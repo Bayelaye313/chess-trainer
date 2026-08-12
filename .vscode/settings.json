@@ -1,0 +1,7 @@
+{
+    "extensions.disabled": [
+    "GitHub.copilot",
+    "GitHub.copilot-chat"
+],
+"git.autofetch": true
+}
