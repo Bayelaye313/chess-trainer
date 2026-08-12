@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cabinet — entraîneur d'échecs local</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chessboard-1.0.0.min.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260808">
+</head>
+<body>
+
+<div class="frame">
+
+  <header class="masthead">
+    <div class="masthead-mark">♞</div>
+    <div class="masthead-text">
+      <h1>Cabinet</h1>
+      <p>un partenaire d'entraînement local — sans compte, sans abonnement</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn is-active" data-tab="play">Jouer</button>
+      <button class="tab-btn" data-tab="puzzles">Puzzles <span id="puzzle-count" class="pill"></span></button>
+      <button class="tab-btn" data-tab="practice">Pratique</button>
+    </nav>
+  </header>
+
+  <!-- ===================== ONGLET JEU ===================== -->
+  <section id="tab-play" class="tab-panel is-active">
+
+    <div class="board-column">
+      <div id="board" class="board"></div>
+      <div class="board-caption">
+        <span id="turn-indicator">Trait aux Blancs</span>
+        <span id="engine-status" class="dim"></span>
+        <div id="match-summary" class="dim match-summary"></div>
+      </div>
+    </div>
+
+    <aside class="ledger">
+      <div class="ledger-setup">
+        <label class="field">
+          <span>Force de l'IA</span>
+          <div class="elo-row">
+            <input type="range" id="elo-slider" min="1320" max="2600" step="20" value="1500">
+            <span id="elo-value" class="mono">1500</span>
+          </div>
+        </label>
+        <label class="field">
+          <span>Tes pièces</span>
+          <select id="color-select">
+            <option value="white">Blancs</option>
+            <option value="black">Noirs</option>
+          </select>
+        </label>
+        <button id="new-game-btn" class="btn-primary">Nouvelle partie</button>
+      </div>
+
+      <h2 class="ledger-title">Journal des coups</h2>
+      <ol id="move-feed" class="move-feed"></ol>
+      <div id="review-panel" class="review-panel hidden">
+        <h2 class="ledger-title">Revue de la partie</h2>
+        <div class="review-board-controls" id="review-board-controls">
+          <button id="review-prev-btn" class="btn-secondary" type="button">Précédent</button>
+          <button id="review-play-btn" class="btn-secondary" type="button">Jouer le coup</button>
+          <button id="review-next-btn" class="btn-secondary" type="button">Suivant</button>
+          <span id="review-step" class="dim review-step"></span>
+        </div>
+        <div id="review-summary" class="review-summary dim"></div>
+        <ol id="review-list" class="review-list"></ol>
+      </div>
+    </aside>
+
+  </section>
+
+  <!-- ===================== ONGLET PUZZLES ===================== -->
+  <section id="tab-puzzles" class="tab-panel">
+    <div class="board-column">
+      <div id="puzzle-board" class="board"></div>
+      <div class="board-caption">
+        <span id="puzzle-instruction">Trouve le meilleur coup dans cette position</span>
+        <span id="puzzle-attempts" class="dim"></span>
+        <button id="show-best-move-btn" class="btn-secondary" type="button">Voir le meilleur coup</button>
+      </div>
+    </div>
+
+    <aside class="ledger">
+      <button id="reset-puzzles-btn" class="btn-secondary" type="button">Réinitialiser les puzzles</button>
+      <h2 class="ledger-title">À réviser aujourd'hui</h2>
+      <p id="puzzle-empty" class="dim" style="display:none;">Aucun puzzle à réviser pour l'instant — reviens après une partie où tu auras fait une erreur ou une gaffe.</p>
+      <ol id="puzzle-list" class="puzzle-list"></ol>
+    </aside>
+  </section>
+
+  <!-- ===================== ONGLET PRATIQUE ===================== -->
+  <section id="tab-practice" class="tab-panel">
+    <div class="practice-shell">
+      <div class="practice-hero">
+        <h2>Practice</h2>
+        <p>In smart queue</p>
+        <div class="practice-badge">7 active decks • 10 flashcards</div>
+        <button class="btn-secondary" type="button">Change decks</button>
+      </div>
+
+      <div class="practice-import-panel">
+        <label class="field">
+          <span>Pseudo Chess.com</span>
+          <input id="chesscom-username" type="text" placeholder="ex. magnuscarlsen" />
+        </label>
+        <button id="import-chesscom-btn" class="btn-primary" type="button">Importer mes parties</button>
+        <div id="import-chesscom-status" class="dim practice-status"></div>
+      </div>
+
+      <div class="practice-grid">
+        <article class="practice-card is-active" data-key="daily-puzzles">
+          <h3>Daily Puzzles</h3>
+          <div class="practice-count" id="practice-daily-puzzles-count">0</div>
+          <p class="practice-detail" id="practice-daily-puzzles-detail">Aucune partie importée</p>
+        </article>
+        <article class="practice-card" data-key="opening-mistakes">
+          <h3>Opening mistakes</h3>
+          <div class="practice-count" id="practice-opening-mistakes-count">0</div>
+          <p class="practice-detail" id="practice-opening-mistakes-detail">Opening mistakes from your games</p>
+        </article>
+        <article class="practice-card" data-key="missed-checkmates">
+          <h3>Missed checkmates</h3>
+          <div class="practice-count" id="practice-missed-checkmates-count">0</div>
+          <p class="practice-detail" id="practice-missed-checkmates-detail">Missed checkmates from your games</p>
+        </article>
+        <article class="practice-card" data-key="endgame-mistakes">
+          <h3>Endgame mistakes</h3>
+          <div class="practice-count" id="practice-endgame-mistakes-count">0</div>
+          <p class="practice-detail" id="practice-endgame-mistakes-detail">Endgame mistakes from your games</p>
+        </article>
+        <article class="practice-card" data-key="missed-tactics">
+          <h3>Missed tactics</h3>
+          <div class="practice-count" id="practice-missed-tactics-count">0</div>
+          <p class="practice-detail" id="practice-missed-tactics-detail">Missed opportunities from your games</p>
+        </article>
+        <article class="practice-card" data-key="tactical-mistakes">
+          <h3>Tactical mistakes</h3>
+          <div class="practice-count" id="practice-tactical-mistakes-count">0</div>
+          <p class="practice-detail" id="practice-tactical-mistakes-detail">Tactical mistakes from your games</p>
+        </article>
+        <article class="practice-card" data-key="positional-mistakes">
+          <h3>Positional mistakes</h3>
+          <div class="practice-count" id="practice-positional-mistakes-count">0</div>
+          <p class="practice-detail" id="practice-positional-mistakes-detail">Positional mistakes from your games</p>
+        </article>
+      </div>
+
+      <div class="practice-review-panel" id="practice-review-panel">
+        <div class="practice-review-header">
+          <div>
+            <h3 id="practice-review-title">Daily Puzzles</h3>
+            <p id="practice-review-detail" class="dim">Revois les parties importées comme un deck quotidien.</p>
+          </div>
+          <button id="practice-review-btn" class="btn-secondary" type="button">Revoir maintenant</button>
+        </div>
+        <ol id="practice-review-list" class="practice-review-list"></ol>
+      </div>
+
+      <div class="practice-import-list">
+        <h3>Parties importées</h3>
+        <ul id="imported-games-list" class="practice-list"></ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chess.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=20260808b"></script>
+</body>
+</html>
