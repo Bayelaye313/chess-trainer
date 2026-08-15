@@ -1,0 +1,48 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "setup:engine": "node scripts/setup-engine.mjs",
+    "smoke:engine": "node scripts/smoke-engine.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node scripts/ensure-data-dir.mjs && drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "postinstall": "node scripts/setup-engine.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "chess-openings": "^0.1.1",
+    "chess.js": "^1.4.0",
+    "drizzle-orm": "^0.45.2",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-chessboard": "^5.12.0",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "stockfish": "^18.0.8",
+    "ts-fsrs": "^5.4.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "playwright": "^1.62.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  }
+}

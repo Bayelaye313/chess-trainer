@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/**
+ * Thème. Les couleurs de qualité de coup sont des jetons de premier niveau :
+ * elles apparaissent sur l'échiquier, dans le journal des coups, dans les
+ * graphes d'évaluation et dans les statistiques. Une seule source.
+ */
+:root {
+  --background: #f7f6f3;
+  --surface: #ffffff;
+  --surface-muted: #efece6;
+  --border: #ddd8cf;
+  --foreground: #1c1a17;
+  --foreground-muted: #6b655c;
+  --accent: #6b8e4e;
+  --accent-foreground: #ffffff;
+
+  /**
+   * Benchmarkées sur ce que Lichess/Chess.com utilisent réellement pour ces
+   * mêmes statuts (teal/bleu/vert/jaune/rouge, plus saturés que la première
+   * version de cette palette) — plus visibles à petite taille dans les badges
+   * du journal des coups.
+   */
+  --quality-brilliant: #1baaa6;
+  --quality-critical: #5b8faf;
+  --quality-best: #98bc49;
+  --quality-okay: #97af8b;
+  --quality-inaccuracy: #f4bf44;
+  --quality-blunder: #c93230;
+  --quality-book: #a88764;
+
+  /**
+   * Graphe d'évaluation : encode la couleur au trait (Blancs/Noirs), pas le
+   * thème de l'appli — comme un échiquier, dont les cases claires/foncées ne
+   * s'inversent pas en mode sombre. Fixe dans les deux modes, à dessein.
+   */
+  --eval-panel: #faf9f6;
+  --eval-white-fill: #f2f0e8;
+  --eval-black-fill: #2b2a25;
+  --eval-line: #4a4940;
+  --eval-line-halo: #faf9f6;
+  --eval-baseline: #b5b3a8;
+  --eval-grid: #ded9cd;
+  --eval-text: #6b6a63;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #161512;
+    --surface: #262421;
+    --surface-muted: #302e2b;
+    --border: #3d3a35;
+    --foreground: #ebe9e6;
+    --foreground-muted: #9b958c;
+    --accent: #81b64c;
+    --accent-foreground: #14210a;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-brilliant: var(--quality-brilliant);
+  --color-critical: var(--quality-critical);
+  --color-best: var(--quality-best);
+  --color-okay: var(--quality-okay);
+  --color-inaccuracy: var(--quality-inaccuracy);
+  --color-blunder: var(--quality-blunder);
+  --color-book: var(--quality-book);
+  --color-eval-panel: var(--eval-panel);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
