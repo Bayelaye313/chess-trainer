@@ -1,5 +1,5 @@
 /**
- * Service d'agrégation pour l'onglet « Progrès » : à partir des coups déjà
+ * Service d'agrégation pour l'onglet « Rapport » : à partir des coups déjà
  * analysés d'un joueur (table `moves`, croisée avec `games` pour l'ECO et le
  * résultat), calcule son profil de faiblesses sur 4 axes.
  *
@@ -25,6 +25,9 @@ import type {
 
 const GAME_PHASES: readonly GamePhase[] = ["opening", "middlegame", "endgame"];
 const TRACKED_TACTICAL_MOTIFS: readonly TrackedTacticalMotif[] = ["fork", "pin"];
+
+/** Nom affiché quand aucune partie d'un groupe ECO n'a de nom d'ouverture connu. */
+export const UNKNOWN_OPENING_NAME = "Ouverture personnalisée / Non répertoriée";
 
 /**
  * Axe 1 — Précision par phase de jeu.
@@ -82,12 +85,38 @@ export function computeTacticalMotifStats(
 }
 
 /** Le joueur a-t-il gagné cette partie ? Nulle et partie sans résultat comptent comme non-victoire. */
-function didPlayerWin(game: Pick<PlayerGameRecord, "result" | "playerColor">): boolean {
+export function didPlayerWin(game: Pick<PlayerGameRecord, "result" | "playerColor">): boolean {
   if (!game.result) return false;
   return (
     (game.result === "1-0" && game.playerColor === "w") ||
     (game.result === "0-1" && game.playerColor === "b")
   );
+}
+
+/**
+ * Nom affiché pour un groupe de parties partageant le même code ECO : le nom
+ * le plus fréquent parmi elles (`games.openingName`, déjà résolu à l'import —
+ * voir la docstring de `PlayerGameRecord.openingName`), à égalité le premier
+ * rencontré pour rester déterministe. `UNKNOWN_OPENING_NAME` si aucune partie
+ * du groupe n'a de nom.
+ */
+function representativeOpeningName(gamesForEco: readonly PlayerGameRecord[]): string {
+  const counts = new Map<string, number>();
+  for (const game of gamesForEco) {
+    if (!game.openingName) continue;
+    counts.set(game.openingName, (counts.get(game.openingName) ?? 0) + 1);
+  }
+
+  let bestName: string | null = null;
+  let bestCount = 0;
+  for (const [name, count] of counts) {
+    if (count > bestCount) {
+      bestName = name;
+      bestCount = count;
+    }
+  }
+
+  return bestName ?? UNKNOWN_OPENING_NAME;
 }
 
 /**
@@ -112,6 +141,7 @@ export function computeOpeningPerformance(games: readonly PlayerGameRecord[]): O
     const playerMoves = gamesForEco.flatMap((game) => game.moves.filter((move) => move.byPlayer));
     performance.push({
       eco,
+      name: representativeOpeningName(gamesForEco),
       gamesPlayed: gamesForEco.length,
       wins,
       winRate: Math.round((wins / gamesForEco.length) * 100),

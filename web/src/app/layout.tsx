@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/ui/nav";
+import { SyncToast } from "@/components/sync-toast";
 import { EngineProvider } from "@/client/engine/engine-context";
 import "./globals.css";
 
@@ -33,6 +34,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <EngineProvider>
           <Nav />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+          {/* Sondage de fond des comptes liés (Chess.com/Lichess) + toast de notification. */}
+          <SyncToast />
         </EngineProvider>
       </body>
     </html>

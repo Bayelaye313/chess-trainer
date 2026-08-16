@@ -1,34 +1,27 @@
 import type { GamePhase } from "@/core/chess/types";
 import type { PlayerProgressOverview } from "@/server/queries/progress";
 import type { TrackedTacticalMotif } from "@/core/analysis/types";
-import { MOTIF_LABEL, PHASE_LABEL } from "@/lib/labels";
+import { MOTIF_LABEL, PHASE_LABEL, accuracyBarClass, accuracyTextClass } from "@/lib/labels";
 
 const PHASE_ORDER: readonly GamePhase[] = ["opening", "middlegame", "endgame"];
 const MOTIF_ORDER: readonly TrackedTacticalMotif[] = ["fork", "pin"];
 
-/** Même échelle que le badge de précision de la liste des parties, sur les jetons de qualité réellement définis. */
-function accuracyTextClass(accuracy: number | null): string {
-  if (accuracy === null) return "text-foreground-muted";
-  if (accuracy >= 90) return "text-brilliant";
-  if (accuracy >= 75) return "text-best";
-  if (accuracy >= 55) return "text-inaccuracy";
-  return "text-blunder";
-}
-
-/** Couleur de remplissage assortie, pour les barres de progression. */
-function accuracyBarClass(accuracy: number | null): string {
-  if (accuracy === null) return "bg-border";
-  if (accuracy >= 90) return "bg-brilliant";
-  if (accuracy >= 75) return "bg-best";
-  if (accuracy >= 55) return "bg-inaccuracy";
-  return "bg-blunder";
-}
-
-function StatTile({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+function StatTile({
+  label,
+  value,
+  valueClass,
+  hint,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+  hint?: string;
+}) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
       <p className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{label}</p>
       <p className={`mt-1 font-mono text-2xl font-semibold ${valueClass ?? ""}`}>{value}</p>
+      {hint && <p className="mt-0.5 text-xs text-foreground-muted">{hint}</p>}
     </div>
   );
 }
@@ -117,30 +110,6 @@ function TacticalMotifsCard({ tacticalMotifs }: { tacticalMotifs: PlayerProgress
   );
 }
 
-function HangingPiecesCard({ hangingPieces }: { hangingPieces: PlayerProgressOverview["hangingPieces"] }) {
-  const { blunderCount, totalBlunders } = hangingPieces;
-  const rate = totalBlunders > 0 ? Math.round((blunderCount / totalBlunders) * 100) : null;
-
-  return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
-        Pièces laissées en prise
-      </h2>
-      <p className="mt-1 text-xs text-foreground-muted">
-        Part des gaffes qui ont laissé une pièce attaquée sans reprise possible.
-      </p>
-      <div className="mt-4 flex items-end gap-2">
-        <span className={`font-mono text-3xl font-semibold ${rate !== null && rate > 0 ? "text-blunder" : ""}`}>
-          {rate !== null ? `${rate}%` : "—"}
-        </span>
-        <span className="pb-1 text-sm text-foreground-muted">
-          {blunderCount} sur {totalBlunders} gaffe{totalBlunders > 1 ? "s" : ""}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function OpeningPerformanceCard({
   openingPerformance,
 }: {
@@ -158,7 +127,7 @@ function OpeningPerformanceCard({
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-foreground-muted">
-                <th className="py-1.5 pr-4 font-medium">ECO</th>
+                <th className="py-1.5 pr-4 font-medium">Ouverture</th>
                 <th className="py-1.5 pr-4 font-medium">Parties</th>
                 <th className="py-1.5 pr-4 font-medium">Victoires</th>
                 <th className="py-1.5 pr-4 font-medium">Précision</th>
@@ -167,7 +136,10 @@ function OpeningPerformanceCard({
             <tbody className="divide-y divide-border">
               {openingPerformance.map((opening) => (
                 <tr key={opening.eco}>
-                  <td className="py-2 pr-4 font-mono font-medium">{opening.eco}</td>
+                  <td className="py-2 pr-4">
+                    <p className="font-medium">{opening.name}</p>
+                    <p className="font-mono text-xs text-foreground-muted">{opening.eco}</p>
+                  </td>
                   <td className="py-2 pr-4 text-foreground-muted">{opening.gamesPlayed}</td>
                   <td className="py-2 pr-4">
                     <span className={`font-mono ${accuracyTextClass(opening.winRate)}`}>{opening.winRate}%</span>
@@ -192,7 +164,7 @@ function OpeningPerformanceCard({
 }
 
 /**
- * Onglet « Progrès » : agrège les quatre axes de `aggregatePlayerProgress`
+ * Onglet « Rapport » : agrège les quatre axes de `aggregatePlayerProgress`
  * (voir `core/analysis/progress-insights.ts`) en cartes Tailwind — pas de
  * bibliothèque de graphes, de simples barres de progression HTML/CSS
  * suffisent à cette étape.
@@ -207,6 +179,9 @@ export function ProgressOverview({ overview }: { overview: PlayerProgressOvervie
     );
   }
 
+  const { blunderCount, totalBlunders } = overview.hangingPieces;
+  const hangingRate = totalBlunders > 0 ? Math.round((blunderCount / totalBlunders) * 100) : null;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -217,16 +192,20 @@ export function ProgressOverview({ overview }: { overview: PlayerProgressOvervie
         />
         <StatTile label="Parties analysées" value={String(overview.gamesAnalysed)} />
         <StatTile
-          label="Gaffes avec pièce en prise"
-          value={String(overview.hangingPieces.blunderCount)}
-          valueClass={overview.hangingPieces.blunderCount > 0 ? "text-blunder" : ""}
+          label="Pièces laissées en prise"
+          value={hangingRate !== null ? `${hangingRate}%` : "—"}
+          valueClass={hangingRate !== null && hangingRate > 0 ? "text-blunder" : ""}
+          hint={
+            totalBlunders > 0
+              ? `${blunderCount} sur ${totalBlunders} gaffe${totalBlunders > 1 ? "s" : ""}`
+              : "Aucune gaffe analysée"
+          }
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <PhaseAccuracyCard phaseAccuracy={overview.phaseAccuracy} />
         <TacticalMotifsCard tacticalMotifs={overview.tacticalMotifs} />
-        <HangingPiecesCard hangingPieces={overview.hangingPieces} />
         <OpeningPerformanceCard openingPerformance={overview.openingPerformance} />
       </div>
     </div>

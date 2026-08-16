@@ -4,7 +4,7 @@ import { applyBookOverride, evaluateMove, uciOf, type EvaluatedMove } from "@/co
 import type { PositionAnalyser } from "@/core/analysis/types";
 import { gameOutcome } from "@/core/chess/termination";
 import type { GameResult } from "@/core/chess/types";
-import { findBookMove } from "./openings";
+import { findBookMove, type OpeningMatch } from "./openings";
 
 export interface ImportedMoveResult {
   ply: number;
@@ -24,8 +24,14 @@ export interface ImportedGameResult {
   finalFen: string;
   result: GameResult | null;
   termination: string | null;
+  /** Tag PGN `TimeControl` brut ("600+5"), `null` s'il est absent — voir `lib/time-control.ts` pour l'affichage. */
+  timeControl: string | null;
   playedAt: Date;
   moves: ImportedMoveResult[];
+  /** Code ECO de la dernière position théorique atteinte, `null` si aucun coup n'était répertorié. */
+  eco: string | null;
+  /** Nom de l'ouverture assorti à `eco`. */
+  openingName: string | null;
 }
 
 function parseResultHeader(raw: string | undefined): GameResult | null {
@@ -105,6 +111,10 @@ export async function analyseImportedGame(
   // une entrée cataloguée. « Théorique » doit rester un préfixe continu depuis
   // le premier coup, pas un statut qui clignote au hasard des transpositions.
   let stillInBook = true;
+  // Dernière position théorique atteinte : la base ECO catalogue des
+  // positions de plus en plus profondes coup après coup, donc le dernier
+  // coup encore répertorié porte l'ECO le plus précis pour cette partie.
+  let lastBookMatch: OpeningMatch | null = null;
   for (let i = 0; i < verboseHistory.length; i += 1) {
     const move = verboseHistory[i];
     try {
@@ -115,6 +125,7 @@ export async function analyseImportedGame(
       // applyBookOverride pour la règle (CLAUDE.md « Book Moves »).
       const book = stillInBook ? findBookMove(move.after) : null;
       if (stillInBook && !book) stillInBook = false;
+      if (book) lastBookMatch = book;
       const finalEvaluated = applyBookOverride(evaluated, book !== null);
 
       moves.push({
@@ -139,7 +150,10 @@ export async function analyseImportedGame(
     finalFen: chess.fen(),
     result: outcome?.result ?? parseResultHeader(headers.Result),
     termination: outcome?.termination ?? headers.Termination ?? null,
+    timeControl: headers.TimeControl ?? null,
     playedAt: parsePlayedAt(headers),
     moves,
+    eco: lastBookMatch?.eco ?? null,
+    openingName: lastBookMatch?.name ?? null,
   };
 }

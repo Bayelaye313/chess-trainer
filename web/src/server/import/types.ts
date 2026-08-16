@@ -4,7 +4,3 @@ export interface FetchedGame {
   /** Identifiant stable côté plateforme, pour le dédoublonnage (unique par source). */
   externalId: string;
 }
-
-export interface GameFetcher {
-  fetchGames(username: string, maxGames: number): Promise<FetchedGame[]>;
-}

@@ -15,6 +15,7 @@ import { ExplorePanel } from "./explore-panel";
 import { GameOverview } from "./game-overview";
 import { KeyMomentsNav } from "./key-moments-nav";
 import { type DrillMistake, MistakesDrillBoard } from "./mistakes-drill-board";
+import { MoveList } from "./move-list";
 import { QualityBadge } from "./quality-badge";
 import { RetryBoard } from "./retry-board";
 import { useExploreMode } from "./use-explore-mode";
@@ -186,8 +187,8 @@ export function GameReviewScreen({
             {accuracy !== null ? ` — précision approximative ${accuracy}%` : ""}
           </p>
         </div>
-        <Link href="/games" className="shrink-0 text-sm text-accent">
-          ← Mes parties
+        <Link href="/analyse" className="shrink-0 text-sm text-accent">
+          ← Analyse
         </Link>
       </div>
 
@@ -285,6 +286,20 @@ export function GameReviewScreen({
         </div>
 
         <div className="space-y-6">
+          <div className="rounded-lg border border-border bg-surface p-4">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+              Fil de notation
+            </h2>
+            <div className="mt-3">
+              <MoveList
+                timeline={timeline}
+                currentPly={currentPly}
+                onSelectPly={goToPly}
+                onRetry={(ply) => setRetryPly(ply)}
+              />
+            </div>
+          </div>
+
           <GameOverview overview={overview} />
         </div>
       </div>

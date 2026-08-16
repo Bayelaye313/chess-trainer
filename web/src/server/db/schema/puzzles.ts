@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { DeckId } from "@/core/chess/decks";
 import type { GamePhase, Motif, MoveQuality } from "@/core/chess/types";
 import { games } from "./games";
@@ -50,6 +50,12 @@ export const puzzles = sqliteTable(
   (table) => [
     index("puzzles_deck_idx").on(table.deck),
     index("puzzles_game_idx").on(table.gameId),
+    // Un coup ne devient jamais deux puzzles, même si l'extraction (voir
+    // server/queries/spaced-repetition.ts) tourne plusieurs fois sur la même
+    // partie. SQLite ne compte pas les NULL comme égaux entre eux : les
+    // puzzles sans coup d'origine (import Lichess) restent libres d'être en
+    // nombre quelconque.
+    uniqueIndex("puzzles_move_idx").on(table.moveId),
   ],
 );
 

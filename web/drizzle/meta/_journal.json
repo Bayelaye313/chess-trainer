@@ -15,6 +15,34 @@
       "when": 1786623772785,
       "tag": "0001_mature_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786710437276,
+      "tag": "0002_daffy_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786719116395,
+      "tag": "0003_cuddly_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786725896576,
+      "tag": "0004_nasty_kinsey_walden",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786821316584,
+      "tag": "0005_serious_ted_forrester",
+      "breakpoints": true
     }
   ]
 }

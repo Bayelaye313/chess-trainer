@@ -80,4 +80,5 @@ export const dailySets = sqliteTable("daily_sets", {
 export type Review = typeof reviews.$inferSelect;
 export type NewReview = typeof reviews.$inferInsert;
 export type ReviewLog = typeof reviewLogs.$inferSelect;
+export type NewReviewLog = typeof reviewLogs.$inferInsert;
 export type DailySet = typeof dailySets.$inferSelect;

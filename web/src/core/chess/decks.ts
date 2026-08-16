@@ -1,4 +1,4 @@
-import type { GamePhase, MoveQuality } from "./types";
+import { isReviewable, type GamePhase, type Motif, type MoveQuality } from "./types";
 
 /**
  * Un deck = une file de révision thématique. `daily` est le seul deck qui ne
@@ -96,4 +96,33 @@ export function categorizeDeck({
   if (phase === "endgame") return "endgame_mistakes";
   if (tactical) return quality === "blunder" ? "tactical_mistakes" : "missed_tactics";
   return "positional_mistakes";
+}
+
+/** Ce qu'il faut savoir d'un coup pour décider s'il mérite de devenir un puzzle. */
+export interface PuzzleCandidate {
+  quality: MoveQuality;
+  /** Un mat forcé était disponible et a disparu après ce coup. */
+  mateMissed: boolean;
+  /** Motifs que le MEILLEUR coup exploitait à cette position. */
+  motifs: readonly Motif[];
+  /** Le coup joué a-t-il exploité ces motifs (coup joué = meilleur coup) ? */
+  motifFound: boolean;
+}
+
+/**
+ * Un coup mérite-t-il de devenir une carte de révision ?
+ *
+ * Deux familles de déclencheurs, indépendantes : une vraie erreur
+ * (`isReviewable` — gaffe ou imprécision, quel que soit le contexte), ou une
+ * occasion manquée qui n'a pas fait chuter l'évaluation assez pour être
+ * classée comme telle — un mat forcé qui s'évapore, ou un motif tactique
+ * (fourchette, clouage...) que le meilleur coup exploitait sans que le joueur
+ * ne le saisisse. Cette seconde famille est la même que le « missed_tactic »
+ * de `findKeyMoments` (`analysis/timeline.ts`), appliquée ici à l'extraction
+ * de puzzles plutôt qu'à la navigation des moments clés d'une partie.
+ */
+export function isPuzzleWorthy(move: PuzzleCandidate): boolean {
+  if (isReviewable(move.quality)) return true;
+  if (move.mateMissed) return true;
+  return move.motifs.length > 0 && !move.motifFound;
 }

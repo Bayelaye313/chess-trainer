@@ -1,11 +1,25 @@
-import { ComingSoon } from "@/components/ui/coming-soon";
+import { ProgressOverview } from "@/client/features/games/progress-overview";
+import { getPlayerProgress } from "@/server/queries/progress";
 
-export default function InsightsPage() {
+// Sans searchParams ni autre API dynamique, Next.js prérendrait cette page une
+// fois au build et servirait ensuite des statistiques figées — alors que de
+// nouvelles parties s'analysent en continu. Il faut la lire à chaque requête.
+export const dynamic = "force-dynamic";
+
+export default async function RapportPage() {
+  const overview = await getPlayerProgress();
+
   return (
-    <ComingSoon title="Progrès" step={5}>
-      Précision par phase de jeu, fourchettes et clouages trouvés contre manqués,
-      performance par ouverture, pièces laissées en prise. Tout s&apos;agrège depuis la
-      table des coups analysés.
-    </ComingSoon>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Rapport</h1>
+        <p className="mt-2 text-sm text-foreground-muted">
+          Précision par phase de jeu, fourchettes et clouages trouvés contre manqués, performance par ouverture,
+          pièces laissées en prise. Tout s&apos;agrège depuis la table des coups analysés.
+        </p>
+      </div>
+
+      <ProgressOverview overview={overview} />
+    </div>
   );
 }

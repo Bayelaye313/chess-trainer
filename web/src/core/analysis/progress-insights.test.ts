@@ -5,6 +5,7 @@ import {
   computeOpeningPerformance,
   computePhaseAccuracy,
   computeTacticalMotifStats,
+  UNKNOWN_OPENING_NAME,
 } from "./progress-insights";
 import type { PlayerGameRecord, PlayerMoveRecord } from "./types";
 
@@ -25,6 +26,7 @@ function move(partial: Partial<PlayerMoveRecord>): PlayerMoveRecord {
 function game(partial: Partial<PlayerGameRecord>): PlayerGameRecord {
   return {
     eco: null,
+    openingName: null,
     result: null,
     playerColor: "w",
     moves: [],
@@ -87,18 +89,21 @@ describe("computeOpeningPerformance", () => {
     const games: PlayerGameRecord[] = [
       game({
         eco: "B01",
+        openingName: "Scandinavian Defense",
         result: "1-0",
         playerColor: "w",
         moves: [move({ quality: "best", byPlayer: true })],
       }),
       game({
         eco: "B01",
+        openingName: "Scandinavian Defense",
         result: "0-1",
         playerColor: "w",
         moves: [move({ quality: "blunder", byPlayer: true })],
       }),
       game({
         eco: "C50",
+        openingName: "Italian Game",
         result: "1/2-1/2",
         playerColor: "b",
         moves: [move({ quality: "okay", byPlayer: true })],
@@ -110,8 +115,22 @@ describe("computeOpeningPerformance", () => {
 
     expect(result).toHaveLength(2);
     // Triée par nombre de parties décroissant : B01 (2) avant C50 (1).
-    expect(result[0]).toEqual({ eco: "B01", gamesPlayed: 2, wins: 1, winRate: 50, accuracy: 53 });
-    expect(result[1]).toEqual({ eco: "C50", gamesPlayed: 1, wins: 0, winRate: 0, accuracy: 85 });
+    expect(result[0]).toEqual({
+      eco: "B01",
+      name: "Scandinavian Defense",
+      gamesPlayed: 2,
+      wins: 1,
+      winRate: 50,
+      accuracy: 53,
+    });
+    expect(result[1]).toEqual({
+      eco: "C50",
+      name: "Italian Game",
+      gamesPlayed: 1,
+      wins: 0,
+      winRate: 0,
+      accuracy: 85,
+    });
   });
 
   it("ne compte jamais une nulle ou une partie sans résultat comme une victoire", () => {
@@ -120,6 +139,20 @@ describe("computeOpeningPerformance", () => {
       game({ eco: "A00", result: null, playerColor: "w" }),
     ]);
     expect(result[0].wins).toBe(0);
+  });
+
+  it("retient le nom le plus fréquent du groupe, à égalité le premier rencontré", () => {
+    const result = computeOpeningPerformance([
+      game({ eco: "C44", openingName: "Ponziani Opening" }),
+      game({ eco: "C44", openingName: "Scotch Game" }),
+      game({ eco: "C44", openingName: "Ponziani Opening" }),
+    ]);
+    expect(result[0].name).toBe("Ponziani Opening");
+  });
+
+  it("retombe sur le nom par défaut si aucune partie du groupe n'a de nom", () => {
+    const result = computeOpeningPerformance([game({ eco: "A00", openingName: null })]);
+    expect(result[0].name).toBe("Ouverture personnalisée / Non répertoriée");
   });
 });
 
@@ -182,7 +215,14 @@ describe("aggregatePlayerProgress", () => {
     expect(result.phaseAccuracy.opening.movesAnalysed).toBe(1);
     expect(result.tacticalMotifs.fork.found).toBe(1);
     expect(result.openingPerformance).toEqual([
-      { eco: "B01", gamesPlayed: 1, wins: 1, winRate: 100, accuracy: expect.any(Number) },
+      {
+        eco: "B01",
+        name: UNKNOWN_OPENING_NAME,
+        gamesPlayed: 1,
+        wins: 1,
+        winRate: 100,
+        accuracy: expect.any(Number),
+      },
     ]);
     expect(result.hangingPieces).toEqual({ blunderCount: 1, totalBlunders: 1 });
   });

@@ -1,25 +1,29 @@
 @import "tailwindcss";
 
 /**
- * Thème. Les couleurs de qualité de coup sont des jetons de premier niveau :
+ * Thème "Jeu Virtuel / E-Sport" — sombre immersif unique (façon chessrank.org),
+ * pas de bascule clair/sombre : un seul jeu de jetons. Les couleurs de qualité
+ * de coup restent des jetons de premier niveau, INCHANGÉES par ce thème —
  * elles apparaissent sur l'échiquier, dans le journal des coups, dans les
- * graphes d'évaluation et dans les statistiques. Une seule source.
+ * graphes d'évaluation et dans les statistiques, et sont déjà benchmarkées sur
+ * ce que Lichess/Chess.com utilisent réellement pour ces mêmes statuts (voir
+ * CLAUDE.md, section "Chess Review Rules & Nuances").
  */
 :root {
-  --background: #f7f6f3;
-  --surface: #ffffff;
-  --surface-muted: #efece6;
-  --border: #ddd8cf;
-  --foreground: #1c1a17;
-  --foreground-muted: #6b655c;
-  --accent: #6b8e4e;
-  --accent-foreground: #ffffff;
+  --background: #020617;
+  --surface: #0f172a;
+  --surface-muted: #1e293b;
+  --border: #334155;
+  --foreground: #f1f5f9;
+  --foreground-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-foreground: #04121f;
 
   /**
    * Benchmarkées sur ce que Lichess/Chess.com utilisent réellement pour ces
    * mêmes statuts (teal/bleu/vert/jaune/rouge, plus saturés que la première
    * version de cette palette) — plus visibles à petite taille dans les badges
-   * du journal des coups.
+   * du journal des coups. Indépendantes du thème (clair ou sombre).
    */
   --quality-brilliant: #1baaa6;
   --quality-critical: #5b8faf;
@@ -32,7 +36,7 @@
   /**
    * Graphe d'évaluation : encode la couleur au trait (Blancs/Noirs), pas le
    * thème de l'appli — comme un échiquier, dont les cases claires/foncées ne
-   * s'inversent pas en mode sombre. Fixe dans les deux modes, à dessein.
+   * s'inversent pas en mode sombre. Fixe, à dessein.
    */
   --eval-panel: #faf9f6;
   --eval-white-fill: #f2f0e8;
@@ -42,19 +46,6 @@
   --eval-baseline: #b5b3a8;
   --eval-grid: #ded9cd;
   --eval-text: #6b6a63;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #161512;
-    --surface: #262421;
-    --surface-muted: #302e2b;
-    --border: #3d3a35;
-    --foreground: #ebe9e6;
-    --foreground-muted: #9b958c;
-    --accent: #81b64c;
-    --accent-foreground: #14210a;
-  }
 }
 
 @theme inline {
@@ -83,4 +74,41 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/**
+ * Transitions fluides en CSS pur (pas de Framer Motion : son installation est
+ * bloquée par le réseau de cet environnement — voir la note dans
+ * `components/ui/nav.tsx`). Deux animations d'entrée réutilisées partout où
+ * le plan de refonte demandait du mouvement : le toast de synchro et les
+ * cartes d'aperçu de l'accueil.
+ */
+@keyframes fade-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up-in {
+  animation: fade-up-in 0.3s ease-out both;
+}
+
+.animate-slide-up-in {
+  animation: slide-up-in 0.2s ease-out both;
 }

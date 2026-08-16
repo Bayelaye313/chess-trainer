@@ -8,7 +8,8 @@
 import type { KeyMomentKind } from "@/core/analysis/timeline";
 import type { Termination } from "@/core/chess/termination";
 import type { GamePhase, GameResult, Motif, MoveQuality } from "@/core/chess/types";
-import type { GameSource, ImportJobStatus } from "@/server/db/schema";
+import type { CurriculumLevel } from "@/server/db/schema/curriculum";
+import type { GameSource } from "@/server/db/schema";
 
 export const QUALITY_LABEL: Record<MoveQuality, string> = {
   brilliant: "Brillant",
@@ -146,6 +147,56 @@ export function describeGameResult(result: GameResult): string {
   return "nulle";
 }
 
+export type GameOutcomeForPlayer = "win" | "loss" | "draw" | "unknown";
+
+/** Issue d'une partie du point de vue du joueur — pour les badges du flux "Parties récentes". */
+export function gameOutcomeForPlayer(
+  result: GameResult | null,
+  playerColor: "w" | "b",
+): GameOutcomeForPlayer {
+  if (!result) return "unknown";
+  if (result === "1/2-1/2") return "draw";
+  const playerWon = (result === "1-0" && playerColor === "w") || (result === "0-1" && playerColor === "b");
+  return playerWon ? "win" : "loss";
+}
+
+export const GAME_OUTCOME_LABEL: Record<GameOutcomeForPlayer, string> = {
+  win: "Victoire",
+  loss: "Défaite",
+  draw: "Nulle",
+  unknown: "—",
+};
+
+/** Fond plein assorti, pour le badge d'issue de partie du flux "Parties récentes". */
+export const GAME_OUTCOME_BADGE_CLASS: Record<GameOutcomeForPlayer, string> = {
+  win: "bg-best/15 text-best border border-best/30",
+  loss: "bg-blunder/15 text-blunder border border-blunder/30",
+  draw: "bg-surface-muted text-foreground-muted border border-border",
+  unknown: "bg-surface-muted text-foreground-muted border border-border",
+};
+
+/**
+ * Couleur de précision, échelle commune au flux "Parties récentes" et à
+ * l'onglet Rapport (`ProgressOverview`) — une seule source, sur les jetons
+ * de qualité réellement définis dans globals.css.
+ */
+export function accuracyTextClass(accuracy: number | null): string {
+  if (accuracy === null) return "text-foreground-muted";
+  if (accuracy >= 90) return "text-brilliant";
+  if (accuracy >= 75) return "text-best";
+  if (accuracy >= 55) return "text-inaccuracy";
+  return "text-blunder";
+}
+
+/** Couleur de remplissage assortie, pour les barres de progression. */
+export function accuracyBarClass(accuracy: number | null): string {
+  if (accuracy === null) return "bg-border";
+  if (accuracy >= 90) return "bg-brilliant";
+  if (accuracy >= 75) return "bg-best";
+  if (accuracy >= 55) return "bg-inaccuracy";
+  return "bg-blunder";
+}
+
 export const TERMINATION_LABEL: Record<Termination, string> = {
   checkmate: "échec et mat",
   stalemate: "pat",
@@ -159,11 +210,23 @@ export const IMPORT_SOURCE_LABEL: Record<Exclude<GameSource, "local">, string> =
   lichess: "Lichess",
 };
 
-export const IMPORT_STATUS_LABEL: Record<ImportJobStatus, string> = {
-  running: "En cours",
-  done: "Terminé",
-  error: "Échec",
-  cancelled: "Annulé",
+export const CURRICULUM_LEVEL_LABEL: Record<CurriculumLevel, string> = {
+  beginner: "Débutant",
+  intermediate: "Intermédiaire",
+  advanced: "Avancé",
+};
+
+/** Vert → ambre → rouge, même dégradé de lisibilité que `accuracyTextClass` — pas les mêmes seuils, le même sens de lecture. */
+export const CURRICULUM_LEVEL_TEXT_CLASS: Record<CurriculumLevel, string> = {
+  beginner: "text-best",
+  intermediate: "text-inaccuracy",
+  advanced: "text-blunder",
+};
+
+export const CURRICULUM_LEVEL_BORDER_CLASS: Record<CurriculumLevel, string> = {
+  beginner: "border-best/30",
+  intermediate: "border-inaccuracy/30",
+  advanced: "border-blunder/30",
 };
 
 export const KEY_MOMENT_LABEL: Record<KeyMomentKind, string> = {

@@ -79,7 +79,7 @@ export function moverPovMate(
 
 /**
  * Entrées de `aggregatePlayerProgress` (voir `progress-insights.ts`), l'onglet
- * « Progrès ». Volontairement distinctes de `AnalysedPly`/`TimelinePly`
+ * « Rapport ». Volontairement distinctes de `AnalysedPly`/`TimelinePly`
  * (`timeline.ts`) : ce module a besoin de `fenBefore`/`uci` pour rejouer un
  * coup et vérifier les pièces en prise (axe 4), que `AnalysedPly` ne porte
  * pas — pas de raison d'alourdir ce dernier pour un besoin qui lui est propre.
@@ -103,6 +103,13 @@ export interface PlayerMoveRecord {
 export interface PlayerGameRecord {
   /** Code ECO de l'ouverture, `null` si la partie n'a pas encore été catégorisée (voir `games.eco`). */
   eco: string | null;
+  /**
+   * Nom de l'ouverture assorti à `eco` (voir `games.openingName`), déjà résolu
+   * à l'import par `findBookMove` (`server/import/openings.ts`). Reçu tel
+   * quel plutôt que recalculé ici : `core/` ne dépend que de `chess.js`, la
+   * résolution FEN → nom d'ouverture reste du ressort de la couche serveur.
+   */
+  openingName: string | null;
   result: GameResult | null;
   playerColor: "w" | "b";
   moves: PlayerMoveRecord[];
@@ -116,7 +123,7 @@ export interface PhaseAccuracy {
   accuracy: number | null;
 }
 
-/** Motifs tactiques comptés « trouvé / manqué » à l'onglet Progrès — un sous-ensemble de `Motif`. */
+/** Motifs tactiques comptés « trouvé / manqué » à l'onglet Rapport — un sous-ensemble de `Motif`. */
 export type TrackedTacticalMotif = "fork" | "pin";
 
 export interface TacticalMotifStats {
@@ -132,6 +139,14 @@ export interface TacticalMotifStats {
 /** Bilan du joueur sur une ouverture (code ECO), agrégé sur toutes ses parties. */
 export interface OpeningPerformance {
   eco: string;
+  /**
+   * Nom lisible de l'ouverture — le plus fréquent parmi les parties de ce
+   * code ECO (voir `UNKNOWN_OPENING_NAME` si aucune partie du groupe n'a de
+   * nom connu). Un même code ECO peut en théorie regrouper plusieurs familles
+   * distinctes qui transposent à la même profondeur ; ce nom n'est donc
+   * représentatif que de CE joueur, pas une vérité générale sur le code.
+   */
+  name: string;
   gamesPlayed: number;
   wins: number;
   /** `wins / gamesPlayed` en %. */
@@ -147,7 +162,7 @@ export interface HangingPieceStats {
   totalBlunders: number;
 }
 
-/** Profil de faiblesses du joueur — sortie de `aggregatePlayerProgress`, onglet « Progrès ». */
+/** Profil de faiblesses du joueur — sortie de `aggregatePlayerProgress`, onglet « Rapport ». */
 export interface PlayerProgressInsights {
   phaseAccuracy: Record<GamePhase, PhaseAccuracy>;
   tacticalMotifs: Record<TrackedTacticalMotif, TacticalMotifStats>;

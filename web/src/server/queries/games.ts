@@ -25,6 +25,7 @@ export interface GameSummary {
   opponentRating: number | null;
   playerColor: "w" | "b";
   result: Game["result"];
+  timeControl: string | null;
   playedAt: Date;
   movesAnalysed: number;
   accuracy: number | null;
@@ -78,6 +79,7 @@ export async function listGamesSummary(
       opponentRating: g.opponentRating,
       playerColor: g.playerColor,
       result: g.result,
+      timeControl: g.timeControl,
       playedAt: g.playedAt,
       movesAnalysed: qualities.length,
       accuracy: computeAccuracy(qualities.map((quality) => ({ quality }))),
