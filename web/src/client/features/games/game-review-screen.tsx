@@ -6,19 +6,19 @@ import { Chessboard, type SquareRenderer } from "react-chessboard";
 import { useEngine } from "@/client/engine/engine-context";
 import { findKeyMoments, type TimelinePly } from "@/core/analysis/timeline";
 import { isReviewable } from "@/core/chess/types";
-import { OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
+import { arrowsFromEngineLines, OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
 import type { Game } from "@/server/db/schema";
 import type { GameOverview as GameOverviewData } from "@/server/queries/games";
+import { EvaluationBar, type EvalScore } from "../board/evaluation-bar";
+import { ExplorePanel } from "../board/explore-panel";
+import { QualityBadge } from "../board/quality-badge";
+import { useExploreMode } from "../board/use-explore-mode";
 import { EvalGraph } from "./eval-graph";
-import { EvaluationBar, type EvalScore } from "./evaluation-bar";
-import { ExplorePanel } from "./explore-panel";
 import { GameOverview } from "./game-overview";
 import { KeyMomentsNav } from "./key-moments-nav";
 import { type DrillMistake, MistakesDrillBoard } from "./mistakes-drill-board";
 import { MoveList } from "./move-list";
-import { QualityBadge } from "./quality-badge";
 import { RetryBoard } from "./retry-board";
-import { useExploreMode } from "./use-explore-mode";
 
 export function GameReviewScreen({
   game,
@@ -143,6 +143,17 @@ export function GameReviewScreen({
       : null;
   }, [explore.isExploring, explore.evaluation, currentPly, currentEntry]);
 
+  // Flèches dégradées (vert/bleu/ambre) matérialisant les lignes du moteur —
+  // uniquement en Mode Exploration, seul moment où une analyse MultiPV étendue
+  // vient d'être faite (voir `use-explore-mode.ts`). La navigation normale du
+  // timeline lit des données déjà importées (un seul `bestUci`, pas de lignes
+  // candidates) : pas de flèches hors exploration, pour ne jamais relancer le
+  // moteur au simple fil des touches ← →.
+  const arrows = useMemo(
+    () => (explore.evaluation.status === "ready" ? arrowsFromEngineLines(explore.evaluation.evaluated.bestLines) : []),
+    [explore.evaluation],
+  );
+
   const boardHighlightColor = explore.isExploring
     ? lastExplorerMove
       ? (exploreQuality ? qualitySquareColor(exploreQuality) : OPPONENT_MOVE_SQUARE_COLOR)
@@ -232,6 +243,7 @@ export function GameReviewScreen({
                       onPieceDrop: explore.onPieceDrop,
                       canDragPiece: explore.canDragPiece,
                       squareRenderer,
+                      arrows,
                     }}
                   />
                 </div>

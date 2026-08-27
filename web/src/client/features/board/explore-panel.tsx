@@ -9,10 +9,13 @@ export function ExplorePanel({
   explorerMoves,
   evaluation,
   onExit,
+  exitLabel = "↩ Retourner à la revue réelle",
 }: {
   explorerMoves: readonly Move[];
   evaluation: ExploreEvaluation;
   onExit: () => void;
+  /** Libellé du bouton de sortie — le contexte varie (revue de partie, puzzle). */
+  exitLabel?: string;
 }) {
   const lastMove = explorerMoves[explorerMoves.length - 1] ?? null;
   const line = explorerMoves.map((m) => m.san).join(" ");
@@ -29,7 +32,7 @@ export function ExplorePanel({
           onClick={onExit}
           className="shrink-0 rounded-md border border-border bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted"
         >
-          ↩ Retourner à la revue réelle
+          {exitLabel}
         </button>
       </div>
 

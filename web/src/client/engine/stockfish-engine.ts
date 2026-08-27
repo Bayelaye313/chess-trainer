@@ -10,7 +10,7 @@
  * Stockfish est sous GPLv3. Il est chargé comme binaire séparé, non lié au code
  * de l'application.
  */
-import type { AnalysisLimit, PositionEvaluation } from "@/core/analysis/types";
+import type { AnalysisLimit, EngineLine, PositionEvaluation } from "@/core/analysis/types";
 import { selectEngineBuild, recommendedThreads, type EngineBuild } from "./loader";
 import { clampElo, type AnalysisProgress, type ChessEngine, type EngineOptions } from "./types";
 import { goCommand, parseBestMove, parseInfoLine } from "@/core/engine/uci";
@@ -29,6 +29,7 @@ const EMPTY_EVALUATION: PositionEvaluation = {
   pv: [],
   depth: 0,
   secondBest: null,
+  lines: [],
 };
 
 type LineListener = (line: string) => void;
@@ -48,6 +49,13 @@ export class StockfishEngine implements ChessEngine {
   private disposed = false;
   /** Le worker a planté : toute nouvelle commande échoue immédiatement, sans réessayer. */
   private crashed: Error | null = null;
+  /**
+   * MultiPV maintenu en permanence par `configure()` (voir son commentaire) —
+   * `search()` s'en sert pour savoir s'il doit basculer temporairement le
+   * MultiPV le temps d'une recherche (voir `AnalysisLimit.lines`) et vers quelle
+   * valeur le restaurer ensuite.
+   */
+  private configuredMultiPv = 2;
 
   readonly build: EngineBuild;
 
@@ -158,8 +166,12 @@ export class StockfishEngine implements ChessEngine {
       // Deux lignes de recherche en permanence : la seconde sert à détecter les
       // positions « critiques » (un seul bon coup) — voir chess/classify.ts.
       // Ne change jamais quel coup le moteur retient (`bestmove` reste celui
-      // de la ligne 1), juste la richesse de ce qu'on observe.
-      this.send("setoption name MultiPV value 2");
+      // de la ligne 1), juste la richesse de ce qu'on observe. `search()`
+      // bascule temporairement au-delà à la demande (`AnalysisLimit.lines`,
+      // Mode Exploration) puis revient toujours à cette valeur — `configuredMultiPv`
+      // doit donc rester alignée sur ce qui est réellement envoyé ici.
+      this.configuredMultiPv = 2;
+      this.send(`setoption name MultiPV value ${this.configuredMultiPv}`);
       if (options.elo === undefined) {
         this.send("setoption name UCI_LimitStrength value false");
       } else {
@@ -200,7 +212,7 @@ export class StockfishEngine implements ChessEngine {
    * Les scores UCI sont exprimés du point de vue du camp au trait ; on les
    * normalise ici en point de vue Blancs, seule convention utilisée en aval.
    */
-  private search(
+  private async search(
     fen: string,
     limit: AnalysisLimit,
     onProgress: AnalysisProgress,
@@ -209,21 +221,26 @@ export class StockfishEngine implements ChessEngine {
     const toWhitePov = (value: number) => (whiteToMove ? value : -value);
 
     let latest: PositionEvaluation = { ...EMPTY_EVALUATION };
-    // Deuxième ligne (MultiPV=2, voir configure()) : seulement de quoi calculer
-    // l'écart avec la première, jamais exposée à `onProgress`.
-    let secondCp: number | null = null;
-    let secondMate: number | null = null;
+    // Toute ligne MultiPV vue (rang → ligne), quel que soit le rang — remplace
+    // le suivi ad hoc « rang 2 seulement » d'avant : `lines` (donc `secondBest`,
+    // dérivé de `lines[1]`) se matérialise au moment de `bestmove`, trié par rang.
+    const linesByRank = new Map<number, EngineLine>();
 
     const done = this.collect<PositionEvaluation>((line) => {
       const info = parseInfoLine(line);
       if (info) {
-        if (info.multipv === 2) {
-          if (info.scoreCp !== undefined) secondCp = toWhitePov(info.scoreCp);
-          if (info.scoreMate !== undefined) secondMate = toWhitePov(info.scoreMate);
-          return undefined;
+        const rank = info.multipv ?? 1;
+        if (info.pv !== undefined || info.scoreCp !== undefined || info.scoreMate !== undefined) {
+          const existing = linesByRank.get(rank);
+          linesByRank.set(rank, {
+            uci: info.pv?.[0] ?? existing?.uci ?? "",
+            cp: info.scoreCp !== undefined ? toWhitePov(info.scoreCp) : (existing?.cp ?? null),
+            mate: info.scoreMate !== undefined ? toWhitePov(info.scoreMate) : (existing?.mate ?? null),
+          });
         }
-        // Rang > 2 : ne devrait pas arriver avec MultiPV=2, ignoré par prudence.
-        if (info.multipv !== undefined && info.multipv > 2) return undefined;
+        // Seule la ligne 1 alimente la progression exposée à l'appelant — les
+        // autres rangs ne servent qu'à construire `lines` au `bestmove`.
+        if (rank !== 1) return undefined;
         if (info.pv === undefined && info.scoreCp === undefined && info.scoreMate === undefined) {
           return undefined;
         }
@@ -234,7 +251,8 @@ export class StockfishEngine implements ChessEngine {
           bestMoveUci: info.pv?.[0] ?? latest.bestMoveUci,
           pv: info.pv ?? latest.pv,
           depth: info.depth ?? latest.depth,
-          secondBest: null,
+          secondBest: latest.secondBest,
+          lines: latest.lines,
         };
         onProgress(latest);
         return undefined;
@@ -243,18 +261,44 @@ export class StockfishEngine implements ChessEngine {
       const best = parseBestMove(line);
       if (!best) return undefined;
 
+      const lines = Array.from(linesByRank.entries())
+        .sort(([rankA], [rankB]) => rankA - rankB)
+        .map(([, candidate]) => candidate)
+        .filter((candidate) => candidate.uci !== "");
+
       // `bestmove` fait foi : c'est le coup que le moteur retient réellement.
       return {
         ...latest,
         bestMoveUci: best.bestMove ?? latest.bestMoveUci,
-        secondBest: secondCp !== null || secondMate !== null ? { cp: secondCp, mate: secondMate } : null,
+        lines,
+        secondBest: lines[1] ? { cp: lines[1].cp, mate: lines[1].mate } : null,
       };
     });
 
-    this.send(`position fen ${fen}`);
-    this.send(goCommand(limit));
-
-    return done;
+    // Au-delà des 2 lignes maintenues en permanence (`configuredMultiPv`), une
+    // recherche peut demander plus de profondeur MultiPV (Mode Exploration, voir
+    // `AnalysisLimit.lines`) — basculée juste pour cette recherche, restaurée
+    // juste après, toujours dans la même tâche sérialisée (`enqueue`) : les
+    // commandes du Worker sont traitées dans l'ordre d'envoi, donc la commande de
+    // restauration est garantie d'arriver avant le `position`/`go` de la
+    // prochaine recherche en attente, sans handshake `isready` supplémentaire.
+    const requestedLines = limit.lines;
+    const needsMultiPvBump = requestedLines !== undefined && requestedLines !== this.configuredMultiPv;
+    try {
+      if (needsMultiPvBump) this.send(`setoption name MultiPV value ${requestedLines}`);
+      this.send(`position fen ${fen}`);
+      this.send(goCommand(limit));
+      return await done;
+    } finally {
+      if (needsMultiPvBump) {
+        try {
+          this.send(`setoption name MultiPV value ${this.configuredMultiPv}`);
+        } catch {
+          // Moteur planté/libéré entre-temps : rien à restaurer, `failAll`/`dispose`
+          // ont déjà invalidé toute recherche suivante.
+        }
+      }
+    }
   }
 
   stop(): void {

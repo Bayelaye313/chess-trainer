@@ -1,7 +1,7 @@
 import { MOVE_QUALITY_ORDER } from "@/core/chess/types";
 import { QUALITY_LABEL } from "@/lib/labels";
 import type { GameOverview as GameOverviewData } from "@/server/queries/games";
-import { QualityBadge } from "./quality-badge";
+import { QualityBadge } from "../board/quality-badge";
 
 /**
  * Répartition des coups par qualité, joueur contre adversaire — l'équivalent

@@ -5,7 +5,7 @@ import type { PositionAnalyser, PositionEvaluation } from "./types";
 const NO_LIMIT = { depth: 1 };
 
 function evaluation(partial: Partial<PositionEvaluation>): PositionEvaluation {
-  return { cp: 0, mate: null, bestMoveUci: null, pv: [], depth: 1, secondBest: null, ...partial };
+  return { cp: 0, mate: null, bestMoveUci: null, pv: [], depth: 1, secondBest: null, lines: [], ...partial };
 }
 
 /**
@@ -68,6 +68,24 @@ describe("evaluateMove", () => {
     const result = await evaluateMove(analyser, START, "e2e4", NO_LIMIT);
 
     expect(result.quality).toBe("critical");
+  });
+
+  it("propage les lignes candidates du moteur (bestLines) pour l'affichage des flèches", async () => {
+    const lines = [
+      { uci: "e2e4", cp: 30, mate: null },
+      { uci: "d2d4", cp: 20, mate: null },
+      { uci: "g1f3", cp: 10, mate: null },
+    ];
+    const analyser = stubAnalyser({
+      [START]: evaluation({ cp: 30, bestMoveUci: "e2e4", lines }),
+      [AFTER_E4]: evaluation({ cp: 25 }),
+    });
+
+    const result = await evaluateMove(analyser, START, "e2e4", NO_LIMIT);
+
+    // Telles quelles, aucune transformation : ce sont les lignes de la position
+    // AVANT le coup joué (`evalBefore.lines`), pas celles d'après.
+    expect(result.bestLines).toEqual(lines);
   });
 
   it("surclasse en brillant un sacrifice quand il y avait une alternative", async () => {
@@ -202,6 +220,7 @@ describe("applyBookOverride", () => {
     san: "e4",
     bestUci: "d2d4",
     bestSan: "d4",
+    bestLines: [],
     quality: "blunder",
     cpLoss: 500,
     cpBefore: 30,

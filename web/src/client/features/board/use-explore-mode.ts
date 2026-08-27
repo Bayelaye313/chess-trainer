@@ -20,6 +20,7 @@ import { Chess, type Move } from "chess.js";
 import type { PieceDropHandlerArgs, PieceHandlerArgs } from "react-chessboard";
 import { evaluateMove, uciOf, type EvaluatedMove } from "@/core/analysis/evaluate-move";
 import type { PositionAnalyser } from "@/core/analysis/types";
+import { ENGINE_ARROW_LINE_COUNT } from "@/lib/labels";
 
 /**
  * Même ordre de grandeur que la partie live (`play/constants.ts`) : assez
@@ -77,7 +78,10 @@ export function useExploreMode({
         return;
       }
       setEvaluation({ status: "loading" });
-      evaluateMove(engine, fenBeforeMove, uci, { depth: EXPLORE_ANALYSIS_DEPTH })
+      // `lines` : au-delà du strict nécessaire à la qualité du coup, alimente
+      // aussi les flèches directionnelles (voir `arrowsFromEngineLines`) sans
+      // appel moteur supplémentaire — c'est la même recherche qui sert les deux.
+      evaluateMove(engine, fenBeforeMove, uci, { depth: EXPLORE_ANALYSIS_DEPTH, lines: ENGINE_ARROW_LINE_COUNT })
         .then((evaluated) => {
           if (requestIdRef.current !== requestId) return;
           setEvaluation({ status: "ready", evaluated });

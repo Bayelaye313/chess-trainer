@@ -11,7 +11,7 @@ import { DECKS, type DeckId } from "@/core/chess/decks";
 import { getNextPuzzle, submitPuzzleAnswer } from "@/server/actions/practice";
 import type { DeckPuzzle } from "@/server/queries/reviews";
 import type { ReviewGrade } from "@/server/srs/fsrs";
-import { PuzzleBoard } from "./puzzle-board";
+import { PuzzleBoard } from "../board/puzzle-board";
 
 type SessionState = { status: "loading" } | { status: "empty" } | { status: "puzzle"; puzzle: DeckPuzzle };
 

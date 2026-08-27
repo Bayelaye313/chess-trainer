@@ -5,9 +5,10 @@
  * finissent en base et dans les URL. Tout le français est ici : changer un
  * libellé ne touche jamais aux données.
  */
+import type { EngineLine } from "@/core/analysis/types";
 import type { KeyMomentKind } from "@/core/analysis/timeline";
 import type { Termination } from "@/core/chess/termination";
-import type { GamePhase, GameResult, Motif, MoveQuality } from "@/core/chess/types";
+import type { GamePhase, GameResult, Motif, MoveQuality, WrongMoveHint } from "@/core/chess/types";
 import type { CurriculumLevel } from "@/server/db/schema/curriculum";
 import type { GameSource } from "@/server/db/schema";
 
@@ -100,6 +101,18 @@ export const QUALITY_SYMBOL: Record<MoveQuality, string> = {
   blunder: "??",
 };
 
+/**
+ * Indice affiché sous l'échiquier d'un puzzle après un coup hors-solution
+ * (`PuzzleBoard`, voir `core/chess/coach-hints.ts#classifyWrongMove`) — le
+ * « Coach Voice » de CLAUDE.md : qualifier l'erreur plutôt que de se limiter
+ * au compte d'essais restants.
+ */
+export const WRONG_MOVE_HINT_LABEL: Record<WrongMoveHint, string> = {
+  hangs_piece: "Tu laisses une pièce en prise.",
+  exposes_king: "Attention à la sécurité de ton roi.",
+  generic: "Ce n'est pas le coup à jouer ici.",
+};
+
 export const MOTIF_LABEL: Record<Motif, string> = {
   fork: "Fourchette",
   pin: "Clouage",
@@ -140,6 +153,54 @@ export function qualitySquareColor(quality: MoveQuality): string {
 /** Surbrillance neutre pour un coup de l'adversaire, jamais qualifié. */
 export const OPPONENT_MOVE_SQUARE_COLOR =
   "color-mix(in srgb, var(--foreground-muted) 35%, transparent)";
+
+/**
+ * Couleurs des flèches de lignes moteur (Mode Exploration), dégradées par
+ * rang — dense pour le meilleur coup, de plus en plus discrète au-delà. Jetons
+ * dédiés (`--engine-arrow-*`, voir globals.css) : une flèche qualifie une ligne
+ * CANDIDATE du moteur, jamais un coup déjà joué — sémantique différente des
+ * jetons `--quality-*` utilisés par `qualitySquareColor`, même si certaines
+ * teintes se ressemblent. L'ordre fixe aussi combien de lignes `arrowsFromEngineLines`
+ * matérialise au maximum, voir `ENGINE_ARROW_LINE_COUNT`.
+ */
+const ENGINE_ARROW_COLORS = [
+  "color-mix(in srgb, var(--engine-arrow-best) 90%, transparent)",
+  "color-mix(in srgb, var(--engine-arrow-second) 55%, transparent)",
+  "color-mix(in srgb, var(--engine-arrow-alt) 28%, transparent)",
+];
+
+/**
+ * Nombre de lignes MultiPV à demander au moteur pour alimenter les flèches
+ * (`AnalysisLimit.lines`) — toujours égal au nombre de teintes définies :
+ * demander plus ne servirait à rien (rien pour les colorer), demander moins
+ * priverait `arrowsFromEngineLines` de sa dernière teinte.
+ */
+export const ENGINE_ARROW_LINE_COUNT = ENGINE_ARROW_COLORS.length;
+
+/**
+ * Convertit les lignes candidates du moteur (`EngineLine[]`, meilleure d'abord)
+ * en flèches directionnelles pour `react-chessboard` (`options.arrows`) — un
+ * type structurellement compatible avec `Arrow`, sans importer la librairie
+ * dans ce module qui reste framework-agnostique.
+ */
+export function arrowsFromEngineLines(
+  lines: readonly EngineLine[],
+): { startSquare: string; endSquare: string; color: string }[] {
+  return lines.slice(0, ENGINE_ARROW_COLORS.length).map((line, index) => ({
+    startSquare: line.uci.slice(0, 2),
+    endSquare: line.uci.slice(2, 4),
+    color: ENGINE_ARROW_COLORS[index],
+  }));
+}
+
+/**
+ * Flèche de révélation de la solution (`PuzzleBoard`, une fois les 3 essais
+ * épuisés) : vert plein, sans dégradé — délibérément plus dense que
+ * `ENGINE_ARROW_COLORS[0]` (90% d'opacité), pour qu'elle se distingue d'une
+ * flèche de ligne CANDIDATE : celle-ci trace un coup CONNU, pas une
+ * suggestion du moteur.
+ */
+export const REVEAL_ARROW_COLOR = "var(--engine-arrow-best)";
 
 export function describeGameResult(result: GameResult): string {
   if (result === "1-0") return "les Blancs gagnent";

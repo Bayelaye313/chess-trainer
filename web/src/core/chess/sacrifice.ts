@@ -39,27 +39,41 @@ export function isSacrifice(before: Chess, move: Move): boolean {
 
   // --- 2. ANALYSE GÉOMÉTRIQUE ET SIMULATION (UNIQUEMENT SI VRAI DÉFICIT) ---
   const after = new Chess(move.after);
-  const opponent = piece.color === "w" ? "b" : "w";
-  const recapturers = after.attackers(move.to, opponent);
-  
-  // S'il n'y a pas de repreneur, la pièce n'est pas en prise directe
-  if (recapturers.length === 0) return false;
 
-  const cheapest = Math.min(...recapturers.map((square) => recaptureValueOf(after.get(square))));
+  // Les repreneurs sont cherchés parmi les COUPS LÉGAUX, pas via
+  // `attackers()`. Deux raisons, la seconde découverte à l'usage :
+  //
+  //  - `attackers()` est purement géométrique et ignore les clouages : une
+  //    pièce qui « voit » la case sans pouvoir légalement s'y rendre y serait
+  //    comptée comme repreneuse, et le sacrifice manqué.
+  //  - rejouer ensuite ce pseudo-coup faisait LEVER `chess.js` (« Invalid
+  //    move »), ce qui remontait jusqu'à faire échouer l'analyse complète
+  //    d'une partie. Partir des coups légaux supprime la classe d'erreur au
+  //    lieu de l'attraper.
+  //
+  // Le coup légal porte aussi son propre drapeau de promotion, là où le
+  // `promotion: "q"` codé en dur plus haut était refusé sur toute reprise qui
+  // n'en était pas une.
+  const recaptures = after.moves({ verbose: true }).filter((reply) => reply.to === move.to);
+  if (recaptures.length === 0) return false;
+
+  const cheapest = Math.min(...recaptures.map((reply) => recaptureValueOf(after.get(reply.from))));
   if (cheapest > movingValue) return false;
 
-  const cheapestRecapturer = recapturers.find(
-    (square) => recaptureValueOf(after.get(square)) === cheapest,
+  const cheapestRecapture = recaptures.find(
+    (reply) => recaptureValueOf(after.get(reply.from)) === cheapest,
   );
-  if (!cheapestRecapturer) return false;
+  if (!cheapestRecapture) return false;
 
-  // Simulation de la reprise adverse la moins chère, puis vérification —
-  // coups légaux à l'appui (donc en tenant compte des clouages) — si le camp
-  // qui vient de sacrifier a une reprise immédiate derrière. `attackers()`
-  // ignore les clouages : une pièce qui « voit » la case mais ne peut
-  // légalement pas y aller y serait comptée à tort comme défenseur.
+  // Simulation de la reprise adverse la moins chère, puis vérification — coups
+  // légaux à l'appui — que le camp qui vient de sacrifier n'a pas de reprise
+  // immédiate derrière.
   const afterRecapture = new Chess(after.fen());
-  afterRecapture.move({ from: cheapestRecapturer, to: move.to, promotion: "q" });
+  afterRecapture.move({
+    from: cheapestRecapture.from,
+    to: cheapestRecapture.to,
+    promotion: cheapestRecapture.promotion,
+  });
   const canRecapture = afterRecapture.moves({ verbose: true }).some((reply) => reply.to === move.to);
 
   return !canRecapture;

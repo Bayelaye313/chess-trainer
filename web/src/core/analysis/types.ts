@@ -11,6 +11,19 @@ import type { GamePhase, GameResult, Motif, MoveQuality } from "../chess/types";
 export const MATE_SCORE = 100_000;
 
 /**
+ * Une ligne candidate du moteur (rang MultiPV donné), POV Blancs — même
+ * convention que `PositionEvaluation.cp`/`mate`. Sert de brique aux flèches
+ * directionnelles (voir `lib/labels.ts#arrowsFromEngineLines`) : chaque ligne
+ * matérialise un coup jouable depuis la position analysée, pas un coup déjà joué.
+ */
+export interface EngineLine {
+  /** Premier coup de la ligne, en notation UCI. */
+  uci: string;
+  cp: number | null;
+  mate: number | null;
+}
+
+/**
  * Évaluation d'une position, **toujours du point de vue des Blancs**.
  *
  * Le protocole UCI raisonne du point de vue du trait ; la normalisation se fait
@@ -33,15 +46,30 @@ export interface PositionEvaluation {
    * `cp`/`mate`), quand le moteur tourne avec MultiPV≥2. `null` si l'option
    * n'était pas active ou qu'aucun second coup légal distinct n'existait.
    * Sert uniquement à détecter les positions « critiques » — voir
-   * `chess/classify.ts`.
+   * `chess/classify.ts`. Dérivé de `lines[1]` par l'adaptateur moteur.
    */
   secondBest: { cp: number | null; mate: number | null } | null;
+  /**
+   * Lignes candidates, meilleure d'abord, jusqu'à la profondeur MultiPV
+   * effectivement configurée (voir `AnalysisLimit.lines`). `[]` si MultiPV
+   * n'était pas actif. Toujours un sur-ensemble cohérent de `bestMoveUci`/
+   * `secondBest` (mêmes rangs 1 et 2), jamais une source contradictoire.
+   */
+  lines: EngineLine[];
 }
 
 export interface AnalysisLimit {
   depth?: number;
   /** Temps de réflexion en millisecondes. */
   movetimeMs?: number;
+  /**
+   * Nombre de lignes MultiPV souhaitées pour cet appel — au-delà de ce que
+   * l'adaptateur maintient en permanence (2, voir `configure()`), le moteur
+   * client bascule temporairement le MultiPV le temps de la recherche puis le
+   * restaure. `undefined` = comportement par défaut, aucun coût ajouté.
+   * L'analyseur serveur (import de fond) ignore ce champ, voir son fichier.
+   */
+  lines?: number;
 }
 
 export interface PositionAnalyser {

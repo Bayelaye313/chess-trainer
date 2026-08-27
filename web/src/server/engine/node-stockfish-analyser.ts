@@ -25,7 +25,7 @@ import "server-only";
  */
 import { createRequire } from "node:module";
 import { goCommand, parseBestMove, parseInfoLine } from "@/core/engine/uci";
-import type { AnalysisLimit, PositionAnalyser, PositionEvaluation } from "@/core/analysis/types";
+import type { AnalysisLimit, EngineLine, PositionAnalyser, PositionEvaluation } from "@/core/analysis/types";
 
 const require = createRequire(import.meta.url);
 
@@ -59,6 +59,7 @@ const EMPTY_EVALUATION: PositionEvaluation = {
   pv: [],
   depth: 0,
   secondBest: null,
+  lines: [],
 };
 
 function sideToMoveIsWhite(fen: string): boolean {
@@ -143,21 +144,25 @@ export class NodeStockfishAnalyser implements PositionAnalyser {
     const toWhitePov = (value: number) => (whiteToMove ? value : -value);
 
     let latest: PositionEvaluation = { ...EMPTY_EVALUATION };
-    // Deuxième ligne (MultiPV=2, voir initialize()) : seulement de quoi calculer
-    // l'écart avec la première, jamais posée sur `latest`.
-    let secondCp: number | null = null;
-    let secondMate: number | null = null;
+    // Toute ligne MultiPV vue (rang → ligne) — voir le commentaire équivalent
+    // dans stockfish-engine.ts (navigateur). `limit.lines` n'est jamais utilisé
+    // ici (import de fond, jamais de flèches à produire) : reste toujours borné
+    // aux 2 lignes fixées par `initialize()`.
+    const linesByRank = new Map<number, EngineLine>();
 
     const done = this.collect<PositionEvaluation>(handle, (line) => {
       const info = parseInfoLine(line);
       if (info) {
-        if (info.multipv === 2) {
-          if (info.scoreCp !== undefined) secondCp = toWhitePov(info.scoreCp);
-          if (info.scoreMate !== undefined) secondMate = toWhitePov(info.scoreMate);
-          return undefined;
+        const rank = info.multipv ?? 1;
+        if (info.pv !== undefined || info.scoreCp !== undefined || info.scoreMate !== undefined) {
+          const existing = linesByRank.get(rank);
+          linesByRank.set(rank, {
+            uci: info.pv?.[0] ?? existing?.uci ?? "",
+            cp: info.scoreCp !== undefined ? toWhitePov(info.scoreCp) : (existing?.cp ?? null),
+            mate: info.scoreMate !== undefined ? toWhitePov(info.scoreMate) : (existing?.mate ?? null),
+          });
         }
-        // Rang > 2 : ne devrait pas arriver avec MultiPV=2, ignoré par prudence.
-        if (info.multipv !== undefined && info.multipv > 2) return undefined;
+        if (rank !== 1) return undefined;
         if (info.pv === undefined && info.scoreCp === undefined && info.scoreMate === undefined) {
           return undefined;
         }
@@ -167,17 +172,25 @@ export class NodeStockfishAnalyser implements PositionAnalyser {
           bestMoveUci: info.pv?.[0] ?? latest.bestMoveUci,
           pv: info.pv ?? latest.pv,
           depth: info.depth ?? latest.depth,
-          secondBest: null,
+          secondBest: latest.secondBest,
+          lines: latest.lines,
         };
         return undefined;
       }
 
       const best = parseBestMove(line);
       if (!best) return undefined;
+
+      const lines = Array.from(linesByRank.entries())
+        .sort(([rankA], [rankB]) => rankA - rankB)
+        .map(([, candidate]) => candidate)
+        .filter((candidate) => candidate.uci !== "");
+
       return {
         ...latest,
         bestMoveUci: best.bestMove ?? latest.bestMoveUci,
-        secondBest: secondCp !== null || secondMate !== null ? { cp: secondCp, mate: secondMate } : null,
+        lines,
+        secondBest: lines[1] ? { cp: lines[1].cp, mate: lines[1].mate } : null,
       };
     });
 

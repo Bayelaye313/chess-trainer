@@ -11,6 +11,7 @@ import {
   toMoverPov,
   toWhitePovScore,
   type AnalysisLimit,
+  type EngineLine,
   type PositionAnalyser,
 } from "./types";
 import { winPercentFromWhitePov } from "./win-percent";
@@ -24,6 +25,13 @@ export interface EvaluatedMove {
   /** Le coup que le moteur recommandait. */
   bestUci: string | null;
   bestSan: string | null;
+  /**
+   * Lignes candidates depuis `fenBefore`, meilleure d'abord — `evalBefore.lines`
+   * telles quelles, aucun appel moteur supplémentaire. `[]` si l'appelant n'a
+   * pas demandé de MultiPV étendu (`AnalysisLimit.lines`, voir son commentaire).
+   * Sert aux flèches directionnelles du Mode Exploration, jamais persisté.
+   */
+  bestLines: EngineLine[];
   quality: MoveQuality;
   /** Centipions perdus par rapport au meilleur coup. `null` si non évaluable. */
   cpLoss: number | null;
@@ -48,15 +56,20 @@ export function uciOf(move: Move): string {
   return move.from + move.to + (move.promotion ?? "");
 }
 
+/**
+ * Décode un UCI ("e2e4", "e7e8q") vers l'entrée attendue par `Chess#move()` —
+ * factorisé ici pour n'avoir qu'une seule règle de décodage (`tryMove`
+ * ci-dessous, `use-puzzle-solver.ts`).
+ */
+export function moveInputFromUci(uci: string): { from: string; to: string; promotion?: string } {
+  return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4, 5) || undefined };
+}
+
 /** Joue un coup UCI sur une copie de la position, sans toucher à l'original. */
 function tryMove(fen: string, uci: string): { move: Move; board: Chess } | null {
   const board = new Chess(fen);
   try {
-    const move = board.move({
-      from: uci.slice(0, 2),
-      to: uci.slice(2, 4),
-      promotion: uci.slice(4, 5) || undefined,
-    });
+    const move = board.move(moveInputFromUci(uci));
     return { move, board };
   } catch {
     return null;
@@ -184,6 +197,7 @@ export async function evaluateMove(
     san: played.move.san,
     bestUci: evalBefore.bestMoveUci,
     bestSan: best?.move.san ?? null,
+    bestLines: evalBefore.lines,
     quality,
     cpLoss,
     cpBefore: evalBefore.cp,

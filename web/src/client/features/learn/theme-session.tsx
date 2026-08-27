@@ -3,15 +3,18 @@
 /**
  * Séance linéaire sur un thème — pendant équivalent de `PuzzleSession`
  * (`client/features/reviews/`) pour l'onglet « Apprendre » : charge le
- * puzzle courant du thème, l'affiche via `ThemePuzzleBoard`, incrémente la
- * progression puis enchaîne sur le suivant. Pas de FSRS, pas de deck : juste
- * un curseur linéaire (`completedCount`, voir `server/queries/curriculum.ts`).
+ * puzzle courant du thème, l'affiche via le `PuzzleBoard` partagé
+ * (`client/features/board/`, même échiquier, même hover, même jauge, même
+ * réfutation active que « Entraîner »), incrémente la progression puis
+ * enchaîne sur le suivant. Pas de FSRS, pas de deck : juste un curseur
+ * linéaire (`completedCount`, voir `server/queries/curriculum.ts`) — d'où
+ * `onComplete` plutôt que `onGraded` (voir le docstring de `PuzzleBoard`).
  */
 import { useEffect, useState } from "react";
+import { PuzzleBoard } from "@/client/features/board/puzzle-board";
 import { getThemePuzzleSession, submitThemePuzzleSolved } from "@/server/actions/curriculum";
 import type { ThemeSession as ThemeSessionData } from "@/server/queries/curriculum";
 import { ProgressBar } from "./progress-bar";
-import { ThemePuzzleBoard } from "./theme-puzzle-board";
 
 type SessionState =
   | { status: "loading" }
@@ -81,12 +84,33 @@ export function ThemeSession({ themeId, onExit }: { themeId: string; onExit: () 
       )}
 
       {state.status === "session" && state.session.puzzle && (
-        <ThemePuzzleBoard key={state.session.puzzle.id} puzzle={state.session.puzzle} onSolved={handleSolved} />
+        <PuzzleBoard
+          key={state.session.puzzle.id}
+          puzzle={{
+            id: state.session.puzzle.id,
+            fenBefore: state.session.puzzle.fen,
+            solution: state.session.puzzle.solution,
+            solutionSan: state.session.puzzle.solutionSan,
+          }}
+          onComplete={handleSolved}
+        />
       )}
 
       {state.status === "session" && !state.session.puzzle && (
         <div className="rounded-lg border border-border bg-surface p-8 text-center">
-          {state.session.completedCount >= state.session.totalPuzzles ? (
+          {state.session.totalPuzzles === 0 ? (
+            // Ne devrait plus survenir : `master-puzzles-dataset.ts` garantit
+            // une entrée par thème du catalogue (voir son test). Gardé comme
+            // filet défensif — jamais un puzzle « Thème maîtrisé » n'a de sens
+            // ici, 0 exercice résolu sur 0 n'est pas une victoire.
+            <>
+              <p className="text-lg font-semibold">Aucun exercice disponible pour l&apos;instant</p>
+              <p className="mt-1 text-sm text-foreground-muted">
+                Le corpus actuel ne contient encore aucune position qui illustre vraiment ce thème —
+                plutôt qu&apos;un exercice hors sujet, ce module attend d&apos;en recevoir un qui convienne.
+              </p>
+            </>
+          ) : state.session.completedCount >= state.session.totalPuzzles ? (
             <>
               <p className="text-lg font-semibold text-best">Thème maîtrisé ! 🏆</p>
               <p className="mt-1 text-sm text-foreground-muted">

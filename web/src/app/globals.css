@@ -46,6 +46,16 @@
   --eval-baseline: #b5b3a8;
   --eval-grid: #ded9cd;
   --eval-text: #6b6a63;
+
+  /**
+   * Flèches de lignes moteur (Mode Exploration, voir lib/labels.ts#arrowsFromEngineLines).
+   * Distinctes des jetons --quality-* : une flèche qualifie une ligne CANDIDATE
+   * du moteur (que jouer d'ici), pas un coup déjà joué — même quand une couleur
+   * se rapproche visuellement d'un jeton de qualité, la sémantique diffère.
+   */
+  --engine-arrow-best: #22c55e;
+  --engine-arrow-second: #38bdf8;
+  --engine-arrow-alt: #f4bf44;
 }
 
 @theme inline {

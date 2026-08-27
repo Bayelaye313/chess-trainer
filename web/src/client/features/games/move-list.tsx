@@ -2,7 +2,7 @@
 
 import type { TimelinePly } from "@/core/analysis/timeline";
 import { formatMotifs, QUALITY_BORDER_CLASS, QUALITY_LABEL, QUALITY_TEXT_CLASS } from "@/lib/labels";
-import { QualityBadge } from "./quality-badge";
+import { QualityBadge } from "../board/quality-badge";
 
 export function MoveList({
   timeline,

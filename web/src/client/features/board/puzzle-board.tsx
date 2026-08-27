@@ -4,48 +4,81 @@
  * L'échiquier d'un puzzle de révision : l'utilisateur joue le camp qui a fait
  * l'erreur (déduit du trait sur `fenBefore`) et doit retrouver `solution`,
  * coup par coup — les coups adverses (rangs impairs du tableau, voir
- * `puzzles.ts`) sont rejoués automatiquement après un court délai.
+ * `puzzles.ts`) sont rejoués automatiquement après un court délai, jusqu'à
+ * épuisement de la variante.
  *
- * Même mécanique que `RetryBoard`/`MistakesDrillBoard` (chess.js + react-
- * chessboard, comparaison à un UCI de référence, indice sur les cases) mais
- * enchaînée sur plusieurs coups et sans révéler le coup attendu en cas
- * d'erreur — un indice discret sur l'échiquier, pas un SAN affiché en toutes
- * lettres. Remonté à neuf par le parent (`key={puzzle.id}`, voir
- * `PuzzleSession`) à chaque nouveau puzzle, comme `DrillAttempt` l'est déjà
- * pour chaque erreur.
+ * Les 3 essais : un coup hors-solution n'est JAMAIS joué sur l'échiquier — la
+ * pièce revient à sa case, un indice qualifie la nature de l'erreur (pièce en
+ * prise, sécurité du roi — voir `core/chess/coach-hints.ts`) plutôt que de se
+ * limiter au compte d'essais. Ce n'est qu'au 3e essai raté que le statut
+ * bascule en « Failed » ; depuis là, un bouton épuré remplace les contrôles
+ * habituels pour révéler la solution : flèche verte pleine et rejeu
+ * automatique jusqu'au bout de la variante enregistrée. Toute cette logique
+ * d'état vit dans `usePuzzleSolver` / `core/puzzle/solve-state.ts` (reducer
+ * pur, testé indépendamment de React) ; ce composant ne fait que l'afficher.
+ *
+ * Une fois `solved`, ou `failed` ET révélé, l'échiquier ne se fige plus :
+ * `usePostSolveAnalysis` (Mode Analyse Pro) prend le relais avec une
+ * navigation ◀ Précédent / Suivant ▶ à travers la solution et, à partir de
+ * n'importe quel pli, l'exploration libre déjà utilisée par la revue de
+ * partie (`use-explore-mode.ts`, `ExplorePanel`, réutilisés tels quels) —
+ * jauge d'évaluation comprise.
+ *
+ * Remonté à neuf par le parent (`key={puzzle.id}`, voir `PuzzleSession` et
+ * `ThemeSession`) à chaque nouveau puzzle.
+ *
+ * Partagé par deux écrans, qui ne se distinguent qu'à la toute fin :
+ * « Entraîner » (FSRS) passe `onGraded`, « Apprendre » (curriculum linéaire,
+ * pas de notation) passe `onComplete`. Le solveur, l'échiquier, la jauge, les
+ * flèches et les 3 essais sont IDENTIQUES dans les deux — voir le docstring de
+ * `SolvablePuzzle` (`core/puzzle/solve-state.ts`).
  */
 import { useEffect, useRef, useState } from "react";
-import { Chess } from "chess.js";
-import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
-import { OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
-import type { DeckPuzzle } from "@/server/queries/reviews";
+import { Chessboard, type SquareRenderer } from "react-chessboard";
+import { useEngine } from "@/client/engine/engine-context";
+import type { MoveQuality } from "@/core/chess/types";
+import type { SolvablePuzzle, SolvePhase } from "@/core/puzzle/solve-state";
+import { OPPONENT_MOVE_SQUARE_COLOR, WRONG_MOVE_HINT_LABEL, qualitySquareColor } from "@/lib/labels";
 import type { ReviewGrade } from "@/server/srs/fsrs";
+import { EvaluationBar } from "./evaluation-bar";
+import { ExplorePanel } from "./explore-panel";
 import { GradePanel } from "./grade-panel";
+import { QualityBadge } from "./quality-badge";
+import { usePostSolveAnalysis } from "./use-post-solve-analysis";
+import { usePuzzleSolver } from "./use-puzzle-solver";
 
-const OPPONENT_REPLY_DELAY_MS = 500;
-
-type Status = "playing" | "wrong" | "solved";
+const STATUS_TEXT: Record<SolvePhase, string> = {
+  solving: "Trouve le coup à jouer.",
+  "opponent-reply": "L'adversaire répond…",
+  solved: "Puzzle résolu !",
+  failed: "Plus d'essai — découvre la solution.",
+};
 
 export function PuzzleBoard({
   puzzle,
   onGraded,
+  onComplete,
 }: {
-  puzzle: DeckPuzzle;
-  onGraded: (grade: ReviewGrade, playedUci: string | null, solvedMs: number) => void;
+  puzzle: SolvablePuzzle;
+  /** Mode Entraîner : note FSRS une fois le puzzle terminé (résolu ou raté). */
+  onGraded?: (grade: ReviewGrade, playedUci: string | null, solvedMs: number) => void;
+  /** Mode Apprendre : pas de FSRS, un seul bouton pour enchaîner — voir `theme-session.tsx`. */
+  onComplete?: () => void;
 }) {
-  const [chess] = useState(() => new Chess(puzzle.fenBefore));
-  const [fen, setFen] = useState(puzzle.fenBefore);
-  const [moveIndex, setMoveIndex] = useState(0);
-  const [status, setStatus] = useState<Status>("playing");
-  const [pendingOpponentIndex, setPendingOpponentIndex] = useState<number | null>(null);
-  const [lastMoveSquares, setLastMoveSquares] = useState<Record<string, { backgroundColor: string }>>({});
-  // Un seul appel à `onGraded` par puzzle : le parent recharge le puzzle
-  // suivant de façon asynchrone, ce composant reste monté (même `key`)
+  const { engine } = useEngine();
+  const solver = usePuzzleSolver({ engine, puzzle });
+
+  // Mode Analyse Pro : actif dès que le puzzle est gagné, ou perdu ET révélé
+  // — jamais avant, sous peine de spoiler la solution en cours de recherche
+  // ou la révélation elle-même. Le hook reste inerte tant que `active` est
+  // `false` (voir son docstring).
+  const postAnalysisActive = solver.phase === "solved" || (solver.phase === "failed" && solver.revealed);
+  const postAnalysis = usePostSolveAnalysis({ engine, puzzle, active: postAnalysisActive });
+
+  // Un seul appel à `onGraded`/`onComplete` par puzzle : le parent recharge le
+  // puzzle suivant de façon asynchrone, ce composant reste monté (même `key`)
   // pendant ce court instant — verrou local pour ignorer un double clic.
   const [graded, setGraded] = useState(false);
-
-  const playerColor: "w" | "b" = puzzle.fenBefore.split(" ")[1] === "b" ? "b" : "w";
-  const firstPlayedUciRef = useRef<string | null>(null);
   // `Date.now()` est impur (interdit pendant le rendu) : l'horodatage de
   // départ est pris dans un effet, pas dans l'initialiseur du ref.
   const startedAtRef = useRef<number>(0);
@@ -53,114 +86,191 @@ export function PuzzleBoard({
     startedAtRef.current = Date.now();
   }, []);
 
-  // Rejoue automatiquement le coup adverse suivant, s'il y en a un.
-  useEffect(() => {
-    if (pendingOpponentIndex === null) return;
-    const uci = puzzle.solution[pendingOpponentIndex];
-    const timer = setTimeout(() => {
-      const move = chess.move({
-        from: uci.slice(0, 2),
-        to: uci.slice(2, 4),
-        promotion: uci.slice(4, 5) || undefined,
-      });
-      setFen(chess.fen());
-      setLastMoveSquares({
-        [move.from]: { backgroundColor: OPPONENT_MOVE_SQUARE_COLOR },
-        [move.to]: { backgroundColor: OPPONENT_MOVE_SQUARE_COLOR },
-      });
-      const afterIndex = pendingOpponentIndex + 1;
-      setMoveIndex(afterIndex);
-      setPendingOpponentIndex(null);
-      if (afterIndex >= puzzle.solution.length) setStatus("solved");
-    }, OPPONENT_REPLY_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [pendingOpponentIndex, chess, puzzle.solution]);
+  const isTerminal = solver.phase === "solved" || solver.phase === "failed";
 
-  function onPieceDrop({ sourceSquare, targetSquare }: PieceDropHandlerArgs): boolean {
-    if (status === "solved" || pendingOpponentIndex !== null || !targetSquare) return false;
+  // Indice qualifiant l'erreur — tant qu'un essai reste (voir
+  // `MAX_PUZZLE_ATTEMPTS`), prioritaire sur le texte de phase habituel
+  // puisqu'on est encore en phase "solving". Une fois "failed", le message
+  // suit l'avancement de la révélation.
+  const statusMessage =
+    solver.phase === "solving" && solver.lastWrongUci
+      ? `${WRONG_MOVE_HINT_LABEL[solver.lastWrongHint ?? "generic"]} Il vous reste ${solver.attemptsLeft} tentative${solver.attemptsLeft > 1 ? "s" : ""}.`
+      : solver.phase === "failed"
+        ? solver.revealed
+          ? "Solution révélée."
+          : solver.revealing
+            ? "Regarde la séquence gagnante…"
+            : STATUS_TEXT.failed
+        : STATUS_TEXT[solver.phase];
+  const hintClassName =
+    solver.phase === "solving" && solver.lastWrongUci
+      ? "font-medium text-inaccuracy"
+      : solver.phase === "failed"
+        ? "font-medium text-inaccuracy"
+        : solver.phase === "solved"
+          ? "font-medium text-best"
+          : "text-foreground-muted";
 
-    const attempt = new Chess(chess.fen());
-    let move;
-    try {
-      move = attempt.move({ from: sourceSquare, to: targetSquare, promotion: "q" });
-    } catch {
-      return false;
-    }
-    const playedUci = move.from + move.to + (move.promotion ?? "");
-    firstPlayedUciRef.current ??= playedUci;
+  // Position/contrôles affichés : le solveur tant que le puzzle est actif,
+  // le Mode Analyse Pro (navigation + exploration libre) une fois terminé —
+  // jamais les deux à la fois.
+  const boardFen = postAnalysisActive ? postAnalysis.explore.fen : solver.fen;
+  const boardOnPieceDrop = postAnalysisActive ? postAnalysis.explore.onPieceDrop : solver.onPieceDrop;
+  const boardCanDragPiece = postAnalysisActive ? postAnalysis.explore.canDragPiece : solver.canDragPiece;
+  const boardArrows = postAnalysisActive ? postAnalysis.arrows : solver.boardArrows;
+  const boardScore = postAnalysisActive ? postAnalysis.currentScore : solver.currentScore;
 
-    if (playedUci !== puzzle.solution[moveIndex]) {
-      setStatus("wrong");
-      return false; // laisse react-chessboard remettre la pièce en place
-    }
+  // Surbrillance + badge du dernier coup joué. Trois sources, jamais deux à
+  // la fois : le solveur (résolution active, réponse adverse, révélation),
+  // l'exploration libre du Mode Analyse Pro (même schéma que
+  // `game-review-screen.tsx`), ou — en Mode Analyse Pro SANS exploration en
+  // cours — le pli de la solution qu'on est en train de consulter.
+  let highlightFrom: string | undefined;
+  let highlightTo: string | undefined;
+  let highlightColor: string | null = null;
+  let badgeSquare: string | null = null;
+  let badgeQuality: MoveQuality | null = null;
 
-    chess.move({ from: sourceSquare, to: targetSquare, promotion: "q" });
-    setFen(chess.fen());
-    setLastMoveSquares({});
-    setStatus("playing");
-
-    const nextIndex = moveIndex + 1;
-    setMoveIndex(nextIndex);
-    if (nextIndex >= puzzle.solution.length) {
-      setStatus("solved");
-    } else {
-      setPendingOpponentIndex(nextIndex);
-    }
-    return true;
+  if (postAnalysisActive && postAnalysis.explore.isExploring) {
+    const lastExplorerMove = postAnalysis.explore.explorerMoves[postAnalysis.explore.explorerMoves.length - 1] ?? null;
+    const exploreQuality = postAnalysis.explore.evaluation.status === "ready" ? postAnalysis.explore.evaluation.evaluated.quality : null;
+    highlightFrom = lastExplorerMove?.from;
+    highlightTo = lastExplorerMove?.to;
+    highlightColor = lastExplorerMove ? (exploreQuality ? qualitySquareColor(exploreQuality) : OPPONENT_MOVE_SQUARE_COLOR) : null;
+    badgeSquare = lastExplorerMove?.to ?? null;
+    badgeQuality = exploreQuality;
+  } else if (postAnalysisActive) {
+    const viewedPly = postAnalysis.viewPly > 0 ? postAnalysis.plies[postAnalysis.viewPly - 1] : null;
+    // Rangs pairs (0-based) = coups du joueur, rangs impairs = réponses
+    // adverses rejouées — même convention que `puzzle.solution`.
+    const isPlayerPly = viewedPly !== null && (postAnalysis.viewPly - 1) % 2 === 0;
+    highlightFrom = viewedPly?.uci.slice(0, 2);
+    highlightTo = viewedPly?.uci.slice(2, 4);
+    highlightColor = viewedPly ? (isPlayerPly ? qualitySquareColor("best") : OPPONENT_MOVE_SQUARE_COLOR) : null;
+    badgeSquare = viewedPly && isPlayerPly ? highlightTo! : null;
+    badgeQuality = viewedPly && isPlayerPly ? "best" : null;
+  } else if (solver.lastMove) {
+    highlightFrom = solver.lastMove.from;
+    highlightTo = solver.lastMove.to;
+    highlightColor = solver.lastMove.quality ? qualitySquareColor(solver.lastMove.quality) : OPPONENT_MOVE_SQUARE_COLOR;
+    badgeSquare = solver.lastMove.quality ? solver.lastMove.to : null;
+    badgeQuality = solver.lastMove.quality;
   }
 
-  function canDragPiece({ piece }: PieceHandlerArgs): boolean {
-    return status !== "solved" && pendingOpponentIndex === null && piece.pieceType.startsWith(playerColor);
-  }
+  const boardSquareStyles: Record<string, { backgroundColor: string }> =
+    highlightColor && highlightFrom && highlightTo
+      ? { [highlightFrom]: { backgroundColor: highlightColor }, [highlightTo]: { backgroundColor: highlightColor } }
+      : {};
 
-  const hintSquares =
-    status === "wrong"
-      ? {
-          [puzzle.solution[moveIndex].slice(0, 2)]: { backgroundColor: qualitySquareColor("inaccuracy") },
-          [puzzle.solution[moveIndex].slice(2, 4)]: { backgroundColor: qualitySquareColor("inaccuracy") },
-        }
-      : lastMoveSquares;
+  const squareRenderer: SquareRenderer = ({ square, children }) => (
+    <div style={{ width: "100%", height: "100%", ...(boardSquareStyles[square] ?? {}) }}>
+      {children}
+      {badgeQuality && square === badgeSquare && (
+        <span className="pointer-events-none absolute right-0.5 top-0.5">
+          <QualityBadge quality={badgeQuality} />
+        </span>
+      )}
+    </div>
+  );
 
   function handleGrade(grade: ReviewGrade) {
-    if (graded) return;
+    if (graded || !onGraded) return;
     setGraded(true);
-    onGraded(grade, firstPlayedUciRef.current, Date.now() - startedAtRef.current);
+    onGraded(grade, solver.firstPlayedUci, Date.now() - startedAtRef.current);
+  }
+
+  function handleComplete() {
+    if (graded || !onComplete) return;
+    setGraded(true);
+    onComplete();
   }
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="mx-auto max-w-[480px]">
-        <Chessboard
-          options={{
-            id: "puzzle-review-board",
-            position: fen,
-            boardOrientation: playerColor === "w" ? "white" : "black",
-            onPieceDrop,
-            canDragPiece,
-            squareStyles: hintSquares,
-          }}
-        />
+      {postAnalysisActive && postAnalysis.explore.isExploring && (
+        <div className="mb-4">
+          <ExplorePanel
+            explorerMoves={postAnalysis.explore.explorerMoves}
+            evaluation={postAnalysis.explore.evaluation}
+            onExit={() => postAnalysis.explore.exit()}
+            exitLabel="↩ Revenir à la solution"
+          />
+        </div>
+      )}
+
+      <div className="mx-auto flex max-w-[480px] items-stretch gap-2">
+        <EvaluationBar score={boardScore} />
+        <div className="min-w-0 flex-1">
+          <Chessboard
+            options={{
+              id: "puzzle-review-board",
+              position: boardFen,
+              boardOrientation: solver.playerColor === "w" ? "white" : "black",
+              onPieceDrop: boardOnPieceDrop,
+              canDragPiece: boardCanDragPiece,
+              onMouseOverSquare: solver.onMouseOverSquare,
+              onMouseOutSquare: solver.onMouseOutSquare,
+              squareRenderer,
+              arrows: boardArrows,
+            }}
+          />
+        </div>
       </div>
 
       <div className="mt-4 min-h-6 text-center text-sm">
-        {status === "playing" && pendingOpponentIndex === null && (
-          <p className="text-foreground-muted">Trouve le coup à jouer.</p>
-        )}
-        {status === "playing" && pendingOpponentIndex !== null && (
-          <p className="text-foreground-muted">L&apos;adversaire répond…</p>
-        )}
-        {status === "wrong" && (
-          <p className="font-medium text-inaccuracy">
-            Pas tout à fait — un indice t&apos;attend sur l&apos;échiquier.
-          </p>
-        )}
-        {status === "solved" && <p className="font-medium text-best">Puzzle résolu !</p>}
+        <p className={hintClassName}>{statusMessage}</p>
       </div>
 
-      {status === "solved" && (
+      {postAnalysisActive && (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => postAnalysis.goToPly(postAnalysis.viewPly - 1)}
+            disabled={!postAnalysis.canGoPrevious}
+            className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+          >
+            ← Précédent
+          </button>
+          <span className="font-mono text-sm text-foreground-muted">
+            {postAnalysis.viewPly} / {postAnalysis.totalPlies}
+          </span>
+          <button
+            type="button"
+            onClick={() => postAnalysis.goToPly(postAnalysis.viewPly + 1)}
+            disabled={!postAnalysis.canGoNext}
+            className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+          >
+            Suivant →
+          </button>
+        </div>
+      )}
+
+      {isTerminal && (
         <div className="mt-4">
-          {graded ? (
-            <p className="text-center text-sm text-foreground-muted">Enregistrement…</p>
+          {solver.phase === "failed" && solver.canReveal ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={solver.requestReveal}
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+              >
+                Révéler la solution
+              </button>
+            </div>
+          ) : solver.phase === "failed" && solver.revealing ? null : graded ? (
+            <p className="text-center text-sm text-foreground-muted">
+              {onComplete ? "Chargement…" : "Enregistrement…"}
+            </p>
+          ) : onComplete ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleComplete}
+                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+              >
+                Continuer →
+              </button>
+            </div>
           ) : (
             <GradePanel onGrade={handleGrade} />
           )}

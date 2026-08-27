@@ -64,3 +64,11 @@ export const MOTIFS = [
 ] as const;
 
 export type Motif = (typeof MOTIFS)[number];
+
+/**
+ * Nature d'un coup hors-solution joué pendant un puzzle (voir
+ * `chess/coach-hints.ts#classifyWrongMove`) — l'indice affiché au joueur
+ * qualifie l'erreur plutôt que de se contenter de dire « faux ».
+ */
+export const WRONG_MOVE_HINTS = ["hangs_piece", "exposes_king", "generic"] as const;
+export type WrongMoveHint = (typeof WRONG_MOVE_HINTS)[number];
