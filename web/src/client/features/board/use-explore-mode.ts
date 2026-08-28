@@ -26,8 +26,12 @@ import { ENGINE_ARROW_LINE_COUNT } from "@/lib/labels";
  * Même ordre de grandeur que la partie live (`play/constants.ts`) : assez
  * profond pour un verdict fiable, assez rapide pour rester interactif coup
  * après coup pendant qu'on tâtonne des alternatives.
+ *
+ * Exportée : `client/features/openings/use-opening-explorer.ts` réutilise
+ * exactement la même profondeur pour son propre bac à sable, plutôt que de
+ * redéfinir une constante jumelle.
  */
-const EXPLORE_ANALYSIS_DEPTH = 16;
+export const EXPLORE_ANALYSIS_DEPTH = 16;
 
 export type ExploreEvaluation =
   | { status: "idle" }

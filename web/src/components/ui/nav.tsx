@@ -70,6 +70,16 @@ function AcademyIcon() {
   );
 }
 
+/** Livre ouvert — l'onglet « Ouvertures », distinct de la toque de l'académie « Apprendre ». */
+function OpeningsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M12 6c-1.5-1.3-3.5-2-6-2v13c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2V4c-2.5 0-4.5.7-6 2Z" strokeLinejoin="round" />
+      <path d="M12 6v13" />
+    </svg>
+  );
+}
+
 function MoreIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -86,6 +96,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/rapport", label: "Rapport", icon: ReportIcon },
   { href: "/entrainer", label: "Entraîner", icon: TrainIcon },
   { href: "/apprendre", label: "Apprendre", icon: AcademyIcon },
+  { href: "/ouvertures", label: "Ouvertures", icon: OpeningsIcon },
   { href: "/plus", label: "Plus", icon: MoreIcon },
 ];
 
