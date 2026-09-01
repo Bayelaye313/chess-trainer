@@ -5,7 +5,7 @@ import { detectMotifs } from "../chess/motifs";
 import { gamePhase } from "../chess/phase";
 import { isBrilliantSacrifice } from "../chess/sacrifice";
 import { isReviewable, type GamePhase, type Motif, type MoveQuality } from "../chess/types";
-import { computeSecondBestGap } from "./critical-gap";
+import { computeSecondBestGap, secondBestWinPercent } from "./critical-gap";
 import {
   moverPovMate,
   toMoverPov,
@@ -116,6 +116,10 @@ export async function evaluateMove(
   // qu'à distinguer « Critique » de « Meilleur coup » quand `foundBest`, voir
   // classify.ts et critical-gap.ts.
   const secondBestGap = computeSecondBestGap(evalBefore, evalBefore.secondBest, moverIsWhite);
+  // Probabilité de gain (%) du second choix DANS L'ABSOLU — le garde-fou qui
+  // manquait pour que « Critique » ne phagocyte plus « Brillant », voir
+  // classify.ts#CRITICAL_SECOND_BEST_MAX_WIN.
+  const secondBestWinPct = secondBestWinPercent(evalBefore.secondBest, moverIsWhite);
 
   const after = played.board;
   const fenAfter = after.fen();
@@ -158,7 +162,13 @@ export async function evaluateMove(
       winAfterMover = winPercentFromWhitePov(evalAfter.cp, evalAfter.mate, moverIsWhite);
       winPercentLoss = Math.max(0, winBeforeMover - winAfterMover);
 
-      quality = classifyMove({ foundBest, onlyLegalMove, winPercentLoss, secondBestGap });
+      quality = classifyMove({
+        foundBest,
+        onlyLegalMove,
+        winPercentLoss,
+        secondBestGap,
+        secondBestWinPercent: secondBestWinPct,
+      });
     } else {
       // Le moteur n'a renvoyé ni centipions ni mat pour l'une des deux
       // positions — un raté d'analyse, pas de la théorie. `book` ne doit

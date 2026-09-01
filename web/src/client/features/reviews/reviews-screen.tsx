@@ -12,11 +12,13 @@ import type { DeckId } from "@/core/chess/decks";
 import { getDeckOverviews } from "@/server/actions/practice";
 import type { DeckOverview } from "@/server/queries/reviews";
 import { DeckDashboard } from "./deck-dashboard";
+import { OpeningMistakesHub } from "./opening-mistakes-hub";
 import { PuzzleSession } from "./puzzle-session";
 
 export function ReviewsScreen({ initialDecks }: { initialDecks: DeckOverview[] }) {
   const [decks, setDecks] = useState(initialDecks);
   const [selectedDeck, setSelectedDeck] = useState<DeckId | null>(null);
+  const [mistakesHubOpen, setMistakesHubOpen] = useState(false);
 
   async function exitSession() {
     setSelectedDeck(null);
@@ -27,5 +29,9 @@ export function ReviewsScreen({ initialDecks }: { initialDecks: DeckOverview[] }
     return <PuzzleSession deckId={selectedDeck} onExit={exitSession} />;
   }
 
-  return <DeckDashboard decks={decks} onSelect={setSelectedDeck} />;
+  if (mistakesHubOpen) {
+    return <OpeningMistakesHub onExit={() => setMistakesHubOpen(false)} />;
+  }
+
+  return <DeckDashboard decks={decks} onSelect={setSelectedDeck} onOpenMistakesHub={() => setMistakesHubOpen(true)} />;
 }

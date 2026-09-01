@@ -1,5 +1,6 @@
 import { Chess } from "chess.js";
 import { describe, expect, it } from "vitest";
+import { mainLine, parsePgnTree } from "../chess/pgn-tree";
 import { findOpening, OPENINGS } from "./openings";
 
 describe("OPENINGS", () => {
@@ -26,6 +27,36 @@ describe("OPENINGS", () => {
   it("a un code ECO au format standard (une lettre A-E suivie de deux chiffres)", () => {
     for (const opening of OPENINGS) {
       expect(opening.eco, opening.id).toMatch(/^[A-E]\d\d$/);
+    }
+  });
+});
+
+describe("OPENINGS avec arbre PGN enrichi", () => {
+  const withPgn = OPENINGS.filter((opening) => opening.pgn);
+
+  it("en enrichit au moins une poignée (pas une régression silencieuse vers 0)", () => {
+    expect(withPgn.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("parse sans erreur, et sa ligne principale préfixe exactement `moves`", () => {
+    for (const opening of withPgn) {
+      const tree = parsePgnTree(opening.pgn!);
+      const line = mainLine(tree).slice(0, opening.moves.length).map((n) => n.san);
+      expect(line, opening.id).toEqual(opening.moves);
+    }
+  });
+
+  it("contient réellement au moins un embranchement (plus d'un enfant quelque part)", () => {
+    for (const opening of withPgn) {
+      const tree = parsePgnTree(opening.pgn!);
+      let hasBranch = false;
+      const stack = [tree];
+      while (stack.length > 0) {
+        const node = stack.pop()!;
+        if (node.children.length > 1) hasBranch = true;
+        stack.push(...node.children);
+      }
+      expect(hasBranch, opening.id).toBe(true);
     }
   });
 });

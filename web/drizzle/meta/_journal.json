@@ -43,6 +43,27 @@
       "when": 1786821316584,
       "tag": "0005_serious_ted_forrester",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787929543586,
+      "tag": "0006_sleepy_sandman",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1788091311030,
+      "tag": "0007_moaning_adam_warlock",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1788182672101,
+      "tag": "0008_jittery_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

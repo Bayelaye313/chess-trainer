@@ -9,11 +9,17 @@
  * `server-only` (~3 Mo, voir `next.config.ts`), ces actions sont son seul
  * accès depuis le bac à sable côté client.
  */
+import type { PopularMove } from "@/server/import/lichess-explorer";
 import { findBookMove, type OpeningMatch } from "@/server/import/openings";
-import { listBookContinuations, type BookContinuation } from "@/server/queries/openings";
+import { listBookContinuations, listPopularContinuations, type BookContinuation } from "@/server/queries/openings";
 
 export async function getBookContinuations(fen: string): Promise<BookContinuation[]> {
   return listBookContinuations(fen);
+}
+
+/** Fréquence humaine des coups depuis `fen` (Lichess Opening Explorer) — voir `use-move-popularity.ts`. */
+export async function getMovePopularity(fen: string): Promise<PopularMove[]> {
+  return listPopularContinuations(fen);
 }
 
 /**

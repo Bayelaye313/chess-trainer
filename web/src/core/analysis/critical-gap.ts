@@ -30,3 +30,22 @@ export function computeSecondBestGap(
   const winSecondMover = winPercentFromWhitePov(secondBest.cp, secondBest.mate, moverIsWhite);
   return Math.max(0, winBestMover - winSecondMover);
 }
+
+/**
+ * Probabilité de gain (%) du second choix moteur LUI-MÊME, POV du joueur au
+ * trait — le pendant absolu de `computeSecondBestGap` ci-dessus, qui ne
+ * mesure qu'un écart RELATIF au meilleur coup. Sert à vérifier que
+ * l'alternative écartée restait elle-même défendable avant de qualifier une
+ * position de « Critique » (voir `chess/classify.ts#CRITICAL_SECOND_BEST_MAX_WIN`) :
+ * un gros écart avec le meilleur coup ne suffit pas si l'alternative, dans
+ * l'absolu, restait tout à fait jouable — c'est alors le meilleur coup qui
+ * était exceptionnel (typiquement un sacrifice « Brillant »), pas la position
+ * qui était critique. `null` si aucun second choix n'a été exposé.
+ */
+export function secondBestWinPercent(
+  secondBest: ScoreLike | null,
+  moverIsWhite: boolean,
+): number | null {
+  if (!secondBest) return null;
+  return winPercentFromWhitePov(secondBest.cp, secondBest.mate, moverIsWhite);
+}

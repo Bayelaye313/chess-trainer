@@ -122,3 +122,32 @@ body {
 .animate-slide-up-in {
   animation: slide-up-in 0.2s ease-out both;
 }
+
+/**
+ * Retour visuel d'erreur du Mode Entraînement (méthode Listudy stricte, voir
+ * `use-opening-drill.ts` : jamais de message texte sur un coup refusé) — un
+ * tremblement bref + un halo rouge autour de l'échiquier, voir
+ * `opening-drill.tsx#errorPulse`.
+ */
+@keyframes shake-error {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.animate-shake-error {
+  animation: shake-error 0.35s ease-in-out both;
+}

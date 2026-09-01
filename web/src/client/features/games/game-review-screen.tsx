@@ -20,21 +20,43 @@ import { type DrillMistake, MistakesDrillBoard } from "./mistakes-drill-board";
 import { MoveList } from "./move-list";
 import { RetryBoard } from "./retry-board";
 
+/**
+ * Coup théorique manqué dans CETTE partie, résolu côté serveur depuis le
+ * catalogue d'ouvertures (voir `app/analyse/[id]/page.tsx`,
+ * `resolveDeviation`) — vient du journal « Erreurs d'ouverture »
+ * (`OpeningMistakesHub`, `?openingId=&ply=`) : ouvre la partie directement au
+ * coup où elle a quitté la théorie, avec un bandeau explicatif et un exercice
+ * de correction (voir le rendu de `repertoireCorrection` ci-dessous).
+ */
+export interface GameDeviation {
+  ply: number;
+  expectedSan: string;
+  expectedUci: string;
+  openingName: string;
+}
+
 export function GameReviewScreen({
   game,
   timeline,
   accuracy,
   overview,
+  deviation = null,
 }: {
   game: Game;
   timeline: TimelinePly[];
   accuracy: number | null;
   overview: GameOverviewData;
+  deviation?: GameDeviation | null;
 }) {
   const { engine } = useEngine();
   const [currentPly, setCurrentPly] = useState(0);
   const [retryPly, setRetryPly] = useState<number | null>(null);
   const [drillActive, setDrillActive] = useState(false);
+  // `true` pendant l'exercice « Corriger ce coup » lancé depuis le bandeau de
+  // déviation — indépendant de `retryPly` (qui rejoue une erreur MOTEUR, voir
+  // `mistakes` ci-dessous) : ici le coup à retrouver est le coup THÉORIQUE
+  // attendu, pas forcément le meilleur coup au sens Stockfish.
+  const [repertoireCorrection, setRepertoireCorrection] = useState(false);
 
   const keyMoments = useMemo(() => findKeyMoments(timeline), [timeline]);
 
@@ -84,6 +106,7 @@ export function GameReviewScreen({
       explore.exit();
       setRetryPly(null);
       setDrillActive(false);
+      setRepertoireCorrection(false);
       setCurrentPly(Math.max(0, Math.min(timeline.length, ply)));
     },
     [timeline.length, explore],
@@ -95,21 +118,33 @@ export function GameReviewScreen({
     goToPlyRef.current = goToPly;
   }, [goToPly]);
 
+  // Atterrit directement au coup de la déviation quand on arrive depuis le
+  // journal « Erreurs d'ouverture » (`?openingId=&ply=`) — une seule fois au
+  // montage, jamais si le joueur navigue ensuite ailleurs dans la partie.
+  // Passe par `goToPlyRef` (déjà à jour, voir l'effet précédent) plutôt que
+  // par `goToPly` directement : évite d'en faire une dépendance qui
+  // redéclencherait ce saut à chaque re-rendu (même rationale que le
+  // docstring de `goToPlyRef` plus haut).
+  useEffect(() => {
+    if (deviation) goToPlyRef.current(deviation.ply);
+  }, [deviation]);
+
   const startDrill = useCallback(() => {
     explore.exit();
     setRetryPly(null);
+    setRepertoireCorrection(false);
     setDrillActive(true);
   }, [explore]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (retryPly !== null || drillActive) return;
+      if (retryPly !== null || drillActive || repertoireCorrection) return;
       if (event.key === "ArrowLeft") goToPly(currentPly - 1);
       if (event.key === "ArrowRight") goToPly(currentPly + 1);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPly, retryPly, drillActive, goToPly]);
+  }, [currentPly, retryPly, drillActive, repertoireCorrection, goToPly]);
 
   const retryEntry = retryPly !== null ? timeline[retryPly - 1] : null;
   const canRetry = retryEntry?.analysis?.bestUci && retryEntry.analysis.bestSan;
@@ -221,8 +256,38 @@ export function GameReviewScreen({
               bestSan={retryEntry.analysis!.bestSan!}
               onExit={() => setRetryPly(null)}
             />
+          ) : repertoireCorrection && deviation ? (
+            // Le coup à retrouver est le coup THÉORIQUE attendu (catalogue
+            // d'ouvertures), pas forcément le meilleur coup Stockfish — voir
+            // le docstring de `repertoireCorrection`. `RetryBoard` reste
+            // générique (fenBefore/bestUci/bestSan), aucune adaptation requise.
+            <RetryBoard
+              key={`deviation-${deviation.ply}`}
+              fenBefore={timeline[deviation.ply - 1].fenBefore}
+              playerColor={game.playerColor}
+              bestUci={deviation.expectedUci}
+              bestSan={deviation.expectedSan}
+              onExit={() => setRepertoireCorrection(false)}
+            />
           ) : (
             <div className="rounded-lg border border-border bg-surface p-5">
+              {deviation && currentPly === deviation.ply && (
+                <div className="mb-4 rounded-md border border-inaccuracy/40 bg-inaccuracy/10 p-3 text-sm">
+                  <p className="text-foreground">
+                    Ici, dans ta partie contre <span className="font-medium">{game.opponentName ?? "adversaire inconnu"}</span>,
+                    tu as joué <span className="font-mono font-semibold">{timeline[deviation.ply - 1].san}</span>. Le coup
+                    théorique attendu était <span className="font-mono font-semibold">{deviation.expectedSan}</span>{" "}
+                    ({deviation.openingName}).
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setRepertoireCorrection(true)}
+                    className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
+                  >
+                    🔧 Corriger ce coup
+                  </button>
+                </div>
+              )}
               {explore.isExploring && (
                 <div className="mb-4">
                   <ExplorePanel

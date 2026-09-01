@@ -1,43 +1,90 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Chessboard } from "react-chessboard";
-import { useEngine } from "@/client/engine/engine-context";
-import { EvaluationBar } from "@/client/features/board/evaluation-bar";
-import { QualityBadge } from "@/client/features/board/quality-badge";
+import { useRouter } from "next/navigation";
+import { findVariationByKey, MAIN_LINE_VARIATION_KEY } from "@/core/curriculum/opening-variation-key";
 import type { OpeningLine } from "@/core/curriculum/openings";
-import { QUALITY_DESCRIPTION, QUALITY_LABEL, QUALITY_TEXT_CLASS } from "@/lib/labels";
-import type { AnnotatedPly } from "@/server/queries/openings";
+import type { RepertoireDeviation } from "@/server/queries/opening-mistakes";
+import type { VariationAccuracy } from "@/server/queries/opening-progress";
+import type { AnnotatedPly, OpeningVariation } from "@/server/queries/openings";
+import type { DrillRound } from "./build-final-test";
+import { OpeningDrill } from "./opening-drill";
 import { SIDE_LABEL, SideDot } from "./side-dot";
-import { useOpeningExplorer } from "./use-opening-explorer";
-import { VariationTree } from "./variation-tree";
+import { StudyProgressBar } from "./study-progress-bar";
+import type { DrillSelection } from "./use-opening-drill";
 
-function ControlButton({
-  onClick,
-  disabled,
-  children,
+/**
+ * Point d'entrée de `/ouvertures/[slug]` — interface UNIQUE façon Listudy
+ * (audit UX du 2026-08-30) : cliquer une ouverture (ou une variante depuis
+ * "Lancer les révisions du jour"/"Mes erreurs fréquentes") tombe TOUJOURS
+ * directement sur l'échiquier réactif de `OpeningDrill` (flèche d'indice par
+ * défaut, IA qui répond automatiquement) — plus jamais sur un bac à sable
+ * passif à côté. L'ancien mode « Explorer » (échiquier libre, arbre des
+ * variantes, `useOpeningExplorer`) a été retiré : `autoStartSelection`
+ * retombe sur la ligne principale plutôt que sur `null` précisément pour ça,
+ * aucun placeholder « choisis un chapitre » n'est plus jamais montré au
+ * premier chargement.
+ */
+export function OpeningExplorer({
+  opening,
+  plies,
+  variations,
+  drillVariationKey,
+  practicedVariationKeys,
+  deviations,
+  variationAccuracies,
 }: {
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
+  opening: OpeningLine;
+  plies: readonly AnnotatedPly[];
+  variations: readonly OpeningVariation[];
+  /** `?drill=<clé>` — relance directe une variante depuis "Lancer les révisions du jour", voir `review-queue.ts`. */
+  drillVariationKey?: string;
+  /** Clés des variantes déjà pratiquées au moins une fois — sert le Test Final (Étape 3 du Mode Entraînement). */
+  practicedVariationKeys: readonly string[];
+  /** Écarts de répertoire récurrents détectés dans les parties importées — voir `server/queries/opening-mistakes.ts`. */
+  deviations: readonly RepertoireDeviation[];
+  /** Dernière précision par variante — étoiles des chapitres et transition automatique du Mode Entraînement, voir `use-opening-drill.ts`. */
+  variationAccuracies: readonly VariationAccuracy[];
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
-    >
-      {children}
-    </button>
-  );
-}
+  const router = useRouter();
+  // Exercice ciblé demandé depuis "Mes erreurs fréquentes" (`trainOnDeviation`
+  // ci-dessous) — a priorité sur `?drill=<clé>` : cliquer une erreur alors
+  // qu'on était arrivé via la file de révisions doit lancer CET exercice-là.
+  const [mistakeSelection, setMistakeSelection] = useState<DrillSelection | null>(null);
 
-export function OpeningExplorer({ opening, plies }: { opening: OpeningLine; plies: readonly AnnotatedPly[] }) {
-  const { engine } = useEngine();
-  const explorer = useOpeningExplorer({ engine, plies });
+  // Résout la sélection à démarrer immédiatement : l'exercice ciblé choisi
+  // (le cas échéant), sinon `?drill=<clé>` (le cas échéant, `null` si la clé
+  // est absente/périmée), sinon la LIGNE PRINCIPALE par défaut — jamais
+  // `null` pour un premier chargement normal, voir le docstring du fichier.
+  const autoStartSelection = useMemo<DrillSelection>(() => {
+    if (mistakeSelection) return mistakeSelection;
+    if (drillVariationKey) {
+      if (drillVariationKey === MAIN_LINE_VARIATION_KEY) return { kind: "main-line" };
+      const variation = findVariationByKey(variations, drillVariationKey);
+      if (variation) return { kind: "variation", variation };
+    }
+    return { kind: "main-line" };
+  }, [mistakeSelection, drillVariationKey, variations]);
 
-  const lastSandboxPly = explorer.sandboxLine[explorer.sandboxLine.length - 1] ?? null;
+  const accuracyByKey = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const entry of variationAccuracies) map.set(entry.variationKey, entry.lastAccuracy);
+    return map;
+  }, [variationAccuracies]);
+
+  function trainOnDeviation(deviation: RepertoireDeviation) {
+    const round: DrillRound = {
+      startFen: deviation.fenBefore,
+      script: plies.slice(deviation.ply - 1).map((ply) => ply.uci),
+      label: `${deviation.expectedSan} attendu ici`,
+      startPly: deviation.ply - 1,
+    };
+    // Position fautive déjà connue (`deviation.fenBefore`) mais pas la partie
+    // entière — `leadInUci` vide saute directement dessus, sans autoplay (voir
+    // `opening-mistakes-hub.tsx` pour le cas où la partie complète est rejouée).
+    setMistakeSelection({ kind: "mistake", round, leadInUci: [], actualSan: deviation.actualSan });
+  }
 
   return (
     <div className="space-y-6">
@@ -58,153 +105,51 @@ export function OpeningExplorer({ opening, plies }: { opening: OpeningLine; plie
         <p className="mt-2 max-w-prose text-sm text-foreground-muted">{opening.description}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,480px)_minmax(0,1fr)]">
+      <StudyProgressBar variations={variations} accuracyByKey={accuracyByKey} />
+
+      {deviations.length > 0 && (
         <div className="rounded-lg border border-border bg-surface p-5">
-          <div className="mx-auto flex max-w-[440px] items-stretch gap-2">
-            <EvaluationBar score={explorer.score} />
-            <div className="min-w-0 flex-1">
-              <Chessboard
-                options={{
-                  id: "opening-explorer-board",
-                  position: explorer.fen,
-                  boardOrientation: opening.side === "white" ? "white" : "black",
-                  onPieceDrop: explorer.onPieceDrop,
-                  canDragPiece: explorer.canDragPiece,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 min-h-10 text-center text-sm">
-            {explorer.isSandboxed && lastSandboxPly ? (
-              lastSandboxPly.evaluation.status === "ready" ? (
-                <div className="flex items-center justify-center gap-2">
-                  <QualityBadge quality={lastSandboxPly.evaluation.evaluated.quality} />
-                  <span className={`font-medium ${QUALITY_TEXT_CLASS[lastSandboxPly.evaluation.evaluated.quality]}`}>
-                    {QUALITY_LABEL[lastSandboxPly.evaluation.evaluated.quality]}
-                  </span>
-                  <span className="text-foreground-muted">
-                    — {QUALITY_DESCRIPTION[lastSandboxPly.evaluation.evaluated.quality]}
-                  </span>
-                </div>
-              ) : lastSandboxPly.evaluation.status === "loading" ? (
-                <p className="text-foreground-muted">Analyse du coup en cours…</p>
-              ) : lastSandboxPly.evaluation.status === "error" ? (
-                <p className="text-inaccuracy">{lastSandboxPly.evaluation.message}</p>
-              ) : null
-            ) : explorer.currentBook ? (
-              <p className="text-foreground-muted">
-                📖 {explorer.currentBook.eco} · {explorer.currentBook.name}
-              </p>
-            ) : explorer.viewPly === 0 ? (
-              <p className="text-foreground-muted">Position de départ.</p>
-            ) : (
-              <p className="text-foreground-muted">Hors théorie cataloguée à partir d&apos;ici.</p>
-            )}
-          </div>
-
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <ControlButton onClick={() => explorer.goToPly(0)} disabled={explorer.viewPly === 0 && !explorer.isSandboxed}>
-              ⏮
-            </ControlButton>
-            <ControlButton onClick={() => explorer.goToPly(explorer.viewPly - 1)} disabled={!explorer.canGoPrevious}>
-              ← Précédent
-            </ControlButton>
-            <span className="font-mono text-sm text-foreground-muted">
-              {explorer.viewPly} / {explorer.totalPlies}
-            </span>
-            <ControlButton onClick={() => explorer.goToPly(explorer.viewPly + 1)} disabled={!explorer.canGoNext}>
-              Suivant →
-            </ControlButton>
-            <ControlButton
-              onClick={() => explorer.goToPly(explorer.totalPlies)}
-              disabled={explorer.viewPly === explorer.totalPlies && !explorer.isSandboxed}
-            >
-              ⏭
-            </ControlButton>
-          </div>
-
-          {explorer.isSandboxed && (
-            <div className="mt-3 flex justify-center">
-              <button
-                type="button"
-                onClick={explorer.returnToLine}
-                className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent/20"
-              >
-                ↩ Revenir à la ligne
-              </button>
-            </div>
-          )}
-
-          <p className="mt-4 text-center text-xs text-foreground-muted">
-            Déplace une pièce à tout moment pour dévier de la ligne et explorer librement.
+          <h2 className="text-sm font-semibold text-foreground">⚠️ Mes erreurs fréquentes</h2>
+          <p className="mt-1 text-xs text-foreground-muted">
+            Coups que tu joues dans tes parties importées à la place de la théorie — transformés en exercices ciblés à
+            répéter.
           </p>
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {deviations.map((deviation) => (
+              <li
+                key={`${deviation.fenBefore}-${deviation.actualUci}`}
+                className="rounded-md border border-border px-2.5 py-2 text-sm"
+              >
+                <span className="block font-mono text-foreground">
+                  {deviation.ply}. … {deviation.actualSan} <span className="font-sans text-foreground-muted">au lieu de</span>{" "}
+                  {deviation.expectedSan}
+                </span>
+                <span className="text-xs text-foreground-muted">
+                  {deviation.count} partie{deviation.count > 1 ? "s" : ""} importée{deviation.count > 1 ? "s" : ""}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => trainOnDeviation(deviation)}
+                  className="mt-2 block rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
+                >
+                  🎯 M&apos;entraîner
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
+      )}
 
-        <div className="space-y-6">
-          <div className="rounded-lg border border-border bg-surface p-5">
-            <h2 className="text-sm font-semibold text-foreground">Ligne de référence</h2>
-            <ol className="mt-3 flex flex-wrap gap-x-1 gap-y-2 font-mono text-sm">
-              {plies.map((ply, index) => (
-                <li key={ply.ply}>
-                  {ply.ply % 2 === 1 && <span className="mr-1 text-foreground-muted">{Math.ceil(ply.ply / 2)}.</span>}
-                  <button
-                    type="button"
-                    onClick={() => explorer.goToPly(index + 1)}
-                    className={`rounded px-1.5 py-0.5 transition-colors hover:bg-surface-muted ${
-                      !explorer.isSandboxed && explorer.viewPly === index + 1
-                        ? "bg-accent/15 text-foreground"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {ply.san}
-                  </button>
-                </li>
-              ))}
-            </ol>
-
-            {explorer.isSandboxed && explorer.sandboxLine.length > 0 && (
-              <>
-                <h2 className="mt-5 text-sm font-semibold text-foreground">Exploration</h2>
-                <ol className="mt-3 space-y-1.5">
-                  {explorer.sandboxLine.map((ply, index) => (
-                    <li key={`${ply.move.san}-${index}`} className="flex items-center gap-2 text-sm">
-                      {ply.evaluation.status === "ready" && <QualityBadge quality={ply.evaluation.evaluated.quality} />}
-                      {ply.evaluation.status === "loading" && (
-                        <span className="inline-block h-5 w-5 shrink-0 animate-pulse rounded-full bg-surface-muted" />
-                      )}
-                      <span className="font-mono font-medium text-foreground">{ply.move.san}</span>
-                      {ply.evaluation.status === "ready" && (
-                        <span className={`text-xs ${QUALITY_TEXT_CLASS[ply.evaluation.evaluated.quality]}`}>
-                          {QUALITY_LABEL[ply.evaluation.evaluated.quality]}
-                        </span>
-                      )}
-                      {ply.evaluation.status === "error" && (
-                        <span className="text-xs text-inaccuracy">{ply.evaluation.message}</span>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </>
-            )}
-
-            <div className="mt-5 border-t border-border pt-4">
-              <h2 className="text-sm font-semibold text-foreground">Théorie coup par coup</h2>
-              <ul className="mt-2 space-y-1 text-xs text-foreground-muted">
-                {plies.map((ply) => (
-                  <li key={ply.ply} className={ply.book ? "text-book" : ""}>
-                    {ply.ply}. {ply.san} — {ply.book ? `${ply.book.eco} ${ply.book.name}` : "position non cataloguée"}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-border bg-surface p-5">
-            <VariationTree fen={explorer.fen} onPlay={explorer.playMove} />
-          </div>
-        </div>
-      </div>
+      <OpeningDrill
+        opening={opening}
+        plies={plies}
+        variations={variations}
+        practicedVariationKeys={practicedVariationKeys}
+        variationAccuracies={variationAccuracies}
+        autoStart={autoStartSelection}
+        inReviewQueue={drillVariationKey != null}
+        onExit={() => router.push("/ouvertures")}
+      />
     </div>
   );
 }

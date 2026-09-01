@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeSecondBestGap } from "./critical-gap";
+import { computeSecondBestGap, secondBestWinPercent } from "./critical-gap";
 
 describe("computeSecondBestGap", () => {
   it("renvoie null sans second choix moteur", () => {
@@ -33,3 +33,25 @@ describe("computeSecondBestGap", () => {
 
 /** Repère lisible pour les assertions "gros écart" ci-dessus (voir CRITICAL_GAP_THRESHOLD dans classify.ts). */
 const CRITICAL_LIKE_GAP = 10;
+
+describe("secondBestWinPercent", () => {
+  it("renvoie null sans second choix moteur", () => {
+    expect(secondBestWinPercent(null, true)).toBeNull();
+  });
+
+  it("mesure la probabilité de gain du second choix dans l'absolu, pas relativement au premier", () => {
+    // Le second choix reste très fort pour le joueur (cp 400 ≈ position
+    // gagnée) même si le meilleur coup l'écrase (voir computeSecondBestGap) —
+    // c'est ce qui distingue une alternative « encore tenable » d'une
+    // alternative qui s'effondre (voir classify.ts#CRITICAL_SECOND_BEST_MAX_WIN).
+    const win = secondBestWinPercent({ cp: 400, mate: null }, true);
+    expect(win).not.toBeNull();
+    expect(win!).toBeGreaterThan(50);
+  });
+
+  it("bascule le point de vue pour les Noirs", () => {
+    const win = secondBestWinPercent({ cp: 400, mate: null }, false);
+    expect(win).not.toBeNull();
+    expect(win!).toBeLessThan(50);
+  });
+});

@@ -19,7 +19,7 @@ import type { BookContinuation } from "@/server/queries/openings";
 
 export type BookContinuationsState =
   | { status: "loading" }
-  | { status: "ready"; continuations: BookContinuation[] }
+  | { status: "ready"; continuations: BookContinuation[]; fen: string }
   | { status: "error" };
 
 export function useBookContinuations(fen: string): BookContinuationsState {
@@ -31,7 +31,13 @@ export function useBookContinuations(fen: string): BookContinuationsState {
     getBookContinuations(fen)
       .then((continuations) => {
         if (requestIdRef.current !== requestId) return;
-        setState({ status: "ready", continuations });
+        // `fen` porté par l'état « ready » — permet à un appelant qui a
+        // besoin d'une fraîcheur stricte (voir `use-opening-drill.ts`, la
+        // validation d'un coup) de vérifier que la liste correspond bien à
+        // la position CE INSTANT, plutôt que de faire confiance à l'ancienne
+        // liste encore affichée pendant qu'une nouvelle arrive (voir le
+        // docstring du fichier).
+        setState({ status: "ready", continuations, fen });
       })
       .catch(() => {
         if (requestIdRef.current !== requestId) return;

@@ -11,9 +11,12 @@ import { DECK_ICON } from "./deck-icon";
 export function DeckDashboard({
   decks,
   onSelect,
+  onOpenMistakesHub,
 }: {
   decks: DeckOverview[];
   onSelect: (deckId: DeckId) => void;
+  /** Ouvre le tableau de bord analytique du deck « Erreurs d'ouverture » — voir `OpeningMistakesHub`. */
+  onOpenMistakesHub: () => void;
 }) {
   return (
     <div className="space-y-6">
@@ -57,15 +60,29 @@ export function DeckDashboard({
                 </span>
               </div>
 
-              {totalToPlay > 0 && (
-                <button
-                  type="button"
-                  onClick={() => onSelect(deck.id)}
-                  className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-                >
-                  Démarrer la révision
-                </button>
-              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {totalToPlay > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(deck.id)}
+                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+                  >
+                    Démarrer la révision
+                  </button>
+                )}
+                {/* Seul ce deck croise le catalogue théorique ET les parties
+                    importées (voir `OpeningMistakesHub`) — les six autres
+                    restent de simples files FSRS, sans hub dédié. */}
+                {deck.id === "opening_mistakes" && (
+                  <button
+                    type="button"
+                    onClick={onOpenMistakesHub}
+                    className="rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/20"
+                  >
+                    📊 Comprendre mes erreurs
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}

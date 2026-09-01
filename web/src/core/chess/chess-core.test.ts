@@ -232,25 +232,68 @@ describe("isBrilliantSacrifice", () => {
 describe("classifyMove", () => {
   it("joue le meilleur coup dans une position ordinaire → meilleur coup", () => {
     expect(
-      classifyMove({ foundBest: true, onlyLegalMove: false, winPercentLoss: 0, secondBestGap: null }),
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: false,
+        winPercentLoss: 0,
+        secondBestGap: null,
+        secondBestWinPercent: null,
+      }),
     ).toBe("best");
   });
 
   it("un seul coup légal → critique, même sans deuxième ligne moteur", () => {
     expect(
-      classifyMove({ foundBest: true, onlyLegalMove: true, winPercentLoss: 0, secondBestGap: null }),
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: true,
+        winPercentLoss: 0,
+        secondBestGap: null,
+        secondBestWinPercent: null,
+      }),
     ).toBe("critical");
   });
 
-  it("gros écart avec le second choix → critique", () => {
+  it("gros écart ET alternative elle-même perdante → critique", () => {
     expect(
-      classifyMove({ foundBest: true, onlyLegalMove: false, winPercentLoss: 0, secondBestGap: 15 }),
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: false,
+        winPercentLoss: 0,
+        secondBestGap: 15,
+        secondBestWinPercent: 20,
+      }),
     ).toBe("critical");
+  });
+
+  it("gros écart MAIS alternative encore tenable → meilleur coup, pas critique (régression du bug « Brillant absorbé par Critique »)", () => {
+    // C'est exactement la signature d'un sacrifice Brillant : le meilleur
+    // coup écrase le second choix en évaluation (gros `secondBestGap`), mais
+    // le second choix reste lui-même tout à fait jouable (`secondBestWinPercent`
+    // au-dessus de l'égalité) — la position n'avait rien de « critique », le
+    // joueur avait simplement trouvé une idée plus forte que nécessaire.
+    // Avant la correction, ce cas retombait systématiquement en `critical`,
+    // ce qui empêchait `isBrilliantSacrifice` de jamais se prononcer.
+    expect(
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: false,
+        winPercentLoss: 0,
+        secondBestGap: 25,
+        secondBestWinPercent: 60,
+      }),
+    ).toBe("best");
   });
 
   it("faible écart avec le second choix → simplement meilleur coup", () => {
     expect(
-      classifyMove({ foundBest: true, onlyLegalMove: false, winPercentLoss: 0, secondBestGap: 5 }),
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: false,
+        winPercentLoss: 0,
+        secondBestGap: 5,
+        secondBestWinPercent: 20,
+      }),
     ).toBe("best");
   });
 
@@ -263,7 +306,13 @@ describe("classifyMove", () => {
     [80, "blunder"],
   ])("perte de gain de %s%% → %s", (winPercentLoss, expected) => {
     expect(
-      classifyMove({ foundBest: false, onlyLegalMove: false, winPercentLoss, secondBestGap: null }),
+      classifyMove({
+        foundBest: false,
+        onlyLegalMove: false,
+        winPercentLoss,
+        secondBestGap: null,
+        secondBestWinPercent: null,
+      }),
     ).toBe(expected);
   });
 });

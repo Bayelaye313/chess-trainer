@@ -80,12 +80,24 @@ function OpeningsIcon() {
   );
 }
 
+/** Trois points — kebab menu, réutilisée comme lien discret vers « Plus »/Paramètres dans l'en-tête (voir `Nav`) maintenant que l'onglet dédié a cédé sa place à « ⚔️ Pièges ». */
 function MoreIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
       <circle cx="5" cy="12" r="1.6" />
       <circle cx="12" cy="12" r="1.6" />
       <circle cx="19" cy="12" r="1.6" />
+    </svg>
+  );
+}
+
+/** Épées croisées — l'onglet « ⚔️ Pièges », qui remplace l'ancien onglet « Plus » (audit contenu du 2026-08-31, voir `core/curriculum/traps.ts`). */
+function TrapIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 4l7 7M11 4L4 11" strokeLinecap="round" />
+      <path d="M20 4l-7 7M13 4l7 7" strokeLinecap="round" />
+      <path d="M8 13l-5 5 2 2 5-5M16 13l5 5-2 2-5-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -97,7 +109,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/entrainer", label: "Entraîner", icon: TrainIcon },
   { href: "/apprendre", label: "Apprendre", icon: AcademyIcon },
   { href: "/ouvertures", label: "Ouvertures", icon: OpeningsIcon },
-  { href: "/plus", label: "Plus", icon: MoreIcon },
+  { href: "/pieges", label: "⚔️ Pièges", icon: TrapIcon },
 ];
 
 export function Nav() {
@@ -108,6 +120,18 @@ export function Nav() {
       <nav className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4 py-3">
         <Link href="/" className="mr-4 shrink-0 font-semibold tracking-tight text-foreground">
           Chess Trainer
+        </Link>
+        {/* Lien discret vers « Plus » (diagnostic moteur, comptes liés, version) — plus d'onglet dédié depuis que
+            « Plus » a cédé sa place à « ⚔️ Pièges » ci-dessous, mais la page reste accessible. */}
+        <Link
+          href="/plus"
+          aria-label="Plus — paramètres"
+          aria-current={pathname.startsWith("/plus") ? "page" : undefined}
+          className={`mr-1 shrink-0 rounded-md border border-transparent p-1.5 transition-colors hover:border-border hover:text-foreground ${
+            pathname.startsWith("/plus") ? "text-foreground" : "text-foreground-muted"
+          }`}
+        >
+          <MoreIcon />
         </Link>
         {NAV_ITEMS.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);

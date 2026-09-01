@@ -105,6 +105,29 @@ describe("evaluateMove", () => {
     expect(result.quality).toBe("brilliant");
   });
 
+  it("reste brillant même quand le second choix moteur (MultiPV) est nettement plus bas — régression du bug « Brillant absorbé par Critique »", async () => {
+    // Repro du bug rapporté : avec MultiPV actif, le second choix (ne pas
+    // sacrifier) est presque toujours nettement moins bon que le sacrifice
+    // gagnant — ce qui produisait systématiquement un gros `secondBestGap` et
+    // faisait retomber le coup en `critical` avant même qu'`isBrilliantSacrifice`
+    // ait pu se prononcer. Ici le second choix (cp 50, POV Blancs) reste tout
+    // à fait tenable pour les Blancs (~55% de gain, au-dessus de l'égalité)
+    // malgré un gros écart avec le sacrifice (cp 900) — ce n'était donc PAS la
+    // seule façon de sauver la position, juste une idée bien plus forte : la
+    // vraie définition du Brillant.
+    const fen = "4k2r/5ppp/8/4N3/8/8/8/4K3 w k - 0 20";
+    const afterNxf7 = "4k2r/5Npp/8/8/8/8/8/4K3 b k - 0 20";
+
+    const analyser = stubAnalyser({
+      [fen]: evaluation({ cp: 900, bestMoveUci: "e5f7", secondBest: { cp: 50, mate: null } }),
+      [afterNxf7]: evaluation({ cp: 850 }),
+    });
+
+    const result = await evaluateMove(analyser, fen, "e5f7", NO_LIMIT);
+
+    expect(result.quality).toBe("brilliant");
+  });
+
   it("ne surclasse PAS en brillant un sacrifice qui est le meilleur coup mais laisse la position perdante", async () => {
     // Régression du bug rapporté : un coup « proche du sommet du classement
     // moteur » (ici même l'exact meilleur coup) ne suffit pas si ce sommet
