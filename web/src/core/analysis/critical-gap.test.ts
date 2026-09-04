@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeSecondBestGap, secondBestWinPercent } from "./critical-gap";
+import { computeSecondBestGap, secondBestAllowsImmediateMate, secondBestWinPercent } from "./critical-gap";
 
 describe("computeSecondBestGap", () => {
   it("renvoie null sans second choix moteur", () => {
@@ -53,5 +53,35 @@ describe("secondBestWinPercent", () => {
     const win = secondBestWinPercent({ cp: 400, mate: null }, false);
     expect(win).not.toBeNull();
     expect(win!).toBeLessThan(50);
+  });
+});
+
+describe("secondBestAllowsImmediateMate", () => {
+  it("renvoie false sans second choix moteur", () => {
+    expect(secondBestAllowsImmediateMate(null, true)).toBe(false);
+  });
+
+  it("renvoie false quand le second choix n'annonce aucun mat", () => {
+    expect(secondBestAllowsImmediateMate({ cp: -600, mate: null }, true)).toBe(false);
+  });
+
+  it("détecte un mat en 1 délivré par l'adversaire, POV Blancs", () => {
+    // mate: -1 POV Blancs = les Noirs matent en 1 : le joueur au trait (Blanc)
+    // se ferait mater instantanément en jouant le second choix.
+    expect(secondBestAllowsImmediateMate({ cp: null, mate: -1 }, true)).toBe(true);
+  });
+
+  it("ne confond pas un mat immédiat avec un mat plus lointain", () => {
+    expect(secondBestAllowsImmediateMate({ cp: null, mate: -3 }, true)).toBe(false);
+  });
+
+  it("bascule le point de vue pour les Noirs", () => {
+    // mate: 1 POV Blancs = les Blancs matent en 1 : catastrophique pour les
+    // Noirs au trait qui envisageraient ce second choix.
+    expect(secondBestAllowsImmediateMate({ cp: null, mate: 1 }, false)).toBe(true);
+  });
+
+  it("ne signale rien quand c'est LE JOUEUR au trait qui mate en 1 dans l'alternative — ce n'est pas une menace", () => {
+    expect(secondBestAllowsImmediateMate({ cp: null, mate: 1 }, true)).toBe(false);
   });
 });

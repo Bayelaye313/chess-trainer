@@ -30,6 +30,19 @@
  * plus bas) : le principe même du test à l'aveugle est de retrouver la ligne
  * SANS aucune aide visuelle, qu'un coup ait déjà été maîtrisé ou non.
  *
+ * FILET DE SÉCURITÉ (cahier des charges du 2026-09-03, lignes sans contenu
+ * rédigé dédié — ex. Zukertort, Défense Benima) : dès que la manche `diverged`
+ * (embranchement théorique réel choisi par le joueur, `script` ne décrit plus
+ * la suite) ET que les continuations théoriques de la position affichée sont
+ * connues, `hintArrow` bascule automatiquement sur le coup le plus joué par
+ * de vrais joueurs (`mostPopularContinuation`) plutôt que de s'éteindre —
+ * jamais laisser le joueur sans AUCUN repère visuel juste parce qu'aucun
+ * texte d'indice n'a été rédigé pour cette branche. Symétriquement, si la
+ * requête théorique échoue carrément pour la position affichée
+ * (`continuationsFailed`), la manche se termine proprement (théorie réputée
+ * épuisée) plutôt que de laisser le plateau attendre indéfiniment une
+ * réponse de l'IA qui ne viendra jamais — voir `decideOpponentStep`.
+ *
  * Trois familles de sélection, en plus d'« Aléatoire » :
  *  - ligne principale / une variante nommée (`listOpeningVariations`) ;
  *  - un "Test Final" (`kind: "final-test"`) qui enchaîne plusieurs manches à
@@ -64,6 +77,7 @@ import type { DrillRound } from "./build-final-test";
 import {
   computeHintArrow,
   decideOpponentStep,
+  mostPopularContinuation,
   type DrillFinishReason,
   type HintArrowBehavior,
 } from "./drill-engine";
@@ -92,6 +106,9 @@ const LEAD_IN_STEP_MS = 550;
 const SAVE_PROGRESS_MAX_ATTEMPTS = 3;
 /** Délai de base entre deux tentatives, multiplié par le numéro de la tentative (backoff linéaire simple). */
 const SAVE_PROGRESS_RETRY_DELAY_MS = 400;
+
+/** Durée d'affichage de `roundTransitionNotice` avant disparition automatique — assez long pour être lu, jamais bloquant. */
+const ROUND_TRANSITION_NOTICE_MS = 2600;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -140,7 +157,26 @@ export type DrillSelection =
    * joueur — affiché comme repère (jamais un message d'erreur) tant que la
    * correction n'a pas été trouvée.
    */
-  | { kind: "mistake"; round: DrillRound; leadInUci: readonly string[]; actualSan: string };
+  | { kind: "mistake"; round: DrillRound; leadInUci: readonly string[]; actualSan: string }
+  /**
+   * Piège d'ouverture (`OpeningTrapDrill`) — structurellement identique à
+   * `"mistake"` (même `DrillRound`/`leadInUci`) mais routé sous son propre
+   * variant pour ne JAMAIS affecter `opening-mistake-exercise.tsx` (corrections
+   * de vraies parties importées, restent à manche unique) : `"trap"` seul
+   * entre dans `usesLearningRounds` ci-dessous, avec sa propre porte manuelle
+   * entre manches (voir `manualRoundGate`/`"round-gate"`).
+   */
+  | { kind: "trap"; round: DrillRound; leadInUci: readonly string[]; actualSan: string }
+  /**
+   * Option « Pion Poison » (incarner la victime, `OpeningTrapDrill`) : AUCUNE
+   * phase interactive — `leadInUci` couvre la mise en place ET le coup piège
+   * ET la ligne de punition (`buildPoisonPawnRound`, voir `trap-round.ts`),
+   * rejouée entièrement en autoplay jusqu'au bout ("l'IA répond
+   * instantanément... comment la position s'effondre"). Termine directement
+   * en `"finished"` une fois l'autoplay épuisé, jamais en `"playing"` — manche
+   * unique, jamais soumis au protocole 2-manches/`markTrapSolved`.
+   */
+  | { kind: "trap-poison"; startFen: string; leadInUci: readonly string[] };
 
 export interface DrillHistoryEntry {
   ply: number;
@@ -150,7 +186,14 @@ export interface DrillHistoryEntry {
   result: "correct" | null;
 }
 
-type DrillStatus = "select" | "autoplaying" | "playing" | "finished";
+/**
+ * `"round-gate"` : entre deux manches d'un chapitre à porte manuelle
+ * (`manualRoundGate`, exclusivement `kind: "trap"` — voir son docstring) —
+ * position figée sur le résultat de la Manche qui vient de se terminer, en
+ * attente de `beginNextRound()`. Jamais atteint par `main-line`/`variation`
+ * (leur enchaînement Manche 1 → 2 reste automatique, comme avant).
+ */
+type DrillStatus = "select" | "autoplaying" | "playing" | "round-gate" | "finished";
 
 export function useOpeningDrill({
   opening,
@@ -194,6 +237,18 @@ export function useOpeningDrill({
   // (« dérouler la suite de l'arbre en fonction du choix de l'utilisateur »).
   // Remis à `false` à chaque nouveau `start()`.
   const [diverged, setDiverged] = useState(false);
+  // Notification transitoire affichée PRÉCISÉMENT au moment où la Manche 1
+  // (indice autorisé) débouche automatiquement sur la Manche 2 (test à
+  // l'aveugle) — voir `completeRound`. AVANT ce garde-fou (cahier des charges
+  // du 2026-09-03, lignes sans contenu rédigé dédié — Zukertort, Défense
+  // Benima, etc.), ce basculement se produisait en silence total : le plateau
+  // se réinitialisait sans jamais passer par `finish()`, donc sans aucun
+  // retour visuel — le joueur pouvait légitimement croire le drill figé pile
+  // au moment où la théorie scriptée s'arrêtait (`"no-more-theory"` comme
+  // `"line-complete"`). `null` hors de cette fenêtre transitoire — remis à
+  // `null` automatiquement après `ROUND_TRANSITION_NOTICE_MS` (voir l'effet
+  // dédié) ou immédiatement à chaque nouveau `start()`.
+  const [roundTransitionNotice, setRoundTransitionNotice] = useState<string | null>(null);
 
   // Position « vivante », mutée directement — même schéma que `sandboxRef`
   // dans `use-opening-explorer.ts` : `fen` (state) ne sert qu'à déclencher les
@@ -203,20 +258,32 @@ export function useOpeningDrill({
   // redéclenche à chaque rendu tant que `status === "finished"`) — remis à
   // `false` à chaque nouveau `start()`, jamais pendant un même drill.
   const progressSavedRef = useRef(false);
+  /** Manche/position en attente pendant `status === "round-gate"` (`manualRoundGate`) — consommée par `beginNextRound()`. `null` en dehors de cet état. */
+  const pendingRoundRef = useRef<{ round: DrillRound; nextRound: LearningRound } | null>(null);
 
   // Le camp du joueur — normalement `opening.side`, MAIS pour une correction
-  // ciblée (`kind: "mistake"`) on le déduit plutôt du trait à `round.startFen` :
-  // par construction (`buildMistakeRound`), le script d'une correction
-  // commence TOUJOURS juste avant le coup fautif du joueur, donc le trait à
-  // `startFen` EST son camp dans cette partie précise — fiable même si
+  // ciblée ou un piège (`kind: "mistake"`/`"trap"`) on le déduit plutôt du
+  // trait à `round.startFen` (`kind: "trap-poison"` : `startFen` directement) :
+  // par construction (`buildMistakeRound`/`buildTrapRound`/`buildPoisonPawnRound`),
+  // le script commence TOUJOURS juste avant le coup du joueur, donc le trait
+  // à cette position EST son camp dans cette partie précise — fiable même si
   // `opening` est un repli générique (voir `OpeningMistakeExercise`, ouverture
   // retirée du catalogue), contrairement à `opening.side` qui décrirait alors
   // le mauvais camp et retournerait l'échiquier dans le mauvais sens.
   const userColor: "w" | "b" =
-    selection?.kind === "mistake" ? new Chess(selection.round.startFen).turn() : opening.side === "white" ? "w" : "b";
+    selection?.kind === "mistake" || selection?.kind === "trap"
+      ? new Chess(selection.round.startFen).turn()
+      : selection?.kind === "trap-poison"
+        ? new Chess(selection.startFen).turn()
+        : opening.side === "white"
+          ? "w"
+          : "b";
 
-  /** Coups d'autoplay (`leadInUci`) pour la sélection courante — `0` hors `kind: "mistake"`. */
-  const leadInLength = selection?.kind === "mistake" ? selection.leadInUci.length : 0;
+  /** Coups d'autoplay (`leadInUci`) pour la sélection courante — `0` hors `kind: "mistake"/"trap"/"trap-poison"`. */
+  const leadInLength =
+    selection?.kind === "mistake" || selection?.kind === "trap" || selection?.kind === "trap-poison"
+      ? selection.leadInUci.length
+      : 0;
 
   /**
    * La manche active : position de départ + suite attendue DEPUIS cette
@@ -239,8 +306,12 @@ export function useOpeningDrill({
         startPly: 0,
       };
     if (selection.kind === "random") return null;
+    // "trap-poison" n'a aucune phase interactive à comparer à un script — tout
+    // son déroulé (mise en place + coup piège + punition) n'est QUE de
+    // l'autoplay (`leadInUci`), voir le docstring du variant.
+    if (selection.kind === "trap-poison") return null;
     if (selection.kind === "final-test") return selection.rounds[roundIndex] ?? null;
-    return selection.round; // "mistake"
+    return selection.round; // "mistake" | "trap"
   }, [selection, plies, opening.name, roundIndex]);
 
   const script = activeRound?.script ?? null;
@@ -259,6 +330,11 @@ export function useOpeningDrill({
   // attend plutôt que de trancher sur une liste déjà périmée.
   const freshContinuations =
     bookContinuations.status === "ready" && bookContinuations.fen === fen ? bookContinuations.continuations : null;
+  // La requête théorique a-t-elle ÉCHOUÉ pour la position AFFICHÉE (pas une
+  // position déjà quittée) ? Filet de sécurité contre le plateau figé sur les
+  // lignes rares (Zukertort, Défense Benima...) — voir
+  // `decideOpponentStep#continuationsFailed`.
+  const continuationsFailed = bookContinuations.status === "error" && bookContinuations.fen === fen;
 
   // Fréquence humaine (Lichess Opening Explorer, voir `use-move-popularity.ts`)
   // — sert UNIQUEMENT à pondérer le tirage ci-dessous parmi `freshContinuations`
@@ -278,12 +354,26 @@ export function useOpeningDrill({
   const plyIndex = history.length - leadInLength;
   const expectedUci = useScript && script && plyIndex >= 0 && plyIndex < script.length ? script[plyIndex] : null;
 
-  // Ligne principale / variante — les seules sélections soumises au
-  // protocole en 2 manches (voir `LearningRound`) : Aléatoire, Test Final et
-  // Correction ciblée gardent une manche unique, comme avant.
-  const usesLearningRounds = selection !== null && (selection.kind === "main-line" || selection.kind === "variation");
+  // Ligne principale / variante / piège — les sélections soumises au
+  // protocole en 2 manches (voir `LearningRound`) : Aléatoire, Test Final,
+  // Correction ciblée ET Pion Poison gardent une manche unique, comme avant.
+  // Un piège (`"trap"`) s'y ajoute (audit UX du 2026-09-02, alignement strict
+  // sur le protocole Listudy pour l'onglet Pièges) SANS jamais toucher
+  // `"mistake"` (`opening-mistake-exercise.tsx`, resté à manche unique).
+  const usesLearningRounds =
+    selection !== null &&
+    (selection.kind === "main-line" || selection.kind === "variation" || selection.kind === "trap");
   /** Le bouton d'indice n'est recevable qu'en Manche 1 — DÉSACTIVÉ en Manche 2 (voir `LearningRound`). */
   const hintsAllowed = !usesLearningRounds || learningRound === 1;
+  /**
+   * Un chapitre à protocole 2-manches enchaîne normalement Manche 1 → Manche 2
+   * INSTANTANÉMENT (`main-line`/`variation`, comportement historique inchangé
+   * — voir `completeRound`). Un piège (`"trap"`) exige au contraire un choix
+   * EXPLICITE du joueur (bouton « 🔒 Retenter sans guide », cahier des charges
+   * Pièges) : dérivé du seul `selection.kind`, jamais un paramètre exposé du
+   * hook — impossible à activer par erreur pour `main-line`/`variation`.
+   */
+  const manualRoundGate = selection?.kind === "trap";
 
   // Second champ (côté après l'espace) d'un FEN : le camp au trait — évite de
   // repasser par `chess.js` uniquement pour ça, `fen` (state) le porte déjà.
@@ -312,6 +402,17 @@ export function useOpeningDrill({
    * été choisi, la flèche redeviendrait trompeuse. Calcul délégué à
    * `computeHintArrow` (pure, testable hors React — voir son docstring).
    */
+  // Coup de secours pour la flèche d'indice une fois qu'il n'y a plus de
+  // script fiable à pointer (`diverged`, voir le docstring du fichier) : le
+  // plus joué par de vrais joueurs à cette position, DÉTERMINISTE (voir
+  // `mostPopularContinuation` — ne pas confondre avec le tirage pondéré de
+  // `pickOpponentContinuation` utilisé pour le coup RÉEL de l'IA). `null`
+  // tant qu'aucune continuation théorique n'est encore connue pour cette
+  // position précise.
+  const fallbackHintUci = freshContinuations
+    ? (mostPopularContinuation(freshContinuations, freshPopularity)?.uci ?? null)
+    : null;
+
   const hintArrow = computeHintArrow({
     status,
     hintsAllowed,
@@ -321,6 +422,7 @@ export function useOpeningDrill({
     diverged,
     expectedUci,
     hintMoveSuccessCount,
+    fallbackUci: fallbackHintUci,
   });
 
   const finish = useCallback((reason: DrillFinishReason) => {
@@ -340,6 +442,26 @@ export function useOpeningDrill({
    *    parcourue sans AUCUNE faute — sinon elle se relance depuis le début,
    *    en boucle, jusqu'à ce sans-faute (méthode Listudy stricte) ;
    *  - Aléatoire / Correction ciblée : inchangé, une seule manche.
+   *
+   * BUG CORRIGÉ (audit UX du 2026-09-02, « bugs de fin de variante qui
+   * bloquent la validation de certaines lignes ») : une manche `main-line`/
+   * `variation` qui a DIVERGÉ (`diverged`, voir `onPieceDrop`) vers un
+   * embranchement théorique réel peut atteindre une position sans AUCUNE
+   * continuation connue — `decideOpponentStep` termine alors avec
+   * `reason: "no-more-theory"`, jamais `"line-complete"` (réservé à
+   * l'épuisement du `script` original). Restreindre le déclenchement du
+   * protocole 2-manches au seul `"line-complete"` faisait sauter directement
+   * la Manche 2 (et la sauvegarde de la progression) pour toute ligne
+   * divergée touchant sa fin théorique naturelle — une fin de ligne pourtant
+   * tout aussi légitime pour un chapitre à 2 manches. Les DEUX raisons de fin
+   * comptent donc désormais comme une fin de manche pour
+   * `usesLearningRounds`.
+   *
+   * `manualRoundGate` (piège uniquement, voir son docstring) : au lieu de
+   * réinitialiser IMMÉDIATEMENT le chapitre en Manche 2, fige la position
+   * actuelle et bascule sur `"round-gate"` — c'est `beginNextRound()`, appelé
+   * depuis un clic explicite du joueur (« 🔒 Retenter sans guide »), qui
+   * effectue le reset réellement écrit ici.
    */
   const completeRound = useCallback(
     (reason: DrillFinishReason) => {
@@ -353,9 +475,27 @@ export function useOpeningDrill({
         return;
       }
 
-      if (reason === "line-complete" && activeRound && usesLearningRounds) {
+      if (activeRound && usesLearningRounds) {
         const outcome = nextLearningRoundOutcome(learningRound, score);
         if (outcome.shouldRestart) {
+          if (manualRoundGate) {
+            pendingRoundRef.current = { round: activeRound, nextRound: outcome.nextRound };
+            setStatus("round-gate");
+            return;
+          }
+          // Enchaînement AUTOMATIQUE Manche 1 → Manche 2 (ou Manche 2 fautive
+          // → nouvelle Manche 2, voir `nextLearningRoundOutcome`) : le joueur
+          // DOIT voir que la ligne scriptée vient bien de se terminer — voir
+          // le docstring de `roundTransitionNotice`. Un mot différent selon
+          // qu'on ENTRE dans le test à l'aveugle pour la première fois
+          // (`learningRound === 1`) ou qu'on relance une Manche 2 déjà en
+          // cours après une faute — ce dernier cas ne doit jamais prétendre
+          // que "la théorie vient de se terminer", juste qu'on recommence.
+          setRoundTransitionNotice(
+            learningRound === 1
+              ? "Variante théorique terminée ! 🔒 Passage au test à l'aveugle..."
+              : "Faute détectée — 🔁 Nouvelle tentative en Manche 2, sans guide.",
+          );
           boardRef.current = new Chess(activeRound.startFen);
           setHistory([]);
           setScore({ correct: 0, attempted: 0 });
@@ -368,8 +508,39 @@ export function useOpeningDrill({
 
       finish(reason);
     },
-    [selection, roundIndex, finish, activeRound, usesLearningRounds, learningRound, score],
+    [selection, roundIndex, finish, activeRound, usesLearningRounds, manualRoundGate, learningRound, score],
   );
+
+  // Efface `roundTransitionNotice` d'elle-même après `ROUND_TRANSITION_NOTICE_MS`
+  // — une notification transitoire ne doit jamais rester collée à l'écran
+  // indéfiniment. Redéclenché à chaque nouvelle notice (le timer précédent est
+  // annulé par le cleanup), jamais interrompu par le reste du drill.
+  useEffect(() => {
+    if (!roundTransitionNotice) return;
+    const timer = setTimeout(() => setRoundTransitionNotice(null), ROUND_TRANSITION_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [roundTransitionNotice]);
+
+  /**
+   * Démarre explicitement la manche mise en attente par `completeRound`
+   * (`status === "round-gate"`, `manualRoundGate` — voir son docstring) —
+   * sans effet si aucune manche n'est en attente (double-clic, appel hors
+   * contexte). Effectue exactement le même reset que l'enchaînement
+   * automatique `main-line`/`variation` dans `completeRound`, juste retardé
+   * jusqu'à ce choix explicite du joueur.
+   */
+  const beginNextRound = useCallback(() => {
+    const pending = pendingRoundRef.current;
+    if (!pending) return;
+    pendingRoundRef.current = null;
+    boardRef.current = new Chess(pending.round.startFen);
+    setHistory([]);
+    setScore({ correct: 0, attempted: 0 });
+    setLearningRound(pending.nextRound);
+    setDiverged(false);
+    setFen(boardRef.current.fen());
+    setStatus("playing");
+  }, []);
 
   const playOpponentUci = useCallback(
     (uci: string) => {
@@ -394,21 +565,31 @@ export function useOpeningDrill({
   );
 
   // Autoplay du "leadInUci" (rejoue la vraie partie du joueur depuis le tout
-  // premier coup) — UNIQUEMENT `kind: "mistake"` avec un lead-in non vide, voir
+  // premier coup) — `kind: "mistake"`/`"trap"` avec un lead-in non vide, voir
   // le docstring du fichier. Un pas par tick, à un rythme volontairement lent
   // et régulier (`LEAD_IN_STEP_MS`) pour rester lisible, jamais un flash.
+  // `kind: "trap-poison"` : MÊME mécanique, mais `leadInUci` couvre la
+  // DÉMONSTRATION ENTIÈRE (mise en place + coup piège + punition, voir son
+  // docstring) — une fois épuisé, termine directement le drill plutôt que de
+  // rendre la main au joueur (aucune phase interactive en Pion Poison).
   useEffect(() => {
-    if (status !== "autoplaying" || selection?.kind !== "mistake") return;
+    if (status !== "autoplaying") return;
+    if (selection?.kind !== "mistake" && selection?.kind !== "trap" && selection?.kind !== "trap-poison") return;
     const board = boardRef.current;
     const stepIndex = history.length;
     const nextUci = selection.leadInUci[stepIndex];
     if (nextUci === undefined) {
-      // Lead-in terminé : la position affichée est déjà `round.startFen` (les
-      // deux DOIVENT coïncider par construction, voir `opening-mistakes-hub.tsx`)
-      // — bascule en interactif, plateau déverrouillé pour la correction.
-      // Déféré au prochain tick, comme `completeRound` ci-dessus
-      // (react-hooks/set-state-in-effect).
-      const timer = setTimeout(() => setStatus("playing"), 0);
+      // Lead-in terminé : la position affichée est déjà `round.startFen`
+      // (`"mistake"`/`"trap"`, les deux DOIVENT coïncider par construction,
+      // voir `opening-mistakes-hub.tsx`/`buildTrapRound`) — bascule en
+      // interactif, plateau déverrouillé. `"trap-poison"` n'a au contraire
+      // AUCUNE phase interactive à débloquer : la démonstration vient de se
+      // terminer, direction `"finished"`. Déféré au prochain tick, comme
+      // `completeRound` ci-dessus (react-hooks/set-state-in-effect).
+      const timer = setTimeout(() => {
+        if (selection.kind === "trap-poison") finish("line-complete");
+        else setStatus("playing");
+      }, 0);
       return () => clearTimeout(timer);
     }
     const timer = setTimeout(() => {
@@ -451,6 +632,7 @@ export function useOpeningDrill({
       relativePlyIndex: board.history().length - leadInLength,
       freshContinuations,
       freshPopularity,
+      continuationsFailed,
     });
 
     if (step.type === "wait") return; // tour du joueur, ou continuations pas encore prêtes : rien à faire pour l'instant.
@@ -477,21 +659,31 @@ export function useOpeningDrill({
     fen,
     freshContinuations,
     freshPopularity,
+    continuationsFailed,
     playOpponentUci,
     completeRound,
   ]);
 
   // Sauvegarde le résultat en répétition espacée dès que le drill se termine
-  // — jamais en mode Aléatoire, Test Final ou Erreur ciblée
+  // — jamais en mode Aléatoire, Test Final, Erreur ciblée ou Piège
   // (`TrackedDrillSelection` ne couvre que « ligne principale »/« variante »,
   // voir `core/curriculum/opening-variation-key.ts`) : ni script fixe à
   // "maîtriser" (Aléatoire), ni UNE variation précise (Test Final compose
   // plusieurs manches ; Erreur ciblée n'est pas un exercice de progression
-  // planifiée). `progressSavedRef` garantit un seul envoi par drill, quel que
-  // soit le nombre de rendus une fois "finished".
+  // planifiée ; un piège se maîtrise via `trap-progress.ts`, localStorage,
+  // jamais cette répétition espacée serveur — voir `OpeningTrapDrill`).
+  // `progressSavedRef` garantit un seul envoi par drill, quel que soit le
+  // nombre de rendus une fois "finished".
   useEffect(() => {
     if (status !== "finished" || !selection) return;
-    if (selection.kind === "random" || selection.kind === "final-test" || selection.kind === "mistake") return;
+    if (
+      selection.kind === "random" ||
+      selection.kind === "final-test" ||
+      selection.kind === "mistake" ||
+      selection.kind === "trap" ||
+      selection.kind === "trap-poison"
+    )
+      return;
     if (progressSavedRef.current) return;
     progressSavedRef.current = true;
 
@@ -521,16 +713,20 @@ export function useOpeningDrill({
   }, [status, selection, score, opening.id]);
 
   const start = useCallback((sel: DrillSelection) => {
-    const hasLeadIn = sel.kind === "mistake" && sel.leadInUci.length > 0;
+    const hasLeadIn =
+      (sel.kind === "mistake" || sel.kind === "trap" || sel.kind === "trap-poison") && sel.leadInUci.length > 0;
     const initialFen = hasLeadIn
       ? START_FEN
       : sel.kind === "final-test"
         ? (sel.rounds[0]?.startFen ?? START_FEN)
-        : sel.kind === "mistake"
+        : sel.kind === "mistake" || sel.kind === "trap"
           ? sel.round.startFen
-          : START_FEN;
+          : sel.kind === "trap-poison"
+            ? sel.startFen
+            : START_FEN;
     boardRef.current = new Chess(initialFen);
     progressSavedRef.current = false;
+    pendingRoundRef.current = null;
     setRoundIndex(0);
     setSelection(sel);
     setHistory([]);
@@ -538,12 +734,17 @@ export function useOpeningDrill({
     setFinishReason(null);
     setProgressResult(null);
     setErrorPulse(0);
+    setRoundTransitionNotice(null);
     // Chaque nouveau départ (y compris "Recommencer") repart de la Manche 1 —
     // indices ré-autorisés, voir `LearningRound`/`completeRound`.
     setLearningRound(1);
     setDiverged(false);
     setFen(boardRef.current.fen());
-    setStatus(hasLeadIn ? "autoplaying" : "playing");
+    // "trap-poison" sans lead-in (cas défensif, ne devrait jamais survenir en
+    // pratique — voir `buildPoisonPawnRound`) : rien à démontrer, le drill
+    // termine directement plutôt que de rendre la main à un joueur qui n'a
+    // structurellement aucun coup interactif à jouer dans ce mode.
+    setStatus(hasLeadIn ? "autoplaying" : sel.kind === "trap-poison" ? "finished" : "playing");
   }, []);
 
   const stop = useCallback(() => {
@@ -551,6 +752,7 @@ export function useOpeningDrill({
     setSelection(null);
     setRoundIndex(0);
     setLearningRound(1);
+    pendingRoundRef.current = null;
   }, []);
 
   const commitPlayerMove = useCallback((uci: string) => {
@@ -706,6 +908,8 @@ export function useOpeningDrill({
     hintMoveSuccessCount,
     /** La manche a-t-elle bifurqué vers un embranchement théorique réel, différent du script initial ? Voir le docstring de l'état `diverged` — sert un éventuel badge UI ("Vous explorez une autre variante"). Toujours `false` hors sélection scriptée. */
     diverged,
+    /** Notification transitoire ("Variante théorique terminée ! 🔒...") au moment précis où la Manche 1 débouche sur la Manche 2 — voir son docstring. `null` en dehors de cette fenêtre. */
+    roundTransitionNotice,
     fen,
     history,
     score,
@@ -715,6 +919,8 @@ export function useOpeningDrill({
     errorPulse,
     start,
     stop,
+    /** À appeler depuis un clic explicite (« 🔒 Retenter sans guide ») pendant `status === "round-gate"` — démarre la manche mise en attente. Sans effet en dehors de cet état. Voir le docstring de `DrillStatus`/`manualRoundGate`. */
+    beginNextRound,
     onPieceDrop,
     canDragPiece,
   };

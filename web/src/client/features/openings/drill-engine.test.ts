@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeHintArrow, decideOpponentStep, HINT_ARROW_SUCCESS_THRESHOLD } from "./drill-engine";
+import { computeHintArrow, decideOpponentStep, HINT_ARROW_SUCCESS_THRESHOLD, mostPopularContinuation } from "./drill-engine";
 
 /**
  * Régression directe de l'audit UI du 2026-08-29 : "je n'ai toujours AUCUNE
@@ -27,6 +27,7 @@ describe("computeHintArrow", () => {
     diverged: false,
     expectedUci: "e2e4",
     hintMoveSuccessCount: 0,
+    fallbackUci: null as string | null,
   };
 
   it("s'affiche dès le premier coup d'une Manche 1 fraîche (jamais réussi avant)", () => {
@@ -67,12 +68,73 @@ describe("computeHintArrow", () => {
     expect(computeHintArrow({ ...base, useScript: false })).toBeNull();
   });
 
-  it("ne s'affiche plus une fois la manche divergée sur un autre embranchement théorique", () => {
+  it("ne pointe plus le script une fois la manche divergée, mais RIEN si aucun coup de secours n'est encore connu", () => {
     expect(computeHintArrow({ ...base, diverged: true })).toBeNull();
   });
 
-  it("ne plante jamais si `expectedUci` est `null` (script épuisé/vide) — repli sûr, pas de flèche", () => {
+  it("reste sans flèche si `expectedUci` est `null` (script épuisé/vide) ET qu'aucun coup de secours n'est connu — repli sûr", () => {
     expect(computeHintArrow({ ...base, expectedUci: null })).toBeNull();
+  });
+
+  it("filet de sécurité : bascule sur le coup de secours une fois la manche divergée (lignes sans indice écrit, ex. Zukertort/Défense Benima)", () => {
+    // Cahier des charges du 2026-09-03 : jamais laisser le joueur sans AUCUN
+    // repère visuel juste parce que la manche a quitté le script initial.
+    expect(computeHintArrow({ ...base, diverged: true, fallbackUci: "d2d4" })).toEqual({ from: "d2", to: "d4" });
+  });
+
+  it("le coup de secours ignore le seuil de réussite — jamais éteint, à la différence de la flèche scriptée", () => {
+    expect(
+      computeHintArrow({ ...base, diverged: true, fallbackUci: "d2d4", hintMoveSuccessCount: 99 }),
+    ).toEqual({ from: "d2", to: "d4" });
+  });
+
+  it("le coup de secours prend le relais dès que `expectedUci` est `null`, même sans divergence explicite", () => {
+    expect(computeHintArrow({ ...base, expectedUci: null, fallbackUci: "g1f3" })).toEqual({ from: "g1", to: "f3" });
+  });
+
+  it("le coup de secours reste soumis aux mêmes garde-fous globaux (Manche 2, mode 'never', hors tour du joueur...)", () => {
+    expect(computeHintArrow({ ...base, diverged: true, fallbackUci: "d2d4", hintsAllowed: false })).toBeNull();
+    expect(computeHintArrow({ ...base, diverged: true, fallbackUci: "d2d4", hintBehavior: "never" })).toBeNull();
+    expect(computeHintArrow({ ...base, diverged: true, fallbackUci: "d2d4", isPlayerTurn: false })).toBeNull();
+    expect(computeHintArrow({ ...base, diverged: true, fallbackUci: "d2d4", useScript: false })).toBeNull();
+  });
+});
+
+describe("mostPopularContinuation", () => {
+  it("renvoie null sans aucune continuation", () => {
+    expect(mostPopularContinuation([], null)).toBeNull();
+  });
+
+  it("renvoie la première continuation sans donnée de popularité", () => {
+    const continuations = [{ uci: "e2e4" }, { uci: "d2d4" }];
+    expect(mostPopularContinuation(continuations, null)).toEqual({ uci: "e2e4" });
+  });
+
+  it("renvoie la continuation la plus jouée par de vrais joueurs", () => {
+    const continuations = [{ uci: "e2e4" }, { uci: "d2d4" }, { uci: "c2c4" }];
+    const popularity = [
+      { uci: "e2e4", san: "e4", games: 100 },
+      { uci: "d2d4", san: "d4", games: 500 },
+      { uci: "c2c4", san: "c4", games: 50 },
+    ];
+    expect(mostPopularContinuation(continuations, popularity)).toEqual({ uci: "d2d4" });
+  });
+
+  it("est déterministe — deux appels sur la même position renvoient toujours le même coup", () => {
+    const continuations = [{ uci: "e2e4" }, { uci: "d2d4" }];
+    const popularity = [
+      { uci: "e2e4", san: "e4", games: 10 },
+      { uci: "d2d4", san: "d4", games: 10 },
+    ];
+    const first = mostPopularContinuation(continuations, popularity);
+    const second = mostPopularContinuation(continuations, popularity);
+    expect(first).toEqual(second);
+  });
+
+  it("ignore un coup théorique absent des données de popularité (poids nul)", () => {
+    const continuations = [{ uci: "e2e4" }, { uci: "a2a3" }];
+    const popularity = [{ uci: "e2e4", san: "e4", games: 1 }];
+    expect(mostPopularContinuation(continuations, popularity)).toEqual({ uci: "e2e4" });
   });
 });
 
@@ -86,6 +148,7 @@ describe("decideOpponentStep", () => {
     relativePlyIndex: 0,
     freshContinuations: null as readonly { uci: string }[] | null,
     freshPopularity: null,
+    continuationsFailed: false,
   };
 
   it("joue le prochain coup du script dès que c'est le tour de l'IA (réponse automatique)", () => {
@@ -160,5 +223,27 @@ describe("decideOpponentStep", () => {
       type: "play",
       uci: "c2c4",
     });
+  });
+
+  it("termine proprement avec 'no-more-theory' quand la requête théorique échoue pour la position affichée (filet de sécurité, ex. Zukertort/Défense Benima)", () => {
+    // Régression directe du plateau figé : `freshContinuations: null` seul ne
+    // suffit pas à distinguer "pas encore arrivé" de "n'arrivera jamais" —
+    // sans `continuationsFailed`, ce cas restait bloqué en `"wait"` pour
+    // toujours.
+    expect(
+      decideOpponentStep({ ...base, useScript: false, freshContinuations: null, continuationsFailed: true }),
+    ).toEqual({ type: "complete", reason: "no-more-theory" });
+  });
+
+  it("même filet de sécurité une fois la manche divergée du script initial", () => {
+    expect(
+      decideOpponentStep({ ...base, diverged: true, freshContinuations: null, continuationsFailed: true }),
+    ).toEqual({ type: "complete", reason: "no-more-theory" });
+  });
+
+  it("continue d'attendre normalement quand la requête n'a simplement pas encore répondu (`continuationsFailed: false`)", () => {
+    expect(
+      decideOpponentStep({ ...base, useScript: false, freshContinuations: null, continuationsFailed: false }),
+    ).toEqual({ type: "wait" });
   });
 });

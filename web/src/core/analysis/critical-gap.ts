@@ -49,3 +49,26 @@ export function secondBestWinPercent(
   if (!secondBest) return null;
   return winPercentFromWhitePov(secondBest.cp, secondBest.mate, moverIsWhite);
 }
+
+/**
+ * Vrai si NE PAS jouer le meilleur coup (jouer le second choix moteur à la
+ * place) se fait mater en une seule réponse adverse — la « reprise évidente »
+ * du cahier des charges : « le seul coup qui ne perd pas instantanément la
+ * Dame/le Roi ». `secondBestWinPercent` seul ne peut pas distinguer ce cas
+ * (mat immédiat) d'un simple gros désavantage (pièce perdue, mais partie pas
+ * finie) : les deux s'écrasent à ~0% de probabilité de gain (voir
+ * `win-percent.ts#winPercent`, qui ne regarde que le SIGNE du mat, jamais sa
+ * distance). Il faut donc regarder `mate` directement.
+ *
+ * Sert de garde-fou supplémentaire dans `classify.ts` : un coup n'est pas
+ * « Critique » seulement parce que l'alternative se fait mater tout de suite
+ * — c'est une évidence pour n'importe quel joueur, pas une trouvaille.
+ */
+export function secondBestAllowsImmediateMate(
+  secondBest: ScoreLike | null,
+  moverIsWhite: boolean,
+): boolean {
+  if (!secondBest || secondBest.mate === null) return false;
+  const moverPovMate = moverIsWhite ? secondBest.mate : -secondBest.mate;
+  return moverPovMate === -1;
+}

@@ -6,7 +6,7 @@
  * la notion de clouage absolu. Les deux sont indispensables à la détection de
  * motifs, on les implémente ici.
  */
-import { Chess, type Color, type Square } from "chess.js";
+import { Chess, type Color, type PieceSymbol, type Square } from "chess.js";
 import {
   BISHOP_DIRECTIONS,
   directionBetween,
@@ -114,27 +114,56 @@ export function isUndefended(board: Chess, square: Square, owner: Color): boolea
   return board.attackers(square, owner).length === 0;
 }
 
+/** Une pièce de `color` (le roi excepté) trouvée en prise — voir `hangingPieces`. */
+export interface HangingPiece {
+  square: Square;
+  piece: PieceSymbol;
+}
+
 /**
- * Le camp `color` a-t-il, quelque part sur l'échiquier, une pièce (le roi
- * excepté) attaquée sans reprise légale possible ?
+ * Toutes les pièces de `color` (le roi excepté) attaquées sans reprise légale
+ * possible.
  *
  * Ne se contente pas de `isUndefended` seule : une pièce dont l'unique
  * « défenseur » est clouée sur son propre roi ne peut pas légalement
  * reprendre — même angle mort que celui corrigé dans `chess/sacrifice.ts`
  * (`attackers()` de chess.js est purement géométrique, il ignore les
- * clouages). Sert à repérer, après coup, une pièce laissée en prise — voir
- * `core/analysis/progress-insights.ts`, axe « pièces en prise ».
+ * clouages).
  */
-export function hasHangingPiece(board: Chess, color: Color): boolean {
+function hangingPieces(board: Chess, color: Color): HangingPiece[] {
   const opponent: Color = color === "w" ? "b" : "w";
+  const found: HangingPiece[] = [];
   for (const row of board.board()) {
     for (const piece of row) {
       if (!piece || piece.color !== color || piece.type === "k") continue;
       if (board.attackers(piece.square, opponent).length === 0) continue; // rien ne l'attaque
       const defenders = board.attackers(piece.square, color);
       const hasLegalDefender = defenders.some((square) => !isPinned(board, color, square));
-      if (!hasLegalDefender) return true;
+      if (!hasLegalDefender) found.push({ square: piece.square, piece: piece.type });
     }
   }
-  return false;
+  return found;
+}
+
+/**
+ * Le camp `color` a-t-il, quelque part sur l'échiquier, une pièce en prise ?
+ * Sert à repérer, après coup, une pièce laissée en prise — voir
+ * `core/analysis/progress-insights.ts`, axe « pièces en prise ».
+ */
+export function hasHangingPiece(board: Chess, color: Color): boolean {
+  return hangingPieces(board, color).length > 0;
+}
+
+/**
+ * Pièces de `color` en prise sur `after` qui ne l'étaient pas déjà sur
+ * `before` — imputables au coup qui sépare les deux positions, par
+ * opposition à du matériel déjà perdu avant lui (voir
+ * `chess/coach-hints.ts#classifyWrongMove`, même principe appliqué aux
+ * puzzles). Sert la bulle du Coach en Revue de partie
+ * (`core/analysis/coach-narrative.ts`), qui veut nommer précisément la pièce
+ * et la case abandonnées.
+ */
+export function newlyHangingPieces(before: Chess, after: Chess, color: Color): HangingPiece[] {
+  const beforeSquares = new Set(hangingPieces(before, color).map((h) => h.square));
+  return hangingPieces(after, color).filter((h) => !beforeSquares.has(h.square));
 }

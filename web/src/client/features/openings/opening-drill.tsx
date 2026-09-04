@@ -42,7 +42,7 @@ import { useRouter } from "next/navigation";
 import { Chessboard } from "react-chessboard";
 import { buildFinalTestRounds, MIN_ROUND_PLIES, resolvePracticedEntries } from "./build-final-test";
 import { findNextUnmasteredVariation, type MasteryCandidate } from "@/core/curriculum/opening-mastery";
-import { getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
 import {
   findVariationByKey,
   MAIN_LINE_VARIATION_KEY,
@@ -168,7 +168,19 @@ export function OpeningDrill({
   // stable ("main-line"/"variation"/"mistake") sont gérés ici.
   const autoStartedKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!autoStart || autoStart.kind === "random" || autoStart.kind === "final-test") return;
+    // "trap"/"trap-poison" (voir `use-opening-drill.ts`) n'atteignent jamais
+    // cet écran en pratique — seul `OpeningTrapDrill` les construit, sur sa
+    // propre instance du hook — mais doivent être exclus explicitement ici
+    // pour que TypeScript puisse encore réduire `autoStart` aux 3 kinds
+    // effectivement gérés par la clé ci-dessous.
+    if (
+      !autoStart ||
+      autoStart.kind === "random" ||
+      autoStart.kind === "final-test" ||
+      autoStart.kind === "trap" ||
+      autoStart.kind === "trap-poison"
+    )
+      return;
     const key =
       autoStart.kind === "main-line"
         ? variationKeyFor({ kind: "main-line" })
@@ -248,15 +260,30 @@ export function OpeningDrill({
             ? "Test Final"
             : selection.kind === "mistake"
               ? "Correction ciblée"
-              : selection.variation.name;
+              : // "trap"/"trap-poison" n'atteignent jamais cet écran en pratique
+                // (voir le commentaire de l'effet ci-dessus) — repli exhaustif
+                // pour TypeScript uniquement, jamais affiché.
+                selection.kind === "trap" || selection.kind === "trap-poison"
+                ? "Piège"
+                : selection.variation.name;
 
   // Indice textuel du prochain coup à trouver — `null` hors sélection
-  // scriptée (Aléatoire) ou si cette position précise n'a pas de contenu
-  // dédié (voir `core/curriculum/opening-commentary.ts`) : le bouton ne
-  // s'affiche alors simplement pas, aucun repli générique n'est proposé ici
-  // (contrairement au commentaire post-coup, un indice DOIT rester ciblé).
+  // scriptée (Aléatoire), le seul cas où AUCUN coup fixe n'existe à
+  // indiquer. Repli sur `GENERIC_BOOK_COMMENT` dès que cette position
+  // précise n'a pas de contenu dédié (voir `core/curriculum/opening-commentary.ts`)
+  // — même convention que le commentaire post-coup (`MoveCommentary`).
+  // BUG CORRIGÉ (retour utilisateur direct, « pas de hints ni de guide » sur
+  // Zukertort et la plupart des variantes/familles dynamiques) : l'ancienne
+  // version masquait carrément le bouton sans contenu dédié — hors des ~20
+  // lignes principales curatées à la main, c'est-à-dire la quasi-totalité du
+  // catalogue (toute variante nommée, chaque famille `lichess-*`), le bouton
+  // « 💡 Show hints for this move! » ne s'affichait alors JAMAIS, laissant
+  // la flèche automatique seule porter tout le poids du guidage — et elle
+  // seule, en plus, s'éteint après 2 réussites (`HINT_ARROW_SUCCESS_THRESHOLD`).
   const hintCommentary =
-    drill.status === "playing" && drill.scriptLength !== null ? getMoveCommentary(opening.id, drill.nextPly) : null;
+    drill.status === "playing" && drill.scriptLength !== null
+      ? (getMoveCommentary(opening.id, drill.nextPly) ?? GENERIC_BOOK_COMMENT)
+      : null;
   const hintRevealed =
     revealedHint !== null && selection !== null && revealedHint.selection === selection && revealedHint.ply === drill.nextPly;
 
@@ -329,6 +356,18 @@ export function OpeningDrill({
                 </p>
               )}
 
+              {/* Notification transitoire Manche 1 → Manche 2 — voir le
+                  docstring de `drill.roundTransitionNotice` dans
+                  `use-opening-drill.ts` : le garde-fou de fin de théorie
+                  (script épuisé OU plus aucune continuation connue dans
+                  l'arbre fusionné, ex. Zukertort/Défense Benima) DOIT se voir
+                  à l'écran, jamais un simple reset silencieux du plateau. */}
+              {drill.roundTransitionNotice && (
+                <div className="mb-2 w-full max-w-[420px] rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-center text-sm font-medium text-foreground">
+                  {drill.roundTransitionNotice}
+                </div>
+              )}
+
               <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
                 <Chessboard
                   options={{
@@ -391,7 +430,7 @@ export function OpeningDrill({
                     onClick={() => setRevealedHint({ selection, ply: drill.nextPly })}
                     className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
                   >
-                    💡 Show hints for this move!
+                    💡 Afficher l&apos;indice de ce coup !
                   </button>
                 </div>
               )}

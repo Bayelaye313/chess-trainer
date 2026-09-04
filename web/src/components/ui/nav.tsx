@@ -33,14 +33,6 @@ function BotIcon() {
   );
 }
 
-function AnalyseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M4 20V10M12 20V4M20 20v-6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function ReportIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -104,7 +96,6 @@ function TrapIcon() {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Jouer contre des Bots", icon: BotIcon },
-  { href: "/analyse", label: "Analyse", icon: AnalyseIcon },
   { href: "/rapport", label: "Rapport", icon: ReportIcon },
   { href: "/entrainer", label: "Entraîner", icon: TrainIcon },
   { href: "/apprendre", label: "Apprendre", icon: AcademyIcon },

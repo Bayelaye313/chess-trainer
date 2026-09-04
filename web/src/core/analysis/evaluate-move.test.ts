@@ -150,11 +150,14 @@ describe("evaluateMove", () => {
     expect(result.quality).toBe("best");
   });
 
-  it("un sacrifice qui était le SEUL coup valable reste critique, pas brillant", async () => {
-    // Même position, mais cette fois le moteur expose un second choix bien
-    // pire (secondBest) : la position est critique. Le sacrifice ne relevait
-    // d'aucune inventivité — c'était le seul coup qui tienne. Régression du
-    // bug signalé : « ce que tu appelles Brillant est en fait Critique ».
+  it("un sacrifice qui était le SEUL coup valable devient quand même brillant — Brillant prime sur Critique", async () => {
+    // Même position, avec un second choix bien pire (secondBest) : sans le
+    // sacrifice, la position s'effondrerait (`critical` au sens de
+    // classify.ts). Cahier des charges explicite (2026-09-03) : Brillant a
+    // priorité ABSOLUE sur Critique, peu importe l'écart avec le second
+    // coup — un don de matériel volontaire qui reste gagnant reste plus
+    // impressionnant qu'un simple coup forcé, même quand ce même coup était
+    // aussi, techniquement, le seul qui tienne.
     const fen = "4k2r/5ppp/8/4N3/8/8/8/4K3 w k - 0 20";
     const afterNxf7 = "4k2r/5Npp/8/8/8/8/8/4K3 b k - 0 20";
 
@@ -165,7 +168,27 @@ describe("evaluateMove", () => {
 
     const result = await evaluateMove(analyser, fen, "e5f7", NO_LIMIT);
 
-    expect(result.quality).toBe("critical");
+    expect(result.quality).toBe("brilliant");
+  });
+
+  it("une reprise forcée (seul coup légal) qui n'est pas un sacrifice reste meilleur coup, jamais critique", async () => {
+    // Un unique coup légal disponible (reprise de la Dame qui vient de mettre
+    // le Roi en échec) ; le pion noir sert juste à garder assez de matériel
+    // sur l'échiquier après la reprise pour que la partie ne se termine pas
+    // (K+p vs K n'est pas nul par manque de matériel, contrairement à K vs K).
+    // Avant la correction, `onlyLegalMove` forçait `critical` à tort — une
+    // reprise évidente, sans aucun choix possible, n'a rien d'une trouvaille.
+    const fen = "7k/8/8/8/8/p7/6q1/7K w - - 0 1";
+    const afterKxg2 = "7k/8/8/8/8/p7/6K1/8 b - - 0 1";
+
+    const analyser = stubAnalyser({
+      [fen]: evaluation({ cp: -50, bestMoveUci: "h1g2" }),
+      [afterKxg2]: evaluation({ cp: -20 }),
+    });
+
+    const result = await evaluateMove(analyser, fen, "h1g2", NO_LIMIT);
+
+    expect(result.quality).toBe("best");
   });
 
   it("range une gaffe dans un deck", async () => {

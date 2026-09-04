@@ -64,6 +64,13 @@
       "when": 1788182672101,
       "tag": "0008_jittery_richard_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1788272310682,
+      "tag": "0009_ambiguous_fabian_cortez",
+      "breakpoints": true
     }
   ]
 }

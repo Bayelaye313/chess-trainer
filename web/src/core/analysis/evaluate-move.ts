@@ -5,7 +5,7 @@ import { detectMotifs } from "../chess/motifs";
 import { gamePhase } from "../chess/phase";
 import { isBrilliantSacrifice } from "../chess/sacrifice";
 import { isReviewable, type GamePhase, type Motif, type MoveQuality } from "../chess/types";
-import { computeSecondBestGap, secondBestWinPercent } from "./critical-gap";
+import { computeSecondBestGap, secondBestAllowsImmediateMate, secondBestWinPercent } from "./critical-gap";
 import {
   moverPovMate,
   toMoverPov,
@@ -120,6 +120,9 @@ export async function evaluateMove(
   // manquait pour que « Critique » ne phagocyte plus « Brillant », voir
   // classify.ts#CRITICAL_SECOND_BEST_MAX_WIN.
   const secondBestWinPct = secondBestWinPercent(evalBefore.secondBest, moverIsWhite);
+  // L'alternative se fait-elle mater en une seule réponse ? Reprise évidente,
+  // pas une trouvaille — voir classify.ts et critical-gap.ts.
+  const alternativeAllowsImmediateMate = secondBestAllowsImmediateMate(evalBefore.secondBest, moverIsWhite);
 
   const after = played.board;
   const fenAfter = after.fen();
@@ -168,6 +171,7 @@ export async function evaluateMove(
         winPercentLoss,
         secondBestGap,
         secondBestWinPercent: secondBestWinPct,
+        alternativeAllowsImmediateMate,
       });
     } else {
       // Le moteur n'a renvoyé ni centipions ni mat pour l'une des deux
@@ -190,13 +194,14 @@ export async function evaluateMove(
     mateMissed = hadForcedMate && !(mateAfterMoverPov !== null && mateAfterMoverPov > 0);
   }
 
-  // Voir isBrilliantSacrifice : un sacrifice ne devient « Brillant » que s'il
-  // y avait une alternative raisonnable (jamais "critical"), que le coup
-  // reste proche du sommet (le meilleur coup exact, ou à une marge de
-  // tolérance près), ET que la position qui suit reste confirmée gagnante —
-  // sinon le joueur n'a pas fait preuve d'inventivité, ou le sacrifice n'a
-  // fait qu'aggraver une position déjà perdue.
-  if (isBrilliantSacrifice(quality, foundBest, winPercentLoss, winAfterMover, before, played.move)) {
+  // Voir isBrilliantSacrifice : un sacrifice devient « Brillant » dès que le
+  // coup reste proche du sommet (le meilleur coup exact, ou à une marge de
+  // tolérance près) ET que la position qui suit reste confirmée gagnante —
+  // appelée EN DERNIER, après classifyMove, pour lui laisser la priorité
+  // absolue et pouvoir surclasser un `critical` tout comme un `best` (cahier
+  // des charges explicite : Brillant prime sur Critique, quel que soit
+  // l'écart avec le second choix moteur).
+  if (isBrilliantSacrifice(foundBest, winPercentLoss, winAfterMover, before, played.move)) {
     quality = "brilliant";
   }
 

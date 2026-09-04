@@ -36,6 +36,14 @@ export interface VariationNode {
   fen: string;
   /** Nom de la sous-variante démarrant à ce nœud, voir le docstring du fichier. `null` si absent. */
   comment: string | null;
+  /**
+   * Code ECO propre à CE nœud, quand il en porte un — n'est renseigné QUE par
+   * `buildTreeFromLines` (voir plus bas), jamais par `parsePgnTree` (un PGN
+   * authored à la main n'a qu'un seul `eco` global, celui de l'`OpeningLine`
+   * qui le porte). `null` par défaut : l'appelant retombe alors sur l'eco de
+   * l'ouverture englobante — voir `server/curriculum/imported-openings-index.ts`.
+   */
+  eco: string | null;
   children: VariationNode[];
 }
 
@@ -72,7 +80,7 @@ function tokenize(pgn: string): string[] {
 }
 
 function makeRoot(startFen: string): VariationNode {
-  return { ply: 0, san: null, uci: null, fen: startFen, comment: null, children: [] };
+  return { ply: 0, san: null, uci: null, fen: startFen, comment: null, eco: null, children: [] };
 }
 
 interface Cursor {
@@ -145,6 +153,7 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       uci: uciOfMove(move),
       fen: chess.fen(),
       comment: null,
+      eco: null,
       children: [],
     };
     parentBeforeThisMove.children.push(child);
@@ -188,4 +197,93 @@ export function collectNodes(root: VariationNode): VariationNode[] {
     stack.push(...node.children);
   }
   return nodes;
+}
+
+/**
+ * Une ligne PLATE (suite de coups SAN depuis la position de départ, jamais de
+ * sous-variante imbriquée) à fusionner dans un arbre — voir `buildTreeFromLines`.
+ * Convention volontairement différente de celle de `parsePgnTree` (le
+ * commentaire nomme la sous-variante qui COMMENCE au nœud) : ici `label` nomme
+ * le nœud TERMINAL de la ligne elle-même (la position que `name` désigne dans
+ * une base comme lichess-org/chess-openings, où le nom qualifie la position
+ * D'ARRIVÉE, pas le coup qui y mène) — voir le docstring de
+ * `server/curriculum/imported-openings-index.ts`.
+ */
+export interface NamedLine {
+  /** Étiquette à poser sur le nœud terminal de cette ligne — `null` pour prolonger l'arbre sans rien nommer de plus. */
+  label: string | null;
+  /** Code ECO à poser sur ce même nœud terminal, avec `label` — voir `VariationNode.eco`. */
+  eco?: string | null;
+  sanMoves: readonly string[];
+}
+
+/**
+ * Fusionne plusieurs lignes plates en un arbre unique (trie de coups) :
+ * chaque ligne est rejouée depuis `startFen`, en réutilisant les nœuds déjà
+ * créés par une ligne précédente partageant le même préfixe de coups (mêmes
+ * SAN, à chaque profondeur) — un embranchement réel apparaît naturellement dès
+ * que deux lignes divergent. `label`/`eco` sont posés sur le nœud terminal de
+ * chaque ligne, sans jamais écraser un `comment`/`eco` déjà présent (une ligne
+ * plus courte, déjà nommée, garde son nom même si une ligne plus longue la
+ * prolonge ensuite) — même esprit que `parsePgnTree`, qui ne réécrit jamais un
+ * commentaire déjà capturé.
+ *
+ * Un coup illégal depuis la position atteinte interrompt SEULEMENT cette
+ * ligne (elle s'arrête au dernier coup légal, sans nommer de nœud si elle n'a
+ * pas atteint sa fin) — jamais toute la fusion : `imported_opening_lines` est
+ * déjà validée coup par coup à l'import (voir `buildOpeningLineFromGame`),
+ * mais rester tolérant ici évite qu'une seule ligne corrompue ne fasse
+ * échouer l'arbre entier d'une famille de centaines de lignes.
+ */
+export function buildTreeFromLines(lines: readonly NamedLine[], startFen: string = PGN_TREE_START_FEN): VariationNode {
+  const root = makeRoot(startFen);
+  for (const line of lines) {
+    let node = root;
+    const chess = new Chess(startFen);
+    let reachedEnd = true;
+    for (const san of line.sanMoves) {
+      let move: Move;
+      try {
+        move = chess.move(san);
+      } catch {
+        reachedEnd = false;
+        break;
+      }
+      let child = node.children.find((c) => c.san === move.san);
+      if (!child) {
+        child = { ply: node.ply + 1, san: move.san, uci: uciOfMove(move), fen: chess.fen(), comment: null, eco: null, children: [] };
+        node.children.push(child);
+      }
+      node = child;
+    }
+    if (reachedEnd && line.label && !node.comment) {
+      node.comment = line.label;
+      node.eco = line.eco ?? null;
+    }
+  }
+  return root;
+}
+
+/**
+ * Fusionne `addition` DANS `base` (mutation en place, renvoyée pour
+ * chaînage) : pour chaque enfant d'`addition`, réutilise l'enfant de `base` de
+ * même `san` s'il existe déjà (fusion récursive), sinon le rattache tel quel
+ * (avec tout son sous-arbre). `comment`/`eco` d'`addition` ne sont recopiés
+ * sur `base` QUE si `base` n'en a pas déjà — un chapitre curaté à la main
+ * (voir `core/curriculum/openings.ts`) garde toujours la priorité sur un nom
+ * dérivé automatiquement de la base Lichess. Les deux arbres doivent partager
+ * la même position de départ (même `startFen`) : la fusion ne recoupe jamais
+ * deux positions différentes par transposition.
+ */
+export function mergeTrees(base: VariationNode, addition: VariationNode): VariationNode {
+  if (base.comment === null && addition.comment !== null) {
+    base.comment = addition.comment;
+    base.eco = addition.eco;
+  }
+  for (const child of addition.children) {
+    const match = base.children.find((c) => c.san === child.san);
+    if (match) mergeTrees(match, child);
+    else base.children.push(child);
+  }
+  return base;
 }

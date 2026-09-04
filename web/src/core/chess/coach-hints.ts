@@ -38,8 +38,11 @@ export function classifyWrongMove(before: Chess, after: Chess, mover: Color): Wr
  * menace d'échec immédiate, qu'elle soit ou non le prélude d'une vraie
  * combinaison. `after.moves()` reste petit (au plus une quarantaine de coups
  * légaux) : un clone par coup candidat est largement assez rapide ici.
+ *
+ * Exportée pour être réutilisée par `core/analysis/coach-narrative.ts` (bulle
+ * du Coach en Revue de partie) — même heuristique, jamais dupliquée.
  */
-function exposesKingToCheck(after: Chess): boolean {
+export function exposesKingToCheck(after: Chess): boolean {
   for (const san of after.moves()) {
     const probe = new Chess(after.fen());
     probe.move(san);

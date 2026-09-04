@@ -10,7 +10,7 @@
  */
 import { Chess } from "chess.js";
 import { hasHangingPiece } from "../chess/attacks";
-import type { GamePhase } from "../chess/types";
+import { isReviewable, type GamePhase } from "../chess/types";
 import { computeAccuracy } from "./timeline";
 import type {
   HangingPieceStats,
@@ -120,6 +120,20 @@ function representativeOpeningName(gamesForEco: readonly PlayerGameRecord[]): st
 }
 
 /**
+ * Ply de la première gaffe/imprécision du joueur en phase d'ouverture, pour
+ * UNE partie — `null` si elle n'en compte aucune. Même sélection que
+ * `earliestOpeningMistakePerGame` (`server/queries/opening-mistakes.ts`),
+ * mais sur des `PlayerMoveRecord` déjà groupés par partie plutôt que sur des
+ * lignes SQL : pas de raison de dupliquer une requête DB pour ce seul besoin.
+ */
+function earliestOpeningMistakePly(moves: readonly PlayerMoveRecord[]): number | null {
+  const plies = moves
+    .filter((move) => move.byPlayer && move.phase === "opening" && isReviewable(move.quality))
+    .map((move) => move.ply);
+  return plies.length > 0 ? Math.min(...plies) : null;
+}
+
+/**
  * Axe 3 — Performance par ouverture (code ECO).
  *
  * Parties sans ECO (pas encore catégorisées, voir `games.eco`) exclues plutôt
@@ -139,6 +153,9 @@ export function computeOpeningPerformance(games: readonly PlayerGameRecord[]): O
   for (const [eco, gamesForEco] of byEco) {
     const wins = gamesForEco.filter(didPlayerWin).length;
     const playerMoves = gamesForEco.flatMap((game) => game.moves.filter((move) => move.byPlayer));
+    const mistakePlies = gamesForEco
+      .map((game) => earliestOpeningMistakePly(game.moves))
+      .filter((mistakePly): mistakePly is number => mistakePly !== null);
     performance.push({
       eco,
       name: representativeOpeningName(gamesForEco),
@@ -146,10 +163,61 @@ export function computeOpeningPerformance(games: readonly PlayerGameRecord[]): O
       wins,
       winRate: Math.round((wins / gamesForEco.length) * 100),
       accuracy: computeAccuracy(playerMoves),
+      avgMistakePly:
+        mistakePlies.length > 0
+          ? Math.round(mistakePlies.reduce((sum, mistakePly) => sum + mistakePly, 0) / mistakePlies.length)
+          : null,
     });
   }
 
   return performance.sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+}
+
+/**
+ * Échantillon minimal pour qu'une ouverture apparaisse dans le TABLEAU de
+ * l'onglet Rapport (`OpeningPerformanceCard`) — audit UX du 2026-09-02 : sous
+ * 5 parties réellement jouées, la ligne n'apporte rien qu'une pollution
+ * visuelle (un coup d'essai isolé n'est pas une statistique). Seuil
+ * volontairement DIFFÉRENT de `STRUGGLING_OPENING_MIN_GAMES` ci-dessous (3) :
+ * le bandeau d'alerte reste plus permissif, alerter tôt sur une faiblesse
+ * naissante vaut mieux qu'attendre 5 parties, alors que le tableau complet
+ * doit au contraire rester lisible.
+ */
+export const MIN_GAMES_IN_OPENING_TABLE = 5;
+
+/**
+ * Filtre `performance` pour l'affichage du tableau de l'onglet Rapport — pure,
+ * jamais appliquée à ce que consomme `findStrugglingOpening` (voir son propre
+ * seuil, plus permissif). `server/queries/progress.ts#getPlayerProgress`
+ * calcule `strugglingOpening` sur la liste COMPLÈTE avant d'appliquer ce
+ * filtre au champ `openingPerformance` qu'il renvoie à la page.
+ */
+export function filterOpeningPerformanceForDisplay(
+  performance: readonly OpeningPerformance[],
+  min: number = MIN_GAMES_IN_OPENING_TABLE,
+): OpeningPerformance[] {
+  return performance.filter((p) => p.gamesPlayed >= min);
+}
+
+/** Échantillon minimal avant d'accuser une ouverture — sous ce seuil, un mauvais score n'est qu'un accident statistique. */
+const STRUGGLING_OPENING_MIN_GAMES = 3;
+/** Taux de victoire (%) en-dessous duquel une ouverture est jugée « en difficulté ». */
+const STRUGGLING_OPENING_MAX_WIN_RATE = 40;
+
+/**
+ * La pire ouverture du joueur, pour le bandeau « ⚠️ Ouverture en difficulté »
+ * du Rapport — `null` si aucune n'a un échantillon suffisant ET un taux de
+ * victoire assez bas pour qualifier (jamais accuser une ouverture jouée une
+ * ou deux fois : une défaite isolée n'est pas une lacune systémique).
+ */
+export function findStrugglingOpening(
+  performance: readonly OpeningPerformance[],
+  minGames: number = STRUGGLING_OPENING_MIN_GAMES,
+  maxWinRate: number = STRUGGLING_OPENING_MAX_WIN_RATE,
+): OpeningPerformance | null {
+  const candidates = performance.filter((p) => p.gamesPlayed >= minGames && p.winRate <= maxWinRate);
+  if (candidates.length === 0) return null;
+  return [...candidates].sort((a, b) => a.winRate - b.winRate)[0];
 }
 
 /** Rejoue `uci` depuis `fenBefore` ; `null` si le coup stocké s'avère illégal (ne devrait pas arriver). */

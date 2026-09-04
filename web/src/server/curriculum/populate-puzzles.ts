@@ -69,6 +69,23 @@ export interface PopulateOptions {
 
 const DATASET_BY_THEME = new Map<string, MasterPuzzle>(MASTER_PUZZLES_DATASET.map((p) => [p.themeId, p]));
 
+/**
+ * Les 6 catégories `lichess_*` (`catalog.ts`, « Saturation Lichess ») sont des
+ * réservoirs purs — bijection stricte titre ↔ tag Lichess exact, jamais de
+ * position composée à la main dans `MASTER_PUZZLES_DATASET` (voir son
+ * docstring). Une absence de ce dataset y est donc attendue, pas une erreur :
+ * ces thèmes affichent honnêtement 0/N tant que `db:convert-puzzles`/
+ * `db:seed-academy` (ou `refine-tactics-pgn`) n'a pas tourné.
+ */
+const LICHESS_TAG_CATEGORIES = new Set([
+  "lichess_motifs",
+  "lichess_advanced",
+  "lichess_mate_in",
+  "lichess_mate_themes",
+  "lichess_special_moves",
+  "lichess_goals_origin",
+]);
+
 function buildRow(theme: (typeof CURRICULUM_THEMES)[number], puzzle: MasterPuzzle): NewCurriculumPuzzle {
   return {
     id: `${theme.id}::master:0`,
@@ -120,9 +137,15 @@ export async function populateThemes(options: PopulateOptions = {}): Promise<Pop
   for (const theme of targetThemes) {
     const puzzle = DATASET_BY_THEME.get(theme.id);
     if (!puzzle) {
+      if (LICHESS_TAG_CATEGORIES.has(theme.category)) {
+        // Attendu — voir le docstring de `LICHESS_TAG_CATEGORIES` : ce n'est
+        // jamais une erreur, juste un réservoir pas encore importé.
+        results.push({ themeId: theme.id, target: theme.totalPuzzles, inserted: 0, totalPuzzles: 0 });
+        continue;
+      }
       // Filet de sécurité : le test de `master-puzzles-dataset.ts` garantit déjà
-      // une entrée par thème du catalogue — ce cas ne devrait jamais survenir
-      // en pratique, on préfère le rapporter plutôt que planter toute la boucle.
+      // une entrée par thème CURATÉ du catalogue — ce cas ne devrait jamais
+      // survenir en pratique, on préfère le rapporter plutôt que planter toute la boucle.
       results.push({ themeId: theme.id, target: theme.totalPuzzles, inserted: 0, totalPuzzles: 0, error: "aucune entrée dans MASTER_PUZZLES_DATASET" });
       continue;
     }

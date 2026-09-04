@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectNodes, mainLine, parsePgnTree } from "./pgn-tree";
+import { buildTreeFromLines, collectNodes, mainLine, mergeTrees, parsePgnTree } from "./pgn-tree";
 
 describe("parsePgnTree", () => {
   it("parse une ligne plate sans variante", () => {
@@ -77,5 +77,98 @@ describe("collectNodes", () => {
     const nodes = collectNodes(root);
     expect(nodes).toContain(root);
     expect(nodes.map((n) => n.san).filter(Boolean).sort()).toEqual(["Nf3", "c5", "e4", "e5"].sort());
+  });
+});
+
+describe("buildTreeFromLines", () => {
+  it("fusionne plusieurs lignes plates en un arbre, embranchant dès qu'elles divergent", () => {
+    const root = buildTreeFromLines([
+      { label: "Sicilienne", sanMoves: ["e4", "c5"] },
+      { label: "Najdorf", sanMoves: ["e4", "c5", "Nf3", "d6"] },
+      { label: "Alapine", sanMoves: ["e4", "c5", "c3"] },
+    ]);
+    const e4 = root.children.find((n) => n.san === "e4")!;
+    const c5 = e4.children.find((n) => n.san === "c5")!;
+    // "Sicilienne" est la ligne la plus courte : son nœud terminal (c5) ne
+    // porte AUCUN enfant à lui — les deux lignes plus longues en ajoutent
+    // ensuite, chacune sur son propre embranchement.
+    expect(c5.comment).toBe("Sicilienne");
+    expect(c5.children.map((n) => n.san).sort()).toEqual(["Nf3", "c3"].sort());
+
+    const alapine = c5.children.find((n) => n.san === "c3")!;
+    expect(alapine.comment).toBe("Alapine");
+    expect(alapine.children).toEqual([]);
+
+    const najdorf = c5.children.find((n) => n.san === "Nf3")!.children.find((n) => n.san === "d6")!;
+    expect(najdorf.comment).toBe("Najdorf");
+  });
+
+  it("ne nomme rien pour une ligne interrompue par un coup illégal — jamais tout l'arbre en échec", () => {
+    const root = buildTreeFromLines([
+      { label: "Cassée", sanMoves: ["e4", "e5", "Xy9"] },
+      { label: "Valide", sanMoves: ["e4", "e5"] },
+    ]);
+    const line = mainLine(root);
+    expect(line.map((n) => n.san)).toEqual(["e4", "e5"]);
+    expect(line.at(-1)?.comment).toBe("Valide"); // "Cassée" s'est arrêtée avant d'atteindre e5, rien à nommer.
+  });
+
+  it("garde le PREMIER nom rencontré à une position donnée, jamais écrasé par une ligne suivante", () => {
+    const root = buildTreeFromLines([
+      { label: "Premier nom", sanMoves: ["d4"] },
+      { label: "Second nom", sanMoves: ["d4"] },
+    ]);
+    expect(mainLine(root)[0].comment).toBe("Premier nom");
+  });
+
+  it("porte le code ECO de la ligne sur son nœud terminal", () => {
+    const root = buildTreeFromLines([{ label: "Sicilienne", eco: "B20", sanMoves: ["e4", "c5"] }]);
+    expect(mainLine(root).at(-1)?.eco).toBe("B20");
+  });
+});
+
+describe("mergeTrees", () => {
+  it("ajoute un embranchement absent de `base` sans toucher au reste", () => {
+    const base = parsePgnTree("1.e4 e5 2.Nf3 Nc6 3.Bb5");
+    // Capturé AVANT la fusion : `mainLine` suit le premier enfant à chaque
+    // étape, et la fusion en ajoute justement un à ce nœud — le recalculer
+    // APRÈS pointerait déjà sur "Nf6", pas sur "Bb5".
+    const bb5 = mainLine(base).at(-1)!;
+    expect(bb5.san).toBe("Bb5");
+    expect(bb5.children).toEqual([]);
+
+    const addition = buildTreeFromLines([{ label: "Berlinoise", sanMoves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "Nf6"] }]);
+    mergeTrees(base, addition);
+
+    expect(bb5.children.map((n) => n.san)).toEqual(["Nf6"]);
+    expect(bb5.children[0].comment).toBe("Berlinoise");
+  });
+
+  it("ne recouvre jamais un `comment` déjà présent dans `base`", () => {
+    // "(1...c5 ...)" remplace le DERNIER coup joué au même niveau (e5) — c5
+    // est donc un enfant du nœud "e4", pas de la racine (voir le docstring de
+    // `parseSequence`).
+    const base = parsePgnTree("1.e4 e5 (1...c5 {Sicilienne authored} 2.Nf3)");
+    const addition = buildTreeFromLines([{ label: "Sicilienne DB", sanMoves: ["e4", "c5"] }]);
+    mergeTrees(base, addition);
+
+    const e4 = base.children.find((n) => n.san === "e4")!;
+    const c5 = e4.children.find((n) => n.san === "c5")!;
+    expect(c5.comment).toBe("Sicilienne authored");
+  });
+
+  it("fusionne récursivement à travers plusieurs niveaux communs", () => {
+    const base = buildTreeFromLines([{ label: "A", sanMoves: ["e4", "c5", "Nf3"] }]);
+    // Capturé AVANT la fusion, même raison que le premier test de ce bloc.
+    const nf3 = mainLine(base).at(-1)!;
+    expect(nf3.comment).toBe("A");
+    expect(nf3.children).toEqual([]);
+
+    const addition = buildTreeFromLines([{ label: "B", sanMoves: ["e4", "c5", "Nf3", "d6"] }]);
+    mergeTrees(base, addition);
+
+    expect(nf3.comment).toBe("A"); // jamais recouvert
+    expect(nf3.children.map((n) => n.san)).toEqual(["d6"]);
+    expect(nf3.children[0].comment).toBe("B");
   });
 });

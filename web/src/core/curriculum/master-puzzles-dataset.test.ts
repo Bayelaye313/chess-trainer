@@ -45,17 +45,44 @@ const EXPECTED_MATE_PATTERN: Record<string, MatePattern> = {
   "cm-mat-du-filet": "net",
 };
 
+/**
+ * Les 6 catégories `lichess_*` (`catalog.ts`, « Saturation Lichess ») sont des
+ * réservoirs purs alimentés par le pipeline d'import, jamais par ce dataset
+ * statique — voir leur docstring. La bijection stricte ci-dessous ne porte
+ * donc que sur les 155 thèmes curatés d'origine.
+ */
+const LICHESS_TAG_CATEGORIES = new Set([
+  "lichess_motifs",
+  "lichess_advanced",
+  "lichess_mate_in",
+  "lichess_mate_themes",
+  "lichess_special_moves",
+  "lichess_goals_origin",
+]);
+const CURATED_THEME_IDS = new Set(
+  CURRICULUM_THEMES.filter((t) => !LICHESS_TAG_CATEGORIES.has(t.category)).map((t) => t.id),
+);
+
 describe("MASTER_PUZZLES_DATASET", () => {
-  it("a exactement une entrée par thème du catalogue — 141 au total", () => {
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(141);
+  it("a exactement une entrée par thème CURATÉ du catalogue — 155 au total", () => {
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(155);
     const datasetIds = new Set(MASTER_PUZZLES_DATASET.map((p) => p.themeId));
-    const catalogIds = new Set(CURRICULUM_THEMES.map((t) => t.id));
-    expect(datasetIds.size).toBe(141);
-    for (const id of catalogIds) expect(datasetIds.has(id)).toBe(true);
-    for (const id of datasetIds) expect(catalogIds.has(id)).toBe(true);
+    expect(datasetIds.size).toBe(155);
+    for (const id of CURATED_THEME_IDS) expect(datasetIds.has(id)).toBe(true);
+    for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("n'a aucune FEN dupliquée — 141 positions distinctes, pas de rotation d'une même base", () => {
+  it("n'a AUCUNE entrée pour les 56 thèmes `lichess_*` — réservoirs purs, alimentés seulement par le pipeline d'import", () => {
+    const datasetIds = new Set(MASTER_PUZZLES_DATASET.map((p) => p.themeId));
+    const lichessTagThemeIds = CURRICULUM_THEMES.filter((t) => LICHESS_TAG_CATEGORIES.has(t.category)).map((t) => t.id);
+    // 58 tags Lichess officiels, mais 56 thèmes : 2 doublons volontairement
+    // fusionnés (queue d'aronde/d'hirondelle, capture/élimination du
+    // défenseur — voir catalog.ts, « Saturation Lichess »).
+    expect(lichessTagThemeIds.length).toBe(56);
+    for (const id of lichessTagThemeIds) expect(datasetIds.has(id)).toBe(false);
+  });
+
+  it("n'a aucune FEN dupliquée — 155 positions distinctes, pas de rotation d'une même base", () => {
     const fens = MASTER_PUZZLES_DATASET.map((p) => p.fen);
     expect(new Set(fens).size).toBe(fens.length);
   });

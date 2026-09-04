@@ -1,10 +1,12 @@
 "use client";
 
 /**
- * Onglet « Ouvertures » : bibliothèque statique (voir `core/curriculum/openings.ts`)
- * qu'on filtre et cherche entièrement côté client — une vingtaine d'entrées,
- * pas besoin d'aller-retour serveur pour ça (contrairement à `LearnScreen`,
- * qui dépend de la progression de l'utilisateur).
+ * Onglet « Ouvertures » : bibliothèque curatée (`core/curriculum/openings.ts`)
+ * + catalogue dynamique tiré de la base Lichess (`server/curriculum/imported-openings-index.ts`,
+ * voir `server/queries/openings.ts#listOpenings`), plus de 150 entrées au
+ * total — récupérée une fois côté serveur puis filtrée/cherchée entièrement
+ * côté client, pas besoin d'aller-retour serveur pour ça (contrairement à
+ * `LearnScreen`, qui dépend de la progression de l'utilisateur).
  *
  * `reviewSummaries`/`dueReviews` SONT de la progression utilisateur (voir
  * `server/queries/opening-progress.ts`) — chargés une fois côté serveur par

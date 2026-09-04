@@ -33,7 +33,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
-import { getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
 import { findOpening, type OpeningLine } from "@/core/curriculum/openings";
 import { markOpeningMistakeReviewed } from "@/server/actions/opening-mistake-review";
 import { useErrorShake } from "./error-feedback";
@@ -103,7 +103,12 @@ export function OpeningMistakeExercise({
     });
   }, [drill.status, deviation.fenBefore, deviation.actualUci]);
 
-  const hintCommentary = drill.status === "playing" ? getMoveCommentary(opening.id, drill.nextPly) : null;
+  // Repli sur `GENERIC_BOOK_COMMENT` sans contenu dédié — voir le même
+  // correctif dans `opening-drill.tsx` : sans lui, le bouton d'indice ne
+  // s'affichait JAMAIS pour la quasi-totalité des parties importées
+  // (`openingId` hors des ~20 chapitres curatés, voir le docstring du fichier).
+  const hintCommentary =
+    drill.status === "playing" ? (getMoveCommentary(opening.id, drill.nextPly) ?? GENERIC_BOOK_COMMENT) : null;
   const mistakeAlert = drill.status === "playing" && drill.plyIndex === 0 ? deviation.actualSan : null;
 
   function retry() {

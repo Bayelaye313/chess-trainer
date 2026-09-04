@@ -46,7 +46,16 @@ export const CRITICAL_SECOND_BEST_MAX_WIN = 50;
 export interface ClassifyMoveInput {
   /** Le coup joué est-il exactement celui recommandé par le moteur ? */
   foundBest: boolean;
-  /** Un seul coup légal existait — la position ne pouvait pas ne pas être critique. */
+  /**
+   * Un seul coup légal existait — jamais un signal de « Critique » : le
+   * joueur n'a rien trouvé, il n'avait pas le choix. Sert au contraire de
+   * GARDE-FOU (voir plus bas) : une reprise évidente forcée (l'adversaire
+   * vient de capturer, un seul coup légal reste) ne doit jamais s'afficher
+   * « Critique » — juste « Meilleur coup ». Bug utilisateur corrigé ici :
+   * l'ancienne version faisait l'inverse (`onlyLegalMove` déclenchait
+   * « Critique »), ce qui écrasait au passage les vrais coups « Brillants »
+   * forcés (voir `sacrifice.ts#isBrilliantSacrifice`, désormais prioritaire).
+   */
   onlyLegalMove: boolean;
   /** Perte de probabilité de gain (%) par rapport au meilleur coup ; 0 si `foundBest`. */
   winPercentLoss: number;
@@ -62,6 +71,14 @@ export interface ClassifyMoveInput {
    * mesurée. Voir `CRITICAL_SECOND_BEST_MAX_WIN`.
    */
   secondBestWinPercent: number | null;
+  /**
+   * Le second choix moteur se fait mater en une seule réponse adverse — voir
+   * `critical-gap.ts#secondBestAllowsImmediateMate`. Autre garde-fou « reprise
+   * évidente » : perdre la Dame/se faire mater instantanément en jouant
+   * autre chose ne rend pas le coup joué « Critique », c'est trop évident
+   * pour mériter le badge.
+   */
+  alternativeAllowsImmediateMate: boolean;
 }
 
 /**
@@ -79,18 +96,22 @@ export function classifyMove({
   winPercentLoss,
   secondBestGap,
   secondBestWinPercent,
+  alternativeAllowsImmediateMate,
 }: ClassifyMoveInput): MoveQuality {
   if (foundBest) {
-    // Les DEUX conditions comptent : un gros écart à lui seul ne suffit pas
-    // (voir CRITICAL_SECOND_BEST_MAX_WIN) — il faut aussi que l'alternative
-    // laissée de côté soit elle-même mauvaise pour le joueur.
+    // Reprise évidente : un seul coup légal, ou l'alternative se fait mater
+    // tout de suite — dans les deux cas, ce n'est PAS une trouvaille, donc
+    // jamais « Critique », quel que soit l'écart avec le second choix moteur.
+    if (onlyLegalMove || alternativeAllowsImmediateMate) return "best";
+    // Sinon, les DEUX conditions comptent : un gros écart à lui seul ne
+    // suffit pas (voir CRITICAL_SECOND_BEST_MAX_WIN) — il faut aussi que
+    // l'alternative laissée de côté soit elle-même mauvaise pour le joueur.
     const alternativeCollapses =
       secondBestGap !== null &&
       secondBestGap >= CRITICAL_GAP_THRESHOLD &&
       secondBestWinPercent !== null &&
       secondBestWinPercent < CRITICAL_SECOND_BEST_MAX_WIN;
-    const isCritical = onlyLegalMove || alternativeCollapses;
-    return isCritical ? "critical" : "best";
+    return alternativeCollapses ? "critical" : "best";
   }
   if (winPercentLoss < OKAY_MAX_LOSS) return "okay";
   if (winPercentLoss < BLUNDER_MIN_LOSS) return "inaccuracy";

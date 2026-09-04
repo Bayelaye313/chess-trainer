@@ -117,6 +117,8 @@ export interface PlayerMoveRecord {
   fenBefore: string;
   /** Coup joué, en UCI. */
   uci: string;
+  /** Numéro de demi-coup dans la partie — sert le ply moyen de la première gaffe d'ouverture (axe 3, « Ouverture en difficulté »). */
+  ply: number;
   quality: MoveQuality;
   phase: GamePhase;
   /** Motifs exploités par le MEILLEUR coup à cette position (voir `detectMotifs`). */
@@ -181,6 +183,14 @@ export interface OpeningPerformance {
   winRate: number;
   /** Précision moyenne du joueur dans les parties de cette ouverture, `null` si aucun coup analysé. */
   accuracy: number | null;
+  /**
+   * Ply moyen (arrondi) de la première gaffe/imprécision du joueur en phase
+   * d'ouverture, sur les parties de ce groupe ECO qui en comptent au moins
+   * une — `null` si aucune (ouverture jouée proprement, ou aucun coup
+   * analysable). Alimente « Tu as tendance à faire des gaffes au coup N » du
+   * bandeau « Ouverture en difficulté » (voir `findStrugglingOpening`).
+   */
+  avgMistakePly: number | null;
 }
 
 /** Gaffes ('blunder') où le coup joué a laissé au moins une pièce attaquée sans reprise légale. */

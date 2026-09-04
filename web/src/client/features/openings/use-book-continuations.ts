@@ -20,7 +20,16 @@ import type { BookContinuation } from "@/server/queries/openings";
 export type BookContinuationsState =
   | { status: "loading" }
   | { status: "ready"; continuations: BookContinuation[]; fen: string }
-  | { status: "error" };
+  /**
+   * `fen` porté ici aussi, même raison que sur `"ready"` : sans lui, un
+   * appelant qui a besoin de savoir si CETTE position précise a échoué (voir
+   * `use-opening-drill.ts#continuationsFailed`, le filet de sécurité qui
+   * évite au plateau de rester figé pour toujours sur une ligne rare — ex.
+   * Zukertort, Défense Benima — dont la requête échoue) ne pouvait pas
+   * distinguer « cette position a échoué » de « une position déjà quittée a
+   * échoué, la nouvelle requête est encore en vol ».
+   */
+  | { status: "error"; fen: string };
 
 export function useBookContinuations(fen: string): BookContinuationsState {
   const [state, setState] = useState<BookContinuationsState>({ status: "loading" });
@@ -41,7 +50,7 @@ export function useBookContinuations(fen: string): BookContinuationsState {
       })
       .catch(() => {
         if (requestIdRef.current !== requestId) return;
-        setState({ status: "error" });
+        setState({ status: "error", fen });
       });
   }, [fen]);
 

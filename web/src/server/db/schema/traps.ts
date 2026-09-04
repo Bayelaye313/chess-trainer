@@ -44,15 +44,13 @@ export const importedTraps = sqliteTable(
 );
 
 /**
- * Lignes d'ouverture importées en masse (`data/import/openings/*.pgn`) —
- * table prête pour une future exploration en profondeur, PAS ENCORE branchée
- * sur `/ouvertures` : ce catalogue reste volontairement 100% statique
- * (`core/curriculum/openings.ts`, voir son docstring « OPENINGS EST la
- * source de vérité », et `server/queries/openings.ts` : « Pas de DB ici »)
- * et n'a aucune raison de changer suite à cet import. Cette table existe pour
- * que le pipeline d'ingestion soit prêt le jour où une fonctionnalité voudra
- * vraiment parcourir un volume massif de parties/variantes hors du
- * répertoire curaté.
+ * Lignes d'ouverture importées en masse (`data/import/openings/*.pgn`, dont
+ * les ~3810 lignes lichess-org/chess-openings) — branchée sur `/ouvertures`
+ * via `server/curriculum/imported-openings-index.ts` : chaque chapitre curaté
+ * (`core/curriculum/openings.ts`) est enrichi de toute la profondeur que ces
+ * lignes lui connaissent, et les familles sans chapitre curaté dédié
+ * deviennent des entrées de catalogue à part entière (voir le docstring de ce
+ * module).
  */
 export const importedOpeningLines = sqliteTable(
   "imported_opening_lines",

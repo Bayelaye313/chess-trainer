@@ -15,7 +15,7 @@ import "server-only";
  * FSRS, pas d'échéance. La progression est un simple curseur linéaire
  * (`completedCount`) — voir le docstring de `userThemeProgress`.
  */
-import { and, asc, eq, gte } from "drizzle-orm";
+import { and, asc, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/server/db";
 import { curriculumPuzzles, curriculumThemes, userThemeProgress } from "@/server/db/schema";
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
@@ -38,34 +38,55 @@ export const LOCAL_USER_ID = "local";
 let seeded = false;
 
 /**
- * Sème le catalogue des 141 thèmes et le contenu de démonstration au premier
- * accès. Idempotent par un simple test "la table est-elle vide ?" — à ce
- * volume (141 lignes, une poignée de puzzles), un aller-retour suffit et
- * évite 141 upserts ligne à ligne à chaque démarrage.
+ * Sème le catalogue et le contenu de démonstration au premier accès, puis
+ * comble les thèmes manquants à chaque démarrage suivant si
+ * `core/curriculum/catalog.ts` a grandi depuis (nouvelle catégorie, nouveaux
+ * titres — ex. l'ajout de "endgame_mastery") : un diff catalogue↔base par
+ * `id`, jamais un ré-seed complet — les lignes déjà en base (progression
+ * utilisateur `user_theme_progress`, puzzles déjà importés par
+ * `seed-academy.ts`) ne sont JAMAIS touchées. Le contenu de démonstration
+ * (`buildDemoCurriculumPuzzleRows`) n'est inséré qu'au tout premier seed
+ * (table vide) — le réinsérer à un backfill ultérieur dupliquerait ses ids
+ * `demo-*`.
  *
- * Ne remet PAS à jour des thèmes déjà semés si `core/curriculum/catalog.ts`
- * change ensuite (nouveau titre, nouveau `totalPuzzles`...) — seule une base
- * vidée reprend le catalogue à jour. Une vraie migration de contenu (par
- * opposition à une migration de schéma) sortirait du cadre de cette fonction.
+ * Le diff nettoie aussi dans l'autre sens : un id présent en base mais qui a
+ * disparu du catalogue (thème renommé/fusionné — ex. l'ancien
+ * `lmt-mat-de-la-queue-d-aronde-dovetail` avant sa fusion avec
+ * `swallowsTailMate`, voir « Saturation Lichess » dans `catalog.ts`) est
+ * supprimé, jamais laissé orphelin : sans ce nettoyage, sa ligne
+ * `curriculum_themes` continuerait d'afficher un `totalPuzzles` figé au
+ * dernier import connu (jamais rafraîchi puisque plus aucun draft ne résout
+ * vers cet id) et resterait visible dans l'académie sous un titre qui n'existe
+ * plus. La suppression cascade (`onDelete: "cascade"`) sur `curriculum_puzzles`
+ * et `user_theme_progress` — un id renommé perd la progression de l'ancien
+ * thème, seule issue cohérente puisque le nouvel id est une entité distincte.
  */
 export async function ensureCurriculumSeeded(): Promise<void> {
   if (seeded) return;
 
-  const existing = await db.select({ id: curriculumThemes.id }).from(curriculumThemes).limit(1);
+  const existing = await db.select({ id: curriculumThemes.id }).from(curriculumThemes);
+  const toThemeRow = (theme: (typeof CURRICULUM_THEMES)[number]) => ({
+    id: theme.id,
+    category: theme.category,
+    author: theme.author,
+    title: theme.title,
+    description: theme.description,
+    level: theme.level,
+    totalPuzzles: theme.totalPuzzles,
+    orderIndex: theme.orderIndex,
+  });
+
   if (existing.length === 0) {
-    await db.insert(curriculumThemes).values(
-      CURRICULUM_THEMES.map((theme) => ({
-        id: theme.id,
-        category: theme.category,
-        author: theme.author,
-        title: theme.title,
-        description: theme.description,
-        level: theme.level,
-        totalPuzzles: theme.totalPuzzles,
-        orderIndex: theme.orderIndex,
-      })),
-    );
+    await db.insert(curriculumThemes).values(CURRICULUM_THEMES.map(toThemeRow));
     await db.insert(curriculumPuzzles).values(buildDemoCurriculumPuzzleRows());
+  } else {
+    const catalogIds = new Set(CURRICULUM_THEMES.map((theme) => theme.id));
+    const existingIds = new Set(existing.map((row) => row.id));
+    const missing = CURRICULUM_THEMES.filter((theme) => !existingIds.has(theme.id));
+    if (missing.length > 0) await db.insert(curriculumThemes).values(missing.map(toThemeRow));
+
+    const orphanedIds = existing.map((row) => row.id).filter((id) => !catalogIds.has(id));
+    if (orphanedIds.length > 0) await db.delete(curriculumThemes).where(inArray(curriculumThemes.id, orphanedIds));
   }
 
   seeded = true;
@@ -85,7 +106,7 @@ export interface CurriculumCategoryOverview extends CurriculumCategoryMeta {
 }
 
 /**
- * Vue complète pour l'écran d'accueil de l'académie : les 5 catégories, dans
+ * Vue complète pour l'écran d'accueil de l'académie : les 6 catégories, dans
  * l'ordre du catalogue, chacune avec ses thèmes et la progression de
  * l'utilisateur. `completedCount` est plafonné à `totalPuzzles` — au cas où
  * un import réduirait plus tard le total annoncé d'un thème déjà entamé.
@@ -130,6 +151,8 @@ export interface ThemePuzzle {
   fen: string;
   solution: string[];
   solutionSan: string[];
+  /** Provenance libre (partie, tournoi, Elo Lichess…) — matière première de la bulle du coach en client, voir `theme-session.tsx`. */
+  sourceRef: string | null;
 }
 
 export interface ThemeSession {

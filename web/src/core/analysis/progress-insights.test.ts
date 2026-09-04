@@ -5,15 +5,19 @@ import {
   computeOpeningPerformance,
   computePhaseAccuracy,
   computeTacticalMotifStats,
+  filterOpeningPerformanceForDisplay,
+  findStrugglingOpening,
+  MIN_GAMES_IN_OPENING_TABLE,
   UNKNOWN_OPENING_NAME,
 } from "./progress-insights";
-import type { PlayerGameRecord, PlayerMoveRecord } from "./types";
+import type { OpeningPerformance, PlayerGameRecord, PlayerMoveRecord } from "./types";
 
 /** Coup minimal, valeurs par défaut neutres — chaque test ne précise que ce qui compte. */
 function move(partial: Partial<PlayerMoveRecord>): PlayerMoveRecord {
   return {
     fenBefore: "4k3/8/8/8/8/8/8/4K3 w - - 0 1",
     uci: "e1d1",
+    ply: 1,
     quality: "best",
     phase: "middlegame",
     motifs: [],
@@ -122,6 +126,7 @@ describe("computeOpeningPerformance", () => {
       wins: 1,
       winRate: 50,
       accuracy: 53,
+      avgMistakePly: null, // les deux coups sont en phase "middlegame" (défaut de la fixture), pas "opening"
     });
     expect(result[1]).toEqual({
       eco: "C50",
@@ -130,6 +135,7 @@ describe("computeOpeningPerformance", () => {
       wins: 0,
       winRate: 0,
       accuracy: 85,
+      avgMistakePly: null,
     });
   });
 
@@ -153,6 +159,91 @@ describe("computeOpeningPerformance", () => {
   it("retombe sur le nom par défaut si aucune partie du groupe n'a de nom", () => {
     const result = computeOpeningPerformance([game({ eco: "A00", openingName: null })]);
     expect(result[0].name).toBe("Ouverture personnalisée / Non répertoriée");
+  });
+
+  it("calcule le ply moyen de la première gaffe d'ouverture, une seule par partie", () => {
+    const result = computeOpeningPerformance([
+      game({
+        eco: "B01",
+        moves: [
+          // Deux gaffes d'ouverture dans la même partie : seule la première (ply 5) compte.
+          move({ phase: "opening", quality: "blunder", ply: 5 }),
+          move({ phase: "opening", quality: "inaccuracy", ply: 9 }),
+          move({ phase: "middlegame", quality: "blunder", ply: 20 }), // hors phase d'ouverture : ignoré
+        ],
+      }),
+      game({
+        eco: "B01",
+        moves: [move({ phase: "opening", quality: "blunder", ply: 7 })],
+      }),
+      game({
+        eco: "B01",
+        moves: [move({ phase: "opening", quality: "best", ply: 3 })], // coup sain : aucune gaffe dans cette partie
+      }),
+    ]);
+
+    // Moyenne sur les DEUX parties qui en comptent une : (5 + 7) / 2 = 6.
+    expect(result[0].avgMistakePly).toBe(6);
+  });
+
+  it("ne compte jamais un coup de l'adversaire dans le ply moyen de gaffe", () => {
+    const result = computeOpeningPerformance([
+      game({ eco: "B01", moves: [move({ phase: "opening", quality: "blunder", ply: 5, byPlayer: false })] }),
+    ]);
+    expect(result[0].avgMistakePly).toBeNull();
+  });
+});
+
+describe("filterOpeningPerformanceForDisplay", () => {
+  function performance(partial: Partial<OpeningPerformance>): OpeningPerformance {
+    return { eco: "A00", name: "Test", gamesPlayed: 5, wins: 2, winRate: 40, accuracy: 70, avgMistakePly: null, ...partial };
+  }
+
+  it("ne garde que les ouvertures jouées au moins 5 fois par défaut", () => {
+    const result = filterOpeningPerformanceForDisplay([
+      performance({ eco: "B01", gamesPlayed: 5 }),
+      performance({ eco: "C50", gamesPlayed: 4 }),
+      performance({ eco: "A00", gamesPlayed: 1 }),
+    ]);
+    expect(result.map((p) => p.eco)).toEqual(["B01"]);
+  });
+
+  it("le seuil par défaut vaut MIN_GAMES_IN_OPENING_TABLE (5)", () => {
+    expect(MIN_GAMES_IN_OPENING_TABLE).toBe(5);
+  });
+
+  it("accepte un seuil personnalisé", () => {
+    const result = filterOpeningPerformanceForDisplay([performance({ eco: "B01", gamesPlayed: 2 })], 2);
+    expect(result).toHaveLength(1);
+  });
+
+  it("renvoie une liste vide sans jamais planter sur une entrée d'entrée vide", () => {
+    expect(filterOpeningPerformanceForDisplay([])).toEqual([]);
+  });
+});
+
+describe("findStrugglingOpening", () => {
+  function performance(partial: Partial<OpeningPerformance>): OpeningPerformance {
+    return { eco: "A00", name: "Test", gamesPlayed: 5, wins: 2, winRate: 40, accuracy: 70, avgMistakePly: null, ...partial };
+  }
+
+  it("retient la pire ouverture parmi celles avec un échantillon suffisant", () => {
+    const result = findStrugglingOpening([
+      performance({ eco: "B01", gamesPlayed: 5, winRate: 30 }),
+      performance({ eco: "C50", gamesPlayed: 4, winRate: 10 }),
+      performance({ eco: "A00", gamesPlayed: 5, winRate: 60 }), // taux correct : jamais candidate
+    ]);
+    expect(result?.eco).toBe("C50");
+  });
+
+  it("ignore une ouverture jouée trop peu de fois, même avec un mauvais taux", () => {
+    const result = findStrugglingOpening([performance({ eco: "B01", gamesPlayed: 1, winRate: 0 })]);
+    expect(result).toBeNull();
+  });
+
+  it("renvoie null quand aucune ouverture ne dépasse le seuil de difficulté", () => {
+    const result = findStrugglingOpening([performance({ eco: "B01", gamesPlayed: 10, winRate: 55 })]);
+    expect(result).toBeNull();
   });
 });
 
@@ -222,6 +313,7 @@ describe("aggregatePlayerProgress", () => {
         wins: 1,
         winRate: 100,
         accuracy: expect.any(Number),
+        avgMistakePly: null, // le seul coup en phase "opening" est un "best", pas une gaffe
       },
     ]);
     expect(result.hangingPieces).toEqual({ blunderCount: 1, totalBlunders: 1 });

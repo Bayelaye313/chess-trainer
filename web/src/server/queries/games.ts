@@ -6,10 +6,11 @@ import "server-only";
  * directement, sans passer par le pont client/serveur des actions (réservé
  * aux mutations déclenchées depuis un composant client).
  */
-import { desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { Chess } from "chess.js";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/server/db";
 import { moveRowToAnalysedPly } from "@/server/db/mappers";
-import { games, moves, type Game, type MoveRow } from "@/server/db/schema";
+import { games, moves, type Game, type GameResult, type MoveRow } from "@/server/db/schema";
 import {
   buildGameTimeline,
   computeAccuracy,
@@ -133,4 +134,71 @@ export async function getGameDetail(gameId: string): Promise<GameDetail | null> 
       },
     },
   };
+}
+
+/** Un coup `!! Brillant` ou `! Critique` joué par le joueur — la matière première du Hall of Fame « Mes Chefs-d'œuvre » (`rapport`, voir `client/features/reports/hall-of-fame.tsx`). */
+export interface MasterpieceEntry {
+  gameId: string;
+  ply: number;
+  san: string;
+  uci: string;
+  fenBefore: string;
+  /** Position juste après le coup — rejouée ici (chess.js) : `moves` ne stocke que `fenBefore`, voir son docstring. */
+  fenAfter: string;
+  quality: "brilliant" | "critical";
+  opponentName: string | null;
+  playedAt: Date;
+  result: GameResult | null;
+  playerColor: "w" | "b";
+}
+
+/**
+ * Scanne l'historique complet des parties importées pour en extraire les
+ * coups classés `!! Brillant` ou `! Critique` par `classify.ts` — le
+ * « Hall of Fame » de l'onglet Rapport. Les plus récents d'abord : ce sont
+ * les sacrifices/trouvailles les plus proches de la mémoire du joueur.
+ */
+export async function listMasterpieces(limit = 30): Promise<MasterpieceEntry[]> {
+  const rows = await db
+    .select({
+      gameId: moves.gameId,
+      ply: moves.ply,
+      san: moves.san,
+      uci: moves.uci,
+      fenBefore: moves.fenBefore,
+      quality: moves.quality,
+      opponentName: games.opponentName,
+      playedAt: games.playedAt,
+      result: games.result,
+      playerColor: games.playerColor,
+    })
+    .from(moves)
+    .innerJoin(games, eq(games.id, moves.gameId))
+    .where(and(eq(moves.byPlayer, true), inArray(moves.quality, ["brilliant", "critical"])))
+    .orderBy(desc(games.playedAt))
+    .limit(limit);
+
+  const entries: MasterpieceEntry[] = [];
+  for (const row of rows) {
+    const board = new Chess(row.fenBefore);
+    try {
+      board.move({ from: row.uci.slice(0, 2), to: row.uci.slice(2, 4), promotion: row.uci.slice(4, 5) || undefined });
+    } catch {
+      continue; // ne devrait pas arriver (coup déjà validé à l'import), mais une ligne illisible ne doit pas planter tout le Hall of Fame.
+    }
+    entries.push({
+      gameId: row.gameId,
+      ply: row.ply,
+      san: row.san,
+      uci: row.uci,
+      fenBefore: row.fenBefore,
+      fenAfter: board.fen(),
+      quality: row.quality as "brilliant" | "critical",
+      opponentName: row.opponentName,
+      playedAt: row.playedAt,
+      result: row.result,
+      playerColor: row.playerColor,
+    });
+  }
+  return entries;
 }

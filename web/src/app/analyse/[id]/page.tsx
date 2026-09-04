@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { GameReviewScreen, type GameDeviation } from "@/client/features/games/game-review-screen";
 import { getGameDetail } from "@/server/queries/games";
+import { getGameOpeningDeviation } from "@/server/queries/opening-mistakes";
 import { getOpeningDetail } from "@/server/queries/openings";
 
 export default async function GameDetailPage({
@@ -23,7 +24,13 @@ export default async function GameDetailPage({
   const detail = await getGameDetail(id);
   if (!detail) notFound();
 
-  const deviation = resolveDeviation(openingId, ply);
+  // Les paramètres explicites (venus du journal « Erreurs d'ouverture »)
+  // restent prioritaires et se résolvent sans I/O (catalogue statique) ;
+  // sans eux, la détection automatique (`getGameOpeningDeviation`) tourne
+  // pour que TOUTE partie ouverte affiche sa déviation, pas seulement celles
+  // déjà cataloguées dans le journal — voir le docstring du Coach
+  // (`buildCoachMessage`, `coach-narrative.ts`).
+  const deviation = resolveDeviation(openingId, ply) ?? (await getGameOpeningDeviation(id));
 
   return (
     <GameReviewScreen

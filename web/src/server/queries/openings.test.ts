@@ -60,10 +60,22 @@ describe("formatMovePreview", () => {
 });
 
 describe("listOpenings", () => {
-  it("renvoie une entrée par ouverture du catalogue, avec un aperçu", () => {
+  it("renvoie le catalogue curaté ET les familles dynamiques de la base Lichess, avec un aperçu chacune", () => {
+    // Le catalogue n'est plus plafonné aux ~20 chapitres curatés à la main
+    // (voir `server/curriculum/imported-openings-index.ts`) : les ~130
+    // familles lichess-org sans chapitre curaté dédié s'y ajoutent.
     const summaries = listOpenings();
-    expect(summaries).toHaveLength(OPENINGS.length);
+    expect(summaries.length).toBeGreaterThan(OPENINGS.length);
     expect(summaries.every((s) => s.preview.length > 0)).toBe(true);
+    // Chaque chapitre curaté reste présent, sous son id stable (répétition
+    // espacée/mastery en dépendent, voir `server/queries/opening-progress.ts`).
+    for (const opening of OPENINGS) {
+      expect(summaries.some((s) => s.id === opening.id)).toBe(true);
+    }
+    // Une entrée par id : le catalogue curaté et le catalogue dynamique ne
+    // doivent jamais se dupliquer (voir `CURATED_FAMILY_HUB`).
+    const ids = summaries.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 
@@ -122,6 +134,22 @@ describe("getOpeningDetail", () => {
   it("inclut les variantes nommées découvertes en base ECO", () => {
     const detail = getOpeningDetail("ruy-lopez");
     expect(detail?.variations.length).toBeGreaterThan(0);
+  });
+
+  it("inclut désormais des dizaines de variantes issues de la base Lichess pour un chapitre curaté riche", () => {
+    // Avant la connexion du catalogue dynamique, la Sicilienne n'avait que
+    // 4-5 variantes écrites à la main — voir le docstring de
+    // `server/curriculum/imported-openings-index.ts`.
+    const detail = getOpeningDetail("sicilian-najdorf");
+    expect(detail?.variations.length).toBeGreaterThan(20);
+  });
+
+  it("renvoie une famille dynamique (id `lichess-*`) pour une ouverture sans chapitre curaté", () => {
+    const dynamicId = listOpenings().find((s) => s.id.startsWith("lichess-"))!.id;
+    const detail = getOpeningDetail(dynamicId);
+    expect(detail).not.toBeNull();
+    expect(detail!.opening.id).toBe(dynamicId);
+    expect(detail!.plies.length).toBeGreaterThan(0);
   });
 
   it("renvoie null pour un slug inconnu", () => {

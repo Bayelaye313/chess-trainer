@@ -405,6 +405,60 @@ async function fetchLeadInUciByGame(
   return result;
 }
 
+/** Ce que la Revue de partie (`GameReviewScreen`) sait afficher d'une déviation — même forme que `GameDeviation` côté client, dupliquée ici pour ne pas faire dépendre `server/` d'un type défini dans un composant client. */
+export interface GameOpeningDeviation {
+  ply: number;
+  expectedSan: string;
+  expectedUci: string;
+  openingName: string;
+}
+
+/**
+ * Version À UNE SEULE PARTIE de `listRepertoireDeviationGames` — sert le
+ * Coach de la Revue de partie (`buildCoachMessage`, `coach-narrative.ts`) pour
+ * afficher automatiquement la bulle de déviation dès qu'une partie s'ouvre,
+ * sans attendre que le joueur passe par le journal « Erreurs d'ouverture »
+ * (`?openingId=&ply=`, voir `app/analyse/[id]/page.tsx#resolveDeviation`, qui
+ * reste prioritaire et synchrone quand ces paramètres sont présents).
+ *
+ * Réutilise exactement les mêmes portes (`isReviewable`,
+ * `filterRealDeviations`, `resolveTheoreticalCorrection`) que la version
+ * multi-parties — aucune nouvelle règle de filtrage, juste une requête
+ * restreinte à `gameId` (le regroupement par partie de
+ * `earliestOpeningMistakePerGame` ne sert à rien ici : il n'y a qu'une seule
+ * partie, le plus petit `ply` se prend directement).
+ */
+export async function getGameOpeningDeviation(gameId: string): Promise<GameOpeningDeviation | null> {
+  const rows = await db
+    .select({
+      ply: moves.ply,
+      actualUci: moves.uci,
+      fenBefore: moves.fenBefore,
+      actualQuality: moves.quality,
+      bestUci: moves.bestUci,
+      bestSan: moves.bestSan,
+      openingName: games.openingName,
+    })
+    .from(moves)
+    .innerJoin(games, eq(games.id, moves.gameId))
+    .where(and(eq(moves.gameId, gameId), eq(moves.byPlayer, true), eq(moves.phase, "opening")));
+
+  const reviewable = rows.filter((row) => isReviewable(row.actualQuality));
+  if (reviewable.length === 0) return null;
+  const row = reviewable.reduce((earliest, candidate) => (candidate.ply < earliest.ply ? candidate : earliest));
+
+  const mastersByFen = await fetchMastersByFen([row.fenBefore]);
+  const survivors = filterRealDeviations([row], mastersByFen);
+  if (survivors.length === 0) return null;
+
+  const correction =
+    resolveTheoreticalCorrection(row.fenBefore, row.actualUci) ??
+    (row.bestUci && row.bestSan ? { uci: row.bestUci, san: row.bestSan } : null);
+  if (!correction) return null;
+
+  return { ply: row.ply, expectedSan: correction.san, expectedUci: correction.uci, openingName: row.openingName ?? "Ouverture non identifiée" };
+}
+
 /**
  * Liste chronologique (plus récentes d'abord) des parties importées où le
  * joueur a commis une vraie gaffe/imprécision en phase d'ouverture — voir le

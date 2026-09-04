@@ -88,6 +88,19 @@ export interface OpeningTrap {
   outcome: string;
   /** Explication conceptuelle plus profonde (motif tactique récurrent, plan stratégique, lien avec d'autres pièges) — affichée sous `outcome` dans `OpeningTrapDrill`. */
   comments: string;
+  /**
+   * Option « Pion Poison » (incarner la victime, `OpeningTrapDrill`) : coups
+   * SAN à jouer APRÈS `trapMove` — la suite qui démontre concrètement
+   * l'effondrement de la position (matérielle ou mat), rejouée entièrement en
+   * autoplay par `buildPoisonPawnRound` (`trap-round.ts`). `undefined` pour
+   * un piège sans cette donnée (aujourd'hui : tous les pièges IMPORTÉS en
+   * base, voir `server/queries/traps.ts#fromImportedRow`) — l'option reste
+   * alors désactivée sur l'écran plutôt que de tenter une démonstration
+   * inventée et non vérifiée. Authorée pour les 25 entrées de ce socle
+   * statique, vérifiée légale par `traps.test.ts` exactement comme
+   * `trapMove`/`refutationMoves`.
+   */
+  punishmentLine?: readonly string[];
 }
 
 export const OPENING_TRAPS: readonly OpeningTrap[] = [
@@ -110,6 +123,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["dxe5", "Qxg4"],
     outcome: "dxe5 refuse la Dame empoisonnée et reste simplement dans la partie. Bxd1?? au contraire tombe dans le Mat de Légal : Bxf7+! Ke7 Nd5#.",
     comments: "Le motif de fond, c'est le faux clouage : un clouage n'est réel que si la pièce clouée protège effectivement quelque chose d'irremplaçable. Ici le cavalier f3 est « cloué » sur la Dame d1, mais le Roi noir compte plus que la Dame — Légal l'a compris et a sacrifié la Dame pour matérialiser l'idée. Ce réflexe (« qui protège quoi, et lequel des deux compte vraiment ? ») revient dans la quasi-totalité des pièges de ce catalogue.",
+    punishmentLine: ["Bxf7+", "Ke7", "Nd5#"],
   },
   {
     id: "blackburne-shilling",
@@ -127,6 +141,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Nxd4"],
     outcome: "Nxd4! profite simplement du cavalier mal placé, sans risque. Nxe5?? au contraire tombe dans le Gambit Shilling de Blackburne : Qg5! menace à la fois le cavalier et g2 — impossible de tout défendre en un coup.",
     comments: "Nd4 n'est PAS un mauvais coup en soi (l'échange de cavaliers après Nxd4 est même légèrement agréable pour les Noirs) — c'est un piège psychologique pur, qui ne fonctionne que parce que Nxe5 « a l'air » de punir un coup imprécis. Les 4 puzzles suivants creusent ce qui se passe si les Blancs mordent à l'hameçon ET s'enfoncent encore après 4...Qg5!.",
+    punishmentLine: ["Qg5", "Nxf7", "Qxg2", "Rf1", "Qxe4+", "Be2", "Nf3#"],
   },
   {
     id: "blackburne-nxf7",
@@ -144,6 +159,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ng4"],
     outcome: "Ng4 ramène le cavalier menacé tout en bloquant provisoirement la colonne g — les Blancs restent en délicatesse après un début aussi imprudent, mais évitent le pire. Nxf7?? au contraire tombe dans la ligne la plus célèbre du Gambit Shilling : Qxg2! Rf1 Qxe4+! Be2 Nf3# — mat.",
     comments: "Le point commun avec le Mat de Légal : les Blancs accumulent les prises de pions « gratuits » (e5, puis f7) sans jamais remarquer que le second cavalier noir, resté sagement sur d4 depuis le 3e coup, attend patiemment sa case c2 ou f3. Un pion offert deux fois de suite dans la même ligne doit alerter, pas rassurer.",
+    punishmentLine: ["Qxg2", "Rf1", "Qxe4+", "Be2", "Nf3#"],
   },
   {
     id: "blackburne-bxf7",
@@ -161,6 +177,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ng4"],
     outcome: "Ng4 limite la casse sans donner de matériel supplémentaire. Bxf7+?? au contraire dépense le Fou pour rien de concret : Ke7! et les Blancs restent nettement pire, sans compensation suffisante.",
     comments: "Un sacrifice « avec échec » n'est pas automatiquement fort — le réflexe à corriger est de se demander ce que l'échec accomplit CONCRÈTEMENT (case gagnée, pièce déviée, tempo pour développer) plutôt que de le jouer parce qu'il « semble actif ». Ici il ne fait qu'échanger le Fou contre un pion, sans réduire la pression sur le cavalier e5.",
+    punishmentLine: ["Ke7"],
   },
   {
     id: "blackburne-d4",
@@ -178,6 +195,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ng4"],
     outcome: "Ng4 répond directement à la double attaque en sauvant le cavalier menacé. Nc3?? au contraire l'ignore complètement : Qxg2! vise ensuite la Tour h1 sans que rien ne s'y oppose.",
     comments: "Face à une double attaque, un coup de développement « normal » qui ne traite ni l'une ni l'autre menace est presque toujours une erreur, même s'il semble constructif. Toujours identifier CE QUE menace l'adversaire avant de jouer un coup qui a l'air bon dans l'absolu.",
+    punishmentLine: ["Qxg2"],
   },
   {
     id: "blackburne-qf3",
@@ -195,6 +213,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ng4"],
     outcome: "Ng4 sauve le cavalier attaqué sans exposer davantage le Roi. Qf3?? au contraire oublie le second cavalier : Nxc2+! fourchette le Roi e1 et la Tour a1 — une pièce supplémentaire s'envole.",
     comments: "La leçon centrale des 4 variantes Blackburne-Shilling : quand DEUX pièces adverses menacent des choses différentes, corriger l'une des deux menaces sans vérifier l'autre est le piège le plus commun de tous les échecs, à tous les niveaux. Toujours faire l'inventaire complet des menaces avant de choisir son coup.",
+    punishmentLine: ["Nxc2+"],
   },
   {
     id: "evans-gambit-accepted-c3",
@@ -212,6 +231,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Bb6"],
     outcome: "Bb6 replie le Fou en sécurité et garde une structure saine, un pion d'avance. dxc3?? au contraire ouvre grand la diagonale b3-f7 : Qb3! attaque simultanément b7 et f7, sans qu'une seule pièce noire supplémentaire ne soit développée pour aider à la défense.",
     comments: "Le Gambit Évans repose entièrement sur le tempo : les Blancs sacrifient un pion (b4) pour gagner un temps de développement massif. Chaque pion supplémentaire que les Noirs grappillent (Bxb4, puis exd4, puis dxc3) coûte lui aussi un tempo — à un moment, le compte devient insoutenable et la Dame blanche punit le retard de développement plutôt que le matériel en lui-même.",
+    punishmentLine: ["Qb3"],
   },
   {
     id: "evans-gambit-fischer-defense",
@@ -229,6 +249,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["d6"],
     outcome: "d6 consolide calmement le centre et garde le pion d4 en sécurité, sans se précipiter sur c3. dxc3?? au contraire retombe dans le même panneau que la ligne principale : Qb3! double attaque b7 et f7 pendant que le développement noir reste en retard.",
     comments: "La Défense Fischer (5...Bc5 au lieu de 5...Ba5) est une vraie amélioration théorique — elle garde le Fou sur sa meilleure diagonale — mais elle ne dispense JAMAIS de compter les tempos avant de croquer un pion de plus. Comparer ce puzzle au précédent (Ligne Acceptée) est un excellent exercice : le motif tactique final est rigoureusement identique malgré l'ordre des coups différent.",
+    punishmentLine: ["Qb3"],
   },
   {
     id: "evans-gambit-declined",
@@ -246,6 +267,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Nc3"],
     outcome: "Nc3 développe sobrement sans se presser. a5?? au contraire perd le pion net : Nxa5! et le cavalier noir attaque en prime le Fou c4 — les Blancs doivent encore perdre un temps pour le sauver.",
     comments: "Une poussée de pion qui « chasse » une pièce adverse doit toujours être vérifiée à l'aune d'une question simple : ce pion avancé est-il lui-même défendu une fois arrivé sur sa case ? Ici, ...a6 avait justement pour but de retarder cette poussée le temps que les Blancs préparent sa défense (par exemple avec Nc3 d'abord).",
+    punishmentLine: ["Nxa5"],
   },
   {
     id: "fried-liver-na5-escape",
@@ -263,6 +285,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Na5"],
     outcome: "Na5! esquive complètement le sacrifice tout en attaquant le Fou c4 — la ligne moderne de référence contre les Deux Cavaliers. Nxd5?? au contraire ouvre la voie à 6.Nxf7! Kxf7 7.Qf3+, avec une attaque très dangereuse pour un seul pion.",
     comments: "Le point théorique central des Deux Cavaliers : 5...Nxd5 n'est pas illégal ni immédiatement perdant au sens strict, mais il invite une attaque que la théorie moderne juge trop dangereuse à affronter en pratique — d'où la préférence pour 5...Na5 (ou 5...Nb4), qui règle le problème du pion d5 SANS jamais laisser le Roi noir au centre. Comparer avec le puzzle suivant, qui explore ce qui se passe pour les joueurs qui acceptent quand même d'entrer dans le sacrifice.",
+    punishmentLine: ["Nxf7", "Kxf7", "Qf3+"],
   },
   {
     id: "fried-liver-king-walk",
@@ -280,6 +303,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ke6"],
     outcome: "Ke6! est le seul coup qui centralise le Roi tout en gardant un accès à ses pièces pour se défendre — le point le plus contre-intuitif de toute l'Attaque Fried Liver. Kg8?? au contraire enferme le Roi derrière un Fou et une Tour non développés, offrant aux Blancs largement le temps de construire une attaque décisive.",
     comments: "Ce coup illustre une idée qui revient souvent en finale d'attaque : un Roi exposé n'est pas nécessairement mieux protégé en reculant vers son camp si ce recul l'enferme derrière ses propres pièces. Ke6, bien que visuellement audacieux, donne au Roi de l'air et implique directement les autres pièces noires dans sa défense — c'est l'un des faits les plus cités de toute la théorie des ouvertures ouvertes.",
+    punishmentLine: ["Qxd5+"],
   },
   {
     id: "traxler-counter-attack",
@@ -297,6 +321,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ke2"],
     outcome: "Ke2! décline la capture et garde le Roi relativement à l'abri, tout en laissant le cavalier f7 engrangé pour plus tard. Kxf2?? au contraire ouvre le jeu en plein centre : Nxe4+! Kg1 (ou une autre case) Qh4! avec une attaque noire extrêmement dangereuse pour la seule pièce sacrifiée.",
     comments: "La Contre-Attaque Traxler (ou Wilkes-Barre) est l'une des lignes les plus tranchantes de toute la théorie des ouvertures : les Noirs répondent à un sacrifice par un CONTRE-sacrifice immédiat plutôt que par la prudence. La leçon pratique à retenir n'est pas de mémoriser 15 coups par cœur, mais ce réflexe précis : face à un sacrifice surprise, la prise la plus évidente n'est pas toujours la mieux, et décliner (Ke2) garde souvent plus de contrôle qu'accepter.",
+    punishmentLine: ["Nxe4+", "Kg1", "Qh4"],
   },
   {
     id: "moller-attack-capture-order",
@@ -314,6 +339,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Bxc3"],
     outcome: "Bxc3! capture avec le Fou en premier — après bxc3, c'est le cavalier e4 qui reste actif au centre, sans rien à défendre en urgence. Nxc3?? au contraire inverse l'ordre : après bxc3, le Fou b4 est soudain attaqué par ce même pion et doit reculer piteusement, perdant le temps que tout le Gambit Évans/l'Attaque Møller cherchait justement à gagner.",
     comments: "Ce puzzle illustre un principe encore plus général que la position elle-même : quand deux pièces PEUVENT toutes les deux jouer la même capture, l'ordre des prises n'est jamais neutre — il faut toujours regarder qui se retrouve exposé APRÈS la recapture adverse, pas seulement ce qui est gagné dans l'instant. On retrouve exactement ce réflexe dans le Gambit Évasion (« dxc3 » ci-dessus) : ici il ne s'agit plus de savoir SI on prend, mais AVEC QUOI.",
+    punishmentLine: ["bxc3"],
   },
   {
     id: "deutz-gambit-recapture",
@@ -331,6 +357,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["exd4"],
     outcome: "exd4 règle la tension centrale proprement et garde le Fou c5 hors de danger. Nxe4?? au contraire ignore que d4 attaque aussi le Fou c5 : dxc5! gagne une pièce nette, le cavalier e4 ne compensant rien.",
     comments: "Une variante de l'idée « laquelle des deux prises règle vraiment le problème » : ici ce n'est même pas une question d'ordre (comme dans l'Attaque Møller) mais de choix pur — une des deux cibles attaquées par d4 doit être sécurisée en priorité (le Fou, qui ne peut pas se recapturer), l'autre (le pion e4) peut attendre.",
+    punishmentLine: ["dxc5"],
   },
   {
     id: "deutz-gambit-f2-fork-illusion",
@@ -348,6 +375,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Nf6"],
     outcome: "Nf6! ramène simplement le cavalier en sécurité, sans perdre de matériel. Nxf2?? au contraire ne fait illusion qu'un instant : Rxf2 (ou Kxf2) et les Blancs restent avec un cavalier de plus pour un seul pion.",
     comments: "Une case qui semble offrir une fourchette (ici sur la Dame d1 et la Tour f1) ne vaut la peine d'y sauter que si elle est elle-même sûre — sinon la « fourchette » ne sert à rien puisque la pièce qui fourche disparaît aussitôt. Toujours vérifier les défenseurs d'une case cible avant de se laisser séduire par ce qu'elle attaque en retour.",
+    punishmentLine: ["Rxf2"],
   },
 
   // ────────────────────────────────────────────────────────────────────────
@@ -369,6 +397,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Bd3"],
     outcome: "Bd3 met le fou à l'abri sans rien perdre. hxg4?? au contraire abandonne le fou après Nxc4! — un classique du Gambit Smith-Morra.",
     comments: "Le Gambit Smith-Morra sacrifie un pion pour du développement et de l'initiative — le Piège de Sibérie punit les Blancs qui, en pleine possession de cette initiative, oublient qu'une menace adverse en attente (ici Na5 sur le Fou c4) reste valable même pendant qu'ils en exécutent une autre. Toujours vérifier ses propres pièces menacées avant de croquer une offrande.",
+    punishmentLine: ["Nxc4"],
   },
   {
     id: "magnus-smith-trap",
@@ -386,6 +415,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Bd7"],
     outcome: "Bd7 termine tranquillement le développement sans se précipiter contre la poussée de pions blancs. h5?? au contraire tombe dans la Variante de Magnus Smith : gxh5! Nxh5 Nxe6! fxe6 Qxh5+! regagne le cavalier avec un échec supplémentaire — les Blancs ressortent une pièce devant.",
     comments: "L'Attaque Keres (6.g4) est une poussée agressive typique des lignes Scheveningen/Najdorf : elle gagne de l'espace au prix de la sécurité de son propre Roi. Le piège rappelle que RÉPONDRE à une attaque de pions par une contre-poussée immédiate n'est pas automatiquement juste — il faut d'abord vérifier que les cases et diagonales qui s'ouvriront ensuite ne profitent pas davantage à l'attaquant.",
+    punishmentLine: ["gxh5", "Nxh5", "Nxe6", "fxe6", "Qxh5+"],
   },
 
   // ────────────────────────────────────────────────────────────────────────
@@ -407,6 +437,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Bg4"],
     outcome: "Bg4! cloue immédiatement le cavalier f3 et garde l'initiative, sans se presser sur d4. exd4?? au contraire cède le centre et le temps aux Blancs, qui recapturent tranquillement sans que les Noirs n'aient rien engrangé en retour.",
     comments: "La Variante Fantaisie (« Attaque Fantôme ») transforme la Caro-Kann en position beaucoup plus ouverte que d'habitude — les repères habituels de la Caro-Kann (structure solide, développement lent) ne s'appliquent plus tels quels. Le réflexe à corriger : dans une position ouverte, le développement AVEC tempo (ici Bg4, clouage) prime presque toujours sur un gain de pion qui ne fait que déplacer la tension sans la résoudre.",
+    punishmentLine: ["Nxd4"],
   },
   {
     id: "caro-kann-two-knights-alien",
@@ -424,6 +455,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Ndf6"],
     outcome: "Ndf6! développe le MÊME cavalier qui occupait d7, libérant cette case pour le Roi. Ngf6?? au contraire tombe dans l'un des mats d'ouverture les plus célèbres : Nd6# — le Roi noir est totalement encagé par ses propres pièces (d7, d8, e7, f7, f8 tous occupés), sans aucune case de fuite ni pièce capable de capturer ou d'intercepter.",
     comments: "Ce piège est un cas d'école de « mat étouffé déguisé » : ce n'est pas un cavalier qui prive le Roi de cases (comme dans un mat étouffé classique), mais les propres pièces non développées du Roi qui jouent ce rôle. La leçon : avant de choisir laquelle de deux pièces développer vers la même case, vérifier systématiquement quelles cases CHACUNE des deux options laisse libres pour le Roi.",
+    punishmentLine: ["Nd6#"],
   },
 
   // ────────────────────────────────────────────────────────────────────────
@@ -445,6 +477,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["d4"],
     outcome: "d4 développe au centre sans mordre à l'hameçon, laissant le cavalier g4 sans réelle utilité pour l'instant. hxg4?? au contraire ouvre la colonne h : hxg4! et la Dame noire peut s'y engouffrer avec une attaque très dangereuse contre un seul cavalier de matériel.",
     comments: "Le « Fishing Pole » est l'un des sacrifices les plus enseignés du jeu d'échecs moderne car il se reproduit, presque à l'identique, dans de nombreuses ouvertures différentes dès qu'un cavalier peut atteindre g4 (ou g5 pour les Noirs) avec le pion h prêt à le suivre. Le réflexe à automatiser : une pièce avancée et « offerte » sans raison apparente doit toujours faire poser la question « qu'est-ce que sa capture ouvre chez MOI ? », pas seulement « qu'est-ce que je gagne ? ».",
+    punishmentLine: ["hxg4", "Kh1", "Qh4"],
   },
   {
     id: "mortimer-trap",
@@ -462,6 +495,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["Bc2"],
     outcome: "Bc2 résout calmement l'attaque sur le Fou avant de songer à autre chose. Nxe5?? au contraire tombe dans le Piège de Mortimer : Qg5! double-attaque le cavalier e5 et le pion g2, et les Blancs ne peuvent pas tout défendre en un seul coup.",
     comments: "Même motif que le Gambit Shilling de Blackburne (Qg5, double attaque cavalier+g2) mais dans un contexte de Ruy Lopez fermée : ce n'est pas un hasard, c'est l'un des motifs de double-attaque les plus recyclés de toute la théorie des débuts ouverts. Reconnaître un motif déjà vu ailleurs est une des compétences les plus utiles en pratique — ne pas résoudre une pièce attaquée avant de grappiller ailleurs en est la cause récurrente.",
+    punishmentLine: ["Qg5"],
   },
   {
     id: "tarrasch-trap",
@@ -479,6 +513,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["O-O"],
     outcome: "O-O termine le développement sans se précipiter sur un pion piégé. Nxe5?? au contraire tombe dans le Piège de Tarrasch : Qd4! centralise en fourchant le cavalier e5 et le pion e4 — les Blancs perdent le fruit de leur prise, et plus encore.",
     comments: "La Variante d'Échange (4.Bxc6) simplifie la position mais déséquilibre aussi la structure de pions noirs (doublés en c) — beaucoup de joueurs blancs, pressés d'exploiter cet avantage, oublient que la colonne d, elle, s'est ouverte pour les DEUX camps une fois les dames encore sur l'échiquier. Un déséquilibre structurel favorable ne dispense jamais de vérifier les lignes ouvertes qui l'accompagnent.",
+    punishmentLine: ["Qd4"],
   },
 
   // ────────────────────────────────────────────────────────────────────────
@@ -500,6 +535,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["e3"],
     outcome: "e3 développe sagement sans se jeter sur le pion. Nxd5?? au contraire perd une pièce nette après Nxd5! Bxd8 Bb4+! Qd2 Bxd2+ Kxd2 Kxd8 — les Noirs ressortent une pièce devant.",
     comments: "Une capture qui semble gagner une pièce mérite toujours d'être poursuivie jusqu'au bout de la séquence forcée, pas seulement jusqu'au premier échange favorable — ici, s'arrêter après Bxd8 fait perdre de vue l'échec intermédiaire Bb4+ qui renverse tout le calcul.",
+    punishmentLine: ["Nxd5", "Bxd8", "Bb4+", "Qd2", "Bxd2+", "Kxd2", "Kxd8"],
   },
   {
     id: "lasker-trap",
@@ -517,6 +553,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["fxe3"],
     outcome: "fxe3 régularise sobrement le matériel. Bxb4?? au contraire tombe dans le Piège de Lasker : exf2+! Ke2 fxg1=Q, et les Noirs ressortent une pièce devant en promouvant.",
     comments: "Un pion très avancé près de la 2e/7e rangée doit toujours être traité comme une menace de promotion active, même s'il semble isolé et sans soutien apparent — le compter pour « juste un pion » est l'erreur de fond de ce piège.",
+    punishmentLine: ["exf2+", "Ke2", "fxg1=Q"],
   },
   {
     id: "scholars-mate",
@@ -534,6 +571,7 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     refutationMoves: ["g6", "Qf3"],
     outcome: "g6! chasse la Dame et coupe net la diagonale vers f7. Nf6?? au contraire perd immédiatement sur Qxf7#, le Mat du Berger.",
     comments: "Le point faible structurel de f7 (et f2 pour les Blancs) — la seule case du plateau uniquement défendue par le Roi en tout début de partie — revient dans une quantité impressionnante de pièges de ce catalogue (Légal, Blackburne-Shilling, Fried Liver, Traxler…). Repérer cette case en priorité dès les premiers coups est l'un des réflexes les plus rentables de toute la phase d'ouverture.",
+    punishmentLine: ["Qxf7#"],
   },
 ] as const;
 

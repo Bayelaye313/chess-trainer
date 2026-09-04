@@ -164,30 +164,30 @@ describe("isBrilliantSacrifice", () => {
   const board = new Chess(fen);
   const nxf7 = new Chess(fen).move("Nxf7");
 
-  it("surclasse un sacrifice qui est aussi le meilleur coup, sans alternative critique, position gagnante", () => {
-    expect(isBrilliantSacrifice("best", true, 0, 55, board, nxf7)).toBe(true);
-  });
-
-  it("ne surclasse jamais un coup critique — c'était le seul coup qui tienne, pas un éclair de génie", () => {
-    expect(isBrilliantSacrifice("critical", true, 0, 55, board, nxf7)).toBe(false);
+  it("surclasse un sacrifice qui est aussi le meilleur coup, position gagnante — même quand il était aussi, techniquement, le seul coup qui tienne", () => {
+    // Cahier des charges explicite (2026-09-03) : Brillant a priorité absolue
+    // sur Critique. `quality` n'est plus un paramètre de cette fonction —
+    // `evaluate-move.ts` l'appelle après `classifyMove` pour lui laisser le
+    // dernier mot, y compris pour surclasser un `critical`.
+    expect(isBrilliantSacrifice(true, 0, 55, board, nxf7)).toBe(true);
   });
 
   it("ne surclasse pas un sacrifice qui n'est pas le coup recommandé par le moteur et perd trop de gain", () => {
-    // "okay" : ni foundBest, ni proche du sommet (5 points de gain perdus, très
+    // Ni foundBest, ni proche du sommet (5 points de gain perdus, très
     // au-dessus de BRILLIANT_NEAR_BEST_MAX_LOSS) — une simple erreur mineure,
     // pas un éclair de génie.
-    expect(isBrilliantSacrifice("okay", false, 5, 55, board, nxf7)).toBe(false);
+    expect(isBrilliantSacrifice(false, 5, 55, board, nxf7)).toBe(false);
   });
 
   it("surclasse un sacrifice qui n'est pas l'exact premier choix mais reste à quasi-égalité (tolérance)", () => {
     // CLAUDE.md : « matches the Best engine choice OR is highly evaluated » —
     // 0.3 point perdu, sous BRILLIANT_NEAR_BEST_MAX_LOSS (0.5) : quasi ex æquo
     // avec le sommet, le sacrifice mérite le label même sans matcher `foundBest`.
-    expect(isBrilliantSacrifice("okay", false, 0.3, 55, board, nxf7)).toBe(true);
+    expect(isBrilliantSacrifice(false, 0.3, 55, board, nxf7)).toBe(true);
   });
 
   it("ne surclasse pas juste en dehors de la marge de tolérance", () => {
-    expect(isBrilliantSacrifice("okay", false, 0.6, 55, board, nxf7)).toBe(false);
+    expect(isBrilliantSacrifice(false, 0.6, 55, board, nxf7)).toBe(false);
   });
 
   it("ne surclasse pas quand la perte est démesurée même si le résultat est nominalement 'best'", () => {
@@ -195,7 +195,7 @@ describe("isBrilliantSacrifice", () => {
     // nul via classify.ts), mais la fonction ne doit dépendre que de ses
     // propres garanties : winPercentLoss null (non mesuré) sans foundBest
     // reste hors marge, par sécurité.
-    expect(isBrilliantSacrifice("okay", false, null, 55, board, nxf7)).toBe(false);
+    expect(isBrilliantSacrifice(false, null, 55, board, nxf7)).toBe(false);
   });
 
   it("ne surclasse JAMAIS un coup qui laisse la position perdante, même proche du sommet du classement moteur", () => {
@@ -205,11 +205,11 @@ describe("isBrilliantSacrifice", () => {
     // le coup n'a pas empiré une mauvaise position de plus qu'un autre.
     // foundBest=true (c'est même le meilleur coup du moteur) + sacrifice réel,
     // mais 30% de gain seulement pour celui qui vient de jouer : toujours perdant.
-    expect(isBrilliantSacrifice("best", true, 0, 30, board, nxf7)).toBe(false);
+    expect(isBrilliantSacrifice(true, 0, 30, board, nxf7)).toBe(false);
   });
 
   it("ne surclasse pas quand winPercentAfter n'a pas pu être mesuré", () => {
-    expect(isBrilliantSacrifice("best", true, 0, null, board, nxf7)).toBe(false);
+    expect(isBrilliantSacrifice(true, 0, null, board, nxf7)).toBe(false);
   });
 
   it("surclasse un vrai retournement : position perdante avant, gagnante après grâce au sacrifice", () => {
@@ -217,7 +217,7 @@ describe("isBrilliantSacrifice", () => {
     // relatifs à ce que le moteur pensait faisable) n'entre pas ici en jeu :
     // seul compte que ce coup précis est le meilleur ET que APRÈS lui, la
     // position est gagnante.
-    expect(isBrilliantSacrifice("best", true, 0, 60, board, nxf7)).toBe(true);
+    expect(isBrilliantSacrifice(true, 0, 60, board, nxf7)).toBe(true);
   });
 
   it("ne surclasse pas un meilleur coup qui n'est pas un sacrifice", () => {
@@ -225,7 +225,7 @@ describe("isBrilliantSacrifice", () => {
     const quiet = "4k3/8/8/4N3/8/8/8/4K3 w - - 0 20";
     const quietBoard = new Chess(quiet);
     const nd3 = new Chess(quiet).move("Nd3");
-    expect(isBrilliantSacrifice("best", true, 0, 55, quietBoard, nd3)).toBe(false);
+    expect(isBrilliantSacrifice(true, 0, 55, quietBoard, nd3)).toBe(false);
   });
 });
 
@@ -238,11 +238,15 @@ describe("classifyMove", () => {
         winPercentLoss: 0,
         secondBestGap: null,
         secondBestWinPercent: null,
+        alternativeAllowsImmediateMate: false,
       }),
     ).toBe("best");
   });
 
-  it("un seul coup légal → critique, même sans deuxième ligne moteur", () => {
+  it("un seul coup légal → meilleur coup, jamais critique (reprise évidente, bug utilisateur corrigé)", () => {
+    // Cahier des charges explicite (2026-09-03) : un coup forcé (recapture,
+    // seul coup légal) n'a rien de « critique » — le joueur n'a fait aucune
+    // trouvaille, il n'avait pas le choix.
     expect(
       classifyMove({
         foundBest: true,
@@ -250,11 +254,25 @@ describe("classifyMove", () => {
         winPercentLoss: 0,
         secondBestGap: null,
         secondBestWinPercent: null,
+        alternativeAllowsImmediateMate: false,
       }),
-    ).toBe("critical");
+    ).toBe("best");
   });
 
-  it("gros écart ET alternative elle-même perdante → critique", () => {
+  it("l'alternative se fait mater en une réponse → meilleur coup, jamais critique (reprise évidente)", () => {
+    expect(
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: false,
+        winPercentLoss: 0,
+        secondBestGap: 40,
+        secondBestWinPercent: 0,
+        alternativeAllowsImmediateMate: true,
+      }),
+    ).toBe("best");
+  });
+
+  it("gros écart ET alternative elle-même perdante (mais pas un mat immédiat) → critique", () => {
     expect(
       classifyMove({
         foundBest: true,
@@ -262,6 +280,7 @@ describe("classifyMove", () => {
         winPercentLoss: 0,
         secondBestGap: 15,
         secondBestWinPercent: 20,
+        alternativeAllowsImmediateMate: false,
       }),
     ).toBe("critical");
   });
@@ -281,6 +300,7 @@ describe("classifyMove", () => {
         winPercentLoss: 0,
         secondBestGap: 25,
         secondBestWinPercent: 60,
+        alternativeAllowsImmediateMate: false,
       }),
     ).toBe("best");
   });
@@ -293,6 +313,7 @@ describe("classifyMove", () => {
         winPercentLoss: 0,
         secondBestGap: 5,
         secondBestWinPercent: 20,
+        alternativeAllowsImmediateMate: false,
       }),
     ).toBe("best");
   });
@@ -312,6 +333,7 @@ describe("classifyMove", () => {
         winPercentLoss,
         secondBestGap: null,
         secondBestWinPercent: null,
+        alternativeAllowsImmediateMate: false,
       }),
     ).toBe(expected);
   });

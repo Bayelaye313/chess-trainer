@@ -16,8 +16,11 @@
     "db:migrate": "node scripts/ensure-data-dir.mjs && drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed-pgn": "tsx --conditions=react-server scripts/seed-from-pgn.ts",
+    "db:seed-academy": "tsx --conditions=react-server scripts/seed-academy.ts",
     "db:import-traps": "tsx --conditions=react-server scripts/import-bulk-traps.ts",
     "db:convert-lichess": "tsx --conditions=react-server scripts/convert-lichess-openings-tsv.ts",
+    "db:convert-puzzles": "tsx --conditions=react-server scripts/convert-lichess-puzzles-csv.ts",
+    "db:refine-tactics": "tsx --conditions=react-server scripts/refine-tactics-pgn.ts",
     "backfill:eco": "node scripts/backfill-eco.mjs",
     "populate:puzzles": "tsx --conditions=react-server src/server/curriculum/populate-puzzles.ts",
     "postinstall": "node scripts/setup-engine.mjs"

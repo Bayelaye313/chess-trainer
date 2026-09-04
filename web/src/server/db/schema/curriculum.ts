@@ -1,4 +1,4 @@
-import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
  * L'onglet « Apprendre » : une académie d'échecs structurée en modules
@@ -12,7 +12,20 @@ export type CurriculumCategory =
   | "jesper_hall_course"
   | "checkmate_patterns"
   | "tactical_motifs"
-  | "sparring_positions";
+  | "sparring_positions"
+  | "endgame_mastery"
+  // Les 6 catégories OFFICIELLES de la taxonomie de tags Lichess (voir le
+  // docstring de `catalog.ts`, section « Saturation Lichess ») — un thème par
+  // tag exact, jamais un module pédagogique composé à la main : ce sont des
+  // réservoirs de contenu 100% alimentés par le pipeline d'import
+  // (`scripts/convert-lichess-puzzles-csv.ts`, `scripts/refine-tactics-pgn.ts`),
+  // pas par `MASTER_PUZZLES_DATASET`.
+  | "lichess_motifs"
+  | "lichess_advanced"
+  | "lichess_mate_in"
+  | "lichess_mate_themes"
+  | "lichess_special_moves"
+  | "lichess_goals_origin";
 
 export type CurriculumLevel = "beginner" | "intermediate" | "advanced";
 
@@ -45,20 +58,32 @@ export const curriculumThemes = sqliteTable("curriculum_themes", {
  * `moveId`, `reviews`). Un puzzle de curriculum n'a ni l'un ni l'autre — c'est
  * un exercice de cours, pas une gaffe personnelle rejouée.
  */
-export const curriculumPuzzles = sqliteTable("curriculum_puzzles", {
-  id: text("id").primaryKey(),
-  themeId: text("theme_id")
-    .notNull()
-    .references(() => curriculumThemes.id, { onDelete: "cascade" }),
-  /** Position dans la progression linéaire du thème, 0-based — c'est aussi la valeur que `completedCount` doit atteindre pour ce puzzle. */
-  orderIndex: integer("order_index").notNull(),
-  fen: text("fen").notNull(),
-  /** Suite attendue en UCI, coups adverses inclus aux rangs impairs — même convention que `puzzles.solution`. */
-  solution: text("solution", { mode: "json" }).$type<string[]>().notNull(),
-  solutionSan: text("solution_san", { mode: "json" }).$type<string[]>().notNull(),
-  /** Référence libre à la source (partie, livre, tournoi) — affichée en petit, jamais indispensable à la résolution. */
-  sourceRef: text("source_ref"),
-});
+export const curriculumPuzzles = sqliteTable(
+  "curriculum_puzzles",
+  {
+    id: text("id").primaryKey(),
+    themeId: text("theme_id")
+      .notNull()
+      .references(() => curriculumThemes.id, { onDelete: "cascade" }),
+    /** Position dans la progression linéaire du thème, 0-based — c'est aussi la valeur que `completedCount` doit atteindre pour ce puzzle. */
+    orderIndex: integer("order_index").notNull(),
+    fen: text("fen").notNull(),
+    /** Suite attendue en UCI, coups adverses inclus aux rangs impairs — même convention que `puzzles.solution`. */
+    solution: text("solution", { mode: "json" }).$type<string[]>().notNull(),
+    solutionSan: text("solution_san", { mode: "json" }).$type<string[]>().notNull(),
+    /** Référence libre à la source (partie, livre, tournoi) — affichée en petit, jamais indispensable à la résolution. */
+    sourceRef: text("source_ref"),
+    /**
+     * Fichier PGN/JSON d'origine, relatif à `data/import/academy/` — `null`
+     * pour le contenu de démonstration semé par `MASTER_PUZZLES_DATASET`
+     * (voir `server/db/seed/curriculum-puzzles.ts`). Clé de purge idempotente
+     * de `scripts/seed-academy.ts` — mêmes conventions que
+     * `imported_traps.source_file`/`imported_opening_lines.source_file`.
+     */
+    sourceFile: text("source_file"),
+  },
+  (table) => [index("curriculum_puzzles_source_idx").on(table.sourceFile)],
+);
 
 /**
  * Avancement d'un thème pour un utilisateur — pas de file de révision, juste

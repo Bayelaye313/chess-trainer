@@ -14,15 +14,29 @@ import "server-only";
 import { eq, isNotNull } from "drizzle-orm";
 import { db } from "@/server/db";
 import { games, moves } from "@/server/db/schema";
-import { aggregatePlayerProgress, didPlayerWin } from "@/core/analysis/progress-insights";
+import {
+  aggregatePlayerProgress,
+  didPlayerWin,
+  filterOpeningPerformanceForDisplay,
+  findStrugglingOpening,
+} from "@/core/analysis/progress-insights";
 import { computeAccuracy, tallyQualities, type QualityTally } from "@/core/analysis/timeline";
-import type { PlayerGameRecord, PlayerMoveRecord, PlayerProgressInsights } from "@/core/analysis/types";
+import type { OpeningPerformance, PlayerGameRecord, PlayerMoveRecord, PlayerProgressInsights } from "@/core/analysis/types";
+import { resolveOpeningSlug } from "@/server/curriculum/opening-slug";
 
 export interface PlayerProgressOverview extends PlayerProgressInsights {
   /** Parties avec au moins un coup analysé — pas juste importées/en attente. */
   gamesAnalysed: number;
   /** Précision moyenne, toutes phases et toutes parties confondues. */
   overallAccuracy: number | null;
+  /**
+   * La pire ouverture du joueur (voir `findStrugglingOpening`), avec le slug
+   * du chapitre Ouvertures correspondant quand il en existe un
+   * (`resolveOpeningSlug`) — alimente le bandeau « ⚠️ Ouverture en
+   * difficulté » et son lien « Lancer le Drill Listudy »
+   * (`progress-overview.tsx`). `null` si aucune ouverture ne qualifie.
+   */
+  strugglingOpening: (OpeningPerformance & { openingSlug: string | null }) | null;
 }
 
 export async function getPlayerProgress(): Promise<PlayerProgressOverview> {
@@ -44,6 +58,7 @@ export async function getPlayerProgress(): Promise<PlayerProgressOverview> {
       gameId: moves.gameId,
       fenBefore: moves.fenBefore,
       uci: moves.uci,
+      ply: moves.ply,
       quality: moves.quality,
       phase: moves.phase,
       motifs: moves.motifs,
@@ -70,10 +85,23 @@ export async function getPlayerProgress(): Promise<PlayerProgressOverview> {
   const insights = aggregatePlayerProgress(gamesData);
   const allPlayerMoves = gamesData.flatMap((game) => game.moves);
 
+  // Une seule résolution de slug (pas une par ligne du tableau) : c'est le
+  // seul champ du bandeau qui a besoin du catalogue d'ouvertures. Calculé
+  // sur la liste COMPLÈTE, AVANT le filtrage d'affichage ci-dessous — le
+  // bandeau garde son propre seuil, plus permissif (voir
+  // `STRUGGLING_OPENING_MIN_GAMES`/`MIN_GAMES_IN_OPENING_TABLE`).
+  const worst = findStrugglingOpening(insights.openingPerformance);
+  const strugglingOpening = worst ? { ...worst, openingSlug: resolveOpeningSlug(worst.eco, worst.name) } : null;
+
   return {
     ...insights,
+    // Filtré à ≥5 parties réellement jouées pour le TABLEAU de l'onglet
+    // Rapport (`OpeningPerformanceCard`) — audit UX du 2026-09-02, une
+    // ouverture essayée une ou deux fois ne fait que polluer l'écran.
+    openingPerformance: filterOpeningPerformanceForDisplay(insights.openingPerformance),
     gamesAnalysed: gamesData.filter((game) => game.moves.length > 0).length,
     overallAccuracy: computeAccuracy(allPlayerMoves),
+    strugglingOpening,
   };
 }
 
@@ -114,4 +142,17 @@ export async function getReportSummary(): Promise<ReportSummary> {
     totalBlunders: tally.blunder,
     totalBrilliant: tally.brilliant,
   };
+}
+
+/**
+ * Décompte global des qualités de coup du joueur, tout l'historique importé
+ * confondu — le « Tableau Statistique Consolidé » qui remplace « Mes
+ * Chefs-d'œuvre » sur `/rapport` (audit UX du 2026-09-02, voir
+ * `quality-summary-table.tsx`). Même requête que `getReportSummary`
+ * (`moves.byPlayer = true`), tally complet via `tallyQualities` plutôt que les
+ * deux seuls compteurs (`blunder`/`brilliant`) que celle-ci expose.
+ */
+export async function getMoveQualityTally(): Promise<QualityTally> {
+  const playerMoveRows = await db.select({ quality: moves.quality }).from(moves).where(eq(moves.byPlayer, true));
+  return tallyQualities(playerMoveRows);
 }

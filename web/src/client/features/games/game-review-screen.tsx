@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
 import { useEngine } from "@/client/engine/engine-context";
+import { buildCoachMessage, buildGameCoachFindings } from "@/core/analysis/coach-narrative";
 import { findKeyMoments, type TimelinePly } from "@/core/analysis/timeline";
 import { isReviewable } from "@/core/chess/types";
 import { arrowsFromEngineLines, OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
@@ -13,6 +14,8 @@ import { EvaluationBar, type EvalScore } from "../board/evaluation-bar";
 import { ExplorePanel } from "../board/explore-panel";
 import { QualityBadge } from "../board/quality-badge";
 import { useExploreMode } from "../board/use-explore-mode";
+import { CoachBubble } from "./coach-bubble";
+import { CoachReportPanel } from "./coach-report";
 import { EvalGraph } from "./eval-graph";
 import { GameOverview } from "./game-overview";
 import { KeyMomentsNav } from "./key-moments-nav";
@@ -22,11 +25,14 @@ import { RetryBoard } from "./retry-board";
 
 /**
  * Coup théorique manqué dans CETTE partie, résolu côté serveur depuis le
- * catalogue d'ouvertures (voir `app/analyse/[id]/page.tsx`,
- * `resolveDeviation`) — vient du journal « Erreurs d'ouverture »
- * (`OpeningMistakesHub`, `?openingId=&ply=`) : ouvre la partie directement au
- * coup où elle a quitté la théorie, avec un bandeau explicatif et un exercice
- * de correction (voir le rendu de `repertoireCorrection` ci-dessous).
+ * catalogue d'ouvertures (voir `app/analyse/[id]/page.tsx#resolveDeviation`) —
+ * soit un lien explicite depuis le journal « Erreurs d'ouverture »
+ * (`OpeningMistakesHub`, `?openingId=&ply=`), soit détecté automatiquement à
+ * l'ouverture de N'IMPORTE QUELLE partie (`getGameOpeningDeviation`,
+ * `server/queries/opening-mistakes.ts`) quand ces paramètres sont absents.
+ * Alimente la bulle du Coach (`buildCoachMessage`, `coach-narrative.ts`) au
+ * coup exact de la déviation, avec un exercice de correction dédié (voir le
+ * rendu de `repertoireCorrection` ci-dessous).
  */
 export interface GameDeviation {
   ply: number;
@@ -159,6 +165,15 @@ export function GameReviewScreen({
   // codes couleur/badge se reportent sur le DERNIER coup exploré (neutre tant
   // que son évaluation n'est pas encore revenue du moteur).
   const currentEntry = currentPly > 0 ? timeline[currentPly - 1] : null;
+  // Bulle du Coach pour le coup actuellement affiché — `null` hors
+  // exploration, coup adverse, ou coup sain (voir `buildCoachMessage`).
+  // Le bilan de fin de revue (`coachFindings`), lui, ne dépend pas de
+  // `currentPly` : il scanne toute la partie une seule fois.
+  const coachMessage = useMemo(
+    () => (currentEntry ? buildCoachMessage(currentEntry, deviation) : null),
+    [currentEntry, deviation],
+  );
+  const coachFindings = useMemo(() => buildGameCoachFindings(timeline), [timeline]);
   const lastExplorerMove = explore.explorerMoves[explore.explorerMoves.length - 1] ?? null;
   const exploreQuality = explore.evaluation.status === "ready" ? explore.evaluation.evaluated.quality : null;
 
@@ -233,8 +248,8 @@ export function GameReviewScreen({
             {accuracy !== null ? ` — précision approximative ${accuracy}%` : ""}
           </p>
         </div>
-        <Link href="/analyse" className="shrink-0 text-sm text-accent">
-          ← Analyse
+        <Link href="/" className="shrink-0 text-sm text-accent">
+          ← Retour
         </Link>
       </div>
 
@@ -271,21 +286,18 @@ export function GameReviewScreen({
             />
           ) : (
             <div className="rounded-lg border border-border bg-surface p-5">
-              {deviation && currentPly === deviation.ply && (
-                <div className="mb-4 rounded-md border border-inaccuracy/40 bg-inaccuracy/10 p-3 text-sm">
-                  <p className="text-foreground">
-                    Ici, dans ta partie contre <span className="font-medium">{game.opponentName ?? "adversaire inconnu"}</span>,
-                    tu as joué <span className="font-mono font-semibold">{timeline[deviation.ply - 1].san}</span>. Le coup
-                    théorique attendu était <span className="font-mono font-semibold">{deviation.expectedSan}</span>{" "}
-                    ({deviation.openingName}).
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setRepertoireCorrection(true)}
-                    className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
-                  >
-                    🔧 Corriger ce coup
-                  </button>
+              {coachMessage && (
+                <div className="mb-4">
+                  <CoachBubble message={coachMessage} />
+                  {deviation && currentPly === deviation.ply && (
+                    <button
+                      type="button"
+                      onClick={() => setRepertoireCorrection(true)}
+                      className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
+                    >
+                      🔧 Corriger ce coup
+                    </button>
+                  )}
                 </div>
               )}
               {explore.isExploring && (
@@ -345,6 +357,8 @@ export function GameReviewScreen({
           />
 
           <KeyMomentsNav moments={keyMoments} onSelect={goToPly} />
+
+          <CoachReportPanel findings={coachFindings} />
 
           {!drillActive && mistakes.length > 0 && (
             <div className="rounded-lg border border-border bg-surface p-4 text-center">

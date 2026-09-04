@@ -1,6 +1,5 @@
 import { Chess, type Move } from "chess.js";
 import { MINOR_PIECE_VALUE, recaptureValueOf, valueOf } from "./pieces";
-import type { MoveQuality } from "./types";
 
 /**
  * Vrai sacrifice : la pièce jouée (cavalier ou plus) atterrit sur une case où
@@ -110,40 +109,41 @@ export const BRILLIANT_MIN_WIN_PERCENT_AFTER = 50;
  * Conditions, toutes nécessaires (CLAUDE.md « The Elite Move Triad », et la
  * nuance rappelée explicitement : « abandonne du matériel » ET « reste la
  * meilleure idée » — les deux ensemble, pas l'un ou l'autre) :
- * 1. `quality` n'est jamais `critical`. Un sacrifice qui était le SEUL coup
- *    tenable n'a rien d'inventif, le joueur a juste trouvé le coup forcé ;
- *    l'accepter écraserait la distinction Critique/Brillant (bug utilisateur
- *    déjà corrigé une fois, voir le test associé dans
- *    `evaluate-move.test.ts` — ne pas régresser).
- * 2. Le coup est « proche du sommet » (`nearBest`) : soit il EST le premier
+ * 1. Le coup est « proche du sommet » (`nearBest`) : soit il EST le premier
  *    choix du moteur (`foundBest`), soit il n'en est écarté que de
  *    `BRILLIANT_NEAR_BEST_MAX_LOSS` points de gain ou moins — un coup
  *    seulement « pas mauvais » (ex. dans la fourchette `okay`, jusqu'à 10
  *    points) reste hors jeu.
- * 3. `winPercentAfter` confirme que la position qui suit reste au moins à
+ * 2. `winPercentAfter` confirme que la position qui suit reste au moins à
  *    l'égalité pour celui qui sacrifie (`BRILLIANT_MIN_WIN_PERCENT_AFTER`).
  *    Sans ce garde-fou, un coup « aussi bon que le meilleur coup » dans une
  *    position déjà perdue passait à tort en Brillant — être proche du
  *    sommet du classement ne veut rien dire quand le classement entier est
  *    perdant. C'est précisément le sens de « reste gagnante », pas
  *    seulement « n'a rien perdu de plus ».
- * 4. `isSacrifice` : un don de matériel réel, sans reprise immédiate possible.
+ * 3. `isSacrifice` : un don de matériel réel, sans reprise immédiate possible.
+ *
+ * `quality` n'entre PLUS en jeu ici : Brillant a priorité absolue sur
+ * Critique, peu importe l'écart avec le second choix moteur (cahier des
+ * charges explicite du 2026-09-03). Un vrai don de matériel volontaire qui
+ * reste gagnant est toujours plus impressionnant qu'un coup « juste » forcé —
+ * même quand ce même coup était aussi, techniquement, le seul qui tienne.
+ * `evaluate-move.ts` appelle cette fonction APRÈS `classifyMove`, en dernier,
+ * précisément pour lui laisser le dernier mot et surclasser un `critical`
+ * comme un `best`.
  *
  * Reste volontairement une fonction de décision séparée de `isSacrifice` (qui
- * ne connaît, elle, que l'échiquier) : ici on mélange qualité déjà classée,
- * marges d'évaluation et géométrie du coup — exactement la frontière que
- * `evaluate-move.ts` doit franchir une fois, pas à chaque site d'appel.
+ * ne connaît, elle, que l'échiquier) : ici on mélange marges d'évaluation et
+ * géométrie du coup — exactement la frontière que `evaluate-move.ts` doit
+ * franchir une fois, pas à chaque site d'appel.
  */
 export function isBrilliantSacrifice(
-  quality: MoveQuality,
   foundBest: boolean,
   winPercentLoss: number | null,
   winPercentAfter: number | null,
   before: Chess,
   move: Move,
 ): boolean {
-  if (quality === "critical") return false;
-
   const nearBest = foundBest || (winPercentLoss !== null && winPercentLoss <= BRILLIANT_NEAR_BEST_MAX_LOSS);
   if (!nearBest) return false;
 

@@ -65,6 +65,29 @@ export function pickOpponentContinuation<T extends { uci: string }>(
   return continuations[continuations.length - 1]; // garde-fou arrondi flottant
 }
 
+/**
+ * Coup à pointer par la flèche de secours (voir `computeHintArrow`) quand
+ * aucun coup scripté n'est disponible — `diverged`, ou plus généralement une
+ * position sans script (mode Aléatoire). DÉTERMINISTE, à la différence de
+ * `pickOpponentContinuation` : une flèche d'indice ne doit jamais changer de
+ * cible d'un rendu à l'autre pour la MÊME position, alors que le coup
+ * réellement joué par l'IA peut légitimement varier. Le plus joué par de
+ * vrais humains (Lichess Opening Explorer) l'emporte quand cette donnée est
+ * disponible ; à défaut, le premier coup théorique connu (ordre stable, pas
+ * de tirage) — jamais `null` tant que `continuations` n'est pas vide.
+ */
+export function mostPopularContinuation<T extends { uci: string }>(
+  continuations: readonly T[],
+  popularity: readonly PopularMove[] | null,
+): T | null {
+  if (continuations.length === 0) return null;
+  if (!popularity || popularity.length === 0) return continuations[0];
+  const gamesByUci = new Map(popularity.map((p) => [p.uci, p.games]));
+  return continuations.reduce((best, candidate) =>
+    (gamesByUci.get(candidate.uci) ?? 0) > (gamesByUci.get(best.uci) ?? 0) ? candidate : best,
+  );
+}
+
 /** Ce que l'effet appelant (`use-opening-drill.ts`) doit faire MAINTENANT — voir `decideOpponentStep`. */
 export type OpponentStep =
   | { type: "wait" } // tour du joueur, ou continuations pas encore prêtes pour la position courante.
@@ -87,6 +110,7 @@ export function decideOpponentStep({
   relativePlyIndex,
   freshContinuations,
   freshPopularity,
+  continuationsFailed,
 }: {
   isGameOver: boolean;
   /** `true` si c'est au tour de l'IA de jouer (pas celui du joueur). */
@@ -99,6 +123,19 @@ export function decideOpponentStep({
   /** `null` : pas encore prêt pour la position courante (voir `freshContinuations` dans le hook). */
   freshContinuations: readonly { uci: string }[] | null;
   freshPopularity: readonly PopularMove[] | null;
+  /**
+   * La requête théorique (`useBookContinuations`) a échoué pour LA POSITION
+   * COURANTE — filet de sécurité (cahier des charges : lignes rares comme
+   * Zukertort/Défense Benima qui « figent » le plateau). Sans lui,
+   * `freshContinuations: null` seul ne distingue pas « pas encore arrivé »
+   * de « n'arrivera jamais » : le plateau attendait alors indéfiniment une
+   * réponse de l'IA qui ne viendrait jamais, une fois `diverged` (ou en mode
+   * Aléatoire). Traité comme une théorie épuisée (`"no-more-theory"`) plutôt
+   * que comme une erreur bloquante — la manche se termine proprement, ce qui
+   * enchaîne la Manche 2 comme n'importe quelle fin de ligne normale (voir
+   * `completeRound` dans `use-opening-drill.ts`).
+   */
+  continuationsFailed: boolean;
 }): OpponentStep {
   if (isGameOver) {
     // Rare en théorie d'ouverture, mais certains pièges cataloguent un mat
@@ -130,7 +167,13 @@ export function decideOpponentStep({
     return { type: "play", uci: script[relativePlyIndex] };
   }
 
-  if (!freshContinuations) return { type: "wait" }; // pas encore prêt pour CETTE position, l'effet se redéclenchera.
+  if (!freshContinuations) {
+    // `continuationsFailed` : la requête a bien répondu, mais en échec, pour
+    // CETTE position — jamais un simple "pas encore arrivé", voir son
+    // docstring. Termine la manche plutôt que d'attendre pour toujours.
+    if (continuationsFailed) return { type: "complete", reason: "no-more-theory" };
+    return { type: "wait" }; // pas encore prêt pour CETTE position, l'effet se redéclenchera.
+  }
   if (freshContinuations.length === 0) return { type: "complete", reason: "no-more-theory" };
   // Priorise les coups les plus joués par de vrais humains à cette position
   // (Lichess Opening Explorer) quand cette donnée est prête pour CETTE
@@ -145,11 +188,20 @@ export function decideOpponentStep({
  * tant qu'elle ne doit PAS s'afficher : hors sélection scriptée (mode
  * Aléatoire, aucun coup fixe à indiquer), hors tour du joueur (l'IA/l'autoplay
  * joue, rien à indiquer), en Manche 2 (`hintsAllowed`, test à l'aveugle STRICT
- * — voir `use-opening-drill.ts`), avec `hintBehavior: "never"`, une fois le
- * coup déjà réussi `HINT_ARROW_SUCCESS_THRESHOLD` fois par le joueur (réglage
- * par défaut), OU dès que la manche a divergé du script (voir `diverged` dans
- * le hook) : plus aucun « LE » coup attendu unique une fois qu'un
- * embranchement théorique a été choisi, la flèche redeviendrait trompeuse.
+ * — voir `use-opening-drill.ts`), avec `hintBehavior: "never"`.
+ *
+ * Deux sources, jamais les deux à la fois :
+ *  - `expectedUci` (le script) tant que la manche n'a pas divergé — flèche
+ *    standard, qui s'éteint après `HINT_ARROW_SUCCESS_THRESHOLD` réussites
+ *    (méthode Listudy) ;
+ *  - `fallbackUci` (filet de sécurité, cahier des charges : lignes sans
+ *    contenu rédigé dédié comme Zukertort/Défense Benima, ou une manche
+ *    `diverged` vers un autre embranchement théorique réel) — le coup le plus
+ *    joué par de vrais joueurs à cette position, voir
+ *    `mostPopularContinuation`. TOUJOURS affichée dès qu'elle est
+ *    disponible, sans le seuil de réussite : ce n'est pas la même flèche
+ *    « pédagogique » suivie sur toute une ligne, juste une indication de
+ *    secours pour ne jamais laisser le joueur sans AUCUN repère visuel.
  */
 export function computeHintArrow({
   status,
@@ -160,8 +212,10 @@ export function computeHintArrow({
   diverged,
   expectedUci,
   hintMoveSuccessCount,
+  fallbackUci,
 }: {
-  status: "select" | "autoplaying" | "playing" | "finished";
+  /** `"round-gate"` (voir `DrillStatus` dans `use-opening-drill.ts`) traite comme n'importe quel statut hors `"playing"` : jamais de flèche hors du tour interactif du joueur. */
+  status: "select" | "autoplaying" | "playing" | "round-gate" | "finished";
   hintsAllowed: boolean;
   hintBehavior: HintArrowBehavior;
   isPlayerTurn: boolean;
@@ -169,20 +223,20 @@ export function computeHintArrow({
   diverged: boolean;
   expectedUci: string | null;
   hintMoveSuccessCount: number;
+  /** Coup de secours (voir `mostPopularContinuation`) — `null` s'il n'y en a aucun à proposer pour l'instant. */
+  fallbackUci: string | null;
 }): { from: string; to: string } | null {
-  if (
-    status !== "playing" ||
-    !hintsAllowed ||
-    hintBehavior === "never" ||
-    !isPlayerTurn ||
-    !useScript ||
-    diverged ||
-    !expectedUci
-  ) {
+  if (status !== "playing" || !hintsAllowed || hintBehavior === "never" || !isPlayerTurn || !useScript) {
     return null;
   }
-  if (hintBehavior === "always" || hintMoveSuccessCount < HINT_ARROW_SUCCESS_THRESHOLD) {
-    return { from: expectedUci.slice(0, 2), to: expectedUci.slice(2, 4) };
+  if (!diverged && expectedUci) {
+    if (hintBehavior === "always" || hintMoveSuccessCount < HINT_ARROW_SUCCESS_THRESHOLD) {
+      return { from: expectedUci.slice(0, 2), to: expectedUci.slice(2, 4) };
+    }
+    return null;
+  }
+  if (fallbackUci) {
+    return { from: fallbackUci.slice(0, 2), to: fallbackUci.slice(2, 4) };
   }
   return null;
 }

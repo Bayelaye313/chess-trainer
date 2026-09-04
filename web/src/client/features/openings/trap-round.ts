@@ -46,3 +46,26 @@ export function buildTrapRound(trap: OpeningTrap): TrapRoundResult {
     leadInUci,
   };
 }
+
+/**
+ * Construit la démonstration « Pion Poison » (incarner la victime, voir
+ * `OpeningTrapDrill`) : `trap.setupMoves` PUIS `trap.trapMove` (le coup
+ * naturel mais perdant, ici volontairement JOUÉ plutôt qu'évité) PUIS
+ * `trap.punishmentLine` — la suite qui démontre concrètement l'effondrement
+ * de la position. `chess` continue sur la MÊME instance d'un bout à l'autre,
+ * même précaution que `buildTrapRound` : la punition doit reprendre
+ * EXACTEMENT là où `trapMove` s'arrête.
+ *
+ * `null` si `trap.punishmentLine` est absent (voir son docstring dans
+ * `core/curriculum/traps.ts`) — les pièges importés en base n'ont pas encore
+ * cette donnée ; l'appelant désactive alors l'option plutôt que d'appeler
+ * cette fonction.
+ */
+export function buildPoisonPawnRound(trap: OpeningTrap): { startFen: string; leadInUci: readonly string[] } | null {
+  if (!trap.punishmentLine) return null;
+  const chess = new Chess();
+  const setupUci = playAndCollectUci(chess, trap.setupMoves);
+  const punishmentUci = playAndCollectUci(chess, [trap.trapMove, ...trap.punishmentLine]);
+
+  return { startFen: START_FEN, leadInUci: [...setupUci, ...punishmentUci] };
+}

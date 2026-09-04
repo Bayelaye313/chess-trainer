@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Onglet « ⚔️ Pièges » — Dashboard de Campagne à TROIS niveaux de navigation,
+ * Onglet « ⚔️ Pièges » — Dashboard de Campagne à DEUX niveaux de navigation,
  * pensé pour absorber l'explosion de contenu de l'architecture « Gambits &
  * Variantes » (voir le docstring de `traps.ts`) :
  *
@@ -9,32 +9,28 @@
  *    carte par `family` (l'ouverture — « Partie Italienne », « Défense
  *    Sicilienne »…) avec un anneau de progression (résolus / total, voir
  *    `trap-progress.ts`).
- *  - NIVEAU 2 (`selectedFamily` posé, `selectedGambit === null`) : au clic sur
- *    une ouverture, liste des séries de gambits (`gambit`) qu'elle contient.
- *  - NIVEAU 3 (les deux posés) : grille de pastilles numériques (une par
- *    puzzle, triées par difficulté croissante) — couleur = difficulté,
- *    contour + ✅ si déjà résolue.
+ *  - NIVEAU 2 (`selectedFamily` posé) : au clic sur une ouverture, liste des
+ *    séries de gambits (`gambit`) qu'elle contient — chaque carte est un lien
+ *    DIRECT vers `/pieges/[slug]` du premier piège NON résolu de la série (le
+ *    premier tout court si elle est déjà entièrement résolue), jamais une
+ *    grille de pastilles numériques intermédiaire à parcourir avant
+ *    d'atteindre l'échiquier (voir `firstActiveTrap` ci-dessous) : `/pieges/
+ *    [slug]` sert déjà tout l'enchaînement de la série (`seriesTraps`,
+ *    bouton « Suivant → » de `OpeningTrapDrill`), inutile de reparcourir
+ *    manuellement chaque pastille pour y accéder.
  *
- * Filtrage/navigation entièrement côté client (pas de route dédiée par
- * niveau) : `selectedFamily`/`selectedGambit` sont de simples états React,
- * jamais persistés — un aller-retour vers `/pieges` repart toujours du
- * NIVEAU 1, ce qui est le comportement voulu (voir aussi `PiegeDrillScreen`,
- * qui ramène ici via `onExit`).
+ * Filtrage/navigation entièrement côté client pour NIVEAU 1↔2 (pas de route
+ * dédiée) : `selectedFamily` est un simple état React, jamais persisté — un
+ * aller-retour vers `/pieges` repart toujours du NIVEAU 1, ce qui est le
+ * comportement voulu (voir aussi `PiegeDrillScreen`, qui ramène ici via
+ * `onExit`).
  */
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { OpeningTrap, TrapDifficulty } from "@/core/curriculum/traps";
-import { DIFFICULTY_LABEL, DIFFICULTY_ORDER } from "@/core/curriculum/traps";
+import type { OpeningTrap } from "@/core/curriculum/traps";
+import { DIFFICULTY_ORDER } from "@/core/curriculum/traps";
 import { familyIcon } from "./trap-family-icon";
 import { getSolvedTrapIds } from "./trap-progress";
-
-/** Couleur de pastille NIVEAU 3 — réutilise les jetons `--quality-*` de `classify.ts` (best/inaccuracy/blunder), même parti pris que l'ex-`TrapCard`. */
-const DIFFICULTY_TILE_CLASS: Record<TrapDifficulty, string> = {
-  beginner: "border-best/50 bg-best/10 text-best hover:bg-best/20",
-  intermediate: "border-inaccuracy/50 bg-inaccuracy/10 text-inaccuracy hover:bg-inaccuracy/20",
-  expert: "border-blunder/50 bg-blunder/10 text-blunder hover:bg-blunder/20",
-};
-const DIFFICULTY_DOT: Record<TrapDifficulty, string> = { beginner: "🟢", intermediate: "🟡", expert: "🔴" };
 
 /** Regroupe `items` par la clé de `keyOf`, dans l'ordre de première apparition — sert aux trois niveaux (famille, gambit). */
 function groupByKey<T>(items: readonly T[], keyOf: (item: T) => string): [string, T[]][] {
@@ -82,7 +78,6 @@ function BackButton({ onClick, children }: { onClick: () => void; children: Reac
 
 export function PiegesScreen({ traps }: { traps: readonly OpeningTrap[] }) {
   const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
-  const [selectedGambit, setSelectedGambit] = useState<string | null>(null);
   // Chargée après montage (localStorage n'existe pas côté serveur) — voir `trap-progress.ts`.
   const [solvedIds, setSolvedIds] = useState<ReadonlySet<string>>(() => new Set());
   useEffect(() => {
@@ -100,72 +95,13 @@ export function PiegesScreen({ traps }: { traps: readonly OpeningTrap[] }) {
     return groupByKey(familyTraps, (trap) => trap.gambit);
   }, [traps, selectedFamily]);
 
-  const activeSeriesTraps = useMemo(() => {
-    if (selectedGambit === null) return [];
-    const group = gambitGroups.find(([gambit]) => gambit === selectedGambit);
-    return group ? sortByDifficulty(group[1]) : [];
-  }, [gambitGroups, selectedGambit]);
-
   function goToFamilies() {
     setSelectedFamily(null);
-    setSelectedGambit(null);
-  }
-  function goToSeries() {
-    setSelectedGambit(null);
   }
 
   // ──────────────────────────────────────────────────────────────────────
-  // NIVEAU 3 — pastilles numériques d'une série de gambit.
-  // ──────────────────────────────────────────────────────────────────────
-  if (selectedFamily !== null && selectedGambit !== null) {
-    const solvedCount = activeSeriesTraps.filter((trap) => solvedIds.has(trap.id)).length;
-    return (
-      <div className="space-y-6">
-        <div>
-          <BackButton onClick={goToSeries}>← Retour aux séries</BackButton>
-          <h1 className="mt-2 text-xl font-semibold tracking-tight">
-            {familyIcon(selectedFamily)} {selectedFamily} <span className="text-foreground-muted">· {selectedGambit}</span>
-          </h1>
-          <p className="mt-1 text-sm text-foreground-muted">
-            {solvedCount} / {activeSeriesTraps.length} résolus
-          </p>
-        </div>
-
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-5 md:grid-cols-6">
-          {activeSeriesTraps.map((trap, index) => {
-            const solved = solvedIds.has(trap.id);
-            return (
-              <Link
-                key={trap.id}
-                href={`/pieges/${trap.id}`}
-                title={trap.name}
-                className={`relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-lg font-bold transition-transform hover:scale-105 ${DIFFICULTY_TILE_CLASS[trap.difficulty]} ${
-                  solved ? "ring-2 ring-best ring-offset-2 ring-offset-surface" : ""
-                }`}
-              >
-                {solved && (
-                  <span aria-hidden="true" className="absolute right-1 top-1 text-xs">
-                    ✅
-                  </span>
-                )}
-                <span>{index + 1}</span>
-                <span aria-hidden="true" className="text-xs leading-none">
-                  {DIFFICULTY_DOT[trap.difficulty]}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <p className="text-[11px] text-foreground-muted">
-          Niveaux : {DIFFICULTY_ORDER.map((level) => `${DIFFICULTY_DOT[level]} ${DIFFICULTY_LABEL[level]}`).join(" → ")}
-        </p>
-      </div>
-    );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────
-  // NIVEAU 2 — séries de gambits d'une ouverture.
+  // NIVEAU 2 — séries de gambits d'une ouverture, chacune un lien direct
+  // vers l'échiquier de son premier piège actif (voir le docstring de fichier).
   // ──────────────────────────────────────────────────────────────────────
   if (selectedFamily !== null) {
     return (
@@ -179,23 +115,26 @@ export function PiegesScreen({ traps }: { traps: readonly OpeningTrap[] }) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {gambitGroups.map(([gambit, gambitTraps]) => {
-            const solvedCount = gambitTraps.filter((trap) => solvedIds.has(trap.id)).length;
-            const percent = Math.round((solvedCount / gambitTraps.length) * 100);
+            const sorted = sortByDifficulty(gambitTraps);
+            const solvedCount = sorted.filter((trap) => solvedIds.has(trap.id)).length;
+            const percent = Math.round((solvedCount / sorted.length) * 100);
+            // Premier piège NON résolu de la série (le tout premier si elle est déjà entièrement résolue) — c'est
+            // LUI que sert `/pieges/[slug]`, jamais l'entrée #1 sans égard à la progression déjà faite.
+            const firstActiveTrap = sorted.find((trap) => !solvedIds.has(trap.id)) ?? sorted[0];
             return (
-              <button
+              <Link
                 key={gambit}
-                type="button"
-                onClick={() => setSelectedGambit(gambit)}
+                href={`/pieges/${firstActiveTrap.id}`}
                 className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface p-4 text-left transition-colors hover:border-accent/40"
               >
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-semibold text-foreground">{gambit}</h3>
                   <p className="mt-0.5 text-xs text-foreground-muted">
-                    {solvedCount} / {gambitTraps.length} résolus
+                    {solvedCount} / {sorted.length} résolus
                   </p>
                 </div>
                 <ProgressRing percent={percent} />
-              </button>
+              </Link>
             );
           })}
         </div>

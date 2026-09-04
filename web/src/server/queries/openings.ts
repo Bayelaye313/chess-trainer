@@ -5,16 +5,26 @@ import { mainLine, type VariationNode } from "@/core/chess/pgn-tree";
 import { findOpening, OPENINGS, type OpeningLine } from "@/core/curriculum/openings";
 import { fetchLichessPopularity, type PopularMove } from "@/server/import/lichess-explorer";
 import { findBookMove, type OpeningMatch } from "@/server/import/openings";
-import { getCuratedChildren, getOpeningTree } from "@/server/curriculum/opening-tree-index";
+import { getCuratedChildren } from "@/server/curriculum/opening-tree-index";
+import {
+  getEnrichedTreeForCuratedOpening,
+  getImportedFamilyDetail,
+  listOpeningFamilies,
+} from "@/server/curriculum/imported-openings-index";
 
 /**
  * Lectures pour l'onglet « Ouvertures » — la bibliothèque d'exploration
- * d'ouvertures (voir `core/curriculum/openings.ts` pour le catalogue statique
- * et `client/features/openings/` pour l'écran).
+ * d'ouvertures : le catalogue curaté à la main (`core/curriculum/openings.ts`)
+ * FUSIONNÉ avec le catalogue dynamique tiré des ~3810 lignes
+ * `imported_opening_lines` (`server/curriculum/imported-openings-index.ts`),
+ * voir `client/features/openings/` pour l'écran.
  *
- * Pas de DB ici, contrairement à `curriculum.ts`/`spaced-repetition.ts` : rien
- * à seeder ni à faire progresser, `OPENINGS` EST la source de vérité — cette
- * fonction ne fait que la ré-annoter à la demande via la base ECO.
+ * `OPENINGS` n'est donc plus la SEULE source de vérité (elle l'est restée
+ * longtemps, d'où encore son rôle de repli partout ici) : chaque chapitre
+ * curaté est enrichi de toute la profondeur que la base Lichess lui connaît
+ * (`getEnrichedTreeForCuratedOpening`), et les familles lichess-org qui n'ont
+ * pas encore de chapitre curaté dédié apparaissent comme des entrées à part
+ * entière (`listOpeningFamilies`) — plus de plafond artificiel à ~20 entrées.
  *
  * `annotateOpeningLine` rejoue une `OpeningLine` avec chess.js et interroge la
  * base ECO (`findBookMove`) après chaque coup, exactement comme la détection
@@ -79,20 +89,57 @@ export function annotateMoveList(sanMoves: readonly string[]): AnnotatedPly[] {
  * chapitres enrichis (Ruy Lopez, Caro-Kann, Najdorf, etc.) toute la
  * profondeur de leur `pgn`, sans toucher aux chapitres pas encore enrichis
  * (repli inchangé sur `opening.moves`).
+ *
+ * Depuis la connexion du catalogue dynamique
+ * (`server/curriculum/imported-openings-index.ts`), la ligne principale
+ * rejouée ici est celle de l'arbre ENRICHI (chapitre curaté fusionné avec
+ * toute la profondeur que la base Lichess lui connaît), pas seulement
+ * l'arbre `pgn` écrit à la main — un chapitre curaté sans `pgn` (repli
+ * `opening.moves`, toujours géré par `getEnrichedTreeForCuratedOpening` en
+ * amont) en profite exactement pareil.
  */
 export function annotateOpeningLine(opening: OpeningLine): AnnotatedPly[] {
-  const sanMoves = opening.pgn
-    ? mainLine(getOpeningTree(opening))
-        .map((node) => node.san)
-        .filter((san): san is string => san !== null)
-    : opening.moves;
+  const sanMoves = mainLine(getEnrichedTreeForCuratedOpening(opening))
+    .map((node) => node.san)
+    .filter((san): san is string => san !== null);
   return annotateMoveList(sanMoves);
 }
 
+/**
+ * `id` désigne soit un chapitre CURATÉ (`core/curriculum/openings.ts`, testé
+ * en premier pour ne jamais changer de comportement pour ces ~20 entrées),
+ * soit une FAMILLE DYNAMIQUE (`lichess-*`, voir `listOpeningFamilies`) — les
+ * ~130 familles lichess-org qui n'ont pas encore de chapitre curaté dédié.
+ * `null` si `id` ne désigne ni l'un ni l'autre.
+ */
 export function getOpeningDetail(id: string): OpeningDetail | null {
   const opening = findOpening(id);
-  if (!opening) return null;
-  return { opening, plies: annotateOpeningLine(opening), variations: listOpeningVariations(opening) };
+  if (opening) return { opening, plies: annotateOpeningLine(opening), variations: listOpeningVariations(opening) };
+
+  const family = getImportedFamilyDetail(id);
+  if (!family) return null;
+  const dynamicOpening: OpeningLine = {
+    id: family.summary.id,
+    name: family.summary.name,
+    eco: family.summary.eco,
+    side: family.summary.side,
+    description: family.summary.description,
+    moves: family.summary.rootMoves,
+  };
+  // `plies` (script de « Ligne principale ») rejoue `rootMoves` — la position
+  // de référence courte de la famille (voir `familyRootMoves`) — PAS
+  // `mainLine(family.tree)` : contrairement à un chapitre curaté (dont le
+  // premier enfant à chaque embranchement est un choix éditorial délibéré, un
+  // vrai « fil rouge »), l'arbre d'une famille dynamique fusionne des
+  // centaines de lignes SANS ordre de priorité entre elles — son premier
+  // enfant à un embranchement donné n'est que le hasard de l'ordre
+  // d'insertion, jamais « LA » ligne principale. Toute la profondeur réelle
+  // reste pleinement accessible via `variations` (`ChapterSelector`).
+  return {
+    opening: dynamicOpening,
+    plies: annotateMoveList(family.summary.rootMoves),
+    variations: deriveVariationsFromNode(family.tree, family.summary.eco),
+  };
 }
 
 /** Un coup légal depuis la position interrogée dont la position d'arrivée est cataloguée en base ECO. */
@@ -197,29 +244,39 @@ const VARIATION_MAX_NODES = 60;
  * longue rencontrée sous ce nom, la plus représentative de « cette variante
  * précise » avant que la théorie ne bifurque encore une fois.
  *
- * Pour un chapitre avec un `pgn` authored (voir `core/curriculum/openings.ts`),
- * les variantes viennent DIRECTEMENT de son arbre (`deriveVariationsFromTree`)
- * — plus précis et plus profond qu'une marche heuristique sur la base ECO
- * (`VARIATION_MAX_EXTRA_PLY`/`VARIATION_MAX_NODES` sont calibrés pour cette
- * dernière, pas pour la profondeur d'un vrai répertoire). Les chapitres sans
- * `pgn` gardent le BFS existant, sans changement.
+ * Depuis la connexion du catalogue dynamique
+ * (`server/curriculum/imported-openings-index.ts`), les variantes viennent en
+ * PRIORITÉ de l'arbre ENRICHI (chapitre curaté fusionné avec toute la
+ * profondeur que la base Lichess lui connaît, voir
+ * `getEnrichedTreeForCuratedOpening`) — plus précis et infiniment plus
+ * profond qu'une marche heuristique sur la base ECO générique
+ * (`VARIATION_MAX_EXTRA_PLY`/`VARIATION_MAX_NODES`, calibrés pour CELLE-CI,
+ * pas pour la profondeur d'un vrai répertoire). Le BFS d'origine
+ * (`computeOpeningVariations`) reste un repli défensif pour le cas — non
+ * rencontré aujourd'hui, chaque chapitre curaté ayant une famille Lichess
+ * correspondante — où l'enrichissement ne trouverait rien : jamais de
+ * régression pour un futur chapitre sans contrepartie en base.
  */
 export function listOpeningVariations(opening: OpeningLine): OpeningVariation[] {
   const cached = variationsCache.get(opening.id);
   if (cached) return cached;
-  const result = opening.pgn ? deriveVariationsFromTree(opening) : computeOpeningVariations(opening);
+  const enriched = deriveVariationsFromNode(getEnrichedTreeForCuratedOpening(opening), opening.eco);
+  const result = enriched.length > 0 ? enriched : computeOpeningVariations(opening);
   variationsCache.set(opening.id, result);
   return result;
 }
 
 /**
- * Parcourt l'arbre authored d'un chapitre (DFS) : chaque nœud dont
- * `comment` définit un nom (voir `core/chess/pgn-tree.ts`) devient une
- * variante, étendue jusqu'au bout de sa PROPRE ligne principale (premier
- * enfant à chaque étape suivante) — la variante affichée porte donc toute sa
- * suite déjà connue, pas seulement le coup qui l'ouvre.
+ * Parcourt un arbre de variantes (DFS) : chaque nœud dont `comment` définit
+ * un nom (voir `core/chess/pgn-tree.ts`) devient une variante, étendue
+ * jusqu'au bout de sa PROPRE ligne principale (premier enfant à chaque étape
+ * suivante) — la variante affichée porte donc toute sa suite déjà connue, pas
+ * seulement le coup qui l'ouvre. `fallbackEco` s'applique aux nœuds sans
+ * `eco` propre (tout arbre `pgn` authored à la main, voir
+ * `core/curriculum/openings.ts`) — les nœuds issus de la base Lichess portent
+ * le leur (voir `VariationNode.eco`, posé par `buildTreeFromLines`).
  */
-function deriveVariationsFromTree(opening: OpeningLine): OpeningVariation[] {
+function deriveVariationsFromNode(tree: VariationNode, fallbackEco: string): OpeningVariation[] {
   const found = new Map<string, OpeningVariation>();
 
   function walk(node: VariationNode, sanPath: readonly string[], uciPath: readonly string[]): void {
@@ -235,18 +292,14 @@ function deriveVariationsFromTree(opening: OpeningLine): OpeningVariation[] {
           deepSan = [...deepSan, cursor.san!];
           deepUci = [...deepUci, cursor.uci!];
         }
-        found.set(`${opening.eco}|${child.comment}`, {
-          eco: opening.eco,
-          name: child.comment,
-          sanMoves: deepSan,
-          uciMoves: deepUci,
-        });
+        const eco = child.eco ?? fallbackEco;
+        found.set(`${eco}|${child.comment}`, { eco, name: child.comment, sanMoves: deepSan, uciMoves: deepUci });
       }
       walk(child, nextSan, nextUci);
     }
   }
 
-  walk(getOpeningTree(opening), [], []);
+  walk(tree, [], []);
   return Array.from(found.values()).sort(
     (a, b) => a.sanMoves.length - b.sanMoves.length || a.name.localeCompare(b.name),
   );
@@ -332,8 +385,16 @@ export interface OpeningSummary {
   preview: string;
 }
 
+/**
+ * La bibliothèque complète de l'onglet « Ouvertures » : les ~20 chapitres
+ * curatés à la main (`core/curriculum/openings.ts`, noms français, contenu
+ * pédagogique dédié) SUIVIS de toutes les familles lichess-org qui n'en ont
+ * pas encore (`listOpeningFamilies` exclut déjà celles qui sont représentées
+ * par un chapitre curaté — voir `CURATED_FAMILY_HUB`) — plus plate barrière à
+ * 20 entrées, voir `server/curriculum/imported-openings-index.ts`.
+ */
 export function listOpenings(): OpeningSummary[] {
-  return OPENINGS.map((opening) => ({
+  const curated = OPENINGS.map((opening) => ({
     id: opening.id,
     name: opening.name,
     eco: opening.eco,
@@ -341,4 +402,13 @@ export function listOpenings(): OpeningSummary[] {
     description: opening.description,
     preview: formatMovePreview(opening.moves),
   }));
+  const dynamic = listOpeningFamilies().map((family) => ({
+    id: family.id,
+    name: family.name,
+    eco: family.eco,
+    side: family.side,
+    description: family.description,
+    preview: formatMovePreview(family.rootMoves),
+  }));
+  return [...curated, ...dynamic];
 }

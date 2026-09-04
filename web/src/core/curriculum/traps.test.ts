@@ -76,6 +76,24 @@ describe("OPENING_TRAPS", () => {
       expect(trap.comments.length, trap.id).toBeGreaterThan(0);
     }
   });
+
+  it("les 25 pièges du socle statique portent tous une `punishmentLine` (option Pion Poison)", () => {
+    for (const trap of OPENING_TRAPS) {
+      expect(trap.punishmentLine, trap.id).toBeDefined();
+      expect(trap.punishmentLine!.length, trap.id).toBeGreaterThan(0);
+    }
+  });
+
+  it("`punishmentLine` (option Pion Poison) ne contient que des coups légalement jouables juste après `trapMove`", () => {
+    for (const trap of OPENING_TRAPS) {
+      if (!trap.punishmentLine) continue;
+      const chess = replaySetup(trap);
+      expect(() => chess.move(trap.trapMove), `${trap.id}: trapMove illégal "${trap.trapMove}"`).not.toThrow();
+      for (const san of trap.punishmentLine) {
+        expect(() => chess.move(san), `${trap.id}: coup illégal "${san}" dans punishmentLine`).not.toThrow();
+      }
+    }
+  });
 });
 
 describe("findTrap", () => {

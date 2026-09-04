@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { GamePhase } from "@/core/chess/types";
+import { MAIN_LINE_VARIATION_KEY } from "@/core/curriculum/opening-variation-key";
 import type { PlayerProgressOverview } from "@/server/queries/progress";
 import type { TrackedTacticalMotif } from "@/core/analysis/types";
 import { MOTIF_LABEL, PHASE_LABEL, accuracyBarClass, accuracyTextClass } from "@/lib/labels";
@@ -131,6 +133,7 @@ function OpeningPerformanceCard({
                 <th className="py-1.5 pr-4 font-medium">Parties</th>
                 <th className="py-1.5 pr-4 font-medium">Victoires</th>
                 <th className="py-1.5 pr-4 font-medium">Précision</th>
+                <th className="py-1.5 pr-4 font-medium">Ply moyen de la 1ère gaffe</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -153,11 +156,45 @@ function OpeningPerformanceCard({
                       <span className="font-mono text-foreground-muted">—</span>
                     )}
                   </td>
+                  <td className="py-2 pr-4 font-mono text-foreground-muted">
+                    {opening.avgMistakePly !== null ? opening.avgMistakePly : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * « ⚠️ Ouverture en difficulté » : le pire taux de victoire du joueur avec un
+ * échantillon suffisant (`findStrugglingOpening`, `progress-insights.ts`),
+ * suivi d'un lien direct vers le Drill Listudy de ce chapitre quand le
+ * catalogue d'Ouvertures le couvre (`resolveOpeningSlug`,
+ * `server/curriculum/opening-slug.ts`) — texte seul sinon (ouverture hors
+ * catalogue).
+ */
+function StrugglingOpeningBanner({ opening }: { opening: PlayerProgressOverview["strugglingOpening"] }) {
+  if (!opening) return null;
+
+  const plySentence = opening.avgMistakePly !== null ? ` Tu as tendance à faire des gaffes au coup ${opening.avgMistakePly}.` : "";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blunder/40 bg-blunder/10 px-4 py-3">
+      <p className="text-sm text-foreground">
+        ⚠️ <span className="font-medium">Ouverture en difficulté :</span> tu as un taux de réussite de seulement{" "}
+        <span className="font-mono font-semibold">{opening.winRate}%</span> avec {opening.name}.{plySentence}
+      </p>
+      {opening.openingSlug && (
+        <Link
+          href={`/ouvertures/${opening.openingSlug}?drill=${MAIN_LINE_VARIATION_KEY}`}
+          className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
+        >
+          🎯 Lancer le Drill Listudy
+        </Link>
       )}
     </div>
   );
@@ -184,6 +221,8 @@ export function ProgressOverview({ overview }: { overview: PlayerProgressOvervie
 
   return (
     <div className="space-y-6">
+      <StrugglingOpeningBanner opening={overview.strugglingOpening} />
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatTile
           label="Précision globale"

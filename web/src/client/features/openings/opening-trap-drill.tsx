@@ -4,12 +4,28 @@
  * Écran de l'onglet « ⚔️ Pièges » (`app/pieges/[slug]/page.tsx`) — réutilise
  * à 100% le hook réactif `useOpeningDrill` (voir son docstring pour la
  * mécanique de jugement des coups) et l'habillage épuré façon Listudy de
- * `OpeningMistakeExercise`, dont ce composant est le clone direct : un piège
- * (`core/curriculum/traps.ts`) est structurellement une correction ciblée
- * (`DrillSelection.kind === "mistake"`) — position de mise en place rejouée
- * en autoplay, puis UN SEUL coup exact accepté (la réfutation), tout autre
- * coup — y compris `trap.trapMove`, le coup naturel mais tentant — refusé
- * (pièce qui revient, tremblement + bip, jamais de message texte).
+ * `OpeningMistakeExercise`, dont ce composant était historiquement le clone
+ * direct — un piège (`core/curriculum/traps.ts`) est structurellement une
+ * correction ciblée (position de mise en place rejouée en autoplay, puis UN
+ * SEUL coup exact accepté, la réfutation).
+ *
+ * PROTOCOLE LISTUDY EN 2 MANCHES (audit UX du 2026-09-02, `DrillSelection.kind
+ * === "trap"` — voir son docstring dans `use-opening-drill.ts`) : Manche 1
+ * guidée (flèche d'indice + bouton indice autorisés, `drill.hintsAllowed`) ;
+ * en fin de Manche 1, le hook fige la position (`status === "round-gate"`)
+ * plutôt que d'enchaîner automatiquement comme pour les Ouvertures — cet
+ * écran affiche alors le bouton **« 🔒 Retenter sans guide »**
+ * (`drill.beginNextRound()`) qui lance la Manche 2, indices désactivés. Le
+ * piège n'est marqué maîtrisé (`markTrapSolved`, pastilles ✅ du NIVEAU 3) que
+ * si cette Manche 2 est parcourue sans AUCUNE faute — sinon elle se relance,
+ * en boucle, via la même porte manuelle.
+ *
+ * OPTION « PION POISON » (incarner la victime) : bascule qui, une fois
+ * activée, rejoue `trap.trapMove` PUIS `trap.punishmentLine` entièrement en
+ * autoplay (`kind: "trap-poison"`, aucune phase interactive) — l'IA « punit »
+ * la victime à l'écran au lieu d'attendre la réfutation du joueur. Manche
+ * unique, jamais suivie par `markTrapSolved`. Désactivée si `trap` n'a pas
+ * encore de `punishmentLine` (pièges importés en base, voir son docstring).
  *
  * FLUX ENCHAÎNÉ (NIVEAU 3 de `PiegesScreen`) : `seriesTraps` est la série
  * complète (même `family` + `gambit`, triée par difficulté, voir
@@ -17,20 +33,7 @@
  * depuis la prop `trap` mais MIS À JOUR EN PLACE par `goToNextInSeries` au lieu
  * de renvoyer à l'accueil : aucune navigation, aucun aller-retour serveur, le
  * hook `useOpeningDrill` est simplement redémarré (`start`) sur le puzzle
- * suivant de la même série (voir l'effet ci-dessous, qui réagit à
- * `activeTrap.id`). Un puzzle résolu marque `trap-progress.ts` (pastilles ✅
- * du NIVEAU 3) — volontairement PAS `markOpeningMistakeReviewed`/
- * `opening_mistake_review` : cette table couvre les vraies erreurs de parties
- * importées avec planification SRS, pas ce catalogue curaté rejoué librement
- * (voir le docstring de `trap-progress.ts`).
- *
- * Différences avec `OpeningMistakeExercise` : la mise en place vient d'un
- * piège curaté (SAN statique, voir `trap-round.ts`) plutôt que de la vraie
- * partie importée du joueur ; le texte affiché (alerte, indice, conclusion,
- * puis l'explication conceptuelle approfondie une fois la réfutation
- * trouvée) vient directement de `trap.trapExplanation`/`hint`/`outcome`/
- * `comments`, jamais de `core/curriculum/opening-commentary.ts` (qui ne
- * couvre que les chapitres du catalogue `openings.ts`, pas les pièges).
+ * suivant de la même série.
  */
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
@@ -38,7 +41,7 @@ import type { OpeningTrap } from "@/core/curriculum/traps";
 import { useErrorShake } from "./error-feedback";
 import { familyIcon } from "./trap-family-icon";
 import { markTrapSolved } from "./trap-progress";
-import { buildTrapRound } from "./trap-round";
+import { buildPoisonPawnRound, buildTrapRound } from "./trap-round";
 import { useOpeningDrill } from "./use-opening-drill";
 
 /** Repli minimal pour `useOpeningDrill` (n'exploite `opening` que pour `side`/`name`/`id`, jamais `moves` — voir `syntheticOpening` dans `opening-mistake-exercise.tsx`, même schéma). */
@@ -77,6 +80,12 @@ export function OpeningTrapDrill({
   const seriesIndex = seriesTraps.findIndex((candidate) => candidate.id === activeTrap.id);
   const nextInSeries = seriesIndex >= 0 ? (seriesTraps[seriesIndex + 1] ?? null) : null;
 
+  // Bascule « Incarner la victime » — voir le docstring du fichier. Remise à
+  // `false` en changeant de puzzle (`goToNextInSeries`) : chaque nouveau piège
+  // démarre en mode normal, jamais en Pion Poison par surprise.
+  const [poisonMode, setPoisonMode] = useState(false);
+  const canPoisonPawn = activeTrap.punishmentLine !== undefined;
+
   const opening = syntheticOpening(activeTrap);
   // `plies` n'est utilisé par `useOpeningDrill` que pour `kind: "main-line"`, jamais démarré ici.
   const drill = useOpeningDrill({ opening, plies: [] });
@@ -85,37 +94,54 @@ export function OpeningTrapDrill({
   // Bouton « Show hints for this move! » — même invariant que `OpeningMistakeExercise`/`OpeningDrill`.
   const [hintRevealed, setHintRevealed] = useState(false);
 
-  const startedRef = useRef<string | null>(null);
-  useEffect(() => {
-    // Redémarre si `activeTrap.id` change (puzzle suivant de la série, ou navigation directe d'un piège à l'autre)
-    // — sinon une seule fois au montage.
-    if (startedRef.current === activeTrap.id) return;
-    startedRef.current = activeTrap.id;
-    const { round, leadInUci } = buildTrapRound(activeTrap);
-    drill.start({ kind: "mistake", round, leadInUci, actualSan: activeTrap.trapMove });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTrap.id]);
+  /** Démarre `trap` dans le mode demandé — normal (`kind: "trap"`, protocole 2 manches) ou Pion Poison (`kind: "trap-poison"`, autoplay pur). Repli silencieux sur le mode normal si `poison` est demandé sans `punishmentLine` (le bouton reste de toute façon désactivé dans ce cas, voir `canPoisonPawn`). */
+  function startDrill(nextTrap: OpeningTrap, poison: boolean) {
+    if (poison) {
+      const poisonRound = buildPoisonPawnRound(nextTrap);
+      if (poisonRound) {
+        drill.start({ kind: "trap-poison", startFen: poisonRound.startFen, leadInUci: poisonRound.leadInUci });
+        return;
+      }
+    }
+    const { round, leadInUci } = buildTrapRound(nextTrap);
+    drill.start({ kind: "trap", round, leadInUci, actualSan: nextTrap.trapMove });
+  }
 
-  // Coche la pastille NIVEAU 3 dès la réfutation trouvée (voir `trap-progress.ts`) — idempotent, aucune écriture
-  // répétée tant que `drill.status` reste "finished" sur le même puzzle.
+  // Redémarre si `activeTrap.id`/`poisonMode` changent (puzzle suivant de la série, navigation directe, ou bascule
+  // Pion Poison) — sinon une seule fois au montage.
+  const startedKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (drill.status === "finished") markTrapSolved(activeTrap.id);
-  }, [drill.status, activeTrap.id]);
+    const key = `${activeTrap.id}:${poisonMode}`;
+    if (startedKeyRef.current === key) return;
+    startedKeyRef.current = key;
+    startDrill(activeTrap, poisonMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTrap.id, poisonMode]);
+
+  // Coche la pastille NIVEAU 3 (« maîtrisé ») dès que la Manche 2, à l'aveugle, est parcourue sans faute — voir
+  // `use-opening-drill.ts` (`nextLearningRoundOutcome`) : `status === "finished"` sur `kind: "trap"` ne peut, par
+  // construction du protocole, signifier autre chose (toute manche imparfaite repasse par `"round-gate"`, jamais
+  // `"finished"`). JAMAIS pour `kind: "trap-poison"` — manche unique, non suivie (voir le docstring du fichier).
+  useEffect(() => {
+    if (drill.status === "finished" && drill.selection?.kind === "trap") markTrapSolved(activeTrap.id);
+  }, [drill.status, drill.selection, activeTrap.id]);
 
   function retry() {
-    const { round, leadInUci } = buildTrapRound(activeTrap);
     setHintRevealed(false);
-    drill.start({ kind: "mistake", round, leadInUci, actualSan: activeTrap.trapMove });
+    startDrill(activeTrap, poisonMode);
   }
 
   function goToNextInSeries() {
     if (!nextInSeries) return;
     setHintRevealed(false);
+    setPoisonMode(false);
     setActiveTrap(nextInSeries);
   }
 
-  // Repère "le piège tente X ici" — uniquement tant que la réfutation n'a pas encore été jouée (`plyIndex === 0`), jamais un message d'erreur.
+  // Repère "le piège tente X ici" — uniquement tant que la réfutation n'a pas encore été jouée (`plyIndex === 0`),
+  // jamais un message d'erreur. `null` en Pion Poison (`status` n'est jamais "playing" dans ce mode).
   const trapAlert = drill.status === "playing" && drill.plyIndex === 0 ? activeTrap.trapMove : null;
+  const isPoisonRun = drill.selection?.kind === "trap-poison";
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
@@ -129,10 +155,29 @@ export function OpeningTrapDrill({
           </h2>
           <p className="mt-1 text-xs text-foreground-muted">
             {activeTrap.name} — tu joues {activeTrap.victimSide === "white" ? "les Blancs" : "les Noirs"}.
+            {!isPoisonRun && drill.selection?.kind === "trap" && (
+              <span> Manche {drill.learningRound} / 2{drill.learningRound === 1 ? " — guidée" : " — sans guide 🔒"}.</span>
+            )}
           </p>
         </div>
         <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
           ← Retour aux pièges
+        </button>
+      </div>
+
+      <div className="mt-3 flex justify-center">
+        <button
+          type="button"
+          disabled={!canPoisonPawn}
+          onClick={() => setPoisonMode((current) => !current)}
+          title={canPoisonPawn ? undefined : "Pas encore disponible pour ce piège"}
+          className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+            poisonMode
+              ? "border-blunder/40 bg-blunder/10 text-blunder"
+              : "border-border text-foreground-muted hover:bg-surface-muted"
+          } ${canPoisonPawn ? "" : "cursor-not-allowed opacity-50"}`}
+        >
+          ☠️ Incarner la victime (Tomber dans le piège)
         </button>
       </div>
 
@@ -154,11 +199,30 @@ export function OpeningTrapDrill({
 
         <div className="mt-3 min-h-6 w-full max-w-[420px] text-center text-sm">
           {drill.status === "autoplaying" ? (
-            <p className="text-foreground-muted">🔁 Mise en place du piège…</p>
+            <p className="text-foreground-muted">🔁 {isPoisonRun ? "L'IA amène le piège…" : "Mise en place du piège…"}</p>
           ) : drill.status === "finished" ? (
-            <p className="font-medium text-foreground">✅ Piège déjoué !</p>
+            <p className="font-medium text-foreground">
+              {isPoisonRun ? "😵 Tu es tombé dans le piège !" : "🔒 Piège maîtrisé !"}
+            </p>
           ) : null}
         </div>
+
+        {drill.status === "round-gate" && (
+          <div className="mt-3 w-full max-w-[420px] rounded-md border border-accent/30 bg-accent/5 p-4 text-center">
+            <p className="text-sm font-medium text-foreground">
+              {drill.learningRound === 1
+                ? "✅ Manche 1 réussie ! Manche 2 : retrouve la réfutation sans indice."
+                : "Presque — la Manche 2 doit être parcourue sans AUCUNE faute pour maîtriser ce piège."}
+            </p>
+            <button
+              type="button"
+              onClick={drill.beginNextRound}
+              className="mt-3 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+            >
+              🔒 Retenter sans guide
+            </button>
+          </div>
+        )}
 
         {trapAlert && (
           <div className="mt-3 w-full max-w-[420px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
@@ -167,7 +231,7 @@ export function OpeningTrapDrill({
           </div>
         )}
 
-        {!hintRevealed && drill.status === "playing" && (
+        {!hintRevealed && drill.status === "playing" && drill.hintsAllowed && (
           <div className="mt-3 flex justify-center">
             <button
               type="button"
@@ -178,13 +242,15 @@ export function OpeningTrapDrill({
             </button>
           </div>
         )}
-        {hintRevealed && drill.status === "playing" && (
+        {hintRevealed && drill.status === "playing" && drill.hintsAllowed && (
           <p className="mt-3 text-center text-xs text-foreground-muted">💡 {activeTrap.hint}</p>
         )}
 
         {drill.status === "finished" && (
           <>
-            <p className="mt-3 max-w-[420px] text-center text-sm text-foreground-muted">{activeTrap.outcome}</p>
+            <p className="mt-3 max-w-[420px] text-center text-sm text-foreground-muted">
+              {isPoisonRun ? activeTrap.trapExplanation : activeTrap.outcome}
+            </p>
             <p className="mt-3 max-w-[420px] rounded-md border border-border bg-surface-muted/30 p-3 text-center text-xs text-foreground-muted">
               💬 {activeTrap.comments}
             </p>
