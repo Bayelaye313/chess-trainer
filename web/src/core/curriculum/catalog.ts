@@ -1,7 +1,7 @@
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
 
 /**
- * Catalogue statique des 211 thèmes de l'académie « Apprendre ».
+ * Catalogue statique des 221 thèmes de l'académie « Apprendre ».
  *
  * Pure donnée, comme `core/chess/decks.ts` pour les decks FSRS — mais ici elle
  * n'est pas consommée directement par l'UI : `server/queries/curriculum.ts` la
@@ -15,13 +15,14 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * en-tête) : `totalPuzzles` est la cible annoncée au catalogue, pas un
  * décompte de contenu déjà importé.
  *
- * ## Saturation Lichess — les 155 thèmes curatés + les 56 thèmes officiels
+ * ## Saturation Lichess — les 165 thèmes curatés + les 56 thèmes officiels
  *
- * Les 155 thèmes ci-dessus (6 catégories : Positional Mastery, cursus Jesper
- * Hall, Checkmate Patterns, Tactical Motifs, Sparring Positions, Endgame
- * Mastery) sont des MODULES PÉDAGOGIQUES composés à la main — un titre
- * français, une description, parfois un tag Lichess de repli pour amorcer le
- * contenu (voir `TACTICAL_MOTIF_LICHESS_TAGS` etc. plus bas).
+ * Les 165 thèmes ci-dessus (8 catégories : Positional Mastery, cursus Jesper
+ * Hall, Structures de pions (Li-Pokamp), Faiblesses de pions (Yushan),
+ * Checkmate Patterns, Tactical Motifs, Sparring Positions, Endgame Mastery)
+ * sont des MODULES PÉDAGOGIQUES composés à la main — un titre français, une
+ * description, parfois un tag Lichess de repli pour amorcer le contenu (voir
+ * `TACTICAL_MOTIF_LICHESS_TAGS` etc. plus bas).
  *
  * Les 6 catégories `lichess_*` ajoutées à la suite sont d'une autre nature :
  * chacune reprend, TEL QUEL, un groupe officiel du sélecteur de thèmes
@@ -42,7 +43,7 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * aucun tag) aient TOUJOURS une case d'accueil exacte pour n'importe quel tag
  * rencontré, sans jamais avoir à improviser un rapprochement approximatif.
  *
- * Différence assumée avec les 155 thèmes curatés : ces 56 thèmes n'ont PAS
+ * Différence assumée avec les 165 thèmes curatés : ces 56 thèmes n'ont PAS
  * d'entrée dans `MASTER_PUZZLES_DATASET` (voir son docstring) — ce sont des
  * réservoirs purs, alimentés exclusivement par le pipeline d'import
  * (`data/import/academy/*.json` généré par les deux scripts ci-dessus), pas
@@ -96,6 +97,20 @@ export const CURRICULUM_CATEGORIES: readonly CurriculumCategoryMeta[] = [
     label: "Endgame Mastery",
     author: null,
     description: "Les finales qui décident la partie : pions, tours, pièces mineures — la technique qui convertit un avantage en victoire.",
+  },
+  {
+    id: "pawn_structures",
+    label: "Structures de pions",
+    author: "Li-Pokamp",
+    description:
+      "Le squelette de pions typique d'une ouverture — Grünfeld, Stonewall, Bénoni, Est-indienne, Française, Caro-Kann — et le plan qu'il impose à chaque camp, tiré de l'étude Lichess « Structures de pions ».",
+  },
+  {
+    id: "pawn_weaknesses",
+    label: "Faiblesses de pions",
+    author: "Yushan",
+    description:
+      "Un vrai cours pas à pas, chapitre après chapitre, sur ce qui rend un pion durablement faible ou fort — tiré de l'étude Lichess « Pawn Structure ».",
   },
   // --- Les 6 catégories officielles de la taxonomie Lichess — voir le docstring de fichier ---
   {
@@ -261,6 +276,108 @@ const JESPER_HALL_TITLES = [
   "Module 24 : Le zugzwang positionnel",
   "Module 25 : Synthèse — parties commentées",
 ] as const;
+
+/**
+ * Une description RÉELLE par module — cahier des charges du 2026-09-06 : le
+ * gabarit générique précédent (`${title} — un module du cursus structuré du
+ * MI Jesper Hall.`) s'affichait identique à un mot près sur les 25 cartes du
+ * module (`theme-path.tsx`), l'exact symptôme du « copier-coller vide »
+ * signalé. Une phrase par module, qui dit CE QUE le module enseigne plutôt
+ * que de nommer une deuxième fois son titre.
+ */
+const JESPER_HALL_DESCRIPTIONS: Record<string, string> = {
+  "Module 1 : Structures de pions symétriques": "Quand les pions sont en miroir, c'est l'activité des pièces — jamais la structure — qui doit décider ton plan.",
+  "Module 2 : Jouer contre l'isolani": "Bloque le pion isolé sur une case fixe, échange les pièces mineures qui l'attaquent, et laisse la faiblesse peser en finale.",
+  "Module 3 : La structure Carlsbad": "c3-d4 contre c6-d5 : l'attaque de minorité (b4-b5) fissure l'aile dame adverse sans jamais avancer le pion c lui-même.",
+  "Module 4 : La structure Maroczy": "Les pions blancs c4+e4 interdisent à jamais ...d5 et ...b5 — Noir doit manœuvrer un cavalier vers d4 ou fissurer avec ...f5 pour respirer.",
+  "Module 5 : Le hérisson (Hedgehog)": "Une position volontairement comprimée (pions sur la 6e rangée) qui explose par une rupture ...b5 ou ...d5 au moment choisi, jamais subi.",
+  "Module 6 : La chaîne de pions en français": "La chaîne e5-d4 se défend à sa base (d4) — chaque camp joue sur l'aile que sa propre chaîne désigne, jamais l'inverse.",
+  "Module 7 : Structures à pions doublés": "Des pions doublés valent une colonne ouverte ou un contrôle central accru — juge l'échange qui les crée, jamais le doublon seul.",
+  "Module 8 : Le roque opposé et l'attaque de pions": "Rois sur des ailes opposées : c'est une course, pas une partie d'échecs — chaque tempo perdu à défendre est un tempo offert à l'assaut adverse.",
+  "Module 9 : La minorité d'attaque": "Deux pions contre trois : pousse-les vers la majorité adverse pour lui infliger une faiblesse permanente, sans jamais chercher à les faire passer eux-mêmes.",
+  "Module 10 : Le sacrifice positionnel de qualité": "Rendre la qualité (tour contre pièce mineure) pour une structure de pions saine et durable — un marché souvent sous-évalué par le calcul brut.",
+  "Module 11 : Les finales de tours pratiques": "L'activité de la tour prime sur le matériel : une tour passive à un pion de plus perd souvent contre une tour active à un pion de moins.",
+  "Module 12 : Les finales de fous de couleurs opposées": "Terriblement nulles au milieu de partie malgré un pion de plus, terriblement gagnantes en attaque — le même déséquilibre, deux visages opposés.",
+  "Module 13 : Transition milieu de partie vers finale": "Compte les pions ET les cases avant chaque échange de dames — une finale entrée par erreur ne se rejoue jamais.",
+  "Module 14 : L'art de la conversion": "Gagner une position gagnante est une compétence à part entière : simplifie méthodiquement, sans jamais relâcher la précision par excès de confiance.",
+  "Module 15 : Fou contre cavalier, mode d'emploi": "Fous ouverts, cavaliers fermés — mais fixe d'abord les pions sur LA couleur qui neutralise le fou adverse avant de choisir ton camp.",
+  "Module 16 : Construire un plan à long terme": "Identifie la faiblesse permanente de l'adversaire AVANT de bouger une pièce — un plan sans cible durable n'est qu'une suite de coups isolés.",
+  "Module 17 : Calcul et intuition positionnelle": "Calcule les séquences forcées, évalue par intuition les positions calmes — confondre les deux registres coûte du temps ET de la précision.",
+  "Module 18 : Évaluation dynamique contre statique": "Une pièce active vaut souvent plus que sa valeur nominale : pèse toujours ce qui bouge contre ce qui reste figé sur l'échiquier.",
+  "Module 19 : Les cases de couleur au milieu de partie": "Chaque camp domine naturellement une couleur de cases — attaque sur la tienne, défends-toi sur celle de l'adversaire.",
+  "Module 20 : Le roi actif en finale": "Dès que le danger de mat s'éloigne, le roi devient une pièce offensive majeure — le marcher au centre vaut souvent un pion entier.",
+  "Module 21 : Jouer les structures fermées": "Dans une position fermée, la manœuvre patiente d'une pièce vaut mieux qu'une rupture prématurée qui n'ouvre rien en ta faveur.",
+  "Module 22 : Affronter le fianchetto": "Le fou fianchetto contrôle une diagonale entière depuis le coin — l'échanger ou fermer sa diagonale sont les deux seuls vrais antidotes.",
+  "Module 23 : Le contrôle du centre": "Contrôler le centre par des pièces vaut souvent plus que l'occuper par des pions, que l'adversaire peut attaquer et faire reculer.",
+  "Module 24 : Le zugzwang positionnel": "Immobilise toutes les pièces adverses sauf une : l'adversaire finit par devoir bouger CETTE pièce et dégrader sa propre position tout seul.",
+  "Module 25 : Synthèse — parties commentées": "Des parties complètes, annotées coup par coup, où se combinent enfin structure, plan et calcul — le test final du cursus.",
+};
+
+/**
+ * Les 9 chapitres « squelette » (texte + FEN sans les pièces, comme sur
+ * Lichess) retenus parmi les 10 importés dans
+ * `data/import/academy/lichess_study_structures-de-pions_*.pgn` (étude
+ * Lichess https://lichess.org/study/srjMsNnC de Li-Pokamp) — un titre par
+ * structure nommée, chacune avec ses plans réels pour les deux camps.
+ *
+ * Règle de dédoublonnage (cahier des charges du 2026-09-07) : un chapitre dont
+ * le TITRE ET LE CONCEPT sont déjà couverts ailleurs dans le catalogue est
+ * retiré plutôt que dupliqué. Un seul cas s'applique ici : « La structure
+ * Carlsbad » recoupait EXACTEMENT `jh-module-3-la-structure-carlsbad` (même
+ * squelette c3-d4/c6-d5, même attaque de minorité b2-b4-b5) — retiré, sa
+ * seconde partie réelle (Wojtaszek–Khairullin, l'exécution effective de b4-b5)
+ * a été versée à la place dans les idées clés de `jh-module-3` (voir
+ * `lesson-content.ts`). « Structure française type I » (contrôle de e5, pion
+ * arriéré e6) reste en revanche distincte de `jh-module-6` (chaîne e5-d4 fixe,
+ * jeu à la base d4) : titres et squelettes différents malgré le nom commun
+ * « française » — pas un doublon.
+ */
+const PAWN_STRUCTURE_TITLES = [
+  "Formation Caro-Kann",
+  "La structure Grünfeld",
+  "La structure Stonewall",
+  "Formation Bénoni asymétrique",
+  "Formation Bénoni symétrique",
+  "Structure Est-indienne type I",
+  "Structure Est-indienne type III",
+  "Structure Est-indienne ouverte",
+  "Structure française type I",
+] as const;
+
+/** Une phrase par structure — reformulée depuis le texte réel du chapitre Lichess correspondant, jamais une simple redite du titre. */
+const PAWN_STRUCTURE_DESCRIPTIONS: Record<string, string> = {
+  "Formation Caro-Kann": "Pions c3-d4 contre c6-e6 : Blanc lutte pour installer une pièce en e5 pendant que Noir cherche la rupture libératrice ...c5.",
+  "La structure Grünfeld": "Le centre de pions blanc (c3-d4-e4) contre la majorité noire à l'aile dame : chaque camp vise son propre pion passé avant l'autre.",
+  "La structure Stonewall": "Pions blancs figés en c3-d4-e3-f2 : le contrôle de la case e5 et l'échange du fou de cases noires décident du milieu de partie.",
+  "Formation Bénoni asymétrique": "Majorité centrale blanche contre majorité à l'aile dame noire : la rupture e4-e5 blanche contre l'avance b7-b5-b4 noire, chacun visant son pion passé.",
+  "Formation Bénoni symétrique": "Blanc garde un léger avantage d'espace ; Noir doit contrôler e4 et échanger les pièces mineures pour ne pas s'asphyxier.",
+  "Structure Est-indienne type I": "La colonne c ouverte est l'enjeu central : qui la contrôle prépare une pénétration à la 2e ou 7e rangée.",
+  "Structure Est-indienne type III": "Actions sur des ailes opposées : rupture c4-c5-c6 pour Blanc contre l'assaut f7-f5-f4-g5-g4 pour Noir.",
+  "Structure Est-indienne ouverte": "Née après ...exd5 : Blanc gagne de l'espace et attaque à l'aile roi, Noir cherche l'échange de pièces et la rupture ...d6-d5 ou ...f7-f5.",
+  "Structure française type I": "Contrôler e5 est la clé : Blanc y installe une pièce et double les tours sur e6, Noir cherche ...c5xd4 puis la rupture ...e6-e5.",
+};
+
+/**
+ * Catégorie `pawn_weaknesses` — un seul thème pour l'instant, mais d'une
+ * nature différente des deux catégories ci-dessus : pas un texte de synthèse
+ * + une position d'exemple, mais un vrai COURS À PLUSIEURS CHAPITRES
+ * (`COURSE_LESSONS`, voir `course-lesson.ts`) reproduisant la structure
+ * réelle de l'étude Lichess « Pawn Structure » de Yushan
+ * (https://lichess.org/study/a8arx17S) — un sujet comme « Backward Pawn » y
+ * est raconté en 17 chapitres réels successifs, chacun sa propre position de
+ * maître et son propre commentaire, plutôt qu'un unique résumé. Seul « Le
+ * pion arriéré » est repris ici : c'est le seul sujet de cette étude dont le
+ * cours est assez étoffé (17 chapitres réels, contre 1 à 5 pour les autres)
+ * pour justifier, à lui seul, un thème dédié — cahier des charges du
+ * 2026-09-07 : « pas de thème sans base solide de cours ». Les autres sujets
+ * (Isolated Pawn, Doubled Pawns, Pawn Duo/Island, Open File…) restent hors
+ * catalogue tant qu'ils n'ont pas reçu le même traitement.
+ */
+const PAWN_WEAKNESS_TITLES = ["Le pion arriéré"] as const;
+
+const PAWN_WEAKNESS_DESCRIPTIONS: Record<string, string> = {
+  "Le pion arriéré": "Un pion sans voisin pour l'appuyer, coincé derrière ses camarades : reconnaître quand il est mortel, et quand il tient bon.",
+};
 
 const CHECKMATE_PATTERN_TITLES = [
   "Mat du couloir",
@@ -437,22 +554,32 @@ const CHECKMATE_PATTERN_LICHESS_TAGS: Record<string, readonly string[]> = {
 // (index % 4 === 1), ce qui le diluait au point de laisser "Roi exposé"
 // quasiment vide. Voir aussi la remontée de priorité de `exposedKing` dans
 // `PRIORITY_LICHESS_TAGS` (scripts/convert-lichess-puzzles-csv.ts).
-const POSITIONAL_MASTERY_LICHESS_TAGS: Record<string, readonly string[]> = Object.fromEntries(
-  POSITIONAL_MASTERY_TITLES.map((title, index) => [
-    title,
-    [["middlegame", "advantage"], ["defensiveMove"], ["hangingPiece", "advancedPawn"], ["castling", "equality"]][index % 4],
-  ]),
-);
-
-/** Cursus plus exigeant (voir `levelForIndex` appliqué plus bas) — mêmes tags de phase/niveau que « Positional Mastery », plus `sacrifice`/`long`/`veryLong` pour refléter la profondeur de calcul attendue en fin de cursus. */
-const JESPER_HALL_LICHESS_TAGS: Record<string, readonly string[]> = Object.fromEntries(
-  JESPER_HALL_TITLES.map((title, index) => [
-    title,
-    [["middlegame", "advantage"], ["sacrifice", "long"], ["defensiveMove", "veryLong"], ["kingsideAttack", "queensideAttack"]][
-      index % 4
-    ],
-  ]),
-);
+/**
+ * Titres « purs stratégiques » retirés du round-robin de tags génériques
+ * ci-dessous — cahier des charges du 2026-09-06, DURCI le même jour : « coupe
+ * IMMÉDIATEMENT tous les puzzles tactiques qui n'ont aucun rapport avec les
+ * thèmes positionnels de Lavinia Valcu (...) et de Jesper Hall » — pas
+ * seulement les 3 thèmes cités en exemple au premier passage, la totalité des
+ * deux catégories : Lichess ne taggue ni « avant-poste », ni « case faible »,
+ * ni aucun plan stratégique nommé ou structure de pions précise
+ * (Carlsbad, Maroczy, hérisson…) — un round-robin de tags génériques
+ * (`middlegame`/`sacrifice`/`kingsideAttack`) n'a jamais eu de rapport réel
+ * avec ces 55 thèmes, seulement l'illusion d'un contenu qui remplissait la
+ * jauge. Curated-only désormais, INTÉGRALEMENT : seuls
+ * `data/import/academy/*.pgn`/`*.json` écrits ou vérifiés à la main (voir
+ * `positional-studies-curated.json`) les alimentent — voir aussi
+ * `STRATEGIC_CURATED_ONLY_THEME_IDS` (`scripts/seed-academy.ts`), qui purge en
+ * plus toute pollution déjà importée par un run précédent du convertisseur
+ * CSV, et `totalPuzzles` (recalculé pour TOUS les thèmes à chaque run, jamais
+ * seulement les thèmes touchés — voir son docstring) : un thème qui retombe à
+ * 0 exercice réel doit afficher honnêtement 0, jamais un objectif fictif.
+ */
+const STRATEGIC_CURATED_ONLY_TITLES = new Set<string>([
+  ...POSITIONAL_MASTERY_TITLES,
+  ...JESPER_HALL_TITLES,
+  ...PAWN_STRUCTURE_TITLES,
+  ...PAWN_WEAKNESS_TITLES,
+]);
 
 /** Niveau tournoi explicitement : `master`/`masterVsMaster`/`superGM`/`crushing` — filtrés en plus sous `SPARRING_MIN_RATING` (Elo 2000) côté convertisseur, pour qu'un tag générique partagé avec les 2 tables ci-dessus ne fasse jamais glisser du contenu débutant dans ce module. */
 const SPARRING_POSITION_LICHESS_TAGS: Record<string, readonly string[]> = Object.fromEntries(
@@ -665,18 +792,42 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
     POSITIONAL_MASTERY_TITLES,
     (title) => `Reconnaître et exploiter : ${title.toLowerCase()}.`,
     undefined,
-    (title) => POSITIONAL_MASTERY_LICHESS_TAGS[title],
+    // Curated-only intégral (voir `STRATEGIC_CURATED_ONLY_TITLES`) : aucun tag
+    // Lichess générique n'a de rapport réel avec un plan stratégique nommé.
+    () => undefined,
   ),
   ...buildCategory(
     "jesper_hall_course",
     "jh",
     "MI Jesper Hall",
     JESPER_HALL_TITLES,
-    (title) => `${title} — un module du cursus structuré du MI Jesper Hall.`,
+    (title) => JESPER_HALL_DESCRIPTIONS[title] ?? `${title} — un module du cursus structuré du MI Jesper Hall.`,
     // Cursus qui monte en exigence sans jamais redescendre en "débutant" : dès le premier module,
     // on suppose les règles acquises — c'est la lecture stratégique qui est enseignée.
     (index) => (index < JESPER_HALL_TITLES.length * 0.6 ? "intermediate" : "advanced"),
-    (title) => JESPER_HALL_LICHESS_TAGS[title],
+    // Curated-only intégral — voir `STRATEGIC_CURATED_ONLY_TITLES`.
+    () => undefined,
+  ),
+  ...buildCategory(
+    "pawn_structures",
+    "ps",
+    "Li-Pokamp",
+    PAWN_STRUCTURE_TITLES,
+    (title) => PAWN_STRUCTURE_DESCRIPTIONS[title] ?? `${title} — une structure de pions nommée et son plan pour chaque camp.`,
+    // Reconnaître une structure nommée exige déjà de lire une position — jamais un module "débutant".
+    () => "intermediate",
+    // Curated-only intégral — voir `STRATEGIC_CURATED_ONLY_TITLES`.
+    () => undefined,
+  ),
+  ...buildCategory(
+    "pawn_weaknesses",
+    "pw",
+    "Yushan",
+    PAWN_WEAKNESS_TITLES,
+    (title) => PAWN_WEAKNESS_DESCRIPTIONS[title] ?? `${title} — un cours à plusieurs chapitres sur cette faiblesse de pions.`,
+    () => "intermediate",
+    // Curated-only intégral — voir `STRATEGIC_CURATED_ONLY_TITLES`.
+    () => undefined,
   ),
   ...buildCategory(
     "checkmate_patterns",
@@ -757,14 +908,15 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
   ),
 ];
 
-if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 211) {
+if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 221) {
   // Filet de sécurité pour toute future édition de ce fichier : le compte de
-  // 211 thèmes (155 curatés + 56 en bijection stricte avec les 6 catégories
-  // officielles Lichess, voir « Saturation Lichess » dans le docstring de
-  // fichier — 58 tags officiels mais 56 thèmes, 2 doublons volontairement
-  // fusionnés) est une exigence du produit, pas un hasard — une régression
-  // silencieuse ici serait invisible en revue de code.
-  throw new Error(`CURRICULUM_THEMES doit contenir 211 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
+  // 221 thèmes (155 curatés + 9 `pawn_structures` (Li-Pokamp) + 1
+  // `pawn_weaknesses` (Yushan) + 56 en bijection stricte avec les 6
+  // catégories officielles Lichess, voir « Saturation Lichess » dans le
+  // docstring de fichier — 58 tags officiels mais 56 thèmes, 2 doublons
+  // volontairement fusionnés) est une exigence du produit, pas un hasard —
+  // une régression silencieuse ici serait invisible en revue de code.
+  throw new Error(`CURRICULUM_THEMES doit contenir 221 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -798,4 +950,15 @@ export const QUALITY_FILTERED_THEME_IDS: ReadonlySet<string> = new Set(
   CURRICULUM_THEMES.filter((theme) => QUALITY_FILTERED_CATEGORIES.has(theme.category) && theme.id !== MATE_IN_ONE_THEME_ID).map(
     (theme) => theme.id,
   ),
+);
+
+/**
+ * Version en `themeId` de `STRATEGIC_CURATED_ONLY_TITLES` — seul
+ * consommateur : `scripts/seed-academy.ts`, qui purge/rejette tout draft ciblant
+ * l'un de ces thèmes s'il provient d'un fichier `*-lichess.json` généré en
+ * masse (tags génériques, voir le docstring de `STRATEGIC_CURATED_ONLY_TITLES`)
+ * plutôt que d'un fichier curaté à la main.
+ */
+export const STRATEGIC_CURATED_ONLY_THEME_IDS: ReadonlySet<string> = new Set(
+  CURRICULUM_THEMES.filter((theme) => STRATEGIC_CURATED_ONLY_TITLES.has(theme.title)).map((theme) => theme.id),
 );

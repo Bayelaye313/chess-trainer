@@ -177,6 +177,15 @@ export async function getThemeSession(themeId: string, userId: string = LOCAL_US
   const [theme] = await db.select().from(curriculumThemes).where(eq(curriculumThemes.id, themeId)).limit(1);
   if (!theme) return null;
 
+  // Alerte défensive en log — cahier des charges du 2026-09-06 : un thème à 0
+  // exercice RÉEL (voir `recalculateAllThemeTotals`, `scripts/seed-academy.ts`
+  // — jamais un objectif théorique) ne doit jamais servir un puzzle inventé
+  // pour combler la jauge. `ThemeLesson` bloque déjà l'accès côté UI ; ce log
+  // couvre l'appel direct (lien profond, contournement du bouton).
+  if (theme.totalPuzzles === 0) {
+    console.warn(`⚠️ Thème "${theme.id}" sans exercice authentique — en attente du fichier PGN de l'utilisateur.`);
+  }
+
   const [progress] = await db
     .select({ completedCount: userThemeProgress.completedCount })
     .from(userThemeProgress)

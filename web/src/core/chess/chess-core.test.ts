@@ -239,6 +239,7 @@ describe("classifyMove", () => {
         secondBestGap: null,
         secondBestWinPercent: null,
         alternativeAllowsImmediateMate: false,
+        isObviousRecapture: false,
       }),
     ).toBe("best");
   });
@@ -255,6 +256,7 @@ describe("classifyMove", () => {
         secondBestGap: null,
         secondBestWinPercent: null,
         alternativeAllowsImmediateMate: false,
+        isObviousRecapture: false,
       }),
     ).toBe("best");
   });
@@ -268,6 +270,24 @@ describe("classifyMove", () => {
         secondBestGap: 40,
         secondBestWinPercent: 0,
         alternativeAllowsImmediateMate: true,
+        isObviousRecapture: false,
+      }),
+    ).toBe("best");
+  });
+
+  it("recapture évidente sur la case où l'adversaire vient de prendre → meilleur coup, jamais critique (bug utilisateur : « une reprise évidente n'est pas un coup critique »)", () => {
+    // Même signature qu'un vrai « Critique » côté moteur (gros écart, alternative
+    // qui s'effondre sans pour autant mater) : c'est justement ce que ce
+    // garde-fou doit intercepter avant le calcul du gap, pas après.
+    expect(
+      classifyMove({
+        foundBest: true,
+        onlyLegalMove: false,
+        winPercentLoss: 0,
+        secondBestGap: 40,
+        secondBestWinPercent: 5,
+        alternativeAllowsImmediateMate: false,
+        isObviousRecapture: true,
       }),
     ).toBe("best");
   });
@@ -281,6 +301,7 @@ describe("classifyMove", () => {
         secondBestGap: 15,
         secondBestWinPercent: 20,
         alternativeAllowsImmediateMate: false,
+        isObviousRecapture: false,
       }),
     ).toBe("critical");
   });
@@ -301,6 +322,7 @@ describe("classifyMove", () => {
         secondBestGap: 25,
         secondBestWinPercent: 60,
         alternativeAllowsImmediateMate: false,
+        isObviousRecapture: false,
       }),
     ).toBe("best");
   });
@@ -314,6 +336,7 @@ describe("classifyMove", () => {
         secondBestGap: 5,
         secondBestWinPercent: 20,
         alternativeAllowsImmediateMate: false,
+        isObviousRecapture: false,
       }),
     ).toBe("best");
   });
@@ -334,6 +357,7 @@ describe("classifyMove", () => {
         secondBestGap: null,
         secondBestWinPercent: null,
         alternativeAllowsImmediateMate: false,
+        isObviousRecapture: false,
       }),
     ).toBe(expected);
   });

@@ -82,6 +82,8 @@ export interface CuratedContinuation {
   name: string;
   /** Nom de la sous-variante que ce coup ouvre, s'il en ouvre une — voir `core/chess/pgn-tree.ts`. */
   variationName: string | null;
+  /** Nombre de branches curatées qui proposent ce coup depuis cette position. */
+  weight: number;
 }
 
 /**
@@ -98,13 +100,19 @@ export function getCuratedChildren(fen: string): CuratedContinuation[] {
   const byUci = new Map<string, CuratedContinuation>();
   for (const { opening, node } of matches) {
     for (const child of node.children) {
-      if (!child.uci || !child.san || byUci.has(child.uci)) continue;
+      if (!child.uci || !child.san) continue;
+      const existing = byUci.get(child.uci);
+      if (existing) {
+        existing.weight += 1;
+        continue;
+      }
       byUci.set(child.uci, {
         san: child.san,
         uci: child.uci,
         eco: opening.eco,
         name: opening.name,
         variationName: child.comment,
+        weight: 1,
       });
     }
   }

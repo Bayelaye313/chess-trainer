@@ -10,6 +10,8 @@ import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlit
 export type CurriculumCategory =
   | "positional_mastery"
   | "jesper_hall_course"
+  | "pawn_structures"
+  | "pawn_weaknesses"
   | "checkmate_patterns"
   | "tactical_motifs"
   | "sparring_positions"

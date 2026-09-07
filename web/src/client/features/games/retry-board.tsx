@@ -16,12 +16,14 @@ export function RetryBoard({
   playerColor,
   bestUci,
   bestSan,
+  onResult,
   onExit,
 }: {
   fenBefore: string;
   playerColor: "w" | "b";
   bestUci: string;
   bestSan: string;
+  onResult?: (result: { correct: boolean; playedUci: string; playedSan: string }) => void;
   onExit: () => void;
 }) {
   const [chess] = useState(() => new Chess(fenBefore));
@@ -47,7 +49,9 @@ export function RetryBoard({
     const uci = move.from + move.to + (move.promotion ?? "");
     setFen(chess.fen());
     setPlayedSan(move.san);
-    setResult(uci === bestUci ? "correct" : "incorrect");
+    const correct = uci === bestUci;
+    setResult(correct ? "correct" : "incorrect");
+    onResult?.({ correct, playedUci: uci, playedSan: move.san });
     return true;
   }
 

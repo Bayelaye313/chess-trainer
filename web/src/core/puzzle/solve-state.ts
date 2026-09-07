@@ -27,7 +27,7 @@
  * rejouée pli par pli à partir de `puzzle.solution`, déjà connue, sans aucun
  * appel moteur.
  */
-import { type MoveQuality, type WrongMoveHint } from "../chess/types";
+import { type Motif, type MoveQuality, type WrongMoveHint } from "../chess/types";
 
 /**
  * Ce qu'il faut, et rien de plus, pour faire tourner un puzzle multi-coups —
@@ -43,6 +43,22 @@ export interface SolvablePuzzle {
   /** Suite attendue en UCI, coups adverses inclus aux rangs impairs. */
   solution: string[];
   solutionSan: string[];
+  /**
+   * Coup adverse qui a mené à `fenBefore` — `null`/absent si inconnu (tout
+   * premier coup d'une partie, ou puzzle sans historique, ex. import
+   * Lichess). `PuzzleBoard` l'affiche au chargement, avant le premier coup du
+   * joueur : retour utilisateur direct (« on joue direct sans savoir le
+   * dernier coup de l'adversaire »). Optionnel pour ne pas casser les
+   * fournisseurs qui n'ont pas cette info sous la main (`ThemePuzzle`,
+   * `theme-session.tsx`).
+   */
+  setupMove?: { uci: string; san: string } | null;
+  /**
+   * Motifs tactiques exploités par la solution (`core/chess/motifs`) — sert
+   * au message du Coach avant résolution (`core/puzzle/pre-solve-coach.ts`).
+   * Optionnel, même raison que `setupMove`.
+   */
+  motifs?: Motif[];
 }
 
 export type SolvePhase =

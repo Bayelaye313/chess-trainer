@@ -6,7 +6,9 @@ export type Termination =
   | "stalemate"
   | "insufficient_material"
   | "threefold_repetition"
-  | "fifty_move_rule";
+  | "fifty_move_rule"
+  /** Le joueur a capitulé — jamais renvoyé par `gameOutcome` (voir `use-play-game.ts#handleResign`). */
+  | "resignation";
 
 export interface GameOutcome {
   result: GameResult;

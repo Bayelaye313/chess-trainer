@@ -78,7 +78,12 @@ import {
   type AcademyJsonEntry,
   type AcademyPuzzleDraft,
 } from "@/core/curriculum/academy-parser";
-import { QUALITY_FILTERED_THEME_IDS, QUALITY_FILTER_MAX_PUZZLES } from "@/core/curriculum/catalog";
+import {
+  CURRICULUM_THEMES,
+  QUALITY_FILTERED_THEME_IDS,
+  QUALITY_FILTER_MAX_PUZZLES,
+  STRATEGIC_CURATED_ONLY_THEME_IDS,
+} from "@/core/curriculum/catalog";
 import { parsePgnGames } from "@/core/curriculum/traps-parser";
 import { db } from "@/server/db";
 import { curriculumPuzzles, curriculumThemes, type NewCurriculumPuzzle } from "@/server/db/schema";
@@ -115,6 +120,31 @@ async function listAcademyFiles(only?: string): Promise<string[]> {
     .sort();
 }
 
+/**
+ * Fichiers générés en masse par `scripts/convert-lichess-puzzles-csv.ts` (un
+ * par catégorie, ex. `positional-mastery-lichess.json`) — par opposition aux
+ * fichiers curatés à la main (`positional-studies-curated.json`,
+ * `checkmate-patterns.pgn`…). Seul indice fiable : le suffixe `-lichess.json`,
+ * imposé par ce même script (voir son en-tête).
+ */
+function isBulkLichessFile(file: string): boolean {
+  return file.endsWith("-lichess.json");
+}
+
+/**
+ * Un thème « curated-only » (`STRATEGIC_CURATED_ONLY_THEME_IDS`, catalog.ts —
+ * avant-poste du cavalier, case faible, structure Maroczy à ce jour) ne doit
+ * JAMAIS recevoir de contenu d'un fichier généré en masse depuis les tags
+ * génériques Lichess (`middlegame`, `sacrifice`…) : ces tags n'ont rien à voir
+ * avec le thème stratégique précis et le polluaient de puzzles tactiques
+ * hors-sujet (cahier des charges du 2026-09-06). Rejette silencieusement (le
+ * fichier curaté correspondant reste, lui, intact) — purge un run précédent
+ * du convertisseur CSV aussi bien qu'elle prévient toute pollution future.
+ */
+function isRejectedStrategicPollution(file: string, themeId: string): boolean {
+  return isBulkLichessFile(file) && STRATEGIC_CURATED_ONLY_THEME_IDS.has(themeId);
+}
+
 async function parseAcademyFile(file: string): Promise<{ found: number; drafts: AcademyPuzzleDraft[]; skipped: number }> {
   const text = await readFile(join(ACADEMY_DIR, file), "utf8");
   const drafts: AcademyPuzzleDraft[] = [];
@@ -136,6 +166,11 @@ async function parseAcademyFile(file: string): Promise<{ found: number; drafts: 
       if (!draft) {
         skipped += 1;
         console.warn(`  ⚠ ${file} — entrée #${index} ignorée (thème introuvable dans le catalogue, ou coup illégal)`);
+        return;
+      }
+      if (isRejectedStrategicPollution(file, draft.themeId)) {
+        skipped += 1;
+        console.warn(`  ⚠ ${file} — entrée #${index} rejetée (thème "${draft.themeId}" curated-only, pas de contenu générique Lichess)`);
         return;
       }
       drafts.push(draft);
@@ -286,9 +321,7 @@ async function insertKeptDrafts(kept: readonly TaggedDraft[]): Promise<Map<strin
   }
 
   const rows: NewCurriculumPuzzle[] = [];
-  const touchedThemes: string[] = [];
   for (const [themeId, items] of itemsByTheme) {
-    touchedThemes.push(themeId);
     const [{ maxOrderIndex } = { maxOrderIndex: null }] = await db
       .select({ maxOrderIndex: max(curriculumPuzzles.orderIndex) })
       .from(curriculumPuzzles)
@@ -321,18 +354,33 @@ async function insertKeptDrafts(kept: readonly TaggedDraft[]): Promise<Map<strin
     if (batch.length > 0) await db.insert(curriculumPuzzles).values(batch);
   }
 
-  for (const themeId of touchedThemes) {
-    // Compte RÉEL de lignes, jamais `max(orderIndex)+1` — voir le docstring
-    // de fichier : ce dernier peut dépasser le compte réel si l'orderIndex a
-    // des trous (thème alimenté par plusieurs fichiers).
+  return builtByFile;
+}
+
+/**
+ * Recalcule `curriculum_themes.totalPuzzles` pour LES 211 THÈMES DU
+ * CATALOGUE, jamais seulement ceux "touchés" par ce run (bug corrigé le
+ * 2026-09-06 : un thème purgé de TOUTE sa pollution — voir
+ * `STRATEGIC_CURATED_ONLY_THEME_IDS` — mais qui n'a reçu AUCUN draft de
+ * remplacement n'apparaissait dans aucune des deux anciennes boucles de
+ * recalcul, et gardait donc son ancien total, gonflé, comme si le contenu
+ * pollué existait toujours). Compte RÉEL de lignes en base pour chaque thème,
+ * jamais un objectif théorique ni un `max(orderIndex)+1` — cahier des
+ * charges explicite : « Ne triche plus pour remplir les jauges », un thème à
+ * 0 exercice réel doit afficher honnêtement 0.
+ *
+ * 211 requêtes `count()` indexées (`themeId`) : coût négligeable face aux
+ * dizaines de secondes déjà passées à parser `tactics.pgn` — jamais sauté par
+ * souci de performance.
+ */
+async function recalculateAllThemeTotals(): Promise<void> {
+  for (const theme of CURRICULUM_THEMES) {
     const [{ total } = { total: 0 }] = await db
       .select({ total: count() })
       .from(curriculumPuzzles)
-      .where(eq(curriculumPuzzles.themeId, themeId));
-    await db.update(curriculumThemes).set({ totalPuzzles: total }).where(eq(curriculumThemes.id, themeId));
+      .where(eq(curriculumPuzzles.themeId, theme.id));
+    await db.update(curriculumThemes).set({ totalPuzzles: total }).where(eq(curriculumThemes.id, theme.id));
   }
-
-  return builtByFile;
 }
 
 function parseArgs(argv: string[]): SeedOptions & { help?: boolean } {
@@ -409,6 +457,9 @@ async function main() {
   const preExistingByTheme = dryRun ? new Map<string, number>() : await countExistingByTheme([...QUALITY_FILTERED_THEME_IDS]);
   const { kept, qualityFilteredByFile } = applyQualityFilter(parsedFiles, preExistingByTheme);
   const builtByFile = dryRun ? countByFile(kept) : await insertKeptDrafts(kept);
+  // Toujours sur TOUS les thèmes du catalogue, jamais seulement ceux touchés
+  // par ce run — voir le docstring de `recalculateAllThemeTotals`.
+  if (!dryRun) await recalculateAllThemeTotals();
 
   const results: FileResult[] = parsedFiles.map((pf) => ({
     file: pf.file,

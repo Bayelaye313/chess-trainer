@@ -22,10 +22,12 @@
  * correspondance, un opening SYNTHÉTIQUE minimal est construit depuis les
  * données propres à CETTE partie (`deviation.openingName`/`eco`/`playerColor`)
  * plutôt que de refuser l'exercice : seuls les commentaires pédagogiques
- * ciblés (`core/curriculum/opening-commentary.ts`, qui n'existent que pour
- * les chapitres du catalogue) restent alors indisponibles — l'échiquier,
- * l'autoplay, la flèche d'indice et la méthode Listudy stricte fonctionnent
- * à l'identique.
+ * RÉDIGÉS À LA MAIN (`core/curriculum/opening-commentary.ts`, qui n'existent
+ * que pour les chapitres du catalogue) restent alors indisponibles — le
+ * repli heuristique (`heuristic-commentary.ts`, analyse chess.js du coup
+ * lui-même) reste lui pleinement fonctionnel, aucune dépendance au
+ * catalogue — l'échiquier, l'autoplay, la flèche d'indice et la méthode
+ * Listudy stricte fonctionnent à l'identique.
  *
  * Volontairement plus dépouillé qu'`OpeningDrill` : un exercice ciblé n'a ni
  * chapitres à choisir, ni Test Final — juste l'échiquier, l'indice, le
@@ -33,7 +35,8 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
-import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { computeHeuristicCommentary } from "@/core/curriculum/heuristic-commentary";
 import { findOpening, type OpeningLine } from "@/core/curriculum/openings";
 import { markOpeningMistakeReviewed } from "@/server/actions/opening-mistake-review";
 import { useErrorShake } from "./error-feedback";
@@ -103,12 +106,17 @@ export function OpeningMistakeExercise({
     });
   }, [drill.status, deviation.fenBefore, deviation.actualUci]);
 
-  // Repli sur `GENERIC_BOOK_COMMENT` sans contenu dédié — voir le même
-  // correctif dans `opening-drill.tsx` : sans lui, le bouton d'indice ne
-  // s'affichait JAMAIS pour la quasi-totalité des parties importées
-  // (`openingId` hors des ~20 chapitres curatés, voir le docstring du fichier).
+  // Repli sur `computeHeuristicCommentary` sans contenu rédigé dédié — voir
+  // le même correctif dans `opening-drill.tsx` : sans lui, le bouton d'indice
+  // ne s'affichait JAMAIS (repli `GENERIC_BOOK_COMMENT` masqué faute de coup à
+  // analyser) pour la quasi-totalité des parties importées (`openingId` hors
+  // des ~20 chapitres curatés, voir le docstring du fichier) — et le texte,
+  // quand il s'affichait, ne dépendait jamais du coup réel à trouver.
   const hintCommentary =
-    drill.status === "playing" ? (getMoveCommentary(opening.id, drill.nextPly) ?? GENERIC_BOOK_COMMENT) : null;
+    drill.status === "playing"
+      ? (getMoveCommentary(opening.id, drill.nextPly) ??
+        (drill.hintUci ? computeHeuristicCommentary(drill.fen, drill.hintUci) : null))
+      : null;
   const mistakeAlert = drill.status === "playing" && drill.plyIndex === 0 ? deviation.actualSan : null;
 
   function retry() {
@@ -177,12 +185,12 @@ export function OpeningMistakeExercise({
 
         {!mistakeAlert && drill.status === "playing" && drill.lastPly > 0 && (
           <div className="w-full max-w-[420px]">
-            <MoveCommentary openingId={opening.id} ply={drill.lastPly} />
+            <MoveCommentary openingId={opening.id} ply={drill.lastPly} lastMove={drill.history.at(-1)} />
           </div>
         )}
         {drill.status === "autoplaying" && drill.history.length > 0 && (
           <div className="w-full max-w-[420px]">
-            <MoveCommentary openingId={opening.id} ply={drill.history.length} />
+            <MoveCommentary openingId={opening.id} ply={drill.history.length} lastMove={drill.history.at(-1)} />
           </div>
         )}
 

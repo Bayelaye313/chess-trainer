@@ -1,3 +1,4 @@
+import { Chess } from "chess.js";
 import { describe, expect, it } from "vitest";
 import { OPENINGS } from "@/core/curriculum/openings";
 import {
@@ -119,6 +120,62 @@ describe("listBookContinuations", () => {
     expect(sans).toContain("a6");
     expect(sans).toContain("Nf6");
   });
+
+  it("fusionne le palier curaté ET la base importée globale plutôt que de s'arrêter au premier non vide (BUG CORRIGÉ, retour utilisateur : Défense Benoni)", () => {
+    // Après 1.d4 Nf6 2.c4, les chapitres CURATÉS Nimzo-Indienne/Est-Indienne
+    // connaissent 2...e6/2...g6 (transposition) — mais SEULE la base
+    // importée GLOBALE (`getImportedChildren`) connaît 2...c5, la Défense
+    // Benoni, qui n'a aucun chapitre curaté dédié. Avant ce correctif,
+    // `listBookContinuations` s'arrêtait au premier palier non vide (le
+    // curaté) et rejetait alors 2...c5 comme hors-théorie, alors qu'il s'agit
+    // d'une vraie ouverture cataloguée (`lichess-benoni-defense`).
+    const chess = new Chess();
+    for (const san of ["d4", "Nf6", "c4"]) chess.move(san);
+    const sans = listBookContinuations(chess.fen()).map((c) => c.san);
+    expect(sans).toContain("e6");
+    expect(sans).toContain("g6");
+    expect(sans).toContain("c5");
+  });
+
+  describe("deep test du catalogue entier (BUG CORRIGÉ, retour utilisateur : « la Défense Benoni s'arrête bien avant la fin réelle de la variante »)", () => {
+    // Avant ce correctif, toute position connue UNIQUEMENT d'une famille
+    // DYNAMIQUE (les ~125 familles lichess-org sans chapitre curaté, ex.
+    // Benoni) retombait directement sur la base ECO générique embarquée
+    // (~3600 positions, TOUTES ouvertures confondues) dès que le palier
+    // curaté était vide — invisible à la théorie qui sert par ailleurs à
+    // construire le script de CETTE MÊME variante (`listOpeningVariations`).
+    // Concrètement : la Défense Benoni tombait à 0 coup connu dès le 7ᵉ
+    // demi-coup d'une ligne pourtant longue de 19. Ce test rejoue CHAQUE
+    // variante nommée du catalogue entier (curaté + dynamique, ~3400+ lignes)
+    // et vérifie que `listBookContinuations` reconnaît chacun de ses coups,
+    // du premier au dernier — pas seulement au tout début de la ligne.
+    it(
+      "reconnaît chaque coup de chaque variante nommée, curatée ou dynamique, du premier au dernier ply",
+      () => {
+        let checked = 0;
+        for (const summary of listOpenings()) {
+          const detail = getOpeningDetail(summary.id);
+          if (!detail) continue;
+          for (const variation of detail.variations) {
+            checked += 1;
+            const chess = new Chess();
+            for (const san of variation.sanMoves) {
+              const known = listBookContinuations(chess.fen()).some((c) => c.san === san);
+              expect(known, `${summary.id} :: "${variation.name}" bloque sur le coup "${san}"`).toBe(true);
+              chess.move(san);
+            }
+          }
+        }
+        // Pas une régression silencieuse vers un catalogue vide (garde-fou,
+        // même esprit que `imported-openings-index.test.ts`).
+        expect(checked).toBeGreaterThan(1000);
+      },
+      // 60s plutôt que les 30s d'origine : `extendWithGlobalTheory` rallonge
+      // désormais les variantes trop courtes (voir son docstring), donc plus
+      // de demi-coups au total à rejouer/valider ici qu'avant ce correctif.
+      60_000,
+    );
+  });
 });
 
 describe("getOpeningDetail", () => {
@@ -155,6 +212,41 @@ describe("getOpeningDetail", () => {
   it("renvoie null pour un slug inconnu", () => {
     expect(getOpeningDetail("does-not-exist")).toBeNull();
   });
+
+  /**
+   * BUG CORRIGÉ (retour utilisateur direct, « il y a un réel bug sur
+   * Zukertort ») : pour "Zukertort Defense" (`side: "black"`), `opening.moves`
+   * — promu tel quel en script interactif de la Ligne principale par
+   * `use-opening-drill.ts` — se limitait à `["Nf3"]`, un seul demi-coup,
+   * intégralement joué par les BLANCS (l'IA). Le joueur, censé s'entraîner à
+   * jouer les NOIRS, n'avait donc STRUCTURELLEMENT aucun coup à jouer : l'IA
+   * jouait Nf3 seule et la manche se terminait aussitôt (`decideOpponentStep`,
+   * script épuisé), sans qu'aucun coup n'ait jamais été proposé au joueur.
+   * Deep test : pour CHAQUE famille dynamique du catalogue entier, au moins
+   * un demi-coup de `opening.moves` doit appartenir au camp du joueur — sinon
+   * ce chapitre est fonctionnellement mort en Ligne principale.
+   */
+  it(
+    "deep test : chaque famille dynamique laisse au joueur au moins un coup à jouer dans sa Ligne principale",
+    () => {
+      const dynamicIds = listOpenings()
+        .map((s) => s.id)
+        .filter((id) => id.startsWith("lichess-"));
+      expect(dynamicIds.length).toBeGreaterThan(50);
+      for (const id of dynamicIds) {
+        const detail = getOpeningDetail(id)!;
+        const userIsWhite = detail.opening.side === "white";
+        // Ply 1-based : impair = Blanc, pair = Noir (même convention que
+        // `OpeningLine.side`) — au moins UN de ces plies doit correspondre au
+        // camp du joueur, sinon le script entier n'appartient qu'à l'IA.
+        const hasPlayerPly = detail.plies.some((_, index) => ((index + 1) % 2 === 1) === userIsWhite);
+        expect(hasPlayerPly, `${id} (side=${detail.opening.side}): moves=${JSON.stringify(detail.opening.moves)}`).toBe(
+          true,
+        );
+      }
+    },
+    20_000,
+  );
 });
 
 describe("listOpeningVariations", () => {
@@ -190,5 +282,57 @@ describe("listOpeningVariations", () => {
     // fois sortie de la base ECO, sans exception.
     const outOfBook = { ...ruyLopez, moves: [...ruyLopez.moves, "a6", "a4", "a5", "h3", "h6"] };
     expect(() => listOpeningVariations(outOfBook)).not.toThrow();
+  });
+
+  /**
+   * BUG CORRIGÉ (retour utilisateur direct, « des lignes faibles, peu de
+   * variation, des manches courtes » sur Zukertort Opening/Defense) : de
+   * nombreuses variantes lichess-org ne sont que le nom du premier coup de
+   * réponse distinctif (2-3 demi-coups), sans suite officiellement rattachée
+   * à CE nom précis — une manche d'un seul coup joué par l'utilisateur.
+   * `extendWithGlobalTheory` les rallonge avec de VRAIS coups puisés dans la
+   * base importée globale (transpositions comprises) ; `MIN_VARIATION_PLIES_
+   * TO_DISPLAY` écarte celles qui n'ont RÉELLEMENT aucune suite nulle part
+   * dans la base (l'extension ne peut alors rien faire) plutôt que de les
+   * garder comme manches insatisfaisantes.
+   */
+  describe("rallonge/filtre les variantes trop courtes (BUG CORRIGÉ, Zukertort)", () => {
+    it("rallonge une variante courte avec de vrais coups théoriques empruntés à une autre famille (Kingside Fianchetto, Zukertort Opening)", () => {
+      const detail = getOpeningDetail("lichess-zukertort-opening")!;
+      const kingsideFianchetto = detail.variations.find((v) => v.name === "Kingside Fianchetto");
+      // Ligne d'origine (lichess-org) : seulement "Nf3 g6", 2 demi-coups —
+      // rallongée ici via la théorie globale (transposition Est-Indienne/Réti).
+      expect(kingsideFianchetto).toBeDefined();
+      expect(kingsideFianchetto!.sanMoves.length).toBeGreaterThanOrEqual(8);
+      expect(kingsideFianchetto!.sanMoves.slice(0, 2)).toEqual(["Nf3", "g6"]);
+    });
+
+    it("écarte du sélecteur une variante qui n'a réellement aucune suite dans toute la base (Basman Defense, 1.Nf3 h6)", () => {
+      const detail = getOpeningDetail("lichess-zukertort-opening")!;
+      // Aucune des ~3810 lignes importées ne prolonge "Nf3 h6" — l'extension
+      // ne peut rien y faire, elle reste sous `MIN_VARIATION_PLIES_TO_DISPLAY`.
+      expect(detail.variations.some((v) => v.name === "Basman Defense")).toBe(false);
+    });
+
+    it(
+      "aucune variante affichée ne descend sous le plancher minimal, catalogue entier",
+      () => {
+        for (const summary of listOpenings()) {
+          const detail = getOpeningDetail(summary.id)!;
+          for (const variation of detail.variations) {
+            expect(
+              variation.sanMoves.length,
+              `${summary.id} :: "${variation.name}" (${variation.sanMoves.length} demi-coups)`,
+            ).toBeGreaterThanOrEqual(4);
+          }
+        }
+      },
+      30_000,
+    );
+
+    it("garde les 2 variantes de Zukertort Defense (4 demi-coups pile, au plancher mais pas en dessous)", () => {
+      const detail = getOpeningDetail("lichess-zukertort-defense")!;
+      expect(detail.variations.map((v) => v.name).sort()).toEqual(["Kingside Variation", "Sicilian Knight Variation"]);
+    });
   });
 });

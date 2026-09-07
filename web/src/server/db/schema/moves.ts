@@ -40,6 +40,16 @@ export const moves = sqliteTable(
 
     bestUci: text("best_uci"),
     bestSan: text("best_san"),
+    /**
+     * Variante principale complète du moteur depuis `fenBefore`, en UCI —
+     * `bestUci` en est toujours le premier coup. Sert à étendre un puzzle
+     * personnel en un enchaînement de plusieurs coups (`EvaluatedMove.bestPv`,
+     * `evaluate-move.ts` ; `extendPuzzleSolution`, `spaced-repetition.ts`) : la
+     * suite RÉELLEMENT jouée dans la partie diverge dès le premier coup
+     * corrigé, seule la PV du moteur reste une continuation légale depuis
+     * cette position.
+     */
+    bestPv: text("best_pv", { mode: "json" }).$type<string[]>().notNull().default([]),
     mateMissed: integer("mate_missed", { mode: "boolean" }).notNull().default(false),
 
     /**

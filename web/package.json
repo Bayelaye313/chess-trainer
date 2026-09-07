@@ -21,7 +21,9 @@
     "db:convert-lichess": "tsx --conditions=react-server scripts/convert-lichess-openings-tsv.ts",
     "db:convert-puzzles": "tsx --conditions=react-server scripts/convert-lichess-puzzles-csv.ts",
     "db:refine-tactics": "tsx --conditions=react-server scripts/refine-tactics-pgn.ts",
+    "db:fix-recapture-quality": "tsx --conditions=react-server scripts/fix-obvious-recapture-quality.ts",
     "backfill:eco": "node scripts/backfill-eco.mjs",
+    "backfill:puzzle-lines": "tsx --conditions=react-server scripts/backfill-puzzle-lines.ts",
     "populate:puzzles": "tsx --conditions=react-server src/server/curriculum/populate-puzzles.ts",
     "postinstall": "node scripts/setup-engine.mjs"
   },

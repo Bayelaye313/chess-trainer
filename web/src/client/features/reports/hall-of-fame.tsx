@@ -94,13 +94,13 @@ export function HallOfFame({ masterpieces }: { masterpieces: readonly Masterpiec
       <div>
         <h2 className="text-lg font-semibold tracking-tight">🏆 Mes Chefs-d&apos;œuvre</h2>
         <p className="mt-1 text-sm text-foreground-muted">
-          Les coups classés Brillant ou Critique dans tes parties importées — clique pour revoir le moment exact.
+          Les coups classés Brillant dans tes parties importées — clique pour revoir le moment exact.
         </p>
       </div>
 
       {masterpieces.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-foreground-muted">
-          Aucun coup Brillant ou Critique repéré pour l&apos;instant — continue à importer tes parties.
+          Aucun coup Brillant repéré pour l&apos;instant — continue à importer tes parties.
         </p>
       ) : (
         <div className="space-y-2">

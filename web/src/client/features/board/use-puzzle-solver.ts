@@ -60,6 +60,14 @@ export function usePuzzleSolver({
   const [chess] = useState(() => new Chess(puzzle.fenBefore));
   const [fen, setFen] = useState(puzzle.fenBefore);
   const [state, dispatch] = useReducer(applyPuzzleEvent, puzzle.solution.length, initialSolveState);
+  // Position juste AVANT le dernier coup DU JOUEUR accepté (jamais une réponse
+  // adverse rejouée automatiquement) — alimente `buildProgressCoachMessage`
+  // (`core/puzzle/progress-coach.ts`), qui a besoin du avant/après pour lire
+  // ce que CE coup précis vient de changer (colonne ouverte, promotion,
+  // matériel gagné). `null` tant qu'aucun coup joueur n'a encore été accepté.
+  const [lastPlayerTransition, setLastPlayerTransition] = useState<{ fenBefore: string; fenAfter: string; uci: string } | null>(
+    null,
+  );
   const [liveEval, setLiveEval] = useState<EvalScore | null>(null);
   const [hovering, setHovering] = useState(false);
   const [hoverArrows, setHoverArrows] = useState<ReturnType<typeof arrowsFromEngineLines>>([]);
@@ -167,7 +175,9 @@ export function usePuzzleSolver({
       // machine d'état l'ignore alors (voir `applyWhileSolving`).
       const hint = matchesSolution ? "generic" : classifyWrongMove(new Chess(fenBefore), chess, playerColor);
       if (matchesSolution) {
-        setFen(chess.fen());
+        const fenAfter = chess.fen();
+        setFen(fenAfter);
+        setLastPlayerTransition({ fenBefore, fenAfter, uci });
       } else {
         // Coup incorrect : jamais rendu visible — la position affichée
         // (`fen`) n'a pas bougé, on annule juste l'instance interne pour
@@ -211,6 +221,9 @@ export function usePuzzleSolver({
     phase: state.phase,
     fen,
     lastMove: state.lastMove,
+    lastPlayerTransition,
+    /** Plis de `puzzle.solution` restants après le dernier coup consommé — voir `buildProgressCoachMessage`. */
+    movesRemaining: puzzle.solution.length - state.moveIndex,
     firstPlayedUci: state.firstPlayedUci,
     attemptsLeft: state.attemptsLeft,
     lastWrongUci: state.lastWrongUci,

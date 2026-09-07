@@ -19,6 +19,9 @@ export function BoardPanel({
   squareStyles,
   onPieceDrop,
   canDragPiece,
+  onTakeback,
+  onResign,
+  canTakeback,
 }: {
   fen: string;
   status: PlayStatus;
@@ -27,6 +30,9 @@ export function BoardPanel({
   squareStyles: Record<string, { backgroundColor: string }>;
   onPieceDrop: ChessboardOptions["onPieceDrop"];
   canDragPiece: ChessboardOptions["canDragPiece"];
+  onTakeback: () => void;
+  onResign: () => void;
+  canTakeback: boolean;
 }) {
   let statusText = "";
   if (status === "over") {
@@ -37,9 +43,11 @@ export function BoardPanel({
     statusText = STATUS_LABEL[status];
   }
 
+  const gameActive = status !== "setup" && status !== "over" && status !== "loading";
+
   return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <div className="mx-auto max-w-[520px]">
+    <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
+      <div className="mx-auto max-w-[520px] overflow-hidden rounded-lg border-2 border-border/70">
         <Chessboard
           options={{
             id: "play-board",
@@ -53,6 +61,26 @@ export function BoardPanel({
         />
       </div>
       <p className="mt-4 min-h-5 text-center text-sm text-foreground-muted">{statusText}</p>
+
+      {gameActive && (
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onTakeback}
+            disabled={!canTakeback}
+            className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-foreground transition-colors hover:bg-surface-muted disabled:opacity-40"
+          >
+            ↩️ Annuler le coup
+          </button>
+          <button
+            type="button"
+            onClick={onResign}
+            className="rounded-xl border border-blunder/30 bg-blunder/5 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-blunder transition-colors hover:bg-blunder/10"
+          >
+            🏳️ Abandonner
+          </button>
+        </div>
+      )}
     </section>
   );
 }

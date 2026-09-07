@@ -36,9 +36,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
 import { useEngine } from "@/client/engine/engine-context";
+import { kingInCheckSquare } from "@/core/chess/check";
 import type { MoveQuality } from "@/core/chess/types";
+import { buildPreSolveCoachMessage } from "@/core/puzzle/pre-solve-coach";
+import { buildProgressCoachMessage } from "@/core/puzzle/progress-coach";
+import { buildRecognitionAids } from "@/core/puzzle/recognition-aids";
 import type { SolvablePuzzle, SolvePhase } from "@/core/puzzle/solve-state";
-import { OPPONENT_MOVE_SQUARE_COLOR, WRONG_MOVE_HINT_LABEL, qualitySquareColor } from "@/lib/labels";
+import { CHECK_SQUARE_RING_COLOR, OPPONENT_MOVE_SQUARE_COLOR, WRONG_MOVE_HINT_LABEL, qualitySquareColor } from "@/lib/labels";
 import type { ReviewGrade } from "@/server/srs/fsrs";
 import { EvaluationBar } from "./evaluation-bar";
 import { ExplorePanel } from "./explore-panel";
@@ -88,6 +92,14 @@ export function PuzzleBoard({
 
   const isTerminal = solver.phase === "solved" || solver.phase === "failed";
 
+  // Nombre de coups DU JOUEUR à trouver (plis pairs de la solution) — sert à
+  // clarifier qu'il s'agit d'une SUITE à enchaîner, pas d'un coup isolé
+  // (retour utilisateur : « il nous demande seulement un coup à trouver et
+  // c'est pourtant l'enchaînement qui compte »), et au message du Coach
+  // ci-dessous.
+  const playerMoveCount = Math.ceil(puzzle.solution.length / 2);
+  const solvingStatusText = `Trouve ${playerMoveCount > 1 ? `la suite (${playerMoveCount} coups)` : "le coup"} à jouer.`;
+
   // Indice qualifiant l'erreur — tant qu'un essai reste (voir
   // `MAX_PUZZLE_ATTEMPTS`), prioritaire sur le texte de phase habituel
   // puisqu'on est encore en phase "solving". Une fois "failed", le message
@@ -101,7 +113,45 @@ export function PuzzleBoard({
           : solver.revealing
             ? "Regarde la séquence gagnante…"
             : STATUS_TEXT.failed
-        : STATUS_TEXT[solver.phase];
+        : solver.phase === "solving"
+          ? solvingStatusText
+          : STATUS_TEXT[solver.phase];
+
+  // Le Coach avant résolution : seulement tant qu'aucun coup n'a encore été
+  // joué sur ce puzzle (`!solver.lastMove`) — une fois la solution entamée,
+  // le texte redevient celui de la progression habituelle, jamais les deux à
+  // la fois. Retour utilisateur : « on résout un puzzle sans savoir c'est
+  // quoi la faiblesse ou l'opportunité présentée » (voir `pre-solve-coach.ts`).
+  const showPreSolveCoach = solver.phase === "solving" && !solver.lastMove;
+  const preSolveMessage = showPreSolveCoach
+    ? buildPreSolveCoachMessage({
+        setupSan: puzzle.setupMove?.san ?? null,
+        motifs: puzzle.motifs ?? [],
+        playerMoveCount,
+      })
+    : null;
+  const recognitionAids = showPreSolveCoach
+    ? buildRecognitionAids(solver.fen, solver.playerColor, puzzle.motifs ?? [])
+    : null;
+
+  // Le Coach APRÈS le premier coup : se met à jour à CHAQUE coup DU JOUEUR
+  // accepté (jamais figé sur `preSolveMessage`) — cahier des charges du
+  // 2026-09-06 (« le Coach reste bloqué sur un commentaire fixe »). Reste
+  // affiché pendant la réponse adverse automatique ET le temps de réflexion
+  // du coup suivant (persiste jusqu'au prochain coup correct) ; s'efface une
+  // fois le puzzle raté, où c'est la séquence de révélation qui prend le
+  // relais du récit.
+  const progressMessage =
+    !showPreSolveCoach && solver.lastPlayerTransition && solver.phase !== "failed"
+      ? buildProgressCoachMessage({
+          fenBefore: solver.lastPlayerTransition.fenBefore,
+          fenAfter: solver.lastPlayerTransition.fenAfter,
+          lastMoveUci: solver.lastPlayerTransition.uci,
+          playerColor: solver.playerColor,
+          movesRemaining: solver.movesRemaining,
+        })
+      : null;
+  const coachMessage = preSolveMessage ?? progressMessage;
   const hintClassName =
     solver.phase === "solving" && solver.lastWrongUci
       ? "font-medium text-inaccuracy"
@@ -117,7 +167,15 @@ export function PuzzleBoard({
   const boardFen = postAnalysisActive ? postAnalysis.explore.fen : solver.fen;
   const boardOnPieceDrop = postAnalysisActive ? postAnalysis.explore.onPieceDrop : solver.onPieceDrop;
   const boardCanDragPiece = postAnalysisActive ? postAnalysis.explore.canDragPiece : solver.canDragPiece;
-  const boardArrows = postAnalysisActive ? postAnalysis.arrows : solver.boardArrows;
+  // Flèche du coup adverse affiché en préambule (voir `showPreSolveCoach`
+  // ci-dessus) — même case que `highlightFrom`/`highlightTo` de cette même
+  // situation, mais une flèche se voit même quand la case de départ est vide
+  // à l'œil (pièce partie), donc plus lisible qu'une simple surbrillance.
+  const setupArrow =
+    showPreSolveCoach && puzzle.setupMove
+      ? [{ startSquare: puzzle.setupMove.uci.slice(0, 2), endSquare: puzzle.setupMove.uci.slice(2, 4), color: OPPONENT_MOVE_SQUARE_COLOR }]
+      : [];
+  const boardArrows = [...(postAnalysisActive ? postAnalysis.arrows : solver.boardArrows), ...setupArrow];
   const boardScore = postAnalysisActive ? postAnalysis.currentScore : solver.currentScore;
 
   // Surbrillance + badge du dernier coup joué. Trois sources, jamais deux à
@@ -149,6 +207,14 @@ export function PuzzleBoard({
     highlightColor = viewedPly ? (isPlayerPly ? qualitySquareColor("best") : OPPONENT_MOVE_SQUARE_COLOR) : null;
     badgeSquare = viewedPly && isPlayerPly ? highlightTo! : null;
     badgeQuality = viewedPly && isPlayerPly ? "best" : null;
+  } else if (!solver.lastMove && puzzle.setupMove) {
+    // Avant le premier coup du joueur : montre le coup adverse qui a créé la
+    // position, plutôt qu'un échiquier nu sans aucun repère (retour
+    // utilisateur : « on vient direct jouer sans savoir le dernier coup de
+    // l'adversaire »). Jamais de badge de qualité — ce n'est pas un coup noté.
+    highlightFrom = puzzle.setupMove.uci.slice(0, 2);
+    highlightTo = puzzle.setupMove.uci.slice(2, 4);
+    highlightColor = OPPONENT_MOVE_SQUARE_COLOR;
   } else if (solver.lastMove) {
     highlightFrom = solver.lastMove.from;
     highlightTo = solver.lastMove.to;
@@ -161,9 +227,29 @@ export function PuzzleBoard({
     highlightColor && highlightFrom && highlightTo
       ? { [highlightFrom]: { backgroundColor: highlightColor }, [highlightTo]: { backgroundColor: highlightColor } }
       : {};
+  if (recognitionAids) {
+    for (const square of recognitionAids.targetSquares) {
+      boardSquareStyles[square] = { backgroundColor: "rgba(244, 180, 0, 0.32)" };
+    }
+  }
+
+  // Roi en échec/mat : surbrillance AUTOMATIQUE, indépendante de tout ce qui
+  // précède — retour utilisateur : « certains puzzles où notre roi est en
+  // mat, on tarde à le remarquer, alors ça devrait être automatique ». Un
+  // anneau (box-shadow), jamais un fond plein : reste visible même si la case
+  // porte déjà une autre surbrillance (ex. le roi vient d'être découvert par
+  // le coup adverse affiché ci-dessus).
+  const checkSquare = kingInCheckSquare(boardFen);
 
   const squareRenderer: SquareRenderer = ({ square, children }) => (
-    <div style={{ width: "100%", height: "100%", ...(boardSquareStyles[square] ?? {}) }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        ...(boardSquareStyles[square] ?? {}),
+        ...(square === checkSquare ? { boxShadow: `inset 0 0 0 4px ${CHECK_SQUARE_RING_COLOR}` } : {}),
+      }}
+    >
       {children}
       {badgeQuality && square === badgeSquare && (
         <span className="pointer-events-none absolute right-0.5 top-0.5">
@@ -195,6 +281,23 @@ export function PuzzleBoard({
             onExit={() => postAnalysis.explore.exit()}
             exitLabel="↩ Revenir à la solution"
           />
+        </div>
+      )}
+
+      {coachMessage && (
+        <div
+          key={coachMessage}
+          className="mx-auto mb-4 max-w-[480px] rounded-lg border border-border bg-surface-muted/40 px-4 py-3 text-sm animate-fade-up-in"
+        >
+          <span aria-hidden="true">🎓 </span>
+          {coachMessage}
+        </div>
+      )}
+
+      {recognitionAids && (
+        <div className="mx-auto mb-4 flex max-w-[480px] items-start gap-2 rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-foreground-muted">
+          <span aria-hidden="true">👁 </span>
+          <span>{recognitionAids.text} Les cases ambrées indiquent des cibles à examiner, pas la solution.</span>
         </div>
       )}
 

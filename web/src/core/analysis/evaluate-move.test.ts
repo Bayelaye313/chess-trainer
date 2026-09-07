@@ -88,6 +88,21 @@ describe("evaluateMove", () => {
     expect(result.bestLines).toEqual(lines);
   });
 
+  it("propage la variante principale complète du moteur (bestPv), pas seulement le premier coup", async () => {
+    // Sert à construire un puzzle multi-coups (voir
+    // `spaced-repetition.ts#extendPuzzleSolution`) : la PV entière, pas
+    // seulement `bestMoveUci`.
+    const pv = ["e2e4", "e7e5", "g1f3"];
+    const analyser = stubAnalyser({
+      [START]: evaluation({ cp: 30, bestMoveUci: "e2e4", pv }),
+      [AFTER_E4]: evaluation({ cp: 25 }),
+    });
+
+    const result = await evaluateMove(analyser, START, "e2e4", NO_LIMIT);
+
+    expect(result.bestPv).toEqual(pv);
+  });
+
   it("surclasse en brillant un sacrifice quand il y avait une alternative", async () => {
     // Nxf7 : le cavalier est repris par le roi, mais ce n'est pas le seul bon
     // coup (pas de secondBest fourni → pas critique) — la définition même du
@@ -256,6 +271,35 @@ describe("evaluateMove", () => {
 
     expect(result.quality).toBe("okay");
   });
+
+  it("reprise évidente (previousMove fourni) → meilleur coup, jamais critique, même si l'alternative s'effondre", async () => {
+    // Le cavalier blanc en d5 vient (par hypothèse, voir `previousMove` passé
+    // ci-dessous) de capturer une pièce noire ; les Noirs reprennent avec leur
+    // cavalier f6. Sans le garde-fou `isObviousRecapture`, ce gros écart avec
+    // une alternative qui s'effondre (ne pas reprendre laisse le matériel
+    // perdu) classerait ce coup « Critique » — exactement le bug utilisateur
+    // signalé (« une reprise évidente n'est pas un coup critique »).
+    // Un pion blanc en plus (e2) évite que chess.js ne classe la position
+    // d'arrivée comme nulle par matériel insuffisant (K+N vs K nu le serait).
+    const fenBefore = "4k3/8/5n2/3N4/8/8/4P3/4K3 b - - 0 1";
+    const fenAfter = "4k3/8/8/3n4/8/8/4P3/4K3 w - - 0 2";
+
+    const analyser = stubAnalyser({
+      [fenBefore]: evaluation({
+        cp: -20,
+        bestMoveUci: "f6d5",
+        secondBest: { cp: 900, mate: null },
+      }),
+      [fenAfter]: evaluation({ cp: -10 }),
+    });
+
+    const result = await evaluateMove(analyser, fenBefore, "f6d5", NO_LIMIT, {
+      to: "d5",
+      wasCapture: true,
+    });
+
+    expect(result.quality).toBe("best");
+  });
 });
 
 describe("applyBookOverride", () => {
@@ -266,6 +310,7 @@ describe("applyBookOverride", () => {
     san: "e4",
     bestUci: "d2d4",
     bestSan: "d4",
+    bestPv: ["d2d4"],
     bestLines: [],
     quality: "blunder",
     cpLoss: 500,

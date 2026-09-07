@@ -1,6 +1,8 @@
 "use client";
 
 import { BoardPanel } from "./board-panel";
+import { PlayCoachBubble } from "./coach-bubble";
+import { GameResultPanel } from "./game-result-panel";
 import { MoveFeed } from "./move-feed";
 import { SetupPanel } from "./setup-panel";
 import { usePlayGame } from "./use-play-game";
@@ -11,6 +13,9 @@ export function PlayScreen() {
   // Reste affiché après la fin d'une partie : lancer la suivante ne demande
   // qu'un nouveau clic, sans revenir en arrière dans l'interface.
   const showSetup = game.status === "setup" || game.status === "over";
+  // N'a de sens qu'une fois qu'un tour complet a eu lieu et que la main
+  // revient au joueur — voir `use-play-game.ts#handleTakeback`.
+  const canTakeback = game.status === "playing" && game.feed.length >= 2;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -21,6 +26,16 @@ export function PlayScreen() {
           <p className="rounded-md border border-blunder/30 bg-blunder/10 px-4 py-2 text-sm text-blunder">
             {game.error}
           </p>
+        )}
+
+        {game.status === "over" && (
+          <GameResultPanel
+            outcome={game.outcome}
+            botProfile={game.botProfile}
+            accuracy={game.accuracy}
+            performanceElo={game.performanceElo ?? game.botProfile.nominalElo}
+            playerColor={game.playerColor}
+          />
         )}
 
         {showSetup && (
@@ -40,8 +55,13 @@ export function PlayScreen() {
             squareStyles={game.squareStyles}
             onPieceDrop={game.onPieceDrop}
             canDragPiece={game.canDragPiece}
+            onTakeback={game.handleTakeback}
+            onResign={game.handleResign}
+            canTakeback={canTakeback}
           />
         )}
+
+        {game.coachMessage && <PlayCoachBubble message={game.coachMessage} />}
       </div>
 
       {hasGame && (

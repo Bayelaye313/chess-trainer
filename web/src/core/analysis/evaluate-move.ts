@@ -26,6 +26,17 @@ export interface EvaluatedMove {
   bestUci: string | null;
   bestSan: string | null;
   /**
+   * Variante principale complète du moteur depuis `fenBefore`, en UCI —
+   * `evalBefore.pv` telle quelle, `bestUci` en est toujours le premier coup
+   * (`[]` si le moteur n'a renvoyé aucune ligne). Sert à construire un puzzle
+   * qui enchaîne plusieurs coups (`spaced-repetition.ts#extendPuzzleSolution`)
+   * : la suite RÉELLEMENT jouée dans la partie diverge dès ce premier coup
+   * corrigé et ne peut plus servir de continuation légale, alors que la PV du
+   * moteur reste par construction une ligne jouable depuis cette position —
+   * bug utilisateur corrigé ici (« puzzles à réviser limités à un seul coup »).
+   */
+  bestPv: string[];
+  /**
    * Lignes candidates depuis `fenBefore`, meilleure d'abord — `evalBefore.lines`
    * telles quelles, aucun appel moteur supplémentaire. `[]` si l'appelant n'a
    * pas demandé de MultiPV étendu (`AnalysisLimit.lines`, voir son commentaire).
@@ -77,6 +88,30 @@ function tryMove(fen: string, uci: string): { move: Move; board: Chess } | null 
 }
 
 /**
+ * Ce qu'il faut savoir du coup adverse qui a mené à `fenBefore` pour détecter
+ * une reprise évidente (voir `isObviousRecapture` ci-dessous) — `null` quand
+ * il n'y en a pas (premier coup de la partie) ou que l'appelant ne l'a pas
+ * fourni (tous les appelants n'ont pas cette info sous la main, ex. Mode
+ * Exploration qui rejoue un coup hors partie réelle).
+ */
+export interface PreviousMoveInfo {
+  /** Case d'arrivée du coup adverse précédent. */
+  to: string;
+  /** Ce coup adverse a-t-il capturé une pièce ? */
+  wasCapture: boolean;
+}
+
+/**
+ * Vrai si le coup joué recapture sur la case où l'adversaire vient tout juste
+ * de capturer — « il a pris en d5, je reprends en d5 ». Voir le docstring de
+ * `classify.ts#ClassifyMoveInput.isObviousRecapture` pour le pourquoi.
+ */
+function isObviousRecapture(move: Move, previousMove: PreviousMoveInfo | null | undefined): boolean {
+  if (!previousMove || !previousMove.wasCapture) return false;
+  return Boolean(move.captured) && move.to === previousMove.to;
+}
+
+/**
  * Analyse un coup joué dans la position `fenBefore`.
  *
  * Coûte deux appels moteur : la position avant (pour le meilleur coup et la
@@ -89,6 +124,8 @@ export async function evaluateMove(
   fenBefore: string,
   playedUci: string,
   limit: AnalysisLimit,
+  /** Voir `PreviousMoveInfo` — omis (`undefined`) quand l'appelant ne l'a pas sous la main. */
+  previousMove?: PreviousMoveInfo | null,
 ): Promise<EvaluatedMove> {
   const played = tryMove(fenBefore, playedUci);
   if (!played) {
@@ -172,6 +209,7 @@ export async function evaluateMove(
         secondBestGap,
         secondBestWinPercent: secondBestWinPct,
         alternativeAllowsImmediateMate,
+        isObviousRecapture: isObviousRecapture(played.move, previousMove),
       });
     } else {
       // Le moteur n'a renvoyé ni centipions ni mat pour l'une des deux
@@ -212,6 +250,7 @@ export async function evaluateMove(
     san: played.move.san,
     bestUci: evalBefore.bestMoveUci,
     bestSan: best?.move.san ?? null,
+    bestPv: evalBefore.pv,
     bestLines: evalBefore.lines,
     quality,
     cpLoss,

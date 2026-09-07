@@ -22,8 +22,13 @@ describe("nextLearningRoundOutcome", () => {
     expect(outcome).toEqual({ shouldRestart: true, nextRound: 2 });
   });
 
-  it("une Manche 2 où rien n'a été joué (attempted: 0) compte comme un échec, pas un sans-faute", () => {
-    const outcome = nextLearningRoundOutcome(2, { correct: 0, attempted: 0 });
+  it("relance une Manche 2 vide quand un coup joueur était attendu", () => {
+    const outcome = nextLearningRoundOutcome(2, { correct: 0, attempted: 0 }, true);
     expect(outcome).toEqual({ shouldRestart: true, nextRound: 2 });
+  });
+
+  it("termine une Manche 2 sans coup joueur à jouer au lieu de boucler", () => {
+    const outcome = nextLearningRoundOutcome(2, { correct: 0, attempted: 0 }, false);
+    expect(outcome).toEqual({ shouldRestart: false, nextRound: 2 });
   });
 });

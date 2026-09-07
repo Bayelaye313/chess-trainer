@@ -110,15 +110,65 @@ describe("buildCoachMessage", () => {
     expect(message?.tag).toBe("inaccuracy");
     expect(message?.text).toContain("d4");
   });
+
+  it("décrit géométriquement la cage du roi sur un mat manqué (roi acculé, muré par ses propres pions)", () => {
+    // Roi noir en g8, muré par ses propres pions f7/g7/h7 — Re8# était disponible.
+    const fenBefore = "6k1/5ppp/8/8/8/8/8/4R1K1 w - - 0 1";
+    const entry: TimelinePly = {
+      ply: 1,
+      side: "w",
+      san: "Kf1",
+      uci: "g1f1",
+      fenBefore,
+      fenAfter: fenBefore,
+      analysis: ply({ ply: 1, quality: "okay", mateMissed: true, bestSan: "Re8#" }),
+    };
+    const message = buildCoachMessage(entry, null);
+    expect(message?.tag).toBe("missed_mate");
+    expect(message?.text).toContain("muré par ses propres pions");
+    expect(message?.text).toContain("Re8#");
+  });
+
+  it("annonce une case faible chroniquement créée par une poussée de pion (a2-a4 sans pion c pour épauler b3)", () => {
+    const fenBefore = "4k3/8/8/8/8/8/P7/4K3 w - - 0 1";
+    const fenAfter = "4k3/8/8/8/P7/8/8/4K3 b - - 0 1";
+    const entry: TimelinePly = {
+      ply: 1,
+      side: "w",
+      san: "a4",
+      uci: "a2a4",
+      fenBefore,
+      fenAfter,
+      analysis: ply({ ply: 1, quality: "inaccuracy", bestSan: "e4" }),
+    };
+    const message = buildCoachMessage(entry, null);
+    expect(message?.tag).toBe("weak_square");
+    expect(message?.text).toContain("b3");
+    expect(message?.text).toContain("a4");
+  });
+
+  it("n'invente pas de motif manqué sur un coup qui n'a rien coûté", () => {
+    // Le meilleur coup exploite structurellement une fourchette (`detectMotifs`
+    // ne juge que sa FORME), mais le coup joué est lui-même `best`/`okay` — un
+    // simple échange matériel linéaire, sans perte de probabilité de gain
+    // mesurable. Annoncer « tu as raté une fourchette » ici serait une fausse
+    // alerte (bug utilisateur corrigé, voir coach-narrative.ts).
+    const timeline = buildGameTimeline(PGN, [
+      ply({ ply: 1, quality: "best", motifs: ["fork"], motifFound: false }),
+      ply({ ply: 3, quality: "okay", motifs: ["fork"], motifFound: false }),
+    ]);
+    expect(buildCoachMessage(timeline[0], null)).toBeNull();
+    expect(buildCoachMessage(timeline[1], null)).toBeNull();
+  });
 });
 
 describe("buildGameCoachFindings", () => {
   it("dédoublonne les lacunes par motif, au premier ply rencontré", () => {
     const timeline = buildGameTimeline(PGN, [
-      ply({ ply: 1, motifs: ["fork"], motifFound: false }),
-      ply({ ply: 3, motifs: ["fork"], motifFound: false }), // même motif, ignoré
-      ply({ ply: 5, motifs: ["pin"], motifFound: false }),
-      ply({ ply: 7, mateMissed: true }),
+      ply({ ply: 1, quality: "blunder", motifs: ["fork"], motifFound: false }),
+      ply({ ply: 3, quality: "blunder", motifs: ["fork"], motifFound: false }), // même motif, ignoré
+      ply({ ply: 5, quality: "inaccuracy", motifs: ["pin"], motifFound: false }),
+      ply({ ply: 7, quality: "okay", mateMissed: true }),
     ]);
     const findings = buildGameCoachFindings(timeline);
     expect(findings.map((f) => [f.ply, f.message.tag])).toEqual([
@@ -130,8 +180,16 @@ describe("buildGameCoachFindings", () => {
 
   it("ignore les coups de l'adversaire et les motifs déjà trouvés", () => {
     const timeline = buildGameTimeline(PGN, [
-      ply({ ply: 2, byPlayer: false, motifs: ["fork"], motifFound: false }),
-      ply({ ply: 3, motifs: ["skewer"], motifFound: true }),
+      ply({ ply: 2, byPlayer: false, quality: "blunder", motifs: ["fork"], motifFound: false }),
+      ply({ ply: 3, quality: "blunder", motifs: ["skewer"], motifFound: true }),
+    ]);
+    expect(buildGameCoachFindings(timeline)).toEqual([]);
+  });
+
+  it("ignore un motif dont le coup joué n'a rien coûté (pas de fausse alerte)", () => {
+    const timeline = buildGameTimeline(PGN, [
+      ply({ ply: 1, quality: "best", motifs: ["fork"], motifFound: false }),
+      ply({ ply: 3, quality: "okay", motifs: ["pin"], motifFound: false }),
     ]);
     expect(buildGameCoachFindings(timeline)).toEqual([]);
   });

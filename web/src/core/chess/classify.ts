@@ -79,6 +79,23 @@ export interface ClassifyMoveInput {
    * pour mériter le badge.
    */
   alternativeAllowsImmediateMate: boolean;
+  /**
+   * Le coup joué recapture immédiatement sur la case où l'adversaire vient de
+   * capturer au coup précédent — la reprise évidente par excellence : « il a
+   * pris ma pièce en d5, je reprends en d5 ». Troisième garde-fou « reprise
+   * évidente », à côté de `onlyLegalMove` et `alternativeAllowsImmediateMate`.
+   *
+   * Bug utilisateur corrigé ici : les deux garde-fous existants ne couvrent
+   * que les cas extrêmes (un seul coup légal, ou l'alternative se fait mater
+   * tout de suite) — une reprise ordinaire, où d'autres coups légaux existent
+   * mais sont simplement mauvais (matériel perdu sans mat), passait encore
+   * « Critique » dès que le second choix moteur s'effondrait. Reprendre la
+   * pièce qui vient de capturer la sienne n'est jamais une trouvaille, même
+   * quand ignorer la reprise serait objectivement catastrophique — c'est
+   * l'automatisme le plus élémentaire du jeu, pas un « seul coup qui sauve la
+   * position » au sens de CLAUDE.md. Voir `evaluate-move.ts` pour le calcul.
+   */
+  isObviousRecapture: boolean;
 }
 
 /**
@@ -97,12 +114,14 @@ export function classifyMove({
   secondBestGap,
   secondBestWinPercent,
   alternativeAllowsImmediateMate,
+  isObviousRecapture,
 }: ClassifyMoveInput): MoveQuality {
   if (foundBest) {
-    // Reprise évidente : un seul coup légal, ou l'alternative se fait mater
-    // tout de suite — dans les deux cas, ce n'est PAS une trouvaille, donc
-    // jamais « Critique », quel que soit l'écart avec le second choix moteur.
-    if (onlyLegalMove || alternativeAllowsImmediateMate) return "best";
+    // Reprise évidente : un seul coup légal, l'alternative se fait mater tout
+    // de suite, ou le coup recapture simplement la pièce qui vient de prendre
+    // la sienne — dans les trois cas, ce n'est PAS une trouvaille, donc jamais
+    // « Critique », quel que soit l'écart avec le second choix moteur.
+    if (onlyLegalMove || alternativeAllowsImmediateMate || isObviousRecapture) return "best";
     // Sinon, les DEUX conditions comptent : un gros écart à lui seul ne
     // suffit pas (voir CRITICAL_SECOND_BEST_MAX_WIN) — il faut aussi que
     // l'alternative laissée de côté soit elle-même mauvaise pour le joueur.

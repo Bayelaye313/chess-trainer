@@ -184,6 +184,10 @@ export interface DrillHistoryEntry {
   byPlayer: boolean;
   /** `"correct"` pour un coup du joueur (un coup faux ne rejoint JAMAIS l'historique — la pièce revient, voir le docstring du fichier). `null` pour un coup de l'IA ou de l'autoplay. */
   result: "correct" | null;
+  /** Le coup, en UCI — sert le repli heuristique du commentaire post-coup (`heuristic-commentary.ts`), qui a besoin du coup exact plutôt que du seul SAN. */
+  uci: string;
+  /** Position juste AVANT ce coup (FEN) — même usage : `computeHeuristicCommentary` analyse un coup par rapport à la position qui le précède, pas la position déjà mutée. */
+  fenBefore: string;
 }
 
 /**
@@ -316,6 +320,13 @@ export function useOpeningDrill({
 
   const script = activeRound?.script ?? null;
   const roundStartPly = activeRound?.startPly ?? 0;
+  const playerMovesExpected = activeRound
+    ? activeRound.script.some((_, index) => {
+        const sideToMove = new Chess(activeRound.startFen).turn();
+        const moveSide = index % 2 === 0 ? sideToMove : sideToMove === "w" ? "b" : "w";
+        return moveSide === userColor;
+      })
+    : false;
 
   // Continuations théoriques connues depuis la position AFFICHÉE — préchargées
   // en continu (même hook que l'arbre des variantes) : sert UNIQUEMENT au mode
@@ -425,6 +436,18 @@ export function useOpeningDrill({
     fallbackUci: fallbackHintUci,
   });
 
+  /**
+   * Le coup à trouver MAINTENANT, en UCI — même source que `hintArrow`
+   * (script tant que la manche n'a pas `diverged`, sinon le coup le plus
+   * populaire) mais SANS ses conditions d'affichage (`hintsAllowed`, seuil de
+   * réussite...) : sert le texte du bouton d'indice (`heuristic-commentary.ts`,
+   * repli une fois `getMoveCommentary` vide), qui reste lisible même une fois
+   * la flèche automatique éteinte — exactement le même contrat que
+   * `hintCommentary` avant ce correctif (gating sur `hintsAllowed` seul, voir
+   * les appelants). `null` hors sélection scriptée (mode Aléatoire).
+   */
+  const hintUci = !useScript ? null : !diverged && expectedUci ? expectedUci : fallbackHintUci;
+
   const finish = useCallback((reason: DrillFinishReason) => {
     setStatus("finished");
     setFinishReason(reason);
@@ -464,7 +487,7 @@ export function useOpeningDrill({
    * effectue le reset réellement écrit ici.
    */
   const completeRound = useCallback(
-    (reason: DrillFinishReason) => {
+    (reason: DrillFinishReason, completedScore?: { correct: number; attempted: number }) => {
       if (selection?.kind === "final-test" && roundIndex + 1 < selection.rounds.length) {
         const next = selection.rounds[roundIndex + 1];
         boardRef.current = new Chess(next.startFen);
@@ -476,7 +499,7 @@ export function useOpeningDrill({
       }
 
       if (activeRound && usesLearningRounds) {
-        const outcome = nextLearningRoundOutcome(learningRound, score);
+        const outcome = nextLearningRoundOutcome(learningRound, completedScore ?? score, playerMovesExpected);
         if (outcome.shouldRestart) {
           if (manualRoundGate) {
             pendingRoundRef.current = { round: activeRound, nextRound: outcome.nextRound };
@@ -508,7 +531,17 @@ export function useOpeningDrill({
 
       finish(reason);
     },
-    [selection, roundIndex, finish, activeRound, usesLearningRounds, manualRoundGate, learningRound, score],
+    [
+      selection,
+      roundIndex,
+      finish,
+      activeRound,
+      usesLearningRounds,
+      manualRoundGate,
+      learningRound,
+      score,
+      playerMovesExpected,
+    ],
   );
 
   // Efface `roundTransitionNotice` d'elle-même après `ROUND_TRANSITION_NOTICE_MS`
@@ -545,6 +578,7 @@ export function useOpeningDrill({
   const playOpponentUci = useCallback(
     (uci: string) => {
       const board = boardRef.current;
+      const fenBefore = board.fen();
       let move: Move;
       try {
         move = board.move(moveInputFromUci(uci));
@@ -559,7 +593,7 @@ export function useOpeningDrill({
         return;
       }
       setFen(board.fen());
-      setHistory((prev) => [...prev, { ply: prev.length + 1, san: move.san, byPlayer: false, result: null }]);
+      setHistory((prev) => [...prev, { ply: prev.length + 1, san: move.san, byPlayer: false, result: null, uci, fenBefore }]);
     },
     [finish],
   );
@@ -594,6 +628,7 @@ export function useOpeningDrill({
     }
     const timer = setTimeout(() => {
       const moverColor = board.turn();
+      const fenBefore = board.fen();
       let move: Move;
       try {
         move = board.move(moveInputFromUci(nextUci));
@@ -605,7 +640,7 @@ export function useOpeningDrill({
       setFen(board.fen());
       setHistory((prev) => [
         ...prev,
-        { ply: prev.length + 1, san: move.san, byPlayer: moverColor === userColor, result: null },
+        { ply: prev.length + 1, san: move.san, byPlayer: moverColor === userColor, result: null, uci: nextUci, fenBefore },
       ]);
     }, LEAD_IN_STEP_MS);
     return () => clearTimeout(timer);
@@ -757,9 +792,13 @@ export function useOpeningDrill({
 
   const commitPlayerMove = useCallback((uci: string) => {
     const board = boardRef.current;
+    const fenBefore = board.fen();
     const move = board.move(moveInputFromUci(uci));
     setFen(board.fen());
-    setHistory((prev) => [...prev, { ply: prev.length + 1, san: move.san, byPlayer: true, result: "correct" }]);
+    setHistory((prev) => [
+      ...prev,
+      { ply: prev.length + 1, san: move.san, byPlayer: true, result: "correct", uci, fenBefore },
+    ]);
     setScore((s) => ({ correct: s.correct + 1, attempted: s.attempted + 1 }));
   }, []);
 
@@ -840,7 +879,10 @@ export function useOpeningDrill({
           // coup, sans jamais déclencher `completeRound`/la sauvegarde de
           // progression.
           if (script && plyIndex + 1 >= script.length) {
-            completeRound("line-complete");
+            completeRound("line-complete", {
+              correct: score.correct + 1,
+              attempted: score.attempted + 1,
+            });
           }
           return true;
         }
@@ -870,6 +912,8 @@ export function useOpeningDrill({
       freshContinuations,
       script,
       plyIndex,
+      score.correct,
+      score.attempted,
       commitPlayerMove,
       completeRound,
       rejectMove,
@@ -904,6 +948,8 @@ export function useOpeningDrill({
     hintsAllowed,
     /** Flèche d'indice automatique (case départ/arrivée du coup théorique attendu) — voir le docstring du fichier. `null` tant qu'elle ne doit pas s'afficher. */
     hintArrow,
+    /** Le coup à trouver maintenant, en UCI — voir son docstring. Sert de repli au texte de l'indice une fois `fen` connu (`heuristic-commentary.ts`). `null` hors sélection scriptée. */
+    hintUci,
     /** Nombre de fois où le coup MAINTENANT attendu a déjà été réussi par le joueur, toutes sessions confondues — sert à un éventuel indicateur UI ("déjà réussi X/2 fois"), la logique d'extinction elle-même vit dans `hintArrow`. `0` hors sélection scriptée. */
     hintMoveSuccessCount,
     /** La manche a-t-elle bifurqué vers un embranchement théorique réel, différent du script initial ? Voir le docstring de l'état `diverged` — sert un éventuel badge UI ("Vous explorez une autre variante"). Toujours `false` hors sélection scriptée. */

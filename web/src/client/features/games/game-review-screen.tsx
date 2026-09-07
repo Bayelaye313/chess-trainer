@@ -22,6 +22,7 @@ import { KeyMomentsNav } from "./key-moments-nav";
 import { type DrillMistake, MistakesDrillBoard } from "./mistakes-drill-board";
 import { MoveList } from "./move-list";
 import { RetryBoard } from "./retry-board";
+import { logTrainingEvent } from "@/server/actions/training";
 
 /**
  * Coup théorique manqué dans CETTE partie, résolu côté serveur depuis le
@@ -47,15 +48,22 @@ export function GameReviewScreen({
   accuracy,
   overview,
   deviation = null,
+  initialPly = null,
+  previousGameId = null,
+  nextGameId = null,
 }: {
   game: Game;
   timeline: TimelinePly[];
   accuracy: number | null;
   overview: GameOverviewData;
   deviation?: GameDeviation | null;
+  initialPly?: number | null;
+  /** Partie analysée plus récente/plus ancienne que celle-ci — voir `getAdjacentGameIds`, `server/queries/games.ts`. */
+  previousGameId?: string | null;
+  nextGameId?: string | null;
 }) {
   const { engine } = useEngine();
-  const [currentPly, setCurrentPly] = useState(0);
+  const [currentPly, setCurrentPly] = useState(initialPly ?? 0);
   const [retryPly, setRetryPly] = useState<number | null>(null);
   const [drillActive, setDrillActive] = useState(false);
   // `true` pendant l'exercice « Corriger ce coup » lancé depuis le bandeau de
@@ -248,9 +256,21 @@ export function GameReviewScreen({
             {accuracy !== null ? ` — précision approximative ${accuracy}%` : ""}
           </p>
         </div>
-        <Link href="/" className="shrink-0 text-sm text-accent">
-          ← Retour
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          {previousGameId && (
+            <Link href={`/analyse/${previousGameId}`} className="text-sm text-accent hover:underline">
+              ◀ Partie précédente
+            </Link>
+          )}
+          {nextGameId && (
+            <Link href={`/analyse/${nextGameId}`} className="text-sm text-accent hover:underline">
+              Partie suivante ▶
+            </Link>
+          )}
+          <Link href="/" className="text-sm text-accent hover:underline">
+            ← Retour
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -269,6 +289,14 @@ export function GameReviewScreen({
               playerColor={game.playerColor}
               bestUci={retryEntry.analysis!.bestUci!}
               bestSan={retryEntry.analysis!.bestSan!}
+              onResult={(result) => {
+                void logTrainingEvent({
+                  kind: "review",
+                  entityId: `${game.id}:${retryPly}`,
+                  sourceGameId: game.id,
+                  score: result.correct ? 1 : 0,
+                });
+              }}
               onExit={() => setRetryPly(null)}
             />
           ) : repertoireCorrection && deviation ? (
@@ -282,6 +310,14 @@ export function GameReviewScreen({
               playerColor={game.playerColor}
               bestUci={deviation.expectedUci}
               bestSan={deviation.expectedSan}
+              onResult={(result) => {
+                void logTrainingEvent({
+                  kind: "review",
+                  entityId: `${game.id}:${deviation.ply}`,
+                  sourceGameId: game.id,
+                  score: result.correct ? 1 : 0,
+                });
+              }}
               onExit={() => setRepertoireCorrection(false)}
             />
           ) : (

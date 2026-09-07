@@ -3,9 +3,11 @@ import { LinkedAccounts } from "@/client/features/home/linked-accounts";
 import { RecentGamesList } from "@/client/features/home/recent-games-list";
 import { MistakesShortcutCard } from "@/client/features/home/mistakes-shortcut-card";
 import { ReportSummaryCard } from "@/client/features/home/report-summary-card";
+import { TrainingRecommendationsCard } from "@/client/features/reviews/training-recommendations-card";
 import { GAMES_PAGE_SIZE, listGamesSummary } from "@/server/queries/games";
 import { listDeckOverviews } from "@/server/queries/reviews";
 import { getReportSummary } from "@/server/queries/progress";
+import { listTrainingRecommendations } from "@/server/queries/training";
 
 // Tableau de bord principal : parties récentes, decks dus et synthèse du
 // rapport évoluent en continu (synchro en tâche de fond) — jamais de rendu
@@ -20,10 +22,11 @@ export default async function HomePage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const [{ games, hasMore }, decks, reportSummary] = await Promise.all([
+  const [{ games, hasMore }, decks, reportSummary, recommendations] = await Promise.all([
     listGamesSummary(page),
     listDeckOverviews(),
     getReportSummary(),
+    listTrainingRecommendations(),
   ]);
 
   const dueTotal = decks.reduce((sum, deck) => sum + deck.dueCount + deck.newCount, 0);
@@ -44,6 +47,7 @@ export default async function HomePage({
         <LinkedAccounts />
         <MistakesShortcutCard dueTotal={dueTotal} />
         <ReportSummaryCard summary={reportSummary} />
+        <TrainingRecommendationsCard recommendations={recommendations} />
       </div>
 
       <section>

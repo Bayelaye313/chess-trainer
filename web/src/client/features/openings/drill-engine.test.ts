@@ -246,4 +246,52 @@ describe("decideOpponentStep", () => {
       decideOpponentStep({ ...base, useScript: false, freshContinuations: null, continuationsFailed: false }),
     ).toEqual({ type: "wait" });
   });
+
+  describe("théorie épuisée quand c'est le tour du JOUEUR (BUG CORRIGÉ, retour utilisateur : Défense Benoni figée)", () => {
+    // Avant le correctif, ces deux checks (continuations vides / requête en
+    // échec) vivaient APRÈS `if (!isOpponentTurn) return wait` — une manche
+    // `diverged` qui tombait à sec pile au tour du joueur (une chance sur
+    // deux, selon la parité du ply où la théorie s'arrête) répondait "wait"
+    // pour toujours : aucun coup du joueur n'était plus jamais reconnu comme
+    // théorique (`freshContinuations` vide), mais rien ne détectait cette
+    // impasse pour terminer la manche — plateau figé, sans flèche de secours
+    // ni conclusion. Voir `use-opening-drill.ts#hintArrow`/`fallbackHintUci`,
+    // qui dépend de la même liste vide.
+
+    it("termine la manche même si c'est le tour du joueur, une fois divergée et les continuations vides", () => {
+      expect(
+        decideOpponentStep({ ...base, isOpponentTurn: false, diverged: true, freshContinuations: [] }),
+      ).toEqual({ type: "complete", reason: "no-more-theory" });
+    });
+
+    it("termine la manche même si c'est le tour du joueur, une fois divergée et la requête théorique en échec", () => {
+      expect(
+        decideOpponentStep({
+          ...base,
+          isOpponentTurn: false,
+          diverged: true,
+          freshContinuations: null,
+          continuationsFailed: true,
+        }),
+      ).toEqual({ type: "complete", reason: "no-more-theory" });
+    });
+
+    it("même chose en mode Aléatoire (`useScript: false`), pas seulement une manche scriptée divergée", () => {
+      expect(
+        decideOpponentStep({ ...base, isOpponentTurn: false, useScript: false, freshContinuations: [] }),
+      ).toEqual({ type: "complete", reason: "no-more-theory" });
+    });
+
+    it("ne termine PAS prématurément : continue d'attendre si la requête est simplement encore en vol, même au tour du joueur", () => {
+      expect(
+        decideOpponentStep({
+          ...base,
+          isOpponentTurn: false,
+          diverged: true,
+          freshContinuations: null,
+          continuationsFailed: false,
+        }),
+      ).toEqual({ type: "wait" });
+    });
+  });
 });

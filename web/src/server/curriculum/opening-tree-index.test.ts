@@ -1,17 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { mainLine } from "@/core/chess/pgn-tree";
-import { findOpening, OPENINGS } from "@/core/curriculum/openings";
+import { findOpening, OPENINGS, type OpeningLine } from "@/core/curriculum/openings";
 import { getCuratedChildren, getGlobalCurriculumIndex, getOpeningTree } from "./opening-tree-index";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 describe("getOpeningTree", () => {
   it("synthétise un arbre strictement linéaire pour un chapitre sans `pgn`", () => {
-    const scandinavian = findOpening("scandinavian")!;
-    expect(scandinavian.pgn).toBeUndefined();
-    const tree = getOpeningTree(scandinavian);
+    // Fixture synthétique plutôt qu'un chapitre du catalogue réel : les ~20
+    // chapitres curatés ont désormais TOUS un arbre `pgn` authored (audit du
+    // 2026-09-04, « une variante à 8 coups n'est pas fun ») — `pgn?: undefined`
+    // reste un état légitime du type `OpeningLine` (voir son docstring), donc
+    // ce test doit continuer à l'exercer indépendamment du contenu actuel du
+    // catalogue, sans dépendre d'un chapitre qui se trouverait justement en
+    // rester dépourvu.
+    const noPgnChapter: OpeningLine = {
+      id: "test-no-pgn",
+      name: "Chapitre de test sans pgn",
+      eco: "A00",
+      side: "black",
+      description: "Fixture de test.",
+      moves: ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5"],
+    };
+    const tree = getOpeningTree(noPgnChapter);
     const line = mainLine(tree);
-    expect(line.map((n) => n.san)).toEqual(scandinavian.moves);
+    expect(line.map((n) => n.san)).toEqual(noPgnChapter.moves);
     expect(line.every((n) => n.children.length <= 1)).toBe(true);
   });
 

@@ -71,6 +71,34 @@
       "when": 1788272310682,
       "tag": "0009_ambiguous_fabian_cortez",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1788629522379,
+      "tag": "0010_powerful_magdalene",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1788630985228,
+      "tag": "0011_lyrical_living_lightning",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1788634811602,
+      "tag": "0012_bouncy_whistler",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1788657381456,
+      "tag": "0013_new_zemo",
+      "breakpoints": true
     }
   ]
 }

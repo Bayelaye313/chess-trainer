@@ -42,7 +42,8 @@ import { useRouter } from "next/navigation";
 import { Chessboard } from "react-chessboard";
 import { buildFinalTestRounds, MIN_ROUND_PLIES, resolvePracticedEntries } from "./build-final-test";
 import { findNextUnmasteredVariation, type MasteryCandidate } from "@/core/curriculum/opening-mastery";
-import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { computeHeuristicCommentary } from "@/core/curriculum/heuristic-commentary";
 import {
   findVariationByKey,
   MAIN_LINE_VARIATION_KEY,
@@ -269,9 +270,11 @@ export function OpeningDrill({
 
   // Indice textuel du prochain coup à trouver — `null` hors sélection
   // scriptée (Aléatoire), le seul cas où AUCUN coup fixe n'existe à
-  // indiquer. Repli sur `GENERIC_BOOK_COMMENT` dès que cette position
-  // précise n'a pas de contenu dédié (voir `core/curriculum/opening-commentary.ts`)
-  // — même convention que le commentaire post-coup (`MoveCommentary`).
+  // indiquer. Repli sur `computeHeuristicCommentary` (analyse chess.js du
+  // coup à trouver, `drill.hintUci` — voir son docstring) dès que cette
+  // position précise n'a pas de contenu rédigé dédié (voir
+  // `core/curriculum/opening-commentary.ts`) — même convention que le
+  // commentaire post-coup (`MoveCommentary`).
   // BUG CORRIGÉ (retour utilisateur direct, « pas de hints ni de guide » sur
   // Zukertort et la plupart des variantes/familles dynamiques) : l'ancienne
   // version masquait carrément le bouton sans contenu dédié — hors des ~20
@@ -280,9 +283,16 @@ export function OpeningDrill({
   // « 💡 Show hints for this move! » ne s'affichait alors JAMAIS, laissant
   // la flèche automatique seule porter tout le poids du guidage — et elle
   // seule, en plus, s'éteint après 2 réussites (`HINT_ARROW_SUCCESS_THRESHOLD`).
+  // BUG CORRIGÉ (retour utilisateur direct, « les hints ne sont jamais
+  // adaptés ») : le repli était `GENERIC_BOOK_COMMENT`, un texte FIXE
+  // identique pour absolument toutes ces positions ("Cherche le coup qui
+  // développe une pièce..."), sans le moindre rapport avec le coup réel à
+  // trouver — remplacé par une analyse spécifique à CE coup précis, voir
+  // `core/curriculum/heuristic-commentary.ts`.
   const hintCommentary =
     drill.status === "playing" && drill.scriptLength !== null
-      ? (getMoveCommentary(opening.id, drill.nextPly) ?? GENERIC_BOOK_COMMENT)
+      ? (getMoveCommentary(opening.id, drill.nextPly) ??
+        (drill.hintUci ? computeHeuristicCommentary(drill.fen, drill.hintUci) : null))
       : null;
   const hintRevealed =
     revealedHint !== null && selection !== null && revealedHint.selection === selection && revealedHint.ply === drill.nextPly;
@@ -406,12 +416,12 @@ export function OpeningDrill({
 
               {!mistakeAlert && drill.status === "playing" && drill.lastPly > 0 && (
                 <div className="w-full max-w-[420px]">
-                  <MoveCommentary openingId={opening.id} ply={drill.lastPly} />
+                  <MoveCommentary openingId={opening.id} ply={drill.lastPly} lastMove={drill.history.at(-1)} />
                 </div>
               )}
               {drill.status === "autoplaying" && drill.history.length > 0 && (
                 <div className="w-full max-w-[420px]">
-                  <MoveCommentary openingId={opening.id} ply={drill.history.length} />
+                  <MoveCommentary openingId={opening.id} ply={drill.history.length} lastMove={drill.history.at(-1)} />
                 </div>
               )}
 

@@ -4,6 +4,8 @@ import type { CurriculumCategory } from "@/server/db/schema/curriculum";
 const MODULE_ICON: Record<CurriculumCategory, string> = {
   positional_mastery: "🧠",
   jesper_hall_course: "📘",
+  pawn_structures: "🧱",
+  pawn_weaknesses: "🩹",
   checkmate_patterns: "👑",
   tactical_motifs: "⚡",
   sparring_positions: "🏆",

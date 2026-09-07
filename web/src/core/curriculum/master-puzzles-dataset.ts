@@ -1,7 +1,8 @@
 /**
  * DATASET STATIQUE ET DÉCONNECTÉ — un puzzle réel et distinct par thème, pour
- * chacun des 155 thèmes de l'académie « Apprendre » (141 d'origine + les 14
- * de la catégorie « Endgame Mastery », voir le docstring de `catalog.ts`).
+ * chacun des 165 thèmes curatés de l'académie « Apprendre » (141 d'origine +
+ * les 14 de la catégorie « Endgame Mastery » + les 9 `pawn_structures` + le
+ * thème `pawn_weaknesses`, voir le docstring de `catalog.ts`).
  *
  * ## Pourquoi ce fichier remplace tout le pipeline dynamique précédent
  *
@@ -1308,5 +1309,95 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     solutionSan: ["Kd3"],
     rating: 1600,
     sourceRef: "Position pédagogique de démonstration — centraliser le roi pour convertir l'avantage matériel.",
+  },
+  // ─────────────────────────────────────────────────────────────────────
+  // Les 9 thèmes `pawn_structures` — chaque position vient d'une VRAIE
+  // partie de maître citée par le chapitre Lichess correspondant (étude
+  // https://lichess.org/study/srjMsNnC de Li-Pokamp), sur un moment DIFFÉRENT
+  // de celui déjà illustré par `THEME_DEMOS` (`theme-demo.ts`) pour ce même
+  // thème — jamais le même couple position/coup répété deux fois.
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    themeId: "ps-formation-caro-kann",
+    fen: "r1bq1rk1/5ppp/2p1p3/ppPn4/3PN3/6P1/PPQ2PBP/R3R1K1 w - - 0 19",
+    solution: ["e4d6"],
+    solutionSan: ["Nd6"],
+    rating: 1650,
+    sourceRef: "Ivanisevic, Ivan – Ascic, Pero, Zupanja 2007 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/upNrvdif",
+  },
+  {
+    themeId: "ps-la-structure-grunfeld",
+    fen: "rnbqk2r/pp2ppbp/6p1/2p5/3PP3/2P2N2/P4PPP/R1BQKB1R w KQkq - 0 8",
+    solution: ["a1b1"],
+    solutionSan: ["Rb1"],
+    rating: 1550,
+    sourceRef: "So, Wesley – Flores Rios, Mauricio, 2012 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/B4IGDKLX",
+  },
+  {
+    themeId: "ps-la-structure-stonewall",
+    fen: "r1b2rk1/pp2q1pp/2pbp3/3pnp2/2PPn3/1P1BP3/PB2NPPP/R2Q1RK1 w - - 0 12",
+    solution: ["d4e5"],
+    solutionSan: ["dxe5"],
+    rating: 1580,
+    sourceRef: "Cvitan, Ognjen – Doric, Darko, Rijeka 2006 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/MvGKodNu",
+  },
+  {
+    themeId: "ps-formation-benoni-asymetrique",
+    fen: "r1bqrbk1/1p3p1p/p2p1np1/2pP4/P1N1P3/2N5/1PQ1BPPP/R4RK1 w - - 2 16",
+    solution: ["f2f4"],
+    solutionSan: ["f4"],
+    rating: 1620,
+    sourceRef: "Akopian, Vladimir – Pantsulaia, Levan, UAE 2013 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/SIXXErfT",
+  },
+  {
+    themeId: "ps-formation-benoni-symetrique",
+    fen: "r2qnrk1/pp3nbp/3p2p1/2pP1p2/2P2P2/2N4P/PP1BB1P1/R2Q1RK1 w - - 1 16",
+    solution: ["g2g4"],
+    solutionSan: ["g4"],
+    rating: 1700,
+    sourceRef: "Spassky, Boris – Fischer, Robert, 1992 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/6s9sqgoy",
+  },
+  {
+    themeId: "ps-structure-est-indienne-type-i",
+    fen: "r1bq1r2/5pbk/pn1p2pp/1p1Pp2n/1P2P3/2N1BP2/P2QB1PP/R1N2RK1 w - - 1 16",
+    solution: ["a2a4"],
+    solutionSan: ["a4"],
+    rating: 1690,
+    sourceRef: "Ponomariov, Ruslan – Radjabov, Teimour, 2010 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/IAnzABFD",
+  },
+  {
+    themeId: "ps-structure-est-indienne-type-iii",
+    fen: "r2q1rk1/pppn2b1/3p2np/3Pp1p1/2P1Pp2/2N2P2/PP1N1BPP/R2QR1K1 w - - 2 16",
+    solution: ["b2b4"],
+    solutionSan: ["b4"],
+    rating: 1590,
+    sourceRef: "Azarov, Sergei – Volke, Karsten, Dresden 2007 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/V85NEXTp",
+  },
+  {
+    themeId: "ps-structure-est-indienne-ouverte",
+    fen: "r1b2rk1/1p3pbp/nqpp2p1/p1n5/P1PNP3/2N1B2P/1P1Q1PP1/1B1R1RK1 w - - 3 15",
+    solution: ["f2f4"],
+    solutionSan: ["f4"],
+    rating: 1560,
+    sourceRef: "Malakhov, Vladimir – Jobava, Baadur, 2012 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/Y6fcd2tD",
+  },
+  {
+    themeId: "ps-structure-francaise-type-i",
+    fen: "r1bqr1k1/pp3pbp/2n1pnp1/2pp4/4P3/2PP1NP1/PP1N1PBP/R1BQR1K1 w - - 3 10",
+    solution: ["e4e5"],
+    solutionSan: ["e5"],
+    rating: 1610,
+    sourceRef: "Areshchenko, Alexander – Vovk, Yuri, Kiev 2011 — étude Lichess « Structures de pions » de Li-Pokamp. https://lichess.org/study/srjMsNnC/Gt5AJoXF",
+  },
+  // ─────────────────────────────────────────────────────────────────────
+  // Le thème `pawn_weaknesses` — étude Lichess « Pawn Structure » de Yushan.
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    themeId: "pw-le-pion-arriere",
+    fen: "3r2k1/6pp/2rp4/3Rp3/4P3/5P1P/6P1/3R2K1 w - - 0 1",
+    solution: ["d5e5", "d6e5", "d1d8"],
+    solutionSan: ["Rxe5", "dxe5", "Rxd8+"],
+    rating: 1500,
+    sourceRef: "Position réelle de l'étude Lichess « Pawn Structure » de Yushan (« Backward Pawn: Make Your Opponent Suffer ») — la nécessité de défendre le pion arriéré d6 laisse échapper le pion e5. https://lichess.org/study/a8arx17S/f05zVwCO",
   },
 ];

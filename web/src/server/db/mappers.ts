@@ -34,6 +34,7 @@ export function evaluatedMoveToRow(
     phase: evaluated.phase,
     bestUci: evaluated.bestUci,
     bestSan: evaluated.bestSan,
+    bestPv: evaluated.bestPv,
     mateMissed: evaluated.mateMissed,
     motifs: evaluated.motifs,
     // A-t-on effectivement joué le coup qui exploitait le motif détecté ?

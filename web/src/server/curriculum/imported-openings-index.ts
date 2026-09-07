@@ -55,6 +55,7 @@ import "server-only";
 import { like } from "drizzle-orm";
 import {
   buildTreeFromLines,
+  collectNodes,
   mergeTrees,
   type NamedLine,
   type VariationNode,
@@ -153,9 +154,11 @@ function longestCommonPrefix(lines: readonly RawLine[]): string[] {
 }
 
 /**
- * Position "racine" d'une famille — sert d'aperçu (carte du catalogue) et de
- * ligne de référence courte (`OpeningLine.moves`) pour les familles sans
- * chapitre curaté. Un nom lichess-org qualifie une STRUCTURE/IDÉE, pas
+ * Préfixe partagé par TOUTES les lignes d'une famille — la mise en place
+ * INCIDENTE commune à ses variantes, pas forcément une position à part
+ * entière (voir `familyReferenceMoves`, qui seul sert désormais de
+ * `OpeningFamilySummary.rootMoves` réel : ce préfixe court n'en est qu'un
+ * ingrédient interne). Un nom lichess-org qualifie une STRUCTURE/IDÉE, pas
  * forcément un ordre de coups unique (transpositions, ex. Grand Prix Attack
  * atteignable par 1.f4 c5 OU 1.e4 c5 2.f4) — le préfixe commun à TOUTES les
  * lignes d'une famille est donc parfois vide (~15% des familles en pratique,
@@ -185,11 +188,8 @@ function mostFrequent(values: readonly string[]): string {
 }
 
 /**
- * Le camp pour qui cette famille constitue un choix d'ouverture — même
- * convention que `OpeningLine.side` (« un nombre IMPAIR de demi-coups vient
- * d'un coup Blanc, PAIR d'un coup Noir »), mais appliquée à la longueur de la
- * VRAIE position de référence de la famille, pas nécessairement à celle de
- * `rootMoves` (voir `familyRootMoves`) :
+ * La VRAIE position de référence d'une famille, en coups — peut être PLUS
+ * LONGUE que `rootMoves` (voir `familyRootMoves`) :
  *
  *  - Si une ligne du groupe porte le nom NU de la famille (sans suffixe
  *    « : … », voir `chapterLabelOf`) — ex. la ligne "Bogo-Indian Defense"
@@ -197,37 +197,71 @@ function mostFrequent(values: readonly string[]): string {
  *    le préfixe partagé entre TOUTES les variantes ne va que jusqu'à 4 coups
  *    (certaines passent par 3.g3 plutôt que 3.Nf3 avant le Bb4+ commun) —
  *    c'est lichess-org elle-même qui désigne CETTE position comme LA
- *    position de référence de la famille : sa longueur prime toujours sur
- *    celle du simple préfixe commun.
+ *    position de référence de la famille : elle prime toujours sur le simple
+ *    préfixe commun, plus court ou non.
  *  - Sinon (aucune ligne nue, ex. "Zukertort Defense", qui n'a QUE des
  *    variantes suffixées "Kingside Variation"/"Sicilian Knight Variation") :
  *    `rootMoves` n'est qu'un préfixe partagé INCIDENT — la mise en place
  *    commune à toutes les variantes nommées, jamais elle-même cataloguée en
  *    tant que ligne à part entière (ici, le tout premier coup 1.Nf3, un coup
- *    BLANC qui n'a rien à voir avec l'idée de la famille). Le vrai choix
- *    d'ouverture qu'elle catalogue est alors le coup JUSTE APRÈS ce préfixe,
- *    celui où ses variantes se distinguent enfin les unes des autres — SAUF
- *    si `rootMoves` est déjà elle-même une ligne complète du groupe (repli
- *    `familyRootMoves` sans préfixe partagé, ex. familles par transposition
- *    comme "Réti Opening") : elle reste alors sa propre référence, inchangée.
+ *    BLANC qui n'a rien à voir avec l'idée de la famille). La VRAIE position
+ *    de référence est alors `rootMoves` + UN coup de plus, celui où ses
+ *    variantes se distinguent enfin les unes des autres — emprunté à la ligne
+ *    la plus courte du groupe (n'importe laquelle convient : elles partagent
+ *    toutes ce coup par construction du préfixe commun) — SAUF si `rootMoves`
+ *    est déjà elle-même une ligne complète du groupe (repli `familyRootMoves`
+ *    sans préfixe partagé, ex. familles par transposition comme "Réti
+ *    Opening") : elle reste alors sa propre référence, inchangée.
  *
- * Bug corrigé ici (retour utilisateur direct, « pas de flèches de guide ni
- * de hints » sur Zukertort et consorts) : sans cette distinction, une
+ * BUG CORRIGÉ, ÉTAPE 1 (retour utilisateur direct, « pas de flèches de guide
+ * ni de hints » sur Zukertort et consorts) : sans cette distinction, une
  * famille « X Defense » (répertoire NOIR par construction) dont le préfixe
  * commun s'arrête par coïncidence sur un coup Blanc se voyait attribuer
- * `side: "white"` — `useOpeningDrill` demandait alors à l'utilisateur de
- * jouer les Blancs dans un chapitre pensé pour s'entraîner à DÉFENDRE en
- * Noir, l'IA enchaînant seule les coups noirs distinctifs (la vraie matière
- * du chapitre) sans jamais les faire pratiquer — la manche se terminait en
- * 1-2 coups, sans la moindre flèche/indice utile à l'idée réelle du chapitre.
+ * `side: "white"` (voir `sideForFamily`, qui consommait alors `rootMoves`
+ * directement) — `useOpeningDrill` demandait alors à l'utilisateur de jouer
+ * les Blancs dans un chapitre pensé pour s'entraîner à DÉFENDRE en Noir.
+ *
+ * BUG CORRIGÉ, ÉTAPE 2 — LE VRAI BUG RESTANT (retour utilisateur direct,
+ * « il y a un réel bug sur Zukertort », après l'étape 1 ci-dessus qui n'en
+ * corrigeait que la moitié) : `side` utilisait déjà cette position de
+ * référence ÉTENDUE pour son calcul, mais `rootMoves` — utilisé PARTOUT
+ * ailleurs (`OpeningFamilySummary.rootMoves`, devenu `opening.moves`/le
+ * SCRIPT INTERACTIF de la Ligne principale dans `getOpeningDetail`) — restait
+ * bloqué à l'ancienne longueur COURTE, jamais étendu en conséquence. Pour
+ * "Zukertort Defense" concrètement : `rootMoves = ["Nf3"]`, un seul demi-coup,
+ * intégralement joué par les BLANCS ; `side` valait pourtant correctement
+ * "black" — mais le script de la Ligne principale restait ce même unique
+ * coup Blanc. Déroulé réel : l'IA joue Nf3 toute seule, puis la manche se
+ * termine IMMÉDIATEMENT (`decideOpponentStep`, script épuisé) — le joueur,
+ * censé s'entraîner à jouer les Noirs, n'a JAMAIS l'occasion de jouer le
+ * moindre coup. Le protocole 2-manches masquait le symptôme en boucle
+ * infinie (`playerMovesExpected` dans `learning-round.ts` empêche de
+ * relancer une Manche 2 sans fin) mais le chapitre restait fonctionnellement
+ * mort : Manche 1 puis Manche 2 s'enchaînaient en un clin d'œil, sans qu'un
+ * seul coup n'ait jamais été proposé au joueur — exactement le « il refuse
+ * mes coups sans indice » ressenti (rien à jouer, donc rien à accepter).
+ *
+ * `familyReferenceMoves` remplace `sideForFamily` : UNE SEULE longueur de
+ * référence calculée, utilisée à la fois pour dériver `side` (parité de sa
+ * longueur, même convention que `OpeningLine.side`) ET comme `rootMoves` réel
+ * de la famille — impossible que les deux divergent à nouveau. Par
+ * construction, le DERNIER coup de cette ligne appartient toujours à `side` :
+ * l'alternance stricte des tours garantit alors que ce dernier coup retombe
+ * TOUJOURS sur le tour du joueur, jamais entièrement consommé par l'IA.
  */
-function sideForFamily(lines: readonly RawLine[], rootMoves: readonly string[]): OpeningSide {
+function familyReferenceMoves(lines: readonly RawLine[], rootMoves: readonly string[]): readonly string[] {
   const bareLine = lines.find((line) => chapterLabelOf(line.name) === null);
-  if (bareLine) return bareLine.moves.length % 2 === 1 ? "white" : "black";
+  if (bareLine) return bareLine.moves;
 
   const rootIsItsOwnLine = lines.some((line) => line.moves.length === rootMoves.length);
-  const referencePly = rootIsItsOwnLine ? rootMoves.length : rootMoves.length + 1;
-  return referencePly % 2 === 1 ? "white" : "black";
+  if (rootIsItsOwnLine) return rootMoves;
+  const shortest = lines.reduce((s, line) => (line.moves.length < s.moves.length ? line : s));
+  return shortest.moves.slice(0, rootMoves.length + 1);
+}
+
+/** Le camp pour qui `referenceMoves` (voir `familyReferenceMoves`) constitue un choix d'ouverture — même convention que `OpeningLine.side` : le dernier demi-coup de la ligne désigne le camp. */
+function sideForReferenceMoves(referenceMoves: readonly string[]): OpeningSide {
+  return referenceMoves.length % 2 === 1 ? "white" : "black";
 }
 
 interface FamilyGroup {
@@ -251,6 +285,37 @@ function loadFamilyGroups(): Map<string, FamilyGroup> {
   }
   familyGroupsCache = groups;
   return groups;
+}
+
+/**
+ * `familyName` appartient-il au périmètre du hub `hubName` ? L'égalité stricte,
+ * mais AUSSI toute famille lichess-org sœur qui commence par ce même nom suivi
+ * d'une frontière non-alphanumérique (espace, virgule...) — ex. "King's Gambit
+ * Accepted"/"King's Gambit Declined" sous le hub "King's Gambit", "Queen's
+ * Gambit Declined"/"Accepted" sous "Queen's Gambit", "London System, with Be2"
+ * sous "London System".
+ *
+ * BUG CORRIGÉ (audit du 2026-09-04, « le Gambit du Roi ne fait que 3 demi-coups,
+ * sans la moindre variante nommée ») : `familyNameOf` scinde un nom lichess-org
+ * sur son PREMIER « : » — "King's Gambit Accepted: Bishop's Gambit" devient
+ * ainsi la famille "King's Gambit Accepted", PAS "King's Gambit". Le hub
+ * `CURATED_FAMILY_HUB["kings-gambit"] = "King's Gambit"` ne récupérait donc
+ * QUE l'unique ligne nue "King's Gambit" (1.e4 e5 2.f4, 3 demi-coups) — les 137
+ * lignes de "King's Gambit Accepted" (Gambit du Fou, Kieseritzky, Muzio...) et
+ * les 53 de "King's Gambit Declined" restaient orphelines, jamais fusionnées.
+ * Même défaut pour `queens-gambit` (256 lignes orphelines sous "Queen's Gambit
+ * Declined"/"Accepted") et `london-system` (4 lignes sous "London System, with
+ * Be2/Bd3"). Un simple `startsWith` capture ces trois cas SANS aucun faux
+ * positif parmi les ~19 hubs déjà déclarés (vérifié empiriquement sur la base
+ * entière) — la frontière non-alphanumérique reste une précaution supplémentaire
+ * contre un futur hub dont le nom serait un préfixe accidentel d'une famille
+ * sans rapport.
+ */
+function familyBelongsToHub(familyName: string, hubName: string): boolean {
+  if (familyName === hubName) return true;
+  if (!familyName.startsWith(hubName)) return false;
+  const boundary = familyName.charAt(hubName.length);
+  return boundary !== "" && !/[a-z0-9]/i.test(boundary);
 }
 
 function slugify(text: string): string {
@@ -284,17 +349,30 @@ let familyCatalogCache: OpeningFamilySummary[] | null = null;
  */
 export function listOpeningFamilies(): OpeningFamilySummary[] {
   if (familyCatalogCache) return familyCatalogCache;
-  const hubFamilyNames = new Set(Object.values(CURATED_FAMILY_HUB));
+  // `familyBelongsToHub`, pas une simple égalité : une famille sœur absorbée
+  // par un hub (ex. "King's Gambit Accepted"/"Declined" sous "King's Gambit",
+  // voir son docstring) ne doit plus non plus apparaître comme sa propre carte
+  // dynamique — sinon son contenu resterait dupliqué (déjà dans le chapitre
+  // curaté ET dans une carte à part, sans nom français ni contenu pédagogique).
+  const hubNames = Object.values(CURATED_FAMILY_HUB);
   const summaries: OpeningFamilySummary[] = [];
   for (const group of loadFamilyGroups().values()) {
-    if (hubFamilyNames.has(group.name)) continue;
-    const rootMoves = familyRootMoves(group.lines);
+    if (hubNames.some((hub) => familyBelongsToHub(group.name, hub))) continue;
+    // BUG CORRIGÉ (Zukertort et consorts, voir le docstring de
+    // `familyReferenceMoves`) : `rootMoves` DOIT être la position de
+    // référence RÉELLE (parfois un coup plus longue que le simple préfixe
+    // partagé), jamais le préfixe court utilisé seul — sans quoi `side`
+    // (calculé sur la référence étendue) et `rootMoves` (resté court, promu
+    // script interactif de la Ligne principale par `getOpeningDetail`)
+    // peuvent décrire deux positions différentes, l'une entièrement jouée
+    // par l'adversaire du camp annoncé.
+    const rootMoves = familyReferenceMoves(group.lines, familyRootMoves(group.lines));
     const deepestPly = Math.max(...group.lines.map((l) => l.moves.length));
     summaries.push({
       id: `lichess-${slugify(group.name)}`,
       name: group.name,
       eco: mostFrequent(group.lines.map((l) => l.eco)),
-      side: sideForFamily(group.lines, rootMoves),
+      side: sideForReferenceMoves(rootMoves),
       description: `${group.lines.length} variante${group.lines.length > 1 ? "s" : ""} issue${group.lines.length > 1 ? "s" : ""} de la base Lichess (lichess-org/chess-openings), jusqu'à ${deepestPly} demi-coups de profondeur.`,
       rootMoves,
       variantCount: group.lines.length,
@@ -317,13 +395,22 @@ const familyTreeCache = new Map<string, VariationNode>();
  * (voir son docstring — seul `base` est jamais muté) n'écrivent dans l'arbre
  * qu'ils reçoivent en `addition`/lecture seule.
  */
-function getFamilyTree(familyName: string): VariationNode | null {
-  const cached = familyTreeCache.get(familyName);
+function getFamilyTree(hubName: string): VariationNode | null {
+  const cached = familyTreeCache.get(hubName);
   if (cached) return cached;
-  const group = loadFamilyGroups().get(familyName);
-  if (!group) return null;
-  const tree = buildTreeFromLines(group.lines.map(toNamedLine));
-  familyTreeCache.set(familyName, tree);
+  // `familyBelongsToHub`, pas une simple égalité : rassemble aussi les
+  // familles SŒURS du hub (ex. "King's Gambit Accepted"/"Declined" sous "King's
+  // Gambit") — voir son docstring pour le bug que cela corrige. Un appel avec
+  // le nom exact d'une famille dynamique (`getImportedFamilyDetail`, jamais un
+  // hub curaté) ne récupère par construction qu'elle-même : aucune AUTRE
+  // famille ne peut commencer par SON nom à elle suivi d'une frontière, ce nom
+  // étant déjà le plus spécifique possible.
+  const matchingLines = Array.from(loadFamilyGroups().values())
+    .filter((group) => familyBelongsToHub(group.name, hubName))
+    .flatMap((group) => group.lines);
+  if (matchingLines.length === 0) return null;
+  const tree = buildTreeFromLines(matchingLines.map(toNamedLine));
+  familyTreeCache.set(hubName, tree);
   return tree;
 }
 
@@ -379,4 +466,91 @@ export function getEnrichedTreeForCuratedOpening(opening: OpeningLine): Variatio
 
   enrichedCuratedTreeCache.set(opening.id, enriched);
   return enriched;
+}
+
+/** Un coup théorique connu depuis une position, tel qu'issu de la base importée globale — voir `getImportedChildren`. */
+export interface ImportedContinuation {
+  san: string;
+  uci: string;
+  eco: string;
+  /** Nom de la sous-variante que ce coup ouvre, s'il en ouvre une — `null` sinon (voir `VariationNode.comment`). */
+  variationName: string | null;
+  /** Nombre de lignes importées qui proposent ce coup depuis cette position. */
+  weight: number;
+}
+
+let globalImportedNodesByFenCache: Map<string, VariationNode[]> | null = null;
+
+/**
+ * `fen → tous les nœuds de TOUTE la base importée (les ~3810 lignes
+ * lichess-org, `imported_opening_lines`) qui atteignent cette position` —
+ * l'équivalent, pour les familles DYNAMIQUES, de `getGlobalCurriculumIndex`
+ * pour les ~20 chapitres curatés : un arbre unique construit sur TOUTES les
+ * lignes d'un coup (`buildTreeFromLines` fusionne déjà les préfixes partagés),
+ * puis indexé par FEN pour capturer EN PLUS les transpositions entre lignes
+ * qui ne partagent pas exactement le même préfixe de coups (deux familles
+ * différentes atteignant la même position par des ordres de coups distincts).
+ *
+ * BUG CORRIGÉ (retour utilisateur direct, « Défense Benoni : coup annoncé
+ * comme le dernier alors que la variante en a bien plus », après le correctif
+ * du 2026-09-04 sur `decideOpponentStep` qui a d'abord révélé le symptôme) :
+ * `listBookContinuations` (voir `server/queries/openings.ts`) n'interrogeait
+ * jusqu'ici QUE `getCuratedChildren` (les ~20 chapitres curatés) puis, à
+ * défaut, la base ECO générique embarquée (~3600 positions, TOUTES ouvertures
+ * confondues). Dès qu'une manche divergeait (ou en mode Aléatoire) sur une
+ * position qui n'existe que dans une famille DYNAMIQUE (les 125 familles
+ * lichess-org sans chapitre curaté dédié, ex. "Benoni Defense") — la théorie
+ * VRAIMENT connue, servant par ailleurs à construire le script de la variante
+ * elle-même (`listOpeningVariations`/`deriveVariationsFromNode`) — restait
+ * invisible à cette validation : `listBookContinuations` répondait "aucun
+ * coup connu ici" en pleine ligne théorique bien vivante (vérifié : la
+ * Défense Benoni tombe à 0 coup connu au ply 7 d'une ligne pourtant longue de
+ * 19 coups). Combiné au filet de sécurité "théorie épuisée → fin de manche"
+ * (désormais valide aussi au tour du joueur, voir `decideOpponentStep`), ce
+ * trou de couverture faisait terminer la manche BIEN avant la vraie fin du
+ * script, sur un simple angle mort de lookup — pas une vraie fin de théorie.
+ */
+function getGlobalImportedNodesByFen(): Map<string, VariationNode[]> {
+  if (globalImportedNodesByFenCache) return globalImportedNodesByFenCache;
+  const tree = buildTreeFromLines(loadRawLines().map(toNamedLine));
+  const index = new Map<string, VariationNode[]>();
+  for (const node of collectNodes(tree)) {
+    const existing = index.get(node.fen);
+    if (existing) existing.push(node);
+    else index.set(node.fen, [node]);
+  }
+  globalImportedNodesByFenCache = index;
+  return index;
+}
+
+/**
+ * Union dédupliquée (par UCI) des coups enfants de TOUS les nœuds de la base
+ * importée connus à `fen` — `[]` si aucune ligne importée n'atteint cette
+ * position. Voir `getGlobalImportedNodesByFen` pour le bug que ceci corrige ;
+ * même contrat que `getCuratedChildren`, dont c'est le pendant pour les
+ * familles dynamiques plutôt que les chapitres curatés.
+ */
+export function getImportedChildren(fen: string): ImportedContinuation[] {
+  const nodes = getGlobalImportedNodesByFen().get(fen);
+  if (!nodes) return [];
+
+  const byUci = new Map<string, ImportedContinuation>();
+  for (const node of nodes) {
+    for (const child of node.children) {
+      if (!child.uci || !child.san) continue;
+      const existing = byUci.get(child.uci);
+      if (existing) {
+        existing.weight += 1;
+        continue;
+      }
+      byUci.set(child.uci, {
+        san: child.san,
+        uci: child.uci,
+        eco: child.eco ?? "A00",
+        variationName: child.comment,
+        weight: 1,
+      });
+    }
+  }
+  return Array.from(byUci.values());
 }

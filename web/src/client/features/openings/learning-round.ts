@@ -55,12 +55,19 @@ function isFaultless(score: LearningRoundScore): boolean {
 export function nextLearningRoundOutcome(
   currentRound: LearningRound,
   score: LearningRoundScore,
+  playerMovesExpected = true,
 ): LearningRoundOutcome {
   if (currentRound === 1) {
     // Fin de la Manche 1 (indice autorisé, fautes tolérées) : toujours un
     // enchaînement automatique vers la Manche 2, quel que soit le score.
     return { shouldRestart: true, nextRound: 2 };
   }
+  // Certaines ouvertures importées commencent par un coup adverse et
+  // s'arrêtent avant le premier coup du joueur (par ex. Zukertort Defense
+  // côté Noir, script d'un seul ply). Il n'y a alors aucune réponse possible
+  // à mémoriser : relancer la Manche 2 indéfiniment ferait rejouer le même
+  // cavalier sans jamais atteindre `finished`.
+  if (!playerMovesExpected) return { shouldRestart: false, nextRound: 2 };
   // Manche 2 : seul un sans-faute complet termine vraiment le drill.
   return isFaultless(score) ? { shouldRestart: false, nextRound: 2 } : { shouldRestart: true, nextRound: 2 };
 }

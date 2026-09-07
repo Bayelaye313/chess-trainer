@@ -118,7 +118,12 @@ export async function analyseImportedGame(
   for (let i = 0; i < verboseHistory.length; i += 1) {
     const move = verboseHistory[i];
     try {
-      const evaluated = await evaluateMove(analyser, move.before, uciOf(move), { depth });
+      // Le coup adverse qui a mené à cette position — sert à `evaluateMove`
+      // pour reconnaître une reprise évidente (voir `isObviousRecapture`,
+      // `evaluate-move.ts`). `null` sur le tout premier coup de la partie.
+      const previous = i > 0 ? verboseHistory[i - 1] : null;
+      const previousMove = previous ? { to: previous.to, wasCapture: Boolean(previous.captured) } : null;
+      const evaluated = await evaluateMove(analyser, move.before, uciOf(move), { depth }, previousMove);
 
       // Le graphe d'évaluation garde cpBefore/cpAfter du moteur — seule la
       // qualité change : ce coup n'est plus noté, il est théorique. Voir

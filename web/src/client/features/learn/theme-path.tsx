@@ -22,6 +22,11 @@ function ThemeNode({
   onSelect: () => void;
 }) {
   const done = theme.completedCount >= theme.totalPuzzles && theme.totalPuzzles > 0;
+  // Cahier des charges du 2026-09-06 : « ne triche plus pour remplir les
+  // jauges » — un thème purgé de tout contenu non-authentique et pas encore
+  // réalimenté doit se voir clairement dans la frise, pas seulement une fois
+  // ouvert (voir aussi `ThemeLesson`, qui bloque le bouton d'exercices).
+  const empty = theme.totalPuzzles === 0;
 
   return (
     <li className="relative flex gap-4">
@@ -41,10 +46,12 @@ function ThemeNode({
       <button
         type="button"
         onClick={onSelect}
-        className="mb-6 flex min-w-0 flex-1 flex-col rounded-lg border border-border bg-surface p-4 text-left transition-colors hover:border-accent/40"
+        className={`mb-6 flex min-w-0 flex-1 flex-col rounded-lg border p-4 text-left transition-colors ${
+          empty ? "border-dashed border-border/60 bg-surface/60 hover:border-border" : "border-border bg-surface hover:border-accent/40"
+        }`}
       >
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-foreground">{theme.title}</h3>
+          <h3 className={`text-sm font-semibold ${empty ? "text-foreground-muted" : "text-foreground"}`}>{theme.title}</h3>
           <span
             className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${CURRICULUM_LEVEL_BORDER_CLASS[theme.level]} ${CURRICULUM_LEVEL_TEXT_CLASS[theme.level]}`}
           >
@@ -52,7 +59,11 @@ function ThemeNode({
           </span>
         </div>
         <p className="mt-1.5 line-clamp-2 text-xs text-foreground-muted">{theme.description}</p>
-        <ProgressBar completed={theme.completedCount} total={theme.totalPuzzles} className="mt-3" />
+        {empty ? (
+          <p className="mt-3 text-xs font-medium text-inaccuracy">⚠️ En attente de contenu authentique — pas encore d&apos;exercice.</p>
+        ) : (
+          <ProgressBar completed={theme.completedCount} total={theme.totalPuzzles} className="mt-3" />
+        )}
       </button>
     </li>
   );

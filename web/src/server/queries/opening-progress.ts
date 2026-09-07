@@ -12,7 +12,7 @@ import "server-only";
  */
 import { and, eq, lte } from "drizzle-orm";
 import { db } from "@/server/db";
-import { openingProgress } from "@/server/db/schema";
+import { openingProgress, trainingEvents } from "@/server/db/schema";
 import type { OpeningProgress } from "@/server/db/schema/opening-progress";
 import { LOCAL_USER_ID } from "@/server/queries/curriculum";
 import { starsForAccuracy, type MasteryStars } from "@/core/curriculum/opening-mastery";
@@ -98,6 +98,14 @@ export async function recordOpeningDrillResult(
         variationLabel: values.variationLabel,
       },
     });
+  await db.insert(trainingEvents).values({
+    id: crypto.randomUUID(),
+    userId,
+    kind: "opening",
+    entityId: `${input.openingId}:${variationKey}`,
+    score: scheduled.lastAccuracy / 100,
+    occurredAt: now,
+  });
 
   return values;
 }

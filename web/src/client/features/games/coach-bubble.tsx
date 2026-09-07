@@ -18,6 +18,7 @@ const TAG_ACCENT_CLASS: Record<CoachMessageTag, string> = {
   hanging_piece: "border-blunder/40 bg-blunder/10",
   king_safety: "border-blunder/40 bg-blunder/10",
   missed_tactic: "border-inaccuracy/40 bg-inaccuracy/10",
+  weak_square: "border-inaccuracy/40 bg-inaccuracy/10",
   open_file: "border-inaccuracy/40 bg-inaccuracy/10",
   blunder: "border-blunder/40 bg-blunder/10",
   inaccuracy: "border-inaccuracy/40 bg-inaccuracy/10",

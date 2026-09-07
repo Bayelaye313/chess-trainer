@@ -1,6 +1,6 @@
 import "server-only";
 import { Chess } from "chess.js";
-import { uciOf } from "@/core/analysis/evaluate-move";
+import { moveInputFromUci, uciOf } from "@/core/analysis/evaluate-move";
 import { mainLine, type VariationNode } from "@/core/chess/pgn-tree";
 import { findOpening, OPENINGS, type OpeningLine } from "@/core/curriculum/openings";
 import { fetchLichessPopularity, type PopularMove } from "@/server/import/lichess-explorer";
@@ -8,6 +8,7 @@ import { findBookMove, type OpeningMatch } from "@/server/import/openings";
 import { getCuratedChildren } from "@/server/curriculum/opening-tree-index";
 import {
   getEnrichedTreeForCuratedOpening,
+  getImportedChildren,
   getImportedFamilyDetail,
   listOpeningFamilies,
 } from "@/server/curriculum/imported-openings-index";
@@ -135,10 +136,20 @@ export function getOpeningDetail(id: string): OpeningDetail | null {
   // enfant à un embranchement donné n'est que le hasard de l'ordre
   // d'insertion, jamais « LA » ligne principale. Toute la profondeur réelle
   // reste pleinement accessible via `variations` (`ChapterSelector`).
+  // Mémoïsé comme `listOpeningVariations` ci-dessous (même cache, `id` sert
+  // de clé dans les deux cas) : `deriveVariationsFromNode` a gagné un vrai
+  // coût depuis `extendWithGlobalTheory` (plusieurs `getImportedChildren` par
+  // variante courte) — sans ce cache, chaque appel à `getOpeningDetail` pour
+  // une même famille dynamique (chaque rendu de `/ouvertures/[slug]`, chaque
+  // test qui la visite) le repayait intégralement.
+  const cachedVariations = variationsCache.get(id);
+  const variations = cachedVariations ?? deriveVariationsFromNode(family.tree, family.summary.eco);
+  if (!cachedVariations) variationsCache.set(id, variations);
+
   return {
     opening: dynamicOpening,
     plies: annotateMoveList(family.summary.rootMoves),
-    variations: deriveVariationsFromNode(family.tree, family.summary.eco),
+    variations,
   };
 }
 
@@ -148,6 +159,8 @@ export interface BookContinuation {
   uci: string;
   eco: string;
   name: string;
+  /** Frequence locale relative : branches qui proposent ce coup, sans API externe. */
+  weight: number;
 }
 
 /**
@@ -167,17 +180,52 @@ export interface BookContinuation {
  * leurs noms de sous-variante) sont plus précis que la base ECO générique —
  * c'est ce qui permet au Mode Entraînement d'accepter n'importe quel coup
  * théorique d'UNE AUTRE branche du même chapitre (voire d'un autre chapitre
- * par transposition) sans jamais le rejeter à tort. Repli sur la base ECO
- * UNIQUEMENT pour les positions qu'aucun arbre curaté n'atteint — jamais de
- * régression pour les chapitres encore sans `pgn` authored.
+ * par transposition) sans jamais le rejeter à tort. FUSIONNÉ, pas juste
+ * essayé en premier, avec la base importée GLOBALE (`getImportedChildren`,
+ * palier 2 ci-dessous) : deux coups DIFFÉRENTS depuis la même position
+ * peuvent chacun n'être connus que d'UN SEUL des deux paliers (transposition
+ * partielle — ex. après 1.d4 Nf6 2.c4, les chapitres curatés Nimzo-Indienne/
+ * Est-Indienne connaissent 2...e6/2...g6, mais SEULE la base importée connaît
+ * 2...c5, la Défense Benoni, qui n'a pas de chapitre curaté dédié) — s'arrêter
+ * au premier palier non vide, comme avant, rejetait alors à tort tout coup
+ * que ce palier gagnant ne couvrait pas.
+ *
+ * PALIER 2 : la base importée GLOBALE (`getImportedChildren`, les ~3810
+ * lignes lichess-org de TOUTES les familles, curatées ou non — voir son
+ * docstring). BUG CORRIGÉ (retour utilisateur, « Défense Benoni : la manche
+ * s'arrête bien avant la fin réelle de la variante ») : avant ce palier,
+ * toute position connue UNIQUEMENT d'une famille dynamique (les 125 familles
+ * lichess-org sans chapitre curaté, ex. "Benoni Defense") retombait
+ * directement sur la base ECO générique ci-dessous (~3600 positions, TOUTES
+ * ouvertures confondues, bien plus pauvre) — vérifié concrètement : la
+ * Défense Benoni tombait à 0 coup connu dès le 7ᵉ demi-coup d'une ligne
+ * pourtant longue de 19, alors que CETTE MÊME théorie sert par ailleurs à
+ * construire le script de la variante (`listOpeningVariations`). Une manche
+ * `diverged` (ou en mode Aléatoire) qui traversait une telle position
+ * terminait alors prématurément — pas une vraie fin de théorie, un simple
+ * angle mort de lookup entre la donnée qui définit le script et celle qui
+ * valide ses coups en cours de partie.
+ *
+ * En cas de collision (même UCI connu des deux paliers), le nom curaté
+ * l'emporte (plus soigné, souvent en français) — jamais l'inverse. Repli sur
+ * la base ECO générique UNIQUEMENT si NI l'un NI l'autre palier ne connaît
+ * la position — jamais de régression pour les chapitres encore sans `pgn`
+ * authored ni ligne lichess-org connue.
  */
 export function listBookContinuations(fen: string): BookContinuation[] {
-  const curated = getCuratedChildren(fen);
-  if (curated.length > 0) {
-    return curated
-      .map(({ san, uci, eco, name, variationName }) => ({ san, uci, eco, name: variationName ?? name }))
-      .sort((a, b) => a.san.localeCompare(b.san));
+  const byUci = new Map<string, BookContinuation>();
+  for (const { san, uci, eco, name, variationName, weight } of getCuratedChildren(fen)) {
+    byUci.set(uci, { san, uci, eco, name: variationName ?? name, weight });
   }
+  for (const { san, uci, eco, variationName, weight } of getImportedChildren(fen)) {
+    const existing = byUci.get(uci);
+    if (existing) {
+      existing.weight += weight;
+      continue;
+    }
+    byUci.set(uci, { san, uci, eco, name: variationName ?? eco, weight });
+  }
+  if (byUci.size > 0) return Array.from(byUci.values()).sort((a, b) => a.san.localeCompare(b.san));
 
   const chess = new Chess(fen);
   const continuations: BookContinuation[] = [];
@@ -185,7 +233,7 @@ export function listBookContinuations(fen: string): BookContinuation[] {
     const after = new Chess(fen);
     const played = after.move(candidate.san);
     const book = findBookMove(after.fen());
-    if (book) continuations.push({ san: played.san, uci: uciOf(played), eco: book.eco, name: book.name });
+    if (book) continuations.push({ san: played.san, uci: uciOf(played), eco: book.eco, name: book.name, weight: 1 });
   }
   return continuations.sort((a, b) => a.san.localeCompare(b.san));
 }
@@ -267,14 +315,96 @@ export function listOpeningVariations(opening: OpeningLine): OpeningVariation[] 
 }
 
 /**
+ * Longueur minimale (en demi-coups) qu'une variante nommée doit atteindre
+ * avant d'être proposée telle quelle au Mode Drill — voir
+ * `extendWithGlobalTheory`, qui rallonge tout ce qui tombe en dessous. Choisi
+ * pour donner une manche substantielle des deux côtés (~4 coups chacun) sans
+ * jamais s'éloigner exagérément de l'idée nommée par la variante elle-même.
+ */
+const MIN_VARIATION_PLIES = 8;
+
+/**
+ * Longueur MINIMALE (en demi-coups), APRÈS tentative d'extension
+ * (`extendWithGlobalTheory`), en dessous de laquelle une variante nommée est
+ * purement et simplement écartée du sélecteur — voir `deriveVariationsFromNode`.
+ * Certaines lignes (ex. "Basman Defense" 1.Nf3 h6, ou les 2 variantes de
+ * "Zukertort Defense") n'ont RÉELLEMENT aucune suite dans toute la base
+ * importée (vérifié : aucune des ~3810 lignes ne les prolonge) — l'extension
+ * ne peut alors rien faire, et les laisser telles quelles (souvent 2 demi-
+ * coups, parfois 0-1 coup pour le joueur) donnerait une manche insatisfaisante
+ * dans un sélecteur qui prétend proposer un chapitre à part entière. Un
+ * chapitre écarté ici reste pleinement JOUABLE en divergeant librement depuis
+ * `OpeningExplorer`/le mode Aléatoire — seule sa promotion en "manche dédiée"
+ * du sélecteur disparaît. Plus bas que `MIN_VARIATION_PLIES` (la cible
+ * d'extension) : une ligne qui n'a pu être étendue qu'à 4-7 plies reste tout
+ * à fait montrable, seul un DEUX ou TROIS coups pile ne l'est pas.
+ */
+const MIN_VARIATION_PLIES_TO_DISPLAY = 4;
+
+/**
+ * Prolonge une ligne trop courte (`sanMoves`/`uciMoves`, arrêtée au bout de
+ * sa PROPRE famille — voir `deriveVariationsFromNode`) avec de VRAIS coups
+ * théoriques puisés dans la base importée GLOBALE (`getImportedChildren`,
+ * TOUTES familles confondues, transpositions comprises) — jamais un coup
+ * inventé : chaque ply ajouté vient d'une ligne réellement cataloguée qui
+ * traverse cette même position. S'arrête à `MIN_VARIATION_PLIES`, ou avant si
+ * la théorie connue s'épuise réellement à un embranchement donné (`length ===
+ * 0`) — une ligne déjà longue, ou qu'aucune autre ligne ne prolonge, ressort
+ * inchangée.
+ *
+ * BUG CORRIGÉ (retour utilisateur direct, « des lignes faibles, peu de
+ * variation, des manches courtes » sur Zukertort Opening/Defense) : de
+ * nombreuses variantes lichess-org (Herrstrom Gambit, Ware Defense, Basman
+ * Defense...) ne sont QUE le nom du premier coup de réponse distinctif — 2
+ * demi-coups pile, sans la moindre suite officiellement rattachée à CE nom
+ * précis. Avant ce correctif, le Mode Drill s'arrêtait donc après un seul
+ * coup joué par l'utilisateur (`decideOpponentStep`, script épuisé) — alors
+ * que la théorie réelle ne s'arrête pas là : d'autres lignes de la base
+ * globale traversent cette même position et continuent bien plus loin. Choix
+ * déterministe par ordre alphabétique de SAN à chaque embranchement (même
+ * convention que `listBookContinuations`) — stable d'un appel à l'autre,
+ * jamais un tirage aléatoire ni un biais vers une branche plutôt qu'une autre.
+ */
+function extendWithGlobalTheory(
+  startFen: string,
+  sanMoves: readonly string[],
+  uciMoves: readonly string[],
+): { sanMoves: string[]; uciMoves: string[] } {
+  const extendedSan = [...sanMoves];
+  const extendedUci = [...uciMoves];
+  if (extendedSan.length >= MIN_VARIATION_PLIES) return { sanMoves: extendedSan, uciMoves: extendedUci };
+
+  const chess = new Chess(startFen);
+  while (extendedSan.length < MIN_VARIATION_PLIES) {
+    const continuations = getImportedChildren(chess.fen());
+    if (continuations.length === 0) break;
+    const next = [...continuations].sort((a, b) => a.san.localeCompare(b.san))[0];
+    let move;
+    try {
+      move = chess.move(moveInputFromUci(next.uci));
+    } catch {
+      // Garde-fou défensif : ne devrait jamais arriver, `next.uci` vient d'un
+      // coup déjà rejoué avec succès à l'import (voir `getImportedChildren`) —
+      // s'arrêter proprement plutôt que planter sur une donnée corrompue.
+      break;
+    }
+    extendedSan.push(move.san);
+    extendedUci.push(next.uci);
+  }
+  return { sanMoves: extendedSan, uciMoves: extendedUci };
+}
+
+/**
  * Parcourt un arbre de variantes (DFS) : chaque nœud dont `comment` définit
  * un nom (voir `core/chess/pgn-tree.ts`) devient une variante, étendue
  * jusqu'au bout de sa PROPRE ligne principale (premier enfant à chaque étape
  * suivante) — la variante affichée porte donc toute sa suite déjà connue, pas
- * seulement le coup qui l'ouvre. `fallbackEco` s'applique aux nœuds sans
- * `eco` propre (tout arbre `pgn` authored à la main, voir
- * `core/curriculum/openings.ts`) — les nœuds issus de la base Lichess portent
- * le leur (voir `VariationNode.eco`, posé par `buildTreeFromLines`).
+ * seulement le coup qui l'ouvre — PUIS au-delà avec la théorie globale si
+ * elle reste trop courte (voir `extendWithGlobalTheory`). `fallbackEco`
+ * s'applique aux nœuds sans `eco` propre (tout arbre `pgn` authored à la
+ * main, voir `core/curriculum/openings.ts`) — les nœuds issus de la base
+ * Lichess portent le leur (voir `VariationNode.eco`, posé par
+ * `buildTreeFromLines`).
  */
 function deriveVariationsFromNode(tree: VariationNode, fallbackEco: string): OpeningVariation[] {
   const found = new Map<string, OpeningVariation>();
@@ -292,8 +422,20 @@ function deriveVariationsFromNode(tree: VariationNode, fallbackEco: string): Ope
           deepSan = [...deepSan, cursor.san!];
           deepUci = [...deepUci, cursor.uci!];
         }
-        const eco = child.eco ?? fallbackEco;
-        found.set(`${eco}|${child.comment}`, { eco, name: child.comment, sanMoves: deepSan, uciMoves: deepUci });
+        const extended = extendWithGlobalTheory(cursor.fen, deepSan, deepUci);
+        // Sous le plancher même après tentative d'extension (voir son
+        // docstring) : aucune vraie suite ne prolonge cette ligne nulle part
+        // dans la base — écartée du sélecteur plutôt que promue en "manche"
+        // insatisfaisante.
+        if (extended.sanMoves.length >= MIN_VARIATION_PLIES_TO_DISPLAY) {
+          const eco = child.eco ?? fallbackEco;
+          found.set(`${eco}|${child.comment}`, {
+            eco,
+            name: child.comment,
+            sanMoves: extended.sanMoves,
+            uciMoves: extended.uciMoves,
+          });
+        }
       }
       walk(child, nextSan, nextUci);
     }
@@ -306,12 +448,16 @@ function deriveVariationsFromNode(tree: VariationNode, fallbackEco: string): Ope
 }
 
 /**
- * `OPENINGS` est un catalogue statique figé (~20 entrées) : le résultat pour
- * un `opening.id` donné ne peut jamais changer d'un appel à l'autre. Sans ce
- * cache, chaque chargement de `/ouvertures/[slug]` repayait l'intégralité de
- * la marche récursive (des centaines de clones `chess.js`) — perceptible côté
- * utilisateur. `Map` module-level : survit tant que le process serveur tourne,
- * se repeuple tout seul après un redémarrage.
+ * Clé = `opening.id` (chapitre curaté OU famille dynamique `lichess-*`, voir
+ * `getOpeningDetail`) : le résultat pour un id donné ne peut jamais changer
+ * d'un appel à l'autre tant que le process tourne (catalogue statique + import
+ * PGN figé jusqu'au prochain `db:seed-pgn`). Sans ce cache, chaque chargement
+ * de `/ouvertures/[slug]` repayait l'intégralité de la marche récursive (des
+ * centaines de clones `chess.js`) — perceptible côté utilisateur, et depuis
+ * `extendWithGlobalTheory` (plusieurs `getImportedChildren` par variante
+ * courte à rallonger) franchement coûteux pour une famille dynamique riche.
+ * `Map` module-level : survit tant que le process serveur tourne, se repeuple
+ * tout seul après un redémarrage.
  */
 const variationsCache = new Map<string, OpeningVariation[]>();
 

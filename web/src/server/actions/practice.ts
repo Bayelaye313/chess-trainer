@@ -20,7 +20,12 @@ export async function getDeckOverviews(): Promise<DeckOverview[]> {
   return listDeckOverviews();
 }
 
-export async function getNextPuzzle(deckId: DeckId): Promise<DeckPuzzle | null> {
+/**
+ * `deckId` omis : n'importe quel puzzle dû, tous decks confondus — la Séance
+ * recommandée de l'accueil (`RecommendedPuzzleSession`) n'est pas scopée à un
+ * deck précis, voir `getNextDuePuzzle`.
+ */
+export async function getNextPuzzle(deckId?: DeckId): Promise<DeckPuzzle | null> {
   return getNextDuePuzzle(deckId);
 }
 

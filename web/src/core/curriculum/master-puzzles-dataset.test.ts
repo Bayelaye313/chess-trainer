@@ -49,7 +49,8 @@ const EXPECTED_MATE_PATTERN: Record<string, MatePattern> = {
  * Les 6 catégories `lichess_*` (`catalog.ts`, « Saturation Lichess ») sont des
  * réservoirs purs alimentés par le pipeline d'import, jamais par ce dataset
  * statique — voir leur docstring. La bijection stricte ci-dessous ne porte
- * donc que sur les 155 thèmes curatés d'origine.
+ * donc que sur les 165 thèmes curatés (155 d'origine + les 9 `pawn_structures`
+ * + le thème `pawn_weaknesses`).
  */
 const LICHESS_TAG_CATEGORIES = new Set([
   "lichess_motifs",
@@ -64,10 +65,10 @@ const CURATED_THEME_IDS = new Set(
 );
 
 describe("MASTER_PUZZLES_DATASET", () => {
-  it("a exactement une entrée par thème CURATÉ du catalogue — 155 au total", () => {
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(155);
+  it("a exactement une entrée par thème CURATÉ du catalogue — 165 au total", () => {
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(165);
     const datasetIds = new Set(MASTER_PUZZLES_DATASET.map((p) => p.themeId));
-    expect(datasetIds.size).toBe(155);
+    expect(datasetIds.size).toBe(165);
     for (const id of CURATED_THEME_IDS) expect(datasetIds.has(id)).toBe(true);
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
@@ -82,7 +83,7 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of lichessTagThemeIds) expect(datasetIds.has(id)).toBe(false);
   });
 
-  it("n'a aucune FEN dupliquée — 155 positions distinctes, pas de rotation d'une même base", () => {
+  it("n'a aucune FEN dupliquée — 165 positions distinctes, pas de rotation d'une même base", () => {
     const fens = MASTER_PUZZLES_DATASET.map((p) => p.fen);
     expect(new Set(fens).size).toBe(fens.length);
   });

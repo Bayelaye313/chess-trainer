@@ -7,7 +7,7 @@ import "server-only";
  * aux mutations déclenchées depuis un composant client).
  */
 import { Chess } from "chess.js";
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, lt } from "drizzle-orm";
 import { db } from "@/server/db";
 import { moveRowToAnalysedPly } from "@/server/db/mappers";
 import { games, moves, type Game, type GameResult, type MoveRow } from "@/server/db/schema";
@@ -154,11 +154,20 @@ export interface MasterpieceEntry {
 
 /**
  * Scanne l'historique complet des parties importées pour en extraire les
- * coups classés `!! Brillant` ou `! Critique` par `classify.ts` — le
- * « Hall of Fame » de l'onglet Rapport. Les plus récents d'abord : ce sont
- * les sacrifices/trouvailles les plus proches de la mémoire du joueur.
+ * coups classés `!! Brillant` et/ou `! Critique` par `classify.ts` — le
+ * « Hall of Fame » de la page `/rapport/brillants`. Les plus récents d'abord :
+ * ce sont les sacrifices/trouvailles les plus proches de la mémoire du joueur.
+ *
+ * `qualities` par défaut aux deux (compatibilité) ; la page « Historique des
+ * coups brillants » (`app/rapport/brillants/page.tsx`) restreint explicitement
+ * à `["brilliant"]` — son propre lien d'entrée (« Voir l'historique de mes
+ * coups brillants → ») ne promet QUE des chefs-d'œuvre, jamais des Critiques,
+ * bug utilisateur corrigé ici.
  */
-export async function listMasterpieces(limit = 30): Promise<MasterpieceEntry[]> {
+export async function listMasterpieces(
+  limit = 30,
+  qualities: readonly ("brilliant" | "critical")[] = ["brilliant", "critical"],
+): Promise<MasterpieceEntry[]> {
   const rows = await db
     .select({
       gameId: moves.gameId,
@@ -174,7 +183,7 @@ export async function listMasterpieces(limit = 30): Promise<MasterpieceEntry[]> 
     })
     .from(moves)
     .innerJoin(games, eq(games.id, moves.gameId))
-    .where(and(eq(moves.byPlayer, true), inArray(moves.quality, ["brilliant", "critical"])))
+    .where(and(eq(moves.byPlayer, true), inArray(moves.quality, qualities)))
     .orderBy(desc(games.playedAt))
     .limit(limit);
 
@@ -201,4 +210,39 @@ export async function listMasterpieces(limit = 30): Promise<MasterpieceEntry[]> 
     });
   }
   return entries;
+}
+
+export interface AdjacentGameIds {
+  /** Partie plus récente que `gameId` — juste au-dessus dans `listGamesSummary` (tri `desc(playedAt)`). */
+  previousGameId: string | null;
+  /** Partie plus ancienne que `gameId` — juste en dessous dans `listGamesSummary`. */
+  nextGameId: string | null;
+}
+
+/**
+ * Voisines chronologiques d'une partie ANALYSÉE (`pgn` non nul, même filtre
+ * que `listGamesSummary`) — alimente la navigation ◀ Précédente / Suivante ▶
+ * de `GameReviewScreen` (`app/analyse/[id]/page.tsx`) : permet de passer d'une
+ * partie analysée à une autre sans revenir à l'accueil (cahier des charges,
+ * action « Erreurs de partie »).
+ */
+export async function getAdjacentGameIds(gameId: string): Promise<AdjacentGameIds> {
+  const [current] = await db.select({ playedAt: games.playedAt }).from(games).where(eq(games.id, gameId)).limit(1);
+  if (!current) return { previousGameId: null, nextGameId: null };
+
+  const [newer] = await db
+    .select({ id: games.id })
+    .from(games)
+    .where(and(isNotNull(games.pgn), gt(games.playedAt, current.playedAt)))
+    .orderBy(asc(games.playedAt))
+    .limit(1);
+
+  const [older] = await db
+    .select({ id: games.id })
+    .from(games)
+    .where(and(isNotNull(games.pgn), lt(games.playedAt, current.playedAt)))
+    .orderBy(desc(games.playedAt))
+    .limit(1);
+
+  return { previousGameId: newer?.id ?? null, nextGameId: older?.id ?? null };
 }

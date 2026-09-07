@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { GameReviewScreen, type GameDeviation } from "@/client/features/games/game-review-screen";
-import { getGameDetail } from "@/server/queries/games";
+import { getAdjacentGameIds, getGameDetail } from "@/server/queries/games";
 import { getGameOpeningDeviation } from "@/server/queries/opening-mistakes";
 import { getOpeningDetail } from "@/server/queries/openings";
 
@@ -17,10 +17,10 @@ export default async function GameDetailPage({
    * catalogue (`getOpeningDetail`), jamais fait confiance à des paramètres
    * d'URL qui pourraient être périmés ou trafiqués.
    */
-  searchParams: Promise<{ openingId?: string; ply?: string }>;
+  searchParams: Promise<{ openingId?: string; ply?: string; reviewPly?: string }>;
 }) {
   const { id } = await params;
-  const { openingId, ply } = await searchParams;
+  const { openingId, ply, reviewPly } = await searchParams;
   const detail = await getGameDetail(id);
   if (!detail) notFound();
 
@@ -31,6 +31,10 @@ export default async function GameDetailPage({
   // déjà cataloguées dans le journal — voir le docstring du Coach
   // (`buildCoachMessage`, `coach-narrative.ts`).
   const deviation = resolveDeviation(openingId, ply) ?? (await getGameOpeningDeviation(id));
+  // Voisines chronologiques, pour la navigation ◀ Précédente / Suivante ▶ —
+  // permet de passer d'une partie analysée à une autre sans repasser par
+  // l'accueil (cahier des charges, action « Erreurs de partie »).
+  const adjacent = await getAdjacentGameIds(id);
 
   return (
     <GameReviewScreen
@@ -39,8 +43,17 @@ export default async function GameDetailPage({
       accuracy={detail.accuracy}
       overview={detail.overview}
       deviation={deviation}
+      initialPly={parseReviewPly(reviewPly, detail.timeline.length)}
+      previousGameId={adjacent.previousGameId}
+      nextGameId={adjacent.nextGameId}
     />
   );
+}
+
+function parseReviewPly(value: string | undefined, maxPly: number): number | null {
+  if (!value) return null;
+  const ply = Number(value);
+  return Number.isInteger(ply) && ply >= 0 && ply <= maxPly ? ply : null;
 }
 
 /**

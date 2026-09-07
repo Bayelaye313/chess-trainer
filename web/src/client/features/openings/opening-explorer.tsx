@@ -10,6 +10,7 @@ import type { VariationAccuracy } from "@/server/queries/opening-progress";
 import type { AnnotatedPly, OpeningVariation } from "@/server/queries/openings";
 import type { DrillRound } from "./build-final-test";
 import { OpeningDrill } from "./opening-drill";
+import { OpeningSparring } from "./opening-sparring";
 import { SIDE_LABEL, SideDot } from "./side-dot";
 import { StudyProgressBar } from "./study-progress-bar";
 import type { DrillSelection } from "./use-opening-drill";
@@ -149,6 +150,13 @@ export function OpeningExplorer({
         autoStart={autoStartSelection}
         inReviewQueue={drillVariationKey != null}
         onExit={() => router.push("/ouvertures")}
+      />
+      <OpeningSparring
+        openingId={opening.id}
+        openingName={opening.name}
+        variationKey={drillVariationKey ?? MAIN_LINE_VARIATION_KEY}
+        script={autoStartSelection.kind === "variation" ? autoStartSelection.variation.uciMoves : plies.map((ply) => ply.uci)}
+        playerSide={opening.side}
       />
     </div>
   );

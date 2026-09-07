@@ -155,6 +155,17 @@ export const OPPONENT_MOVE_SQUARE_COLOR =
   "color-mix(in srgb, var(--foreground-muted) 35%, transparent)";
 
 /**
+ * Anneau de surbrillance automatique du roi en échec/mat (`PuzzleBoard`, voir
+ * `core/chess/check.ts#kingInCheckSquare`) — retour utilisateur : sur
+ * certains puzzles le roi du joueur est déjà en échec au chargement, et rien
+ * ne le signalait avant qu'il ne cherche à comprendre pourquoi ses coups
+ * semblaient illégaux. Jeton `--quality-blunder` (danger), pas un fond plein
+ * comme `qualitySquareColor` : un ANNEAU (box-shadow) pour rester lisible
+ * même superposé à une autre surbrillance de case.
+ */
+export const CHECK_SQUARE_RING_COLOR = "var(--quality-blunder)";
+
+/**
  * Couleurs des flèches de lignes moteur (Mode Exploration), dégradées par
  * rang — dense pour le meilleur coup, de plus en plus discrète au-delà. Jetons
  * dédiés (`--engine-arrow-*`, voir globals.css) : une flèche qualifie une ligne
@@ -264,6 +275,7 @@ export const TERMINATION_LABEL: Record<Termination, string> = {
   insufficient_material: "matériel insuffisant",
   threefold_repetition: "répétition",
   fifty_move_rule: "règle des 50 coups",
+  resignation: "abandon",
 };
 
 export const IMPORT_SOURCE_LABEL: Record<Exclude<GameSource, "local">, string> = {

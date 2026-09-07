@@ -161,20 +161,38 @@ export function decideOpponentStep({
     return { type: "complete", reason: "line-complete" };
   }
 
-  if (!isOpponentTurn) return { type: "wait" }; // tour du joueur : rien à faire, on attend `onPieceDrop`.
+  // BUG CORRIGÉ (retour utilisateur direct, « Défense Benoni, reste bloqué —
+  // plus de guide, plus de coup valable, aucune conclusion ») : une fois la
+  // manche `diverged` (ou en mode Aléatoire, `!useScript`), la théorie peut
+  // s'épuiser des DEUX côtés, pas seulement pendant le tour de l'IA. Ce check
+  // vivait auparavant APRÈS `if (!isOpponentTurn) return wait` — quand
+  // l'impasse tombait tout juste sur le tour du JOUEUR (une position sur deux,
+  // pile ou face selon la parité du ply où la théorie s'arrête), la manche
+  // répondait `wait` pour toujours : plus aucun coup du joueur n'était jamais
+  // reconnu comme théorique (`freshContinuations` vide, voir `onPieceDrop`),
+  // mais rien ne détectait jamais cette impasse pour terminer proprement la
+  // manche — le plateau restait figé sans la moindre flèche de secours
+  // (`fallbackHintUci`, lui aussi tributaire d'une liste vide) ni conclusion.
+  // Symétrique à l'ancien filet de sécurité còté IA : la théorie épuisée met
+  // fin à la manche quel que soit le camp au trait.
+  if (!useScript || diverged) {
+    if (freshContinuations !== null) {
+      if (freshContinuations.length === 0) return { type: "complete", reason: "no-more-theory" };
+    } else if (continuationsFailed) {
+      // `continuationsFailed` : la requête a bien répondu, mais en échec, pour
+      // CETTE position — jamais un simple "pas encore arrivé", voir son
+      // docstring. Termine la manche plutôt que d'attendre pour toujours.
+      return { type: "complete", reason: "no-more-theory" };
+    }
+  }
+
+  if (!isOpponentTurn) return { type: "wait" }; // tour du joueur, théorie pas épuisée (voir ci-dessus) : on attend `onPieceDrop`.
 
   if (useScript && script && !diverged) {
     return { type: "play", uci: script[relativePlyIndex] };
   }
 
-  if (!freshContinuations) {
-    // `continuationsFailed` : la requête a bien répondu, mais en échec, pour
-    // CETTE position — jamais un simple "pas encore arrivé", voir son
-    // docstring. Termine la manche plutôt que d'attendre pour toujours.
-    if (continuationsFailed) return { type: "complete", reason: "no-more-theory" };
-    return { type: "wait" }; // pas encore prêt pour CETTE position, l'effet se redéclenchera.
-  }
-  if (freshContinuations.length === 0) return { type: "complete", reason: "no-more-theory" };
+  if (!freshContinuations) return { type: "wait" }; // pas encore prêt pour CETTE position, l'effet se redéclenchera.
   // Priorise les coups les plus joués par de vrais humains à cette position
   // (Lichess Opening Explorer) quand cette donnée est prête pour CETTE
   // position précise — sinon tirage uniforme, voir `pickOpponentContinuation`.
