@@ -12,6 +12,7 @@ export type CurriculumCategory =
   | "jesper_hall_course"
   | "pawn_structures"
   | "pawn_weaknesses"
+  | "middlegame"
   | "checkmate_patterns"
   | "tactical_motifs"
   | "sparring_positions"

@@ -21,8 +21,9 @@ import type { CurriculumThemeOverview } from "@/server/queries/curriculum";
  *    qui portent le tag Lichess `pawnEndgame`, voir `catalog.ts`), les 9
  *    thèmes `pawn_structures` (étude Lichess « Structures de pions » de
  *    Li-Pokamp — `data/import/academy/lichess_study_structures-de-pions_*.pgn`),
- *    et le thème `pawn_weaknesses` (étude Lichess « Pawn Structure » de
- *    Yushan — voir `course-lesson.ts` pour son format à plusieurs chapitres).
+ *    le thème `pawn_weaknesses` (étude Lichess « Pawn Structure » de
+ *    Yushan), et les 7 thèmes `middlegame` (études Lichess de NoseKnowsAll —
+ *    voir `course-lesson.ts` pour leur format à plusieurs chapitres).
  *  - `resolveLessonContent` : pour tout thème SANS entrée curatée (les ~180
  *    thèmes tactiques/mats/sparring restants, où le nom du motif est déjà
  *    auto-suffisant), un gabarit généré depuis les données déjà en base
@@ -702,6 +703,76 @@ export const CURATED_LESSONS: Record<string, LessonContent> = {
       "La case juste devant lui est presque toujours la vraie clé de la position : celui qui l'occupe (souvent avec un cavalier, hors de portée des pions) tient toute la chaîne, dans un sens comme dans l'autre.",
       "Un pion arriéré n'est pas condamné d'avance : s'il est bien défendu, si la case devant lui reste sous contrôle, ou si les pièces qui le gardent ont un rôle utile par ailleurs (défendre le roi, tenir une colonne), la position reste équilibrée.",
       "Le camp qui l'attaque cherche à multiplier les pièces qui le visent, à empêcher pour toujours son avance libératrice, et guette la moindre occasion tactique (souvent un échange forcé sur la case devant lui) pour le gagner ou le fixer définitivement.",
+    ],
+  },
+  "mg-les-cavaliers": {
+    objective:
+      "Dominer un cavalier adverse — avec un fou, des pions, une tour, le roi ou la dame — et sécuriser pour ton propre cavalier un avant-poste où il ne sera plus jamais chassé.",
+    keyIdeas: [
+      "Un fou exactement à trois cases d'un cavalier, ou une pièce exactement à deux cases en diagonale, couvre toutes ses cases d'avance — le cavalier est dominé, parfois pour le reste de la partie.",
+      "Un cavalier a besoin d'un point d'appui avancé (avant-poste) pour révéler tout son potentiel : un seul coup de pion bien choisi peut garder cette case sous contrôle pour toujours.",
+      "Deux pions d'aile suffisent déjà à dominer un cavalier relégué au bord de l'échiquier, et peuvent continuer d'avancer pour le repousser encore plus loin.",
+      "En finale dame ou tour contre cavalier, répète le motif : domine d'abord avec le roi, puis avec la pièce lourde, jusqu'à ce que le cavalier n'ait plus aucune case sûre.",
+    ],
+  },
+  "mg-les-fous": {
+    objective:
+      "Distinguer un bon fou d'un mauvais fou, mais surtout juger son ACTIVITÉ réelle — un mauvais fou actif vaut souvent bien plus qu'un bon fou inactif.",
+    keyIdeas: [
+      "Un bon fou est sur la couleur opposée à tes pions fixés ; un mauvais fou est sur la même couleur — mais « mauvais » ne veut pas dire « inactif » : juge toujours l'activité réelle avant l'étiquette.",
+      "Ton mauvais fou est presque toujours de la même couleur que le bon fou adverse : l'échanger contre lui laisse l'adversaire avec un seul mauvais fou — sauf si ce fou adverse est en réalité très actif.",
+      "Un mauvais fou peut légitimement défendre un bon pion depuis l'arrière, tant que ce pion restreint les pièces adverses — ne l'échange pas par réflexe.",
+      "Pour réactiver un mauvais fou coincé derrière sa propre chaîne de pions : retraite-le d'abord (il trouvera souvent une diagonale libre), ou sacrifie un pion pour ouvrir la diagonale qui lui manque.",
+    ],
+  },
+  "mg-les-tours": {
+    objective:
+      "Infiltrer une tour sur la 7e ou la 8e rangée adverse, contrôler une colonne ouverte jusqu'à sa vraie case d'infiltration, et connecter tes tours avant l'adversaire.",
+    keyIdeas: [
+      "Le rêve de toute tour est la 7e rangée (2e pour Noir) — mais ce qui compte vraiment, c'est d'attaquer les faiblesses adverses, où qu'elles se trouvent : parfois c'est la 6e rangée qu'il faut viser.",
+      "Contrôler une colonne ouverte ne sert que s'il existe une vraie case d'infiltration au bout — sinon, cède-la sans regret pour garder tes pièces actives ailleurs.",
+      "La dame est la pire pièce pour tenir une colonne ouverte (on la chasse trop facilement) ; une fois le contrôle assuré, double toujours tes tours dessus pour t'infiltrer.",
+      "Doubler les tours sur la 8e rangée mène presque toujours à une attaque directe contre le roi, même sans pion à y prendre — vise alors l'assaut total, pas le grignotage.",
+    ],
+  },
+  "mg-toujours-sacrifier-la-qualite": {
+    objective:
+      "Juger quand céder une tour contre un cavalier ou un fou (5 points contre 3) gagne tout de suite, quand c'est une vraie compensation positionnelle durable, et reconnaître les deux cas où il ne faut surtout pas le faire.",
+    keyIdeas: [
+      "Un vrai sacrifice de qualité échange une tour contre une compensation positionnelle DURABLE — jamais pour regagner le matériel tout de suite : une pièce mineure bien placée peut valoir mieux qu'une tour entière.",
+      "Avant de sacrifier, dresse la liste des pour et des contre pour chaque camp (pièces actives, pions faibles, cases fortes) — la compensation doit être concrète, pas seulement ressentie.",
+      "Exception 1 : si tu sacrifies pour l'initiative, cette initiative doit être RÉELLE — une attaque repoussée te laisse juste en moins de matériel, pour rien.",
+      "Exception 2 : dans une finale pure sans plus aucun avantage positionnel, la tour domine largement le cavalier ou le fou — ne laisse jamais un sacrifice de qualité te conduire jusque-là sans compensation.",
+    ],
+  },
+  "mg-cases-claires-et-cases-sombres": {
+    objective:
+      "Repérer un complexe de cases faible chez l'adversaire (tous ses pions fixés sur une seule couleur) et l'exploiter pièce après pièce, avant que la structure de pions ne se referme.",
+    keyIdeas: [
+      "Un complexe de cases faible n'est pas fatal en soi tant que peu de pièces peuvent l'exploiter — plus tu ajoutes de pièces capables de s'infiltrer sur les cases affaiblies, plus le déficit devient grave.",
+      "Le cavalier contrôle la couleur OPPOSÉE à celle où il se trouve : replante-le sur cette couleur pour frapper directement les cases affaiblies de l'autre.",
+      "La tour contrôle toujours un nombre égal de cases claires et sombres où qu'elle aille — elle est essentiellement daltonienne, contrairement au fou, au cavalier, à la dame et au roi.",
+      "Un pion (voire une pièce entière) sacrifié pour fixer définitivement les pions adverses sur une seule couleur est souvent rentable — surtout si l'adversaire perd le fou qui pourrait contester cette couleur.",
+    ],
+  },
+  "mg-parle-a-tes-pieces": {
+    objective:
+      "Mettre chaque pièce à la place qu'elle réclame pour trouver un plan sain quand aucun coup forcé ne s'impose — la méthode qui transforme une armée de pièces désordonnées en un plan cohérent.",
+    keyIdeas: [
+      "Un pion n'est pas une « pièce » : ne le développe jamais par réflexe — seule une pièce (cavalier, fou, tour, dame) se développe vraiment.",
+      "Dans une position calme, mets-toi à la place de chacune de tes pièces : où voudrait-elle être ? Quelle case l'empêche d'y aller ? Un long détour en vaut souvent la peine.",
+      "Une pièce mal placée révèle souvent un plan complet : la réactiver (retraite, manœuvre, échange favorable) libère en général plusieurs autres pièces du même coup.",
+      "Parler à ses pièces trouve un plan — mais calcule toujours les coups forcés avant de jouer : une bonne idée positionnelle qui ignore une tactique adverse perd quand même la partie.",
+    ],
+  },
+  "mg-les-pions-ne-sont-pas-des-personnes": {
+    objective:
+      "Sacrifier un pion sans hésiter dès qu'il active toutes tes pièces à la fois, et reconnaître les rares positions où, à l'inverse, un pion — ou une chaîne de pions — vaut réellement une pièce entière.",
+    keyIdeas: [
+      "« Les pions ne sont pas des personnes » : fais toujours passer les envies de tes pièces avant un souci de structure de pions ou un gain de matériel apparemment gratuit.",
+      "Un pion qui bloque l'accès d'une case clé à plusieurs de tes pièces à la fois est un traître qu'il faut parfois donner sans hésiter — la structure de pions est souvent surestimée face à l'activité des pièces.",
+      "En finale, fais toujours monter ton roi vers son poste le plus actif, même au prix d'un ou deux pions — c'est la pièce de finale la plus précieuse de toutes.",
+      "Exception : un pion sacrifié doit obtenir une vraie compensation dynamique en retour — et une chaîne de pions passés proche de la promotion peut, à l'inverse, valoir une pièce entière.",
     ],
   },
 };

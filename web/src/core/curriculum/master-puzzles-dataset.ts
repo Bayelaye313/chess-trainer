@@ -1,8 +1,9 @@
 /**
  * DATASET STATIQUE ET DÉCONNECTÉ — un puzzle réel et distinct par thème, pour
- * chacun des 165 thèmes curatés de l'académie « Apprendre » (141 d'origine +
+ * chacun des 172 thèmes curatés de l'académie « Apprendre » (141 d'origine +
  * les 14 de la catégorie « Endgame Mastery » + les 9 `pawn_structures` + le
- * thème `pawn_weaknesses`, voir le docstring de `catalog.ts`).
+ * thème `pawn_weaknesses` + les 7 `middlegame`, voir le docstring de
+ * `catalog.ts`).
  *
  * ## Pourquoi ce fichier remplace tout le pipeline dynamique précédent
  *
@@ -1399,5 +1400,67 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     solutionSan: ["Rxe5", "dxe5", "Rxd8+"],
     rating: 1500,
     sourceRef: "Position réelle de l'étude Lichess « Pawn Structure » de Yushan (« Backward Pawn: Make Your Opponent Suffer ») — la nécessité de défendre le pion arriéré d6 laisse échapper le pion e5. https://lichess.org/study/a8arx17S/f05zVwCO",
+  },
+  // ─────────────────────────────────────────────────────────────────────
+  // Le thème `middlegame` — 7 études Lichess complètes de NoseKnowsAll (voir
+  // `course-lesson.ts`) : un exercice par thème, tiré du chapitre « Exercise »
+  // de l'étude source elle-même (position + solution déjà données par
+  // NoseKnowsAll), jamais composé à la main.
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    themeId: "mg-les-cavaliers",
+    fen: "3r2r1/p1p2n1k/1p4p1/4p2p/PP2PP1P/4BP2/2K3R1/6R1 w - - 0 2",
+    solution: ["g2d2", "e5f4", "e3f4"],
+    solutionSan: ["Rd2", "exf4", "Bxf4"],
+    rating: 1750,
+    sourceRef: "Exercice 2 de l'étude Lichess « Knights » de NoseKnowsAll, adapté de Petrosian – Botvinnik, 1963 — le fou reprend sur f4 et domine aussitôt le cavalier f7. https://lichess.org/study/kI8ikTU4/0m3Rdf01",
+  },
+  {
+    themeId: "mg-les-fous",
+    fen: "r3kbnr/p4ppp/bpn1p3/2p5/4P3/2P2NP1/PP3PBP/RNBK3R w kq - 1 3",
+    solution: ["g2f1", "e8c8", "b1d2", "a6b7"],
+    solutionSan: ["Bf1", "O-O-O+", "Nbd2", "Bb7"],
+    rating: 1700,
+    sourceRef: "Exercice 3 de l'étude Lichess « Bishops » de NoseKnowsAll — le fou se redirige vers la grande diagonale plutôt que de s'échanger contre le fou mal placé en f1. https://lichess.org/study/kNn68T8l/FfZCrLSb",
+  },
+  {
+    themeId: "mg-les-tours",
+    fen: "3r3k/2Rb4/2p5/P1R4P/4P1p1/8/rP3PK1/8 w - - 0 1",
+    solution: ["c5e5", "d7e8", "e5e7", "a2a5", "e7h7", "h8g8", "c7g7", "g8f8", "h5h6"],
+    solutionSan: ["Re5", "Be8", "Ree7", "Rxa5", "Rh7+", "Kg8", "Rcg7+", "Kf8", "h6"],
+    rating: 1900,
+    sourceRef: "Exercice 4 de l'étude Lichess « Rooks » de NoseKnowsAll — les tours doublées créent un filet de mat imparable (Rh8# menacé) après h6. https://lichess.org/study/U7tTRtdj/PTOUuoVo",
+  },
+  {
+    themeId: "mg-toujours-sacrifier-la-qualite",
+    fen: "b2r2k1/2q3bp/1r4p1/p2nPp2/2pP1P2/2P4P/R1B1NQ1K/2B2R2 b - - 1 31",
+    solution: ["b6b3", "c2b3", "c4b3", "a2a4", "g7f8", "c1b2", "a8c6"],
+    solutionSan: ["Rb3", "Bxb3", "cxb3", "Ra4", "Bf8", "Bb2", "Bc6"],
+    rating: 2100,
+    sourceRef: "Exercice 3 de l'étude Lichess « Always sacrifice the exchange! » de NoseKnowsAll, tiré du tournoi des Candidats 1959, Smyslov – Gligorić. https://lichess.org/study/h3ccaYFE/Xoo9CRly",
+  },
+  {
+    themeId: "mg-cases-claires-et-cases-sombres",
+    fen: "3q1r2/5pkp/r1p1p1p1/p2p3n/4P3/2N2P2/PPPQ2P1/2KR3R w - - 0 16",
+    solution: ["g2g4", "h5f6", "d2h6", "g7g8", "e4e5"],
+    solutionSan: ["g4", "Nf6", "Qh6+", "Kg8", "e5"],
+    rating: 1650,
+    sourceRef: "Exercice 3 de l'étude Lichess « Light and Dark Squares » de NoseKnowsAll — après e5, le cavalier noir n'a plus aucune case sûre et Qxh7# est imparable. https://lichess.org/study/T3ixjwmg/6VkLbgOl",
+  },
+  {
+    themeId: "mg-parle-a-tes-pieces",
+    fen: "r4rk1/7p/2nq2p1/1pp1p1Q1/4P3/pPPP2P1/P4P2/R3RBK1 b - - 0 1",
+    solution: ["b5b4", "c3c4", "c6d4"],
+    solutionSan: ["b4", "c4", "Nd4"],
+    rating: 1800,
+    sourceRef: "Exercice 3 de l'étude Lichess « Talk to your pieces! » de NoseKnowsAll — le pion c3 dominait le cavalier ; une fois délogé, le cavalier rejoint enfin sa case de rêve d4. https://lichess.org/study/kjBSgqoA/xwGEKc63",
+  },
+  {
+    themeId: "mg-les-pions-ne-sont-pas-des-personnes",
+    fen: "3qr1k1/3n1pbp/3p2p1/1p1P4/2p1PPP1/1r2BB1P/1P2RQK1/R7 b - - 0 1",
+    solution: ["g6g5", "f4g5", "d7e5"],
+    solutionSan: ["g5", "fxg5", "Ne5"],
+    rating: 1950,
+    sourceRef: "Exercice 3 de l'étude Lichess « Pawns aren't people! » de NoseKnowsAll — le pion sacrifié n'a aucune importance, seule compte l'activation du cavalier sur e5. https://lichess.org/study/dYFcDtRq/RlyKOUux",
   },
 ];

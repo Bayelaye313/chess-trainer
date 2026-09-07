@@ -1,7 +1,7 @@
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
 
 /**
- * Catalogue statique des 221 thèmes de l'académie « Apprendre ».
+ * Catalogue statique des 228 thèmes de l'académie « Apprendre ».
  *
  * Pure donnée, comme `core/chess/decks.ts` pour les decks FSRS — mais ici elle
  * n'est pas consommée directement par l'UI : `server/queries/curriculum.ts` la
@@ -15,12 +15,13 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * en-tête) : `totalPuzzles` est la cible annoncée au catalogue, pas un
  * décompte de contenu déjà importé.
  *
- * ## Saturation Lichess — les 165 thèmes curatés + les 56 thèmes officiels
+ * ## Saturation Lichess — les 172 thèmes curatés + les 56 thèmes officiels
  *
- * Les 165 thèmes ci-dessus (8 catégories : Positional Mastery, cursus Jesper
+ * Les 172 thèmes ci-dessus (9 catégories : Positional Mastery, cursus Jesper
  * Hall, Structures de pions (Li-Pokamp), Faiblesses de pions (Yushan),
- * Checkmate Patterns, Tactical Motifs, Sparring Positions, Endgame Mastery)
- * sont des MODULES PÉDAGOGIQUES composés à la main — un titre français, une
+ * Milieu de partie (NoseKnowsAll), Checkmate Patterns, Tactical Motifs,
+ * Sparring Positions, Endgame Mastery) sont des MODULES PÉDAGOGIQUES composés
+ * à la main — un titre français, une
  * description, parfois un tag Lichess de repli pour amorcer le contenu (voir
  * `TACTICAL_MOTIF_LICHESS_TAGS` etc. plus bas).
  *
@@ -43,7 +44,7 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * aucun tag) aient TOUJOURS une case d'accueil exacte pour n'importe quel tag
  * rencontré, sans jamais avoir à improviser un rapprochement approximatif.
  *
- * Différence assumée avec les 165 thèmes curatés : ces 56 thèmes n'ont PAS
+ * Différence assumée avec les 172 thèmes curatés : ces 56 thèmes n'ont PAS
  * d'entrée dans `MASTER_PUZZLES_DATASET` (voir son docstring) — ce sont des
  * réservoirs purs, alimentés exclusivement par le pipeline d'import
  * (`data/import/academy/*.json` généré par les deux scripts ci-dessus), pas
@@ -111,6 +112,13 @@ export const CURRICULUM_CATEGORIES: readonly CurriculumCategoryMeta[] = [
     author: "Yushan",
     description:
       "Un vrai cours pas à pas, chapitre après chapitre, sur ce qui rend un pion durablement faible ou fort — tiré de l'étude Lichess « Pawn Structure ».",
+  },
+  {
+    id: "middlegame",
+    label: "Milieu de partie",
+    author: "NoseKnowsAll",
+    description:
+      "7 cours à plusieurs chapitres, chacun tiré d'une étude Lichess complète et distincte de NoseKnowsAll (staff pick Lichess) : dominer une pièce mineure, infiltrer avec les tours, juger un sacrifice de qualité, lire les complexes de cases, et bâtir un plan en parlant à ses pièces.",
   },
   // --- Les 6 catégories officielles de la taxonomie Lichess — voir le docstring de fichier ---
   {
@@ -379,6 +387,35 @@ const PAWN_WEAKNESS_DESCRIPTIONS: Record<string, string> = {
   "Le pion arriéré": "Un pion sans voisin pour l'appuyer, coincé derrière ses camarades : reconnaître quand il est mortel, et quand il tient bon.",
 };
 
+/**
+ * Catégorie `middlegame` — 7 cours à plusieurs chapitres (`COURSE_LESSONS`,
+ * voir `course-lesson.ts`), chacun repris d'une étude Lichess complète et
+ * distincte de NoseKnowsAll (staff pick Lichess) — cahier des charges du
+ * 2026-09-07 : « ajoutons Middlegame [...] sur l'onglet apprendre », avec la
+ * liste exacte des 8 études annoncées. Un 8e thème, « Morphy Simulator », a dû
+ * être omis : son étude Lichess (`LAV8k5kM`) est passée privée depuis
+ * l'annonce — voir le docstring de `course-lesson.ts` pour le détail.
+ */
+const MIDDLEGAME_TITLES = [
+  "Les cavaliers",
+  "Les fous",
+  "Les tours",
+  "Toujours sacrifier la qualité",
+  "Cases claires et cases sombres",
+  "Parle à tes pièces",
+  "Les pions ne sont pas des personnes",
+] as const;
+
+const MIDDLEGAME_DESCRIPTIONS: Record<string, string> = {
+  "Les cavaliers": "Dominer un cavalier adverse — avec un fou, des pions, une tour, le roi et la dame — et sécuriser un avant-poste où le tien ne sera plus jamais chassé.",
+  "Les fous": "Reconnaître un bon ou un mauvais fou, mais surtout juger son ACTIVITÉ réelle : un mauvais fou actif vaut souvent mieux qu'un bon fou enfermé.",
+  "Les tours": "Infiltrer une tour sur la 7e ou la 8e rangée, contrôler une colonne ouverte jusqu'à sa vraie case d'infiltration, et connecter ses tours avant l'adversaire.",
+  "Toujours sacrifier la qualité": "Juger quand céder une tour contre un cavalier ou un fou gagne tout de suite, quand c'est une vraie compensation positionnelle — et les deux cas où il ne faut surtout pas le faire.",
+  "Cases claires et cases sombres": "Repérer un complexe de cases faible chez l'adversaire et l'exploiter pièce après pièce, avant que la structure de pions ne le referme.",
+  "Parle à tes pièces": "Mettre chaque pièce à la place qu'elle réclame — la méthode pour trouver un plan quand aucun coup forcé ne s'impose.",
+  "Les pions ne sont pas des personnes": "Sacrifier un pion sans hésiter dès qu'il active toutes tes pièces à la fois — et reconnaître les rares positions où, à l'inverse, un pion vaut une pièce entière.",
+};
+
 const CHECKMATE_PATTERN_TITLES = [
   "Mat du couloir",
   "Mat de l'escalier",
@@ -579,6 +616,7 @@ const STRATEGIC_CURATED_ONLY_TITLES = new Set<string>([
   ...JESPER_HALL_TITLES,
   ...PAWN_STRUCTURE_TITLES,
   ...PAWN_WEAKNESS_TITLES,
+  ...MIDDLEGAME_TITLES,
 ]);
 
 /** Niveau tournoi explicitement : `master`/`masterVsMaster`/`superGM`/`crushing` — filtrés en plus sous `SPARRING_MIN_RATING` (Elo 2000) côté convertisseur, pour qu'un tag générique partagé avec les 2 tables ci-dessus ne fasse jamais glisser du contenu débutant dans ce module. */
@@ -830,6 +868,17 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
     () => undefined,
   ),
   ...buildCategory(
+    "middlegame",
+    "mg",
+    "NoseKnowsAll",
+    MIDDLEGAME_TITLES,
+    (title) => MIDDLEGAME_DESCRIPTIONS[title] ?? `${title} — un cours à plusieurs chapitres tiré d'une étude Lichess de NoseKnowsAll.`,
+    // Chaque cours suppose déjà les règles acquises (comme `pawn_weaknesses`) — jamais un module "débutant".
+    () => "intermediate",
+    // Curated-only intégral — voir `STRATEGIC_CURATED_ONLY_TITLES`.
+    () => undefined,
+  ),
+  ...buildCategory(
     "checkmate_patterns",
     "cm",
     null,
@@ -908,15 +957,16 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
   ),
 ];
 
-if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 221) {
+if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 228) {
   // Filet de sécurité pour toute future édition de ce fichier : le compte de
-  // 221 thèmes (155 curatés + 9 `pawn_structures` (Li-Pokamp) + 1
-  // `pawn_weaknesses` (Yushan) + 56 en bijection stricte avec les 6
-  // catégories officielles Lichess, voir « Saturation Lichess » dans le
-  // docstring de fichier — 58 tags officiels mais 56 thèmes, 2 doublons
-  // volontairement fusionnés) est une exigence du produit, pas un hasard —
-  // une régression silencieuse ici serait invisible en revue de code.
-  throw new Error(`CURRICULUM_THEMES doit contenir 221 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
+  // 228 thèmes (155 curatés + 9 `pawn_structures` (Li-Pokamp) + 1
+  // `pawn_weaknesses` (Yushan) + 7 `middlegame` (NoseKnowsAll, cahier des
+  // charges du 2026-09-07) + 56 en bijection stricte avec les 6 catégories
+  // officielles Lichess, voir « Saturation Lichess » dans le docstring de
+  // fichier — 58 tags officiels mais 56 thèmes, 2 doublons volontairement
+  // fusionnés) est une exigence du produit, pas un hasard — une régression
+  // silencieuse ici serait invisible en revue de code.
+  throw new Error(`CURRICULUM_THEMES doit contenir 228 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
