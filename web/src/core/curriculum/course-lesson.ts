@@ -142,18 +142,35 @@ export interface CourseLesson {
  * `jh-module-12-les-finales-de-fous-de-couleurs-opposees`.
  *
  * **Piège rencontré, à surveiller sur tout futur lot de cette bibliothèque :**
- * les fichiers `PILOT_03_*` à `PILOT_09_*` (21 des 30 parties) ont été
- * enregistrés par la session source sans accents français (bug d'encodage
- * de son côté, confirmé — `file` les détecte comme ASCII pur, alors que
- * `PILOT_01_*`/`PILOT_02_*` et un fichier de `PILOT_10_*` sont du vrai
- * UTF-8 accentué). Les accents ont été restaurés ICI, à l'import, via un
- * dictionnaire de mots + une liste de locutions exactes pour lever
+ * les fichiers `PILOT_03_*` à `PILOT_09_*` (21 des 30 parties du premier
+ * lot) ont été enregistrés par la session source sans accents français (bug
+ * d'encodage de son côté, confirmé — `file` les détecte comme ASCII pur,
+ * alors que `PILOT_01_*`/`PILOT_02_*` et un fichier de `PILOT_10_*` sont du
+ * vrai UTF-8 accentué). Les accents ont été restaurés ICI, à l'import, via
+ * un dictionnaire de mots + une liste de locutions exactes pour lever
  * l'ambiguïté française "a" (verbe avoir, jamais accentué) / "à"
  * (préposition, toujours accentuée) — jamais par un remplacement global
  * aveugle, qui aurait cassé les vraies occurrences du verbe. Un script
- * one-shot a servi à ce nettoyage (non conservé dans le dépôt) ; toute
- * nouvelle partie mal encodée envoyée par cette session sœur doit être
- * signalée pour correction À LA SOURCE plutôt que re-corrigée à la main ici.
+ * one-shot a servi à ce nettoyage (non conservé dans le dépôt). Signalé à la
+ * session source, qui a corrigé le bug : le second lot (6 thèmes
+ * supplémentaires, ci-dessous) est arrivé en UTF-8 propre, sans retouche
+ * nécessaire.
+ *
+ * ## Second lot — 6 thèmes de plus, 18 parties (2026-09-08, même journée)
+ *
+ * Même bibliothèque, même session source (relayée entre-temps par une
+ * session sœur parallèle, « devoir-python-2a », après un incident de
+ * collision de fichiers entre les deux résolu de leur côté) : 6 thèmes
+ * `positional_mastery` de plus, chacun avec 3 parties réelles sourcées et
+ * commentées, au même format un-commentaire-source = un-`CourseStep` que le
+ * premier lot ci-dessus.
+ *
+ * Correspondance thème PGN → thème catalogue (second lot) :
+ * Cavalier contre fou → `pm-cavalier-contre-fou-qui-domine` ; Pions
+ * pendants → `pm-les-pions-pendants` ; Pions doublés →
+ * `pm-doubler-les-pions-adverses` ; Pion passé protégé →
+ * `pm-le-pion-passe-protege` ; Colonne ouverte → `pm-la-colonne-ouverte` ;
+ * Colonne semi-ouverte → `pm-la-colonne-semi-ouverte`.
  */
 export const COURSE_LESSONS: Record<string, CourseLesson> = {
   "ps-formation-caro-kann": {
@@ -2711,6 +2728,454 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
         title: "Bojan Kurajica – Anatoly Karpov : coup 57",
         fen: "8/8/2p5/2Pp4/p2P3p/7k/7P/2Bb2K1 w - - 8 58",
         text: "Zugzwang final : le Fou blanc ne peut plus bouger sans perdre davantage de terrain, et le Roi blanc est totalement paralyse dans le coin. Blanc abandonne : une démonstration devenue célèbre (analysee ensuite comme « enigme de finale » par Karsten Muller) de la facon dont un avantage positionnel suffisant, avec des pions passes sur des ailes opposées, permet de vaincre la tendance au nul des Fous de couleurs opposées.",
+      },
+    ],
+  },
+  "pm-cavalier-contre-fou-qui-domine": {
+    steps: [
+      {
+        title: "Magnus Carlsen – Dmitry Jakovenko, Dortmund Sparkassen 2009",
+        fen: "r1bk1b1r/ppp2ppp/2p5/4Pn2/8/5N2/PPP2PPP/RNB2RK1 w - - 0 9",
+        text: "Le fameux « mur de Berlin » : Dame échangée dès le 8e coup, roi noir contraint à se déplacer, mais surtout Blanc vient d'échanger son Fou contre le Cavalier c6 noir. Noir se retrouve avec des pions doublés (c6 et c7) et sans Fou de cases claires pour les défendre, tandis que Blanc conservera un Cavalier. C'est la naissance de la lutte Cavalier contre Fou qui va dominer toute la fin de partie.",
+        moveSan: ["Nc3", "Ke8", "h3", "h5"],
+      },
+      {
+        title: "Magnus Carlsen – Dmitry Jakovenko : coup 24",
+        fen: "8/1pp1kp2/2p1b1p1/rr2P2p/p2R1N1P/P1P2P2/1P2R1P1/6K1 w - - 5 25",
+        text: "Position typique de finale Cavalier contre Fou : les pions noirs a4, c6 et c7 sont figés sur des cases où le Cavalier blanc pourra les attaquer depuis plusieurs angles, alors que le Fou noir, seul, ne peut surveiller qu'une seule couleur de case à la fois et doit courir d'un bout à l'autre de l'échiquier pour défendre les deux ailes.",
+        moveSan: ["Kf2", "Rxe5", "Rxe5", "Rxe5"],
+      },
+      {
+        title: "Magnus Carlsen – Dmitry Jakovenko : coup 43",
+        fen: "8/2p2p2/p1N1k2P/8/1P6/P3K3/8/5b2 b - - 0 43",
+        text: "Le pion h passé devient imparable : le Cavalier blanc, contrairement au Fou noir, peut à la fois soutenir sa propre poussée de pion ET continuer à harceler les faiblesses noires (a6, f7) — démonstration classique de la supériorité du Cavalier quand les pions adverses sont fixés sur les deux ailes.",
+        moveSan: ["Kf6", "Ne5", "Bb5", "Kd4"],
+      },
+      {
+        title: "Magnus Carlsen – Dmitry Jakovenko : coup 49",
+        fen: "8/2p5/p3N1k1/8/bP1K4/P7/8/8 b - - 3 49",
+        text: "Le Cavalier, en une seule manœuvre, vient de gober le pion f7 et fourchette maintenant les débris de la position noire ; le Fou, condamné à l'inactivité sur une seule diagonale, n'a jamais pu empêcher cette double action. Noir abandonne, sans pièces ni pions suffisants pour résister.",
+      },
+      {
+        title: "Robert James Fischer – Mark Taimanov, Fischer - Taimanov Candidates Quarterfinal 1971",
+        fen: "7r/1p1k1pp1/p4n1p/2p5/4RP2/6P1/PPP3BP/6K1 w - - 0 24",
+        text: "La finale de pièces mineures apparaît : Fou blanc (fianchetto, cases claires) contre Cavalier noir, avec des pions noirs c5/a6 déjà fixés sur l'aile dame.",
+        moveSan: ["Re5", "b6", "Bf1", "a5"],
+      },
+      {
+        title: "Robert James Fischer – Mark Taimanov : coup 45",
+        fen: "8/4n3/1p1k2p1/pBp2p1p/P4P1P/2PK2P1/1P6/8 w - - 2 46",
+        text: "Après l'échange des Tours, le Cavalier noir doit à lui seul surveiller les deux ailes du plateau — une tâche que le Fou blanc, capable de sauter d'une aile à l'autre en un coup, remplit bien plus facilement.",
+        moveSan: ["Be8", "Kd5", "Bf7+", "Kd6"],
+      },
+      {
+        title: "Robert James Fischer – Mark Taimanov : coup 62",
+        fen: "3k4/4n3/Kp4B1/p1p2p1p/P4P1P/2P3P1/1P6/8 b - - 0 62",
+        text: "Le sacrifice thématique : après trente coups de domination silencieuse, Fischer convertit enfin l'avantage positionnel en gain matériel décisif — le Cavalier ne pouvait défendre le pion g6 sans abandonner l'aile dame.",
+        moveSan: ["Nxg6", "Kxb6", "Kd7", "Kxc5"],
+      },
+      {
+        title: "Robert James Fischer – Mark Taimanov : coup 71",
+        fen: "1k6/8/1PK5/P4p1p/4nP1P/6P1/8/8 b - - 0 71",
+        text: "Le pion b, désormais imparable et hors d'atteinte du Cavalier isolé, décide la partie.",
+      },
+      {
+        title: "Veselin Topalov – Vladimir Kramnik, Kramnik - Topalov World Championship Match 2006",
+        fen: "rn1qkb1r/pp3pp1/2p1pnp1/3p4/2PP4/2N1P3/PP3PPP/R1BQKB1R w KQkq - 0 8",
+        text: "Coup-clé pour le thème : Blanc échange volontairement son propre Cavalier contre le Fou clair noir. Il conserve ainsi ses deux Fous pour la suite de la partie, pendant que Noir devra se contenter de pièces mineures moins harmonieuses (deux Cavaliers) dans une position qui va s'ouvrir.",
+        moveSan: ["a3", "Nbd7", "g3", "Be7"],
+      },
+      {
+        title: "Veselin Topalov – Vladimir Kramnik : coup 28",
+        fen: "1n1rrnk1/pq3pp1/2p3p1/4P3/1b1P3P/2N2BP1/1PQ5/3R1RBK w - - 3 29",
+        text: "La position s'est nettement ouverte : centre liquidé, colonnes semi-ouvertes, Rois en présence de pièces actives des deux côtés. C'est précisément le type de position où la paire de Fous doit démontrer sa supériorité sur les Cavaliers noirs, encore mal coordonnés.",
+        moveSan: ["Qg2", "Qc8", "Rc1", "Bxc3"],
+      },
+      {
+        title: "Veselin Topalov – Vladimir Kramnik : coup 31",
+        fen: "1nqrrnk1/p4pp1/2p3p1/4P3/3P3P/2P2BP1/6Q1/2R2RBK b - - 0 31",
+        text: "Dernier échange décisif du thème : le second Fou noir disparaît contre le second Cavalier blanc. Il ne reste donc plus sur l'échiquier QUE des Fous du côté blanc et QUE des Cavaliers du côté noir — la confrontation Fou contre Cavalier est désormais totale et va trancher la partie.",
+        moveSan: ["Ne6", "Bg4", "Qc7", "Rcd1"],
+      },
+      {
+        title: "Veselin Topalov – Vladimir Kramnik : coup 38",
+        fen: "3r2k1/p1q1rRpn/1np3p1/4P3/3P2BP/2P1B1P1/Q7/5R1K b - - 0 38",
+        text: "L'infiltration décisive : les deux Fous blancs, actifs sur des diagonales complémentaires (g4 et e3), dominent totalement des Cavaliers noirs relégués à la défense passive et incapables de coordonner une contre-attaque.",
+        moveSan: ["Nd5", "R7f3"],
+      },
+    ],
+  },
+  "pm-les-pions-pendants": {
+    steps: [
+      {
+        title: "Ossip Bernstein – Jose Raul Capablanca, Capablanca - Bernstein Match 1914",
+        fen: "r2q1rk1/p3bppp/Q4n2/2pp4/8/2N1PN2/PP3PPP/2R1K2R w K - 0 14",
+        text: "Les pions pendants c5 et d5 sont nés : deux pions adjacents, isolés de tout autre pion, séparés par une seule colonne libre entre eux. Ils sont une arme à double tranchant, ni faiblesse ni force en soi — tout dépendra de qui contrôle le rythme des événements.",
+        moveSan: ["O-O", "Qb6", "Qe2", "c4"],
+      },
+      {
+        title: "Ossip Bernstein – Jose Raul Capablanca : coup 15",
+        fen: "r4rk1/p3bppp/1q3n2/3p4/2p5/2N1PN2/PP2QPPP/2R2RK1 w - - 0 16",
+        text: "La démonstration classique de la force DYNAMIQUE des pions pendants : plutôt que de rester statiques et défendables, Capablanca les fait avancer. Ce coup gagne de l'espace, chasse les pièces blanches et transforme le doublet en un puissant duo offensif — bien loin d'une faiblesse.",
+        moveSan: ["Rfd1", "Rfd8", "Nd4", "Bb4"],
+      },
+      {
+        title: "Ossip Bernstein – Jose Raul Capablanca : coup 22",
+        fen: "2rr2k1/p4ppp/1q6/3n4/3N4/2p1P3/P1R1QPPP/3R2K1 w - - 0 23",
+        text: "Le pion pendant qui a le plus avancé (c4-c3) devient maintenant un pion passé très avancé, protégé et terriblement gênant : il cloue la Tour blanche à sa surveillance et prépare l'infiltration finale des pièces noires.",
+        moveSan: ["Rdc1", "Rc5", "Nb3", "Rc6"],
+      },
+      {
+        title: "Ossip Bernstein – Jose Raul Capablanca : coup 29",
+        fen: "3r2k1/p4ppp/8/8/8/2R1P3/Pq2QPPP/6K1 w - - 1 30",
+        text: "Le sacrifice final du pion c3 a ouvert toutes les lignes nécessaires à l'infiltration décisive de la Dame noire ; les pions pendants ont rempli leur rôle offensif jusqu'au bout. Blanc abandonne, sans parade satisfaisante face aux menaces combinées sur la 1e/2e rangée.",
+      },
+      {
+        title: "Tigran Petrosian – Efim Geller, Amsterdam Candidates 1956",
+        fen: "r1b2rk1/p3bppp/1qp2n2/3p4/5B2/2N3P1/PP2PPBP/R2Q1RK1 w - - 0 12",
+        text: "De nouveau les pions pendants noirs c6-d5 apparaissent après l'échange des Cavaliers. Petrosian, spécialiste de la lente asphyxie positionnelle, va démontrer sur près de 150 coups la faiblesse à long terme de ce doublet dès que le camp adverse contrôle patiemment le jeu de pièces.",
+        moveSan: ["Qc2", "Be6", "Be3", "Qa5"],
+      },
+      {
+        title: "Tigran Petrosian – Efim Geller : coup 23",
+        fen: "r3r1k1/p4ppp/1np5/2Np1b2/8/1P2P1P1/PR3PBP/R5K1 b - - 2 23",
+        text: "Le Cavalier s'installe sur l'avant-poste c5, juste devant les pions pendants : de là il les surveille en permanence et empêche toute activité, condamnant Noir à une défense purement passive.",
+        moveSan: ["Rec8", "Rc1", "a5", "e4"],
+      },
+      {
+        title: "Tigran Petrosian – Efim Geller : coup 25",
+        fen: "r1r3k1/5ppp/1np5/p1Np1b2/4P3/1P4P1/PR3PBP/2R3K1 b - - 0 25",
+        text: "Petrosian ouvre le jeu au centre pour son propre profit alors que les pions pendants noirs restent des cibles fixes incapables de bouger sans s'affaiblir davantage.",
+        moveSan: ["Bg6", "f4", "f6", "Bh3"],
+      },
+      {
+        title: "Tigran Petrosian – Efim Geller : coup 46",
+        fen: "2n5/2k3pp/P1N5/2Kp4/P7/6Pb/4B2P/8 b - - 0 46",
+        text: "Après des dizaines de coups de manœuvres patientes, le pion c6, dernière faiblesse structurelle issue des pions pendants initiaux, tombe enfin — Petrosian n'a fait que confirmer méthodiquement, sur toute la durée de la partie, que ce doublet de pions ne pouvait être défendu indéfiniment sans pièces actives.",
+        moveSan: ["Nb6", "Bb5", "Nd7+", "Kxd5"],
+      },
+      {
+        title: "Tigran Petrosian – Efim Geller : coup 73",
+        fen: "8/4n2p/1k2K3/6PP/8/8/8/8 b - - 3 73",
+        text: "Les pions passés blancs (h et g) sont désormais indéfendables pour le seul Cavalier noir ; Noir abandonne, clôturant l'une des démonstrations techniques les plus longues et les plus pures de l'histoire du jeu contre les pions pendants.",
+      },
+      {
+        title: "Akiba Rubinstein – Georg Salwe, Lodz 1908",
+        fen: "r1b1kb1r/p4ppp/1qp2n2/3p4/8/2N3P1/PP2PPBP/R1BQK2R w KQkq - 0 10",
+        text: "Les pions pendants noirs c6 et d5 apparaissent, mais cette fois affaiblis d'entrée : la case c5 devient un poste idéal pour une pièce blanche, et les deux pions ne peuvent être défendus que par des pièces (jamais par d'autres pions). Tout le plan de Rubinstein va consister à cibler méthodiquement ce doublet.",
+        moveSan: ["O-O", "Be7", "Na4", "Qb5"],
+      },
+      {
+        title: "Akiba Rubinstein – Georg Salwe : coup 15",
+        fen: "r4rk1/p3bppp/2p1bn2/1qBp4/N7/5PP1/PP2P1BP/2RQ1RK1 b - - 2 15",
+        text: "Le Fou s'installe précisément sur la case-clé libérée par l'échange des Cavaliers, attaquant directement la pièce qui défend le complexe c6-d5 et préparant l'échange des ultimes défenseurs noirs.",
+        moveSan: ["Rfe8", "Rf2", "Nd7", "Bxe7"],
+      },
+      {
+        title: "Akiba Rubinstein – Georg Salwe : coup 27",
+        fen: "1r4k1/r4ppp/pqR1b3/R2p4/1P1Q4/P3PPP1/7P/5BK1 b - - 0 27",
+        text: "Après avoir échangé toutes les pièces qui pouvaient défendre les pions pendants, Rubinstein récolte enfin le fruit de son plan : le pion c6 tombe, laissant Noir avec un pion d5 isolé et condamné, exactement la finalité recherchée contre une paire de pions pendants mal soutenue.",
+        moveSan: ["Qxc6", "Qxa7", "Ra8", "Qc5"],
+      },
+      {
+        title: "Akiba Rubinstein – Georg Salwe : coup 37",
+        fen: "1q4k1/2R2p2/1P1Qb1p1/r2p3p/p6P/P3PPP1/4BK2/8 w - - 1 38",
+        text: "La technique se transforme en course de pions : le pion b, soutenu par la Tour à la 7e rangée, devient imparable.",
+        moveSan: ["b7"],
+      },
+      {
+        title: "Akiba Rubinstein – Georg Salwe : coup 38",
+        fen: "1q4k1/1PR2p2/3Qb1p1/r2p3p/p6P/P3PPP1/4BK2/8 b - - 0 38",
+        text: "Le pion promeut au coup suivant, aucune parade possible.",
+      },
+    ],
+  },
+  "pm-doubler-les-pions-adverses": {
+    steps: [
+      {
+        title: "Robert James Fischer – Wolfgang Unzicker, Siegen ol (Men) fin-A 1970",
+        fen: "r1bqkbnr/1ppp1ppp/p1B5/4p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 4",
+        text: "Même plan que Lasker en 1914, mais avec 56 ans de raffinement technique en plus : Fischer double les pions c noirs puis, plutôt qu'une lente manœuvre de finale, choisit une expansion rapide au centre et à l'aile roi pour exploiter dynamiquement la faiblesse.",
+        moveSan: ["dxc6", "O-O", "f6", "d4"],
+      },
+      {
+        title: "Robert James Fischer – Wolfgang Unzicker : coup 14",
+        fen: "r1bq1rk1/1pp3pp/p1pb1p2/5P2/3NP3/3QB3/PPP3PP/R4RK1 b - - 0 14",
+        text: "La poussée thématique de la Ruy Lopez d'échange version Fischer : au lieu de chercher à créer un pion passé (impossible, les pions c noirs étant doublés), Blanc utilise son avantage d'espace pour lancer une attaque directe.",
+        moveSan: ["Qe7", "Bf4", "Bxf4", "Rxf4"],
+      },
+      {
+        title: "Robert James Fischer – Wolfgang Unzicker : coup 31",
+        fen: "2b5/1pp1r1pk/p4qNp/2p2P2/2Q3PP/2P5/PP2R3/6K1 b - - 8 31",
+        text: "Le Cavalier s'infiltre au cœur de la position noire, profitant de ce que les pions c doublés ne peuvent générer aucun contre-jeu sur l'aile dame pour compenser.",
+        moveSan: ["Rxe2", "Qxe2", "Bd7", "Qe7"],
+      },
+      {
+        title: "Robert James Fischer – Wolfgang Unzicker : coup 42",
+        fen: "8/1p1N2k1/p7/5Pp1/2p3P1/2P3K1/PP6/3b4 b - - 1 42",
+        text: "Le Cavalier blanc, seul maître du plateau face à une structure noire toujours marquée par les pions doublés du coup 4, décide la partie en finale.",
+      },
+      {
+        title: "Paul F Johner – Aron Nimzowitsch, Dresden 1926",
+        fen: "r1bq1rk1/pp1p1ppp/2n1pn2/2p5/2PP4/2bBPN2/PP3PPP/R1BQ1RK1 w - - 0 8",
+        text: "Mécanisme inverse des parties Lasker-Capablanca et Fischer-Unzicker : ici c'est Noir qui sacrifie sa paire de Fous pour doubler les pions adverses, selon l'idée maîtresse de la Nimzo-indienne que Nimzowitsch a lui-même théorisée.",
+        moveSan: ["bxc3", "d6", "Nd2", "b6"],
+      },
+      {
+        title: "Paul F Johner – Aron Nimzowitsch : coup 24",
+        fen: "2r3rk/3b1p1q/1p1p1n1n/p1pP2pp/P1P1pP2/2P1P1PP/3N2BK/R1B1Q1R1 w - - 0 25",
+        text: "Les pions c3/c4 doublés et le complexe de cases noires qui les entoure restent une faiblesse chronique tout au long de la partie ; Nimzowitsch peut désormais lancer sans crainte une attaque de pions à l'aile roi.",
+        moveSan: ["Nf1", "Rg7", "Ra2", "Nf5"],
+      },
+      {
+        title: "Paul F Johner – Aron Nimzowitsch : coup 33",
+        fen: "6rk/5prq/1p1p1n2/p1pP3p/P1P1pP1n/2P1R1Pb/2Q4K/2B2NRB w - - 0 34",
+        text: "Le Fou noir s'engouffre par les cases noires affaiblies autour du Roi blanc — conséquence directe de la structure de pions compromise depuis le coup 8.",
+        moveSan: ["Bxe4", "Bf5", "Bxf5", "Nxf5"],
+      },
+      {
+        title: "Paul F Johner – Aron Nimzowitsch : coup 40",
+        fen: "4r2k/5pr1/1p1p1n2/p1pP4/P1P2P1n/2P1N1pq/2Q1R1R1/2B2K2 w - - 6 41",
+        text: "La combinaison finale des pièces noires autour du Roi blanc, rendue possible par la faiblesse structurelle initiée par les pions doublés, force l'abandon quelques coups plus tard.",
+      },
+      {
+        title: "Emanuel Lasker – Jose Raul Capablanca, St. Petersburg 1914",
+        fen: "r1bqkbnr/1ppp1ppp/p1B5/4p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 4",
+        text: "Le coup fondateur du thème : Lasker échange son Fou contre le Cavalier pour doubler définitivement les pions c de Noir. En contrepartie Noir garde la paire de Fous, mais Lasker mise sur le très long terme — c'est la première grande démonstration de ce plan, qui inspirera toute une école (notamment Fischer, cf. le thème « Fischer contre Unzicker » dans cette même bibliothèque).",
+        moveSan: ["dxc6", "d4", "exd4", "Qxd4"],
+      },
+      {
+        title: "Emanuel Lasker – Jose Raul Capablanca : coup 14",
+        fen: "r3r1k1/1b2n1pp/pppp1p2/5P2/4P3/1NN5/PPP3PP/R4RK1 w - - 0 15",
+        text: "Les pions c doublés de Noir (c6/c7 à l'origine) sont maintenant fixés en c6 et d6 : ils ne peuvent plus jamais former un pion passé efficace, et constitueront une faiblesse structurelle pour toute la finale.",
+        moveSan: ["Nd4", "Rad8", "Ne6", "Rd7"],
+      },
+      {
+        title: "Emanuel Lasker – Jose Raul Capablanca : coup 35",
+        fen: "4k1r1/1b1r4/1nppNp2/1p2PPp1/1P4P1/2N3KR/2P5/7R b - - 0 35",
+        text: "Trente et un coups après le coup d'échange initial, la faiblesse structurelle finit par se concrétiser : Blanc ouvre définitivement les lignes vers le Roi noir, paralysé par ses propres pions doublés incapables de fournir un contre-jeu central.",
+        moveSan: ["dxe5", "Ne4", "Nd5", "N6c5"],
+      },
+      {
+        title: "Emanuel Lasker – Jose Raul Capablanca : coup 42",
+        fen: "R1bk1r2/7R/2p2p2/1pNnpPp1/1P4P1/6K1/2P5/8 b - - 7 42",
+        text: "Les Tours blanches, infiltrées sur la 7e et la 8e rangée, paralysent totalement les pièces noires ; Capablanca abandonne, écrasé par le plan initié trente-huit coups plus tôt.",
+      },
+    ],
+  },
+  "pm-le-pion-passe-protege": {
+    steps: [
+      {
+        title: "Levon Aronian – Viswanathan Anand, Morelia-Linares 2007",
+        fen: "r3r1k1/1p1n1ppp/2pB1nb1/1p1Pp3/4P2P/2N5/PP3PBP/3RR1K1 b - - 0 19",
+        text: "Le pion d, soutenu par le pion e4, devient un pion passé protégé dès ce 19e coup : il ne peut être capturé par aucun pion noir et va progressivement avancer, soutenu, jusqu'à la fin de la partie.",
+        moveSan: ["Nh5", "Bf1", "f6", "b3"],
+      },
+      {
+        title: "Levon Aronian – Viswanathan Anand : coup 31",
+        fen: "r1r3k1/1p2Bbpp/3P1pn1/1B2p3/P6P/8/5P1P/1R1R2K1 b - - 0 31",
+        text: "Le pion d, toujours protégé, s'enfonce encore plus profondément dans le camp noir, immobilisant totalement la coordination des pièces adverses.",
+        moveSan: ["Nxe7", "Bd7", "Nc6", "Rxb7"],
+      },
+      {
+        title: "Levon Aronian – Viswanathan Anand : coup 37",
+        fen: "1R2brk1/6pp/3P1p2/P3p3/3n3P/8/5P1P/1R4K1 b - - 0 37",
+        text: "Un second pion passé, cette fois sur l'aile a, se met en marche à son tour : les deux pions passés connectés a et d, en avançant de concert, débordent complètement les défenses noires — l'exemple même de la force décisive d'une paire de pions passés soutenus.",
+        moveSan: ["Nf3+", "Kf1", "Nd2+", "Ke1"],
+      },
+      {
+        title: "Levon Aronian – Viswanathan Anand : coup 44",
+        fen: "Q4R2/3k2pp/2b2p2/4p3/7P/8/5P1P/1n2K3 b - - 0 44",
+        text: "Le pion a atteint la 8e case en premier et promeut ; Blanc obtient une Dame supplémentaire et la partie est décidée.",
+        moveSan: ["Bxa8", "Rxa8", "h5", "Ra7+"],
+      },
+      {
+        title: "Robert James Fischer – Tigran Vartanovich Petrosian, Fischer - Petrosian Candidates Final 1971",
+        fen: "r1bqkbnr/3p1ppp/p1p1p3/8/4P3/3B4/PPP2PPP/RNBQK2R w KQkq - 0 7",
+        text: "Après cet échange, Noir n'a plus qu'un seul pion à l'aile dame (a6), alors que Blanc en garde deux (a2 et, bientôt, b4) : une majorité de pions 2 contre 1 qui, à terme, peut produire un pion passé protégé sur cette aile.",
+        moveSan: ["O-O", "d5", "c4", "Nf6"],
+      },
+      {
+        title: "Robert James Fischer – Tigran Vartanovich Petrosian : coup 18",
+        fen: "r5k1/4rppp/p3bn2/3p4/NP6/3B4/P4PPP/R3R1K1 b - - 0 18",
+        text: "La majorité de pions à l'aile dame prend forme : ce pion b4, à terme soutenu par a2-a3 ou par un Cavalier en c5, est la ressource positionnelle durable sur laquelle Fischer va appuyer toute la fin de partie — Petrosian, pourtant l'un des plus grands défenseurs de l'histoire, ne trouvera jamais de contre-jeu suffisant.",
+        moveSan: ["Kf8", "Nc5", "Bc8", "f3"],
+      },
+      {
+        title: "Robert James Fischer – Tigran Vartanovich Petrosian : coup 34",
+        fen: "r3k3/1R3R2/p2r2p1/5p2/1PBp1n1p/8/P2K2PP/8 b - - 1 34",
+        text: "Les deux Tours blanches infiltrées sur la 7e rangée, combinées à la menace toujours présente du pion passé protégé potentiel à l'aile dame, laissent Petrosian sans aucune ressource : il abandonne.",
+      },
+      {
+        title: "Vladimir Kramnik – Alexey Shirov, Tilburg Fontys 1997",
+        fen: "r2q1rk1/ppp1n2p/3pPbp1/5p2/1PP1Pp2/2N5/P3BPPP/2RQR1K1 b - - 0 15",
+        text: "Le pion d de Blanc s'engouffre en territoire noir. Protégé temporairement par la pression sur la case e6, il devient un formidable clou qui immobilise les pièces noires bien avant même d'être un pion passé « classique » sur une colonne ouverte.",
+        moveSan: ["Bxc3", "Rxc3", "fxe4", "Bf1"],
+      },
+      {
+        title: "Vladimir Kramnik – Alexey Shirov : coup 25",
+        fen: "r4rk1/pp2nR1p/4P1p1/2Qp2q1/1P6/8/P5PP/4RBK1 b - - 7 25",
+        text: "Le pion e6, désormais soutenu par la Tour f7, écrase littéralement la position noire : il ne peut être capturé sans perdre la Tour, et sa seule présence paralyse la défense noire sur la dernière rangée.",
+        moveSan: ["Rxf7", "exf7+", "Kxf7", "Qc7"],
+      },
+      {
+        title: "Vladimir Kramnik – Alexey Shirov : coup 36",
+        fen: "4rk2/4n2p/6p1/8/3Q4/P3R1P1/4B1KP/2q5 b - - 2 36",
+        text: "Le pion avancé e6, en clouant durablement la position noire pendant une dizaine de coups, a offert à Kramnik le temps nécessaire pour récolter tous les pions faibles noirs (b7, a7) et emporter la partie.",
+      },
+    ],
+  },
+  "pm-la-colonne-ouverte": {
+    steps: [
+      {
+        title: "Alexander Alekhine – Aron Nimzowitsch, San Remo 1930",
+        fen: "r4rk1/pb1qnppp/1pn1p3/1N1pP3/PP1P1P2/5N2/3Q2PP/R3KB1R w KQ - 1 14",
+        text: "La colonne c est désormais totalement ouverte : plus aucun pion, blanc ou noir, ne s'y trouve. Alekhine va y masser progressivement toutes ses pièces lourdes.",
+        moveSan: ["Nd6", "f5", "a5", "Nc8"],
+      },
+      {
+        title: "Alexander Alekhine – Aron Nimzowitsch : coup 22",
+        fen: "r1r1q1k1/p3n1p1/Ppn1p2p/1B1pPp2/1P1P1P2/5N2/2RQ2PP/2R3K1 b - - 5 22",
+        text: "Les deux Tours blanches sont désormais doublées sur la colonne c ouverte (c1 et c2).",
+        moveSan: ["Rab8", "Qe3", "Rc7", "Rc3"],
+      },
+      {
+        title: "Alexander Alekhine – Aron Nimzowitsch : coup 26",
+        fen: "1r3k2/p1rqn1p1/Ppn1p2p/1B1pPp2/1P1P1P2/2R2N2/2R3PP/2Q3K1 b - - 13 26",
+        text: "Le fameux « canon d'Alekhine » : Dame, Tour et Tour empilées sur la même colonne ouverte (c1-c2-c3), une puissance de feu qu'aucune pièce noire ne peut neutraliser puisque la colonne leur est entièrement fermée.",
+        moveSan: ["Rbc8", "Ba4", "b5", "Bxb5"],
+      },
+      {
+        title: "Alexander Alekhine – Aron Nimzowitsch : coup 30",
+        fen: "2rk4/p1rqn1p1/P1n1p2p/3pPp2/BP1P1P1P/2R2N2/2R3P1/2Q3K1 b - - 0 30",
+        text: "Totalement paralysé sur la colonne c et incapable du moindre coup utile, Nimzowitsch abandonne : la prise de possession complète de la colonne ouverte a suffi à décider la partie sans même qu'un sacrifice ne soit nécessaire.",
+      },
+      {
+        title: "Viswanathan Anand – Vassily Ivanchuk, Amber Rapidplay 2001",
+        fen: "3r4/4kpp1/p2prn1p/P1p5/1p2P3/5P1P/1PPR2P1/2NR2K1 w - - 8 29",
+        text: "Les Tours blanches occupent déjà la colonne d, mais elle reste pour l'instant à demi fermée par le pion d6 noir : c'est la prochaine étape, l'ouverture complète de la colonne, qui va donner tout son sens à cette occupation préalable.",
+        moveSan: ["Nd3", "Rd7", "b3", "g5"],
+      },
+      {
+        title: "Viswanathan Anand – Vassily Ivanchuk : coup 34",
+        fen: "4n3/4kp2/p2pr2p/Prp1P1p1/1pN5/1P3P1P/2PR1KP1/3R4 b - - 0 34",
+        text: "Le coup clé : Anand sacrifie un pion pour ouvrir définitivement la colonne d, sur laquelle ses Tours forment déjà une batterie depuis plusieurs coups.",
+        moveSan: ["dxe5", "Rd7+"],
+      },
+      {
+        title: "Viswanathan Anand – Vassily Ivanchuk : coup 35",
+        fen: "4n3/3Rkp2/p3r2p/Prp1p1p1/1pN5/1P3P1P/2P2KP1/3R4 b - - 1 35",
+        text: "La colonne à peine ouverte, la Tour blanche s'engouffre immédiatement sur la 7e rangée.",
+        moveSan: ["Kf6", "Ra7", "Kg6", "Rdd7"],
+      },
+      {
+        title: "Viswanathan Anand – Vassily Ivanchuk : coup 40",
+        fen: "R3n3/8/R3rpk1/Prp1p1p1/1pN4p/1P3P1P/2P2KP1/8 b - - 0 40",
+        text: "Les deux Tours blanches, maîtresses absolues de la 7e et de la 8e rangée grâce à la colonne d ouverte, ratissent méthodiquement tous les pions faibles noirs — exactement le plan décrit par Nimzowitsch dans « Mon Système ».",
+        moveSan: ["Nc7", "Rxe6", "Nxe6", "a6"],
+      },
+      {
+        title: "Anatoly Karpov – Wolfgang Uhlmann, Madrid 1973",
+        fen: "rnbqkbnr/pp3ppp/8/2pp4/3P4/8/PPPN1PPP/R1BQKBNR w KQkq - 0 5",
+        text: "La Française Tarrasch symétrique ouvre d'emblée totalement la colonne e : plus aucun pion ne s'y trouve, pour aucun des deux camps.",
+        moveSan: ["Ngf3", "Nc6", "Bb5", "Bd6"],
+      },
+      {
+        title: "Anatoly Karpov – Wolfgang Uhlmann : coup 26",
+        fen: "2rr2k1/1p2Rppp/6b1/pB1p4/P2P2P1/5P2/1P4P1/R5K1 b - - 2 26",
+        text: "Malgré la simplification en finale, Karpov s'empare en premier de la colonne e ouverte et plonge directement sur la 7e rangée.",
+        moveSan: ["b6", "Rae1", "h6", "Rb7"],
+      },
+      {
+        title: "Anatoly Karpov – Wolfgang Uhlmann : coup 28",
+        fen: "2rr2k1/1R3pp1/1p4bp/pB1p4/P2P2P1/5P2/1P4P1/4R1K1 b - - 1 28",
+        text: "Les deux Tours blanches, l'une sur la 7e rangée (b7), l'autre prête à la rejoindre, dominent toute la position à partir de la seule colonne ouverte disponible.",
+        moveSan: ["Rd6", "Ree7", "h5", "gxh5"],
+      },
+      {
+        title: "Anatoly Karpov – Wolfgang Uhlmann : coup 37",
+        fen: "8/1R2R1pk/1p4r1/pB1p2P1/P2PbP2/4K3/1Pr5/8 b - - 2 37",
+        text: "Les deux Tours occupent maintenant ensemble la 7e rangée d'un bout à l'autre : la position noire est totalement paralysée.",
+        moveSan: ["Rxb2", "Be8", "Rb3+", "Ke2"],
+      },
+    ],
+  },
+  "pm-la-colonne-semi-ouverte": {
+    steps: [
+      {
+        title: "Viswanathan Anand – Garry Kasparov, Kasparov - Anand PCA World Championship Match 1995",
+        fen: "3rr1k1/1p1bbppp/p2ppn2/q7/P3PP2/2NQBB2/1PP3PP/R2R3K b - - 3 16",
+        text: "Coup typique de la Scheveningen : la Tour blanche s'installe sur la colonne d, semi-ouverte pour Blanc puisque Noir y garde son pion arriéré d6, cible permanente de toute cette structure.",
+        moveSan: ["Bc6", "b4", "Qc7", "b5"],
+      },
+      {
+        title: "Viswanathan Anand – Garry Kasparov : coup 24",
+        fen: "r1q1r1k1/1p2bppp/1B1p1n2/1Q2P3/P1P1P3/5B2/6PP/1R1R3K b - - 0 24",
+        text: "La pression accumulée sur la colonne d, combinée à l'expansion à l'aile dame, force finalement Noir à cette ouverture centrale : le pion arriéré d6 disparaît, mais au prix d'un affaiblissement décisif des cases noires centrales (d5, e4).",
+        moveSan: ["dxe5", "a5", "Bf8", "h3"],
+      },
+      {
+        title: "Viswanathan Anand – Garry Kasparov : coup 27",
+        fen: "r3rbk1/1p3ppp/1B2qn2/PQ1Rp3/2P1P3/5B1P/6P1/1R5K b - - 2 27",
+        text: "La Tour, présente sur la colonne d depuis le coup 16, y trouve maintenant un point d'appui avancé et irrésistible.",
+        moveSan: ["Nxd5", "exd5", "Qg6", "c5"],
+      },
+      {
+        title: "Viswanathan Anand – Garry Kasparov : coup 35",
+        fen: "r4bk1/1Q3ppp/1B1Pq3/P1P5/8/4p1rP/4B1PK/6R1 b - - 2 35",
+        text: "L'ancienne faiblesse structurelle du pion d6, exploitée dès le coup 16 par la Tour sur la colonne semi-ouverte, a fini par se transformer en un pion d passé et décisif ; Kasparov, en position perdue, abandonne peu après.",
+      },
+      {
+        title: "Boris Spassky – Robert James Fischer, Spassky - Fischer World Championship Match 1972",
+        fen: "rnbqkb1r/pp3ppp/3p1n2/2pP4/8/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 6",
+        text: "Structure caractéristique du Benoni moderne : après cet échange, Noir n'a plus de pion e, alors que Blanc en garde un. La colonne e est donc semi-ouverte pour Noir — le plan thématique de tout le Benoni consiste précisément à y placer une Tour pour faire pression sur le futur pion e4 blanc.",
+        moveSan: ["Nc3", "g6", "Nd2", "Nbd7"],
+      },
+      {
+        title: "Boris Spassky – Robert James Fischer : coup 10",
+        fen: "r1bqr1k1/pp1n1pbp/3p1np1/2pP4/4P3/2N5/PP1NBPPP/R1BQ1RK1 w - - 5 11",
+        text: "Exactement le plan annoncé : la Tour vient immédiatement occuper la colonne semi-ouverte pour cibler le pion e4, qui devient une faiblesse permanente à surveiller pour Blanc pendant toute la partie.",
+        moveSan: ["Qc2", "Nh5", "Bxh5", "gxh5"],
+      },
+      {
+        title: "Boris Spassky – Robert James Fischer : coup 31",
+        fen: "4r1k1/3brpb1/3p2q1/1p1P3p/1Pp1PBp1/2N3P1/3QRP1P/4R1K1 b - - 5 31",
+        text: "Après vingt coups de pression sur la colonne semi-ouverte, Blanc doit garder ses deux Tours sur la défensive du pion e4 — une contrainte permanente que Fischer exploite pour lancer l'offensive décisive.",
+        moveSan: ["Bxc3", "Qxc3", "Rxe4", "Rxe4"],
+      },
+      {
+        title: "Boris Spassky – Robert James Fischer : coup 34",
+        fen: "6k1/3b1p2/3p4/1p1P3p/1Pp1qBp1/2Q3P1/5P1P/6K1 w - - 0 35",
+        text: "Le sacrifice de qualité de Fischer élimine enfin le pion e4 lui-même, aboutissant sur cette colonne à un gain matériel décisif : Noir a échangé une Tour contre Fou et pion, mais domine totalement avec Dame et Fou contre Dame.",
+        moveSan: ["Bh6", "Qg6", "Bc1", "Qb1"],
+      },
+      {
+        title: "Boris Spassky – Robert James Fischer : coup 41",
+        fen: "6k1/5p2/3p4/1p1P3p/1PpQ2p1/1q1b2P1/4KP1P/2B5 w - - 14 42",
+        text: "La première victoire de Fischer contre Spassky de toute leur carrière, tournant décisif du match.",
+      },
+      {
+        title: "Loek van Wely – Judit Polgar, VAM Hoogeveen 1997",
+        fen: "1bb1r1k1/1p4pp/r1q5/1N1p1p2/P1nBn1BN/4P1PP/5PK1/R3Q2R w - - 0 23",
+        text: "Noir sacrifie son pion f pour ouvrir une colonne f désormais semi-ouverte (Blanc garde son pion f2, Noir n'en a plus) : sa Tour va pouvoir y faire pression toute la partie.",
+        moveSan: ["Bxf5", "Rf8", "Bxc8", "Qxc8"],
+      },
+      {
+        title: "Loek van Wely – Judit Polgar : coup 27",
+        fen: "1bq2rk1/1p5p/7r/1N1p4/P1nBn1p1/4PNPP/R4PK1/3Q3R w - - 0 28",
+        text: "Le pion g noir disparaît à son tour au coup suivant, créant cette fois une colonne g semi-ouverte pour la Dame noire (Blanc garde son pion g3).",
+        moveSan: ["hxg4", "Rxh1", "Qxh1", "Qxg4"],
+      },
+      {
+        title: "Loek van Wely – Judit Polgar : coup 29",
+        fen: "1b3rk1/1p5p/8/1N1p4/P1nBn1q1/4PNP1/R4PK1/7Q w - - 0 30",
+        text: "Malgré le sacrifice de deux pions, Noir contrôle maintenant deux colonnes semi-ouvertes (f et g) avec sa Tour et sa Dame : une compensation dynamique largement suffisante face à la faiblesse du Roi blanc resté au centre.",
+        moveSan: ["Nh2", "Rxf2+"],
+      },
+      {
+        title: "Loek van Wely – Judit Polgar : coup 30",
+        fen: "1b4k1/1p5p/8/1N1p4/P1nBn1q1/4P1P1/R4rKN/7Q w - - 0 31",
+        text: "La Tour noire, restée maîtresse de la colonne f semi-ouverte depuis le coup 22, porte le coup décisif : Blanc abandonne devant la perte imminente de matériel et l'attaque irrésistible.",
       },
     ],
   },
