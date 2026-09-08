@@ -17,13 +17,13 @@ import type { CurriculumThemeOverview } from "@/server/queries/curriculum";
  *    le gabarit générique en dérivant `theme.description`, lui-même un
  *    "${title} — un module du cursus structuré du MI Jesper Hall." avant
  *    correction de `catalog.ts` — exactement le symptôme "copier-coller vide"
- *    signalé), les 5 thèmes "finale de pions" de `endgame_mastery` (ceux
- *    qui portent le tag Lichess `pawnEndgame`, voir `catalog.ts`), les 9
- *    thèmes `pawn_structures` (étude Lichess « Structures de pions » de
- *    Li-Pokamp — `data/import/academy/lichess_study_structures-de-pions_*.pgn`),
+ *    signalé), les 9 thèmes `pawn_structures` (étude Lichess « Structures de
+ *    pions » de Li-Pokamp — `data/import/academy/lichess_study_structures-de-pions_*.pgn`),
  *    le thème `pawn_weaknesses` (étude Lichess « Pawn Structure » de
- *    Yushan), et les 7 thèmes `middlegame` (études Lichess de NoseKnowsAll —
- *    voir `course-lesson.ts` pour leur format à plusieurs chapitres).
+ *    Yushan), les 7 thèmes `middlegame` (études Lichess de NoseKnowsAll), et
+ *    les 3 thèmes `endgame_mastery` (études Lichess de Jeremy Silman/AliJradi
+ *    et de MungosQerslen/nishka_d, cahier des charges du 2026-09-08 — voir
+ *    `course-lesson.ts` pour leur format à plusieurs chapitres).
  *  - `resolveLessonContent` : pour tout thème SANS entrée curatée (les ~180
  *    thèmes tactiques/mats/sparring restants, où le nom du motif est déjà
  *    auto-suffisant), un gabarit généré depuis les données déjà en base
@@ -34,7 +34,7 @@ export interface LessonContent {
   keyIdeas: readonly string[];
 }
 
-/** Clé = `CurriculumThemeOverview.id` (ex. `pm-le-mauvais-fou`, `eg-la-regle-du-carre`). */
+/** Clé = `CurriculumThemeOverview.id` (ex. `pm-le-mauvais-fou`, `eg-face-au-roi-seul`). */
 export const CURATED_LESSONS: Record<string, LessonContent> = {
   "pm-l-avant-poste-du-cavalier": {
     objective:
@@ -336,54 +336,34 @@ export const CURATED_LESSONS: Record<string, LessonContent> = {
       "Une majorité à l'aile dame est souvent plus précieuse qu'une majorité symétrique à l'aile roi : le pion passé y est plus éloigné des deux rois, donc plus difficile à stopper à temps en finale.",
     ],
   },
-  "eg-l-opposition-en-finale-de-pions": {
+  "eg-mats-de-force-ecrasante": {
     objective:
-      "Maîtriser l'outil le plus fondamental de toute finale roi + pion(s) : savoir qui « a » l'opposition, et pourquoi ce simple décompte de cases décide souvent, à lui seul, du résultat.",
+      "Connaître par cœur les mats de base à réaliser dès qu'un avantage matériel écrasant se présente — dame, tour, deux pièces lourdes, et le redoutable fou + cavalier.",
     keyIdeas: [
-      "Deux rois sont en opposition quand ils se font face avec un nombre impair de cases vides entre eux (le cas le plus courant : une seule case) — celui qui n'a PAS à jouer « a » l'opposition.",
-      "Avoir l'opposition force l'adversaire à céder du terrain : son roi doit s'écarter, ce qui ouvre souvent le chemin de la promotion à votre propre roi.",
-      "Comptez les cases AVANT d'engager la manœuvre : un coup de roi apparemment naturel peut céder l'opposition et transformer une position gagnante en position nulle, ou l'inverse.",
-      "L'opposition « à distance » (rois alignés par une colonne, rangée ou diagonale avec un nombre impair de cases vides) suit exactement la même logique, même à plusieurs cases d'écart.",
+      "Avec deux pièces lourdes (dame + tour, ou deux tours), la méthode la plus simple est l'« escalier » : chacune coupe le roi une ligne après l'autre jusqu'à le pousser au bord.",
+      "Une dame seule mate un roi seul en se plaçant comme un cavalier géant qui restreint la boîte à chaque coup — mais resserrer une case de trop, une fois le roi au bord, mène au pat, pas au mat.",
+      "Une dame bat aussi n'importe quelle pièce mineure seule (fou ou cavalier) avec exactement la même technique patiente : couper, réduire, puis mater à l'aide de son propre roi.",
+      "Le mat du fou et du cavalier est le plus dur des mats de base : le roi adverse ne peut être maté QUE dans le coin de la couleur de votre fou — jamais dans l'autre coin.",
     ],
   },
-  "eg-la-regle-du-carre": {
+  "eg-face-au-roi-seul": {
     objective:
-      "Déterminer en un coup d'œil, sans calculer une seule variante, si un roi peut rattraper un pion passé adverse qui court vers la promotion.",
+      "Savoir exactement quel matériel suffit à mater un roi seul (et lequel n'y suffit jamais), plus les deux outils qui décident toute finale de pions : la règle du carré et l'opposition.",
     keyIdeas: [
-      "Tracez mentalement un carré dont un côté va du pion jusqu'à sa case de promotion — si le roi adverse peut entrer dans ce carré à son prochain coup, il rattrape le pion ; sinon, c'est trop tard.",
-      "Le trait compte : si c'est au pion de jouer, dessinez le carré depuis sa case ACTUELLE ; si c'est au roi de jouer, il doit déjà être dans le carré ou pouvoir y entrer immédiatement.",
-      "Un roi qui commence hors du carré ne peut JAMAIS rattraper le pion, quel que soit le nombre de coups restants — inutile de calculer plus loin, la course est perdue.",
-      "La règle s'applique uniquement à un pion sans obstacle sur sa route — une pièce ou un pion ami sur son chemin change complètement le calcul.",
+      "Dame, tour, ou deux fous de cases de couleurs différentes matent toujours un roi seul, dans n'importe quel coin — deux cavaliers seuls, eux, ne peuvent JAMAIS forcer le mat contre une bonne défense.",
+      "Fou et cavalier matent, mais seulement dans le coin de la couleur du fou — la « manœuvre en W » (roi et cavalier en zigzag) est la technique de référence pour y pousser le roi adverse.",
+      "La « règle du carré » dit en un coup d'œil si un roi peut rattraper un pion passé adverse : trace un carré du pion à sa case de promotion — hors de ce carré, la course est perdue d'avance.",
+      "L'opposition (rois face à face, un nombre impair de cases vides entre eux) décide qui doit céder du terrain — la triangulation permet même de « perdre un temps » exprès pour forcer l'adversaire à jouer en premier.",
     ],
   },
-  "eg-le-pion-passe-decisif-en-finale": {
+  "eg-finales-de-pions-le-duel-des-rois": {
     objective:
-      "Reconnaître le moment où un pion passé cesse d'être un simple atout structurel et devient l'enjeu décisif qui doit dicter tous les coups suivants.",
+      "Distinguer, parmi neuf types de finales de rois et pions très proches en apparence, celles qui se gagnent de celles qui ne tiennent que la nulle — et la technique précise pour chaque cas.",
     keyIdeas: [
-      "En finale, un pion passé grandit en valeur à chaque échange de pièces — ce qui n'était qu'un atout en milieu de partie peut devenir l'unique critère qui décide de la partie.",
-      "Le camp qui le possède doit souvent SACRIFIER du matériel ailleurs pour garantir sa promotion — un pion qui va promouvoir vaut fréquemment plus qu'une pièce mineure entière.",
-      "Le camp adverse doit évaluer en priorité absolue s'il peut l'arrêter (voir « La règle du carré ») avant de songer à son propre plan — un pion passé ignoré gagne presque toujours la course.",
-      "Un pion passé ÉLOIGNÉ du roi adverse est structurellement plus fort qu'un pion passé central : plus il est loin, plus il coûte de temps au roi pour intervenir.",
-    ],
-  },
-  "eg-la-percee-de-pions": {
-    objective:
-      "Calculer un sacrifice de pion(s) qui ouvre une voie de promotion forcée à travers un mur de pions adverses apparemment infranchissable.",
-    keyIdeas: [
-      "Une percée de pions sacrifie délibérément un ou plusieurs pions pour en faire passer UN SEUL en position de promotion — comptez toujours le résultat final, jamais le matériel momentanément perdu.",
-      "Le motif le plus classique : pousser un pion au milieu de deux pions adverses alignés, de sorte que quelle que soit la reprise choisie, un autre pion ami passe derrière.",
-      "Une percée ne fonctionne que si le roi adverse ne peut pas intervenir à temps sur la case clé — vérifiez toujours sa position AVANT de sacrifier, pas après.",
-      "Ces séquences sont souvent forcées et se calculent jusqu'au bout (plusieurs coups à l'avance) — une percée de pions est l'un des rares moments de finale où un calcul tactique précis prime sur l'évaluation générale.",
-    ],
-  },
-  "eg-le-roi-actif-en-finale-de-pions": {
-    objective:
-      "Adopter le réflexe le plus important de toute finale : centraliser son roi le plus tôt possible, dès que le danger de mat a disparu.",
-    keyIdeas: [
-      "En finale, le roi devient une pièce offensive majeure — un roi actif au centre vaut souvent l'équivalent d'un pion supplémentaire en pratique, simplement par sa mobilité.",
-      "La règle empirique : dès que les dames (et souvent les pièces mineures dangereuses) ont quitté l'échiquier, marchez votre roi vers le centre AVANT même de penser à pousser vos pions.",
-      "Un roi actif peut à la fois soutenir ses propres pions passés ET attaquer les pions faibles adverses — deux rôles qu'un roi resté au bord de l'échiquier ne peut jamais remplir.",
-      "Comparez systématiquement l'activité des DEUX rois avant d'entrer dans une finale de pions par échange volontaire de pièces — un roi en retard d'un seul coup peut suffire à perdre la course.",
+      "Une même structure de pions peut être gagnante ou nulle selon un seul détail — la rangée où le roi capture le pion adverse, ou qui a l'opposition au bon moment.",
+      "Un pion isolé et passé ne doit JAMAIS être poussé trop tôt : gardez-le comme réserve de coups de tempo pendant que votre roi va chercher une autre entrée, à l'opposé.",
+      "Des pions connectés se couvrent l'un l'autre et valent plus que la somme de leurs cases : amenez d'abord le roi du côté le plus spacieux, puis sacrifiez un pion au bon moment pour ouvrir la voie à l'autre.",
+      "Face à un pion passé extérieur adverse en préparation, la priorité absolue est de l'empêcher de naître (verrouiller la case clé) — pas de courir après une fois qu'il existe déjà.",
     ],
   },
 

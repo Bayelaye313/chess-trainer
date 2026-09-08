@@ -1,7 +1,7 @@
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
 
 /**
- * Catalogue statique des 228 thèmes de l'académie « Apprendre ».
+ * Catalogue statique des 217 thèmes de l'académie « Apprendre ».
  *
  * Pure donnée, comme `core/chess/decks.ts` pour les decks FSRS — mais ici elle
  * n'est pas consommée directement par l'UI : `server/queries/curriculum.ts` la
@@ -15,9 +15,9 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * en-tête) : `totalPuzzles` est la cible annoncée au catalogue, pas un
  * décompte de contenu déjà importé.
  *
- * ## Saturation Lichess — les 172 thèmes curatés + les 56 thèmes officiels
+ * ## Saturation Lichess — les 161 thèmes curatés + les 56 thèmes officiels
  *
- * Les 172 thèmes ci-dessus (9 catégories : Positional Mastery, cursus Jesper
+ * Les 161 thèmes ci-dessus (9 catégories : Positional Mastery, cursus Jesper
  * Hall, Structures de pions (Li-Pokamp), Faiblesses de pions (Yushan),
  * Milieu de partie (NoseKnowsAll), Checkmate Patterns, Tactical Motifs,
  * Sparring Positions, Endgame Mastery) sont des MODULES PÉDAGOGIQUES composés
@@ -44,7 +44,7 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * aucun tag) aient TOUJOURS une case d'accueil exacte pour n'importe quel tag
  * rencontré, sans jamais avoir à improviser un rapprochement approximatif.
  *
- * Différence assumée avec les 172 thèmes curatés : ces 56 thèmes n'ont PAS
+ * Différence assumée avec les 161 thèmes curatés : ces 56 thèmes n'ont PAS
  * d'entrée dans `MASTER_PUZZLES_DATASET` (voir son docstring) — ce sont des
  * réservoirs purs, alimentés exclusivement par le pipeline d'import
  * (`data/import/academy/*.json` généré par les deux scripts ci-dessus), pas
@@ -97,7 +97,8 @@ export const CURRICULUM_CATEGORIES: readonly CurriculumCategoryMeta[] = [
     id: "endgame_mastery",
     label: "Endgame Mastery",
     author: null,
-    description: "Les finales qui décident la partie : pions, tours, pièces mineures — la technique qui convertit un avantage en victoire.",
+    description:
+      "3 cours à plusieurs chapitres, chacun tiré d'une étude Lichess distincte : les mats de base à connaître, les mats impossibles à contourner, et les finales de rois et pions qui décident la partie.",
   },
   {
     id: "pawn_structures",
@@ -416,6 +417,30 @@ const MIDDLEGAME_DESCRIPTIONS: Record<string, string> = {
   "Les pions ne sont pas des personnes": "Sacrifier un pion sans hésiter dès qu'il active toutes tes pièces à la fois — et reconnaître les rares positions où, à l'inverse, un pion vaut une pièce entière.",
 };
 
+/**
+ * Catégorie `endgame_mastery` — 3 cours à plusieurs chapitres
+ * (`COURSE_LESSONS`, voir `course-lesson.ts`), chacun repris d'une étude
+ * Lichess distincte fournie par l'utilisateur — cahier des charges du
+ * 2026-09-08 : « le endgame mastery peut être regroupé sous le format
+ * Lichess, avec tous les chapitres sous un cadre, on défile avec des
+ * commentaires et indices ». Remplace intégralement l'ancienne version de la
+ * catégorie (14 thèmes nourris par un pool de tags Lichess génériques —
+ * `pawnEndgame`/`rookEndgame`/`bishopEndgame`/`knightEndgame`/`endgame` —
+ * jamais un vrai cours) : voir le docstring de `course-lesson.ts` pour le
+ * détail des 3 études sources et les chapitres retenus dans chacune.
+ */
+const ENDGAME_MASTERY_TITLES = [
+  "Mats de force écrasante",
+  "Face au roi seul",
+  "Finales de pions : le duel des rois",
+] as const;
+
+const ENDGAME_MASTERY_DESCRIPTIONS: Record<string, string> = {
+  "Mats de force écrasante": "Les mats de base à connaître par cœur quand le matériel est écrasant — dame, tour, deux fous, et le redoutable fou + cavalier — tirés du « Complete Endgame Course » de Jeremy Silman.",
+  "Face au roi seul": "Quel matériel suffit à mater un roi seul (et lequel n'y suffit jamais), plus les deux outils qui décident toute finale de pions : la règle du carré et l'opposition.",
+  "Finales de pions : le duel des rois": "Neuf types de finales de rois et pions, du pion isolé aux pions connectés en passant par la course de pions — l'opposition, la triangulation et le sacrifice de pion au service du roi.",
+};
+
 const CHECKMATE_PATTERN_TITLES = [
   "Mat du couloir",
   "Mat de l'escalier",
@@ -574,7 +599,10 @@ const CHECKMATE_PATTERN_LICHESS_TAGS: Record<string, readonly string[]> = {
  * ne subdivise pas ses puzzles par plan stratégique nommé (« avant-poste du
  * cavalier », « structure Carlsbad »…) ni par tournoi 2026 : aucun tag ne
  * correspond à un titre précis ici, contrairement à `TACTICAL_MOTIF_LICHESS_TAGS`/
- * `CHECKMATE_PATTERN_LICHESS_TAGS`/`ENDGAME_MASTERY_LICHESS_TAGS` ci-dessus.
+ * `CHECKMATE_PATTERN_LICHESS_TAGS` ci-dessus — `endgame_mastery` avait
+ * auparavant sa propre table dédiée (`ENDGAME_MASTERY_LICHESS_TAGS`), retirée
+ * le 2026-09-08 quand la catégorie est devenue curated-only (voir le
+ * docstring de `ENDGAME_MASTERY_TITLES`).
  * Ces 3 tables associent donc chaque titre à un petit pool de tags Lichess
  * génériques mais réels (phase de partie, niveau, sacrifice…) — en dernière
  * priorité dans `PRIORITY_LICHESS_TAGS`
@@ -617,6 +645,7 @@ const STRATEGIC_CURATED_ONLY_TITLES = new Set<string>([
   ...PAWN_STRUCTURE_TITLES,
   ...PAWN_WEAKNESS_TITLES,
   ...MIDDLEGAME_TITLES,
+  ...ENDGAME_MASTERY_TITLES,
 ]);
 
 /** Niveau tournoi explicitement : `master`/`masterVsMaster`/`superGM`/`crushing` — filtrés en plus sous `SPARRING_MIN_RATING` (Elo 2000) côté convertisseur, pour qu'un tag générique partagé avec les 2 tables ci-dessus ne fasse jamais glisser du contenu débutant dans ce module. */
@@ -626,53 +655,6 @@ const SPARRING_POSITION_LICHESS_TAGS: Record<string, readonly string[]> = Object
     [["master", "masterVsMaster"], ["superGM", "crushing"], ["masterVsMaster", "advantage"]][index % 3],
   ]),
 );
-
-/**
- * Catégorie « Fins de partie » — seul vrai trou du catalogue face à Lichess
- * (voir le docstring de fichier) : pions, tours, pièces mineures, plus un
- * repli générique (`endgame`) pour la conversion pratique d'avantage.
- */
-const ENDGAME_MASTERY_TITLES = [
-  "L'opposition en finale de pions",
-  "La règle du carré",
-  "Le pion passé décisif en finale",
-  "La percée de pions",
-  "Le roi actif en finale de pions",
-  "La position de Lucena",
-  "La position de Philidor",
-  "La tour derrière le pion passé",
-  "Couper le roi en finale de tours",
-  "Fous de couleurs opposées : forteresse",
-  "Le mauvais fou en finale",
-  "Cavalier contre pions passés",
-  "Fou contre cavalier en finale",
-  "Finale pratique : convertir l'avantage",
-] as const;
-
-const ENDGAME_MASTERY_LICHESS_TAGS: Record<string, readonly string[]> = {
-  "L'opposition en finale de pions": ["pawnEndgame"],
-  "La règle du carré": ["pawnEndgame"],
-  "Le pion passé décisif en finale": ["pawnEndgame"],
-  "La percée de pions": ["pawnEndgame"],
-  "Le roi actif en finale de pions": ["pawnEndgame"],
-  "La position de Lucena": ["rookEndgame"],
-  "La position de Philidor": ["rookEndgame"],
-  "La tour derrière le pion passé": ["rookEndgame"],
-  "Couper le roi en finale de tours": ["rookEndgame"],
-  "Fous de couleurs opposées : forteresse": ["bishopEndgame"],
-  "Le mauvais fou en finale": ["bishopEndgame"],
-  "Cavalier contre pions passés": ["knightEndgame"],
-  "Fou contre cavalier en finale": ["bishopEndgame", "knightEndgame"],
-  // Repli générique : seul le tag de phase `endgame` (pas de sous-type précis) le nourrit.
-  "Finale pratique : convertir l'avantage": ["endgame"],
-};
-
-/** Finales de base (opposition, carré, pion passé) d'abord ; Lucena/Philidor et forteresses ensuite, plus exigeantes. */
-function endgameLevel(index: number): CurriculumLevel {
-  if (index < 5) return "beginner";
-  if (index < 9) return "intermediate";
-  return "advanced";
-}
 
 // ─────────────────────────────────────────────────────────────────────────
 // Les 6 catégories officielles Lichess — bijection stricte titre ↔ tag exact
@@ -911,9 +893,11 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
     "eg",
     null,
     ENDGAME_MASTERY_TITLES,
-    (title) => `Finale : ${title.toLowerCase()}.`,
-    endgameLevel,
-    (title) => ENDGAME_MASTERY_LICHESS_TAGS[title],
+    (title) => ENDGAME_MASTERY_DESCRIPTIONS[title] ?? `${title} — un cours à plusieurs chapitres tiré d'une étude Lichess de finales.`,
+    // Chaque cours suppose déjà les règles acquises (comme `middlegame`) — jamais un module "débutant".
+    () => "intermediate",
+    // Curated-only intégral — voir `STRATEGIC_CURATED_ONLY_TITLES`.
+    () => undefined,
   ),
   // --- Les 6 catégories officielles Lichess — voir « Saturation Lichess » dans le docstring de fichier ---
   ...buildLichessTagCategory(
@@ -957,16 +941,18 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
   ),
 ];
 
-if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 228) {
+if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 217) {
   // Filet de sécurité pour toute future édition de ce fichier : le compte de
-  // 228 thèmes (155 curatés + 9 `pawn_structures` (Li-Pokamp) + 1
-  // `pawn_weaknesses` (Yushan) + 7 `middlegame` (NoseKnowsAll, cahier des
-  // charges du 2026-09-07) + 56 en bijection stricte avec les 6 catégories
-  // officielles Lichess, voir « Saturation Lichess » dans le docstring de
-  // fichier — 58 tags officiels mais 56 thèmes, 2 doublons volontairement
-  // fusionnés) est une exigence du produit, pas un hasard — une régression
-  // silencieuse ici serait invisible en revue de code.
-  throw new Error(`CURRICULUM_THEMES doit contenir 228 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
+  // 217 thèmes (144 curatés (dont les 3 `endgame_mastery`, cahier des charges
+  // du 2026-09-08 — remplacent les 14 thèmes à tags Lichess génériques
+  // d'origine) + 9 `pawn_structures` (Li-Pokamp) + 1 `pawn_weaknesses`
+  // (Yushan) + 7 `middlegame` (NoseKnowsAll, cahier des charges du
+  // 2026-09-07) + 56 en bijection stricte avec les 6 catégories officielles
+  // Lichess, voir « Saturation Lichess » dans le docstring de fichier — 58
+  // tags officiels mais 56 thèmes, 2 doublons volontairement fusionnés) est
+  // une exigence du produit, pas un hasard — une régression silencieuse ici
+  // serait invisible en revue de code.
+  throw new Error(`CURRICULUM_THEMES doit contenir 217 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────

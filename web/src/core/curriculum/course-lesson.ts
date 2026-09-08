@@ -85,11 +85,75 @@ export interface CourseLesson {
  *   charges, « Morphy Simulator », a dû être omis : son étude
  *   (`https://lichess.org/study/LAV8k5kM`) est passée privée depuis
  *   l'annonce de NoseKnowsAll — son export PGN renvoie littéralement
- *   `private` en HTTP 403, aucun contenu réel à en tirer. Chaque `CourseStep`
- *   ici garde `fen` = position de DÉPART du chapitre source (jamais la
- *   position d'arrivée) ; `moveSan`, quand présent, est un PRÉFIXE RÉEL de la
- *   partie/ligne du chapitre rejoué depuis cette même position — jamais une
- *   suite reconstituée à la main.
+ *   `private` en HTTP 403, aucun contenu réel à en tirer.
+ * - Les 3 thèmes `eg-*` (catégorie `endgame_mastery`, cahier des charges du
+ *   2026-09-08 : « le endgame mastery peut être regroupé sous le format
+ *   Lichess, avec tous les chapitres sous un cadre, on défile avec des
+ *   commentaires et indices ») REMPLACENT l'ancienne version de la catégorie,
+ *   qui piochait dans le pipeline d'import de tags Lichess génériques
+ *   (`pawnEndgame`/`rookEndgame`/…) plutôt que de raconter un vrai cours.
+ *   Chacun reprend, chapitre par chapitre, une étude Lichess distincte
+ *   fournie par l'utilisateur : « eg-mats-de-force-ecrasante » vient du
+ *   « Complete Endgame Course » de Jeremy Silman annoté par AliJradi
+ *   (`https://lichess.org/study/EXprT7yo`) ; « eg-face-au-roi-seul » et
+ *   « eg-finales-de-pions-le-duel-des-rois » viennent respectivement de
+ *   « Master The Endgame (1) » et « Master The Endgame (2) » de MungosQerslen
+ *   et nishka_d (`https://lichess.org/study/g57WZOXL`,
+ *   `https://lichess.org/study/LNWy0uSa`). Chaque étude contient bien plus de
+ *   chapitres que ceux repris ici (variantes de puzzle faciles/moyennes/
+ *   difficiles, chapitres d'introduction ou de remerciements sans position
+ *   réelle) — seul un chapitre par sous-thème a été retenu, le plus riche en
+ *   commentaires pédagogiques, pour rester à une taille de cours comparable
+ *   aux 7 thèmes `mg-*`.
+ *
+ * Pour ces trois familles (`ps-*`/`pw-*`, `mg-*`, `eg-*`), chaque `CourseStep`
+ * garde `fen` = position de DÉPART du chapitre source (jamais la position
+ * d'arrivée) ; `moveSan`, quand présent, est un PRÉFIXE RÉEL de la
+ * partie/ligne du chapitre rejoué depuis cette même position — jamais une
+ * suite reconstituée à la main.
+ *
+ * ## Les 10 thèmes `pm-*`/`jh-*` enrichis de vraies parties commentées (2026-09-08)
+ *
+ * 10 thèmes qui n'avaient jusque-là qu'un seul exercice statique
+ * (`MASTER_PUZZLES_DATASET`) reçoivent ici, EN PLUS, un vrai cours à
+ * plusieurs chapitres — cahier des charges du 2026-09-08 : « importe et
+ * remplace » une bibliothèque de 30 parties historiques réelles (3 par
+ * thème), préparée par une session sœur (« devoir-python-18 ») pour un
+ * devoir universitaire, chaque partie sourcée (chessgames.com/Wikipedia/
+ * étude Lichess citée en tag `[Source]`) et déjà commentée en français aux
+ * moments clés (`devoir/Lichess_Studies_PGN/PILOT_*.pgn`, vérifiée
+ * python-chess par cette session sœur, PUIS rejouée et vérifiée une seconde
+ * fois ici avec chess.js — voir `course-lesson.test.ts`). Contrairement aux
+ * familles ci-dessus, ici CHAQUE commentaire de la partie source devient son
+ * propre `CourseStep` (pas un chapitre = un step) : le format PGN d'une
+ * partie n'a pas de découpage en chapitres comme une étude Lichess, donc
+ * chaque position commentée par l'annotateur original est reprise telle
+ * quelle, avec le coup suivant réel en `moveSan`.
+ *
+ * Correspondance thème PGN → thème catalogue :
+ * Avant-poste du cavalier → `pm-l-avant-poste-du-cavalier` ; Case faible →
+ * `pm-la-case-faible-dans-le-camp-adverse` ; Mauvais fou →
+ * `pm-le-mauvais-fou` ; IQP → `pm-le-pion-isole-de-la-dame` ; Carlsbad →
+ * `jh-module-3-la-structure-carlsbad` ; Maroczy Bind →
+ * `jh-module-4-la-structure-maroczy` ; Chaîne de pions →
+ * `jh-module-6-la-chaine-de-pions-en-francais` ; Attaque de minorité vs
+ * majorité → `jh-module-9-la-minorite-d-attaque` ; Finales de tours →
+ * `jh-module-11-les-finales-de-tours-pratiques` ; Fous de couleurs opposées →
+ * `jh-module-12-les-finales-de-fous-de-couleurs-opposees`.
+ *
+ * **Piège rencontré, à surveiller sur tout futur lot de cette bibliothèque :**
+ * les fichiers `PILOT_03_*` à `PILOT_09_*` (21 des 30 parties) ont été
+ * enregistrés par la session source sans accents français (bug d'encodage
+ * de son côté, confirmé — `file` les détecte comme ASCII pur, alors que
+ * `PILOT_01_*`/`PILOT_02_*` et un fichier de `PILOT_10_*` sont du vrai
+ * UTF-8 accentué). Les accents ont été restaurés ICI, à l'import, via un
+ * dictionnaire de mots + une liste de locutions exactes pour lever
+ * l'ambiguïté française "a" (verbe avoir, jamais accentué) / "à"
+ * (préposition, toujours accentuée) — jamais par un remplacement global
+ * aveugle, qui aurait cassé les vraies occurrences du verbe. Un script
+ * one-shot a servi à ce nettoyage (non conservé dans le dépôt) ; toute
+ * nouvelle partie mal encodée envoyée par cette session sœur doit être
+ * signalée pour correction À LA SOURCE plutôt que re-corrigée à la main ici.
  */
 export const COURSE_LESSONS: Record<string, CourseLesson> = {
   "ps-formation-caro-kann": {
@@ -1426,6 +1490,1227 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
         fen: "2q3k1/2pbbn2/1p1p1n2/1N1Pp1p1/1PP1PpP1/2NQ1P2/6B1/1KB5 b - - 0 34",
         text: "Le problème pour les Blancs : le pion g passé noir est bien plus fort que leur pion e arriéré, et chaque pièce noire est plus active que son homologue blanche. Un phalange de pions qui approche de la 8e rangée peut parfois valoir une pièce entière — si tu te retrouves dans une telle position, les pions redeviennent alors, exceptionnellement, des personnes.",
         moveSan: ["Nxg4", "fxg4", "Bxg4", "Bf3", "Bh3", "Bh5", "g4", "Ne2", "Bf1", "Qd1", "Bg2", "Bg6", "Ng5", "Nbc3", "Bf3", "Qf1", "Kg7", "Bf5", "Qh8", "Nxf4", "exf4", "Bxf4", "Bf6"],
+      },
+    ],
+  },
+  "eg-mats-de-force-ecrasante": {
+    steps: [
+      {
+        title: "L'escalier : deux pièces lourdes contre un roi",
+        fen: "8/8/3k4/8/8/3K4/5Q2/6R1 w - - 0 1",
+        text: "Avec deux pièces lourdes (dame et tour, ou deux tours) contre un roi seul, la méthode la plus simple est l'« escalier » : chaque pièce coupe le roi une rangée après l'autre, jusqu'à le pousser au bord de l'échiquier. Ici 1.Df5! empêche le roi noir de revenir sur la 5e rangée ; la tour prend ensuite le relais avec échec sur la 6e, puis la dame revient couper la 7e — le roi est mené marche par marche jusqu'à la dernière rangée, où 4.Tg8 mate. Le même principe fonctionne avec deux tours ou deux dames.",
+        moveSan: ["Qf5", "Kc6", "Rg6+", "Kc7", "Qf7+", "Kd8", "Rg8#"],
+        highlights: [{ square: "f5", color: "green" }],
+        arrows: [
+          { from: "f2", to: "f5", color: "green" },
+          { from: "f5", to: "a5", color: "green" },
+          { from: "f5", to: "h5", color: "green" },
+        ],
+      },
+      {
+        title: "Deux tours : la même idée, en pratique",
+        fen: "8/8/8/8/8/4k3/6R1/6RK w - - 0 1",
+        text: "Le même mat à l'escalier, cette fois avec deux tours : gardez-les toujours aussi loin que possible du roi adverse pendant qu'elles se relaient pour lui retirer une colonne, puis une rangée. Ce n'est pas la voie la plus rapide vers le mat, mais la plus simple à retenir : 1.Te1+! interdit d'emblée la colonne e, puis chaque tour, l'une après l'autre, chasse le roi noir vers le bord jusqu'au mat final.",
+        moveSan: ["Re1+", "Kd3", "Rg8", "Kd2", "Re7", "Kd3"],
+      },
+      {
+        title: "Mat à la dame seule",
+        fen: "8/8/8/3k4/8/8/8/6QK w - - 0 1",
+        text: "Seule contre un roi, la dame peut l'enfermer toute seule en se plaçant comme si elle était un cavalier à distance de mat : 1.Qe3! Kc4 2.Qd2! Kc5 3.Qd3! Kc6 4.Qd4! — à chaque coup, elle restreint un peu plus la boîte. Attention au piège classique : resserrer l'étau une case de trop mène au pat, pas au mat. Une fois le roi acculé sur le bord, c'est votre propre roi qu'il faut amener pour porter le coup de grâce.",
+        moveSan: ["Qe3", "Kc4", "Qd2", "Kc5", "Qd3", "Kc6", "Qd4"],
+      },
+      {
+        title: "Mat à la tour seule",
+        fen: "8/8/2k5/8/8/5R2/6K1/8 w - - 0 1",
+        text: "Avec la tour, la méthode est différente : elle seule referme la boîte en tenant une rangée ou une colonne à distance du roi adverse, pendant que votre roi s'avance faire tout le travail de rapprochement. 1.Tf5! Kd6 2.Rf3! Kc6 3.Re4! — la tour retire une ligne au roi noir, puis c'est au tour du roi blanc de s'approcher, jusqu'à ce que le roi noir soit en zugzwang et forcé de reculer jusqu'au mat.",
+        moveSan: ["Rf5", "Kd6", "Kf3", "Kc6", "Ke4", "Kd6", "Rh5"],
+      },
+      {
+        title: "La dame bat le fou",
+        fen: "8/8/3b4/6k1/8/8/2K5/Q7 w - - 0 1",
+        text: "Une dame seule bat toujours un fou seul, mais il faut la même méthode patiente qu'un mat à la dame : couper le roi, réduire l'espace, puis mater à l'aide du roi. Le fou ne peut qu'observer : 1.Qf1! Be5 2.Kd3! Kg6 3.Ke4! — le roi blanc s'avance pendant que la dame contrôle les diagonales, jusqu'au mat final.",
+        moveSan: ["Qf1", "Be5", "Kd3", "Kg6", "Ke4"],
+      },
+      {
+        title: "Fou et cavalier : la manœuvre en W",
+        fen: "7k/8/8/8/8/8/8/3NKB2 w - - 0 1",
+        text: "Le mat du fou et du cavalier est réputé le plus dur des mats de base : il faut piéger le roi adverse dans LE bon coin, celui de la couleur de votre fou (ici les cases claires, donc h8) — le pousser vers l'autre coin ne mène à rien. La méthode classique s'appelle la « manœuvre en W » : cavalier et roi avancent en zigzag pour repousser méthodiquement le roi adverse, pendant que le fou verrouille une diagonale à la fois. Ici le roi noir part déjà du bon côté : 1.Re2! Rg7 2.Re3! Rf6 3.Rf4! Rg6 4.Ce3! — toute la suite, jusqu'au mat final Cb7#, est un exemple réel et intégral de cette manœuvre.",
+        moveSan: ["Ke2", "Kg7", "Ke3", "Kf6", "Kf4", "Kg6", "Ne3", "Kf6"],
+      },
+    ],
+  },
+  "eg-face-au-roi-seul": {
+    steps: [
+      {
+        title: "Dame et roi contre roi seul",
+        fen: "8/8/8/8/3k4/8/8/2QK4 w - - 0 1",
+        text: "Le mat au roi et à la dame contre un roi seul est le plus simple de tous : imaginez la dame comme un cavalier géant qui donne échec à distance et grignote une rangée ou une colonne à chaque coup, jusqu'à repousser le roi adverse au bord de l'échiquier. 1.Dc2! Rd5 2.Dc3! Re4 3.Dd2! Re5 — la dame reste toujours à distance de cavalier du roi noir pour ne jamais lui laisser de repos. Une fois le roi acculé sur la dernière rangée, résistez à la tentation de resserrer encore l'étau : ce serait le pat. Amenez plutôt votre propre roi, et matez avec la dame juste à côté du vôtre.",
+        moveSan: ["Qc2", "Kd5", "Qc3", "Ke4", "Qd2", "Ke5"],
+      },
+      {
+        title: "Tour et roi contre roi seul",
+        fen: "8/8/8/8/8/3k4/8/2RK4 w - - 0 1",
+        text: "Avec la tour, la méthode est différente : elle seule referme la boîte en tenant une rangée ou une colonne à distance du roi adverse, pendant que votre roi s'avance faire tout le travail de rapprochement. 1.Tc2! Re3 2.Td2! Re4 3.Re2! — la tour retire une ligne au roi noir, puis c'est au tour du roi blanc de s'approcher. Une fois que la tour ne peut plus resserrer l'étau sans se faire attaquer, jouez un coup d'attente qui la garde protégée, jusqu'à ce que le roi noir soit forcé de reculer jusqu'au mat.",
+        moveSan: ["Rc2", "Ke3", "Rd2", "Ke4", "Ke2", "Kf4"],
+      },
+      {
+        title: "Deux fous contre roi seul",
+        fen: "8/8/8/8/4k3/8/8/3BBK2 w - - 0 1",
+        text: "Deux fous de cases de couleurs différentes matent un roi seul dans n'importe quel coin — contrairement au fou et au cavalier. Le duo avance en cage : les deux fous se soutiennent l'un l'autre sur des diagonales adjacentes pour grignoter l'espace du roi noir, avec l'aide du roi blanc dès que les fous ne peuvent plus avancer seuls. 1.Fd2! Rd4 2.Fc2! Rc4 3.Re2! — la cage se resserre jusqu'à ce que le roi noir soit poussé sur la dernière rangée, où l'opposition du roi blanc puis un dernier coup de fou délivrent le mat.",
+        moveSan: ["Bd2", "Kd4", "Bc2", "Kc4", "Ke2", "Kd4"],
+      },
+      {
+        title: "Fou et cavalier : le mat le plus dur",
+        fen: "4k3/8/8/8/8/8/3B4/4KN2 w - - 0 1",
+        text: "Le mat du fou et du cavalier est le plus difficile des quatre mats de base — jusqu'à 33 coups sont parfois nécessaires, et il faut connaître une règle précise : le roi adverse ne peut être maté QUE dans le coin de la couleur de votre fou (ici les cases claires : h8 ou a1), jamais dans l'autre coin. La technique de référence, la « manœuvre en W », consiste à faire avancer le cavalier et le roi en zigzag pour repousser méthodiquement le roi adverse vers le bon coin, pendant que le fou verrouille une diagonale à la fois. Dès que le roi tombe dans le mauvais coin, il faut le repousser patiemment vers l'autre — c'est précisément ce que montre cette partie, jusqu'au mat Fg7#.",
+        moveSan: ["Ke2", "Kd7", "Kd3", "Kd6", "Kd4", "Kc6"],
+      },
+      {
+        title: "Deux cavaliers ne matent pas",
+        fen: "7k/8/4N1K1/5N2/8/8/8/8 w - - 0 1",
+        text: "Deux cavaliers ne peuvent PAS forcer le mat contre un roi seul qui se défend bien — si vous obtenez cette position en partie, c'est une nulle automatique. Le mat n'arrive que si l'adversaire se trompe : ici, après l'erreur noire ...Rh8??, 1.Cf6! suivi de 2.Cf7 mate. Retenez surtout la leçon inverse : ne comptez jamais sur deux cavaliers seuls pour gagner une finale, ce matériel ne suffit pas à forcer quoi que ce soit.",
+        moveSan: ["Nf8", "Kg8", "Nd7", "Kh8", "Nd6", "Kg8", "Nf6+", "Kh8", "Nf7#"],
+      },
+      {
+        title: "La règle du carré",
+        fen: "8/8/8/8/8/P5k1/8/7K w - - 0 1",
+        text: "La « règle du carré » permet de savoir en un coup d'œil si un roi peut rattraper un pion adverse sans calculer une seule variante : trace un carré dont un côté va du pion jusqu'à sa case de promotion — si le roi adverse est DANS ce carré (ou peut y entrer immédiatement au trait), il rattrape le pion ; sinon, c'est trop tard. Ici, trait aux Blancs : le roi noir est hors du carré du pion a, et 1.a4! Rf4 2.a5! Re5 3.a6! Rd6 4.a7! Rc7 5.a8=D promeut avant que le roi n'ait pu revenir.",
+        moveSan: ["a4", "Kf4", "a5", "Ke5", "a6", "Kd6", "a7", "Kc7", "a8=Q"],
+      },
+      {
+        title: "L'opposition et les cases clés",
+        fen: "8/4k3/8/8/3KP3/8/8/8 w - - 0 1",
+        text: "L'opposition, c'est deux rois face à face avec une case (ou trois, ou même en diagonale) qui les sépare : si c'est à l'ADVERSAIRE de jouer dans cette position, il doit reculer — c'est vous qui « avez » l'opposition. Pour gagner une finale de roi et pion, il faut amener son roi devant son propre pion et y contrôler les « cases clés » (ici d6/e6/f6, à une rangée du pion) AVEC l'opposition : 1.Re5! Rd7 2.Rf6! Re8 3.e5! Rf8 4.e6! — le roi blanc garde toujours l'opposition, ce qui force le roi noir à céder du terrain jusqu'à la promotion. Sans l'opposition au bon moment, la même position ne serait que nulle.",
+        moveSan: ["Ke5", "Kd7", "Kf6", "Ke8", "e5", "Kf8", "e6"],
+        highlights: [
+          { square: "d6", color: "green" },
+          { square: "e6", color: "green" },
+          { square: "f6", color: "green" },
+        ],
+      },
+      {
+        title: "La triangulation : perdre un temps exprès",
+        fen: "2k5/8/p1P5/P2K4/8/8/8/8 w - - 1 2",
+        text: "Parfois vous êtes déjà en position gagnante... sauf que c'est à VOUS de jouer, alors que la même position serait gagnante au trait adverse. La « triangulation » consiste à faire un détour avec le roi — trois cases qui forment un triangle — pour revenir exactement à la même position, mais en ayant « perdu un temps » : c'est alors à l'adversaire de bouger. Ici 1.Rd4! Rd8 2.Rc4! Rc8 3.Rd5! Rd8 4.Rd6! — après ce détour, on retombe sur la position de départ, mais cette fois c'est Noir qui doit céder du terrain.",
+        moveSan: ["Kd4", "Kd8", "Kc4", "Kc8", "Kd5", "Kd8", "Kd6"],
+      },
+    ],
+  },
+  "eg-finales-de-pions-le-duel-des-rois": {
+    steps: [
+      {
+        title: "Roi et pion : la nulle par l'opposition",
+        fen: "8/8/5k2/8/8/8/5P2/5K2 w - - 0 1",
+        text: "La finale la plus fondamentale : roi et pion contre roi seul. Ici, le trait n'a AUCUNE importance — la position est nulle quel que soit qui doit jouer, car le roi noir contrôle déjà les cases clés devant le pion. Retenez la règle de survie si vous défendez une telle position : dès que le pion avance, allez TOUJOURS dans sa direction avec votre roi, jamais à l'opposé — c'est exactement ce que fait Noir ici, coup après coup, pour tenir la nulle jusqu'au bout.",
+        moveSan: ["Kg2", "Kg6", "Kg3", "Kg5", "Kf3", "Kf5", "Ke3", "Ke5"],
+        highlights: [
+          { square: "e4", color: "green" },
+          { square: "f4", color: "green" },
+          { square: "g4", color: "green" },
+        ],
+      },
+      {
+        title: "Même colonne, mais un rang plus haut : le gain",
+        fen: "4k3/8/4p3/4P3/8/3K4/8/8 w - - 0 1",
+        text: "Même position en apparence que la précédente — pions sur la même colonne — mais avec une différence capitale : ici, quand le roi blanc prend le pion noir, c'est déjà à la 6e rangée, donc le gain est garanti. Le seul coup gagnant est de partir chercher l'opposition sur le côté et de s'infiltrer dans le camp noir : 1.Rc4! Rd7 2.Rb5! Rc7 3.Rc5! Rd7 4.Rb6! — le roi blanc contourne, prend l'opposition diagonale puis normale, et s'invite dans le camp adverse jusqu'à croquer le pion en toute sécurité.",
+        moveSan: ["Kc4", "Kd7", "Kb5", "Kc7", "Kc5", "Kd7", "Kb6"],
+      },
+      {
+        title: "La course des pions... avec un piège",
+        fen: "8/6p1/7k/8/1K6/8/1P6/8 w - - 0 1",
+        text: "Les deux pions semblent promouvoir en même temps — une nulle logique. Mais c'est faux : le pion blanc promeut AVEC ÉCHEC, ce qui change tout. Le coup gagnant est étonnant : 1.Rc5! — le roi blanc rentre directement dans le carré de son PROPRE pion b, sans se soucier un instant du pion noir. Peu importe que le roi noir se rapproche du pion blanc : celui-ci promeut à temps, avec échec, ce qui laisse toujours le temps de revenir stopper le pion noir avant qu'il ne promeuve à son tour.",
+        moveSan: ["Kc5", "Kg6", "b4", "Kf7", "b5", "Ke7", "Kc6"],
+      },
+      {
+        title: "Le pion isolé : ne le poussez pas trop tôt",
+        fen: "8/8/8/k1p5/2P5/1K6/P7/8 w - - 0 1",
+        text: "Un pion isolé et passé (ici le pion a2) donne un avantage, mais il ne faut surtout pas se précipiter : le pousser trop tôt fermerait la porte au roi. La technique consiste à utiliser ce pion comme réserve de « coups de tempo » pendant que le roi va chercher une autre entrée dans le camp adverse, à l'opposé : 1.Ra3! Rb6 2.Rb2! Ra5 3.Rb3! Rb6 4.Rc3! — le roi blanc manœuvre patiemment vers l'aile roi, forçant le roi noir à faire des allers-retours, jusqu'à percer et gagner le pion c5.",
+        moveSan: ["Ka3", "Kb6", "Kb2", "Ka5", "Kb3", "Kb6", "Kc3"],
+      },
+      {
+        title: "Le pion de réserve qui sauve tout",
+        fen: "8/5p2/5P2/3k4/5K2/5P2/8/8 w - - 0 1",
+        text: "Le roi noir est plus actif, mais Blanc possède une ressource décisive : un pion f3 de réserve, qui sert de coup d'attente providentiel. Se précipiter avec 1.Rg5? perd le pion f6 après ...Re5! — il faut d'abord gagner un temps avec 1.Rf5! Rd6 2.f4! Rd5 3.Rg4! — désormais le roi blanc peut aller chercher le pion f7 sans jamais craindre de perdre l'opposition, précisément grâce au coup de réserve joué au bon moment.",
+        moveSan: ["Kf5", "Kd6", "f4", "Kd5", "Kg4", "Kd6", "Kh5"],
+      },
+      {
+        title: "Pions connectés bloqués : la défense par l'opposition",
+        fen: "8/8/8/5k2/6pP/6P1/5K2/8 w - - 0 1",
+        text: "Deux pions passés et connectés, bloqués l'un devant l'autre : la position semble perdue pour Noir, mais elle tient nulle avec une défense précise. Noir doit garder l'opposition — normale, ou à défaut diagonale, ou à défaut distante — à chaque instant, en restant toujours dans le carré du pion h. 1.Re3! Re5 2.Rd3! Rd5 3.Rc3! Re5! (l'opposition diagonale sauve la mise) 4.Rc4! Re4! — Noir jongle entre les trois types d'opposition sans jamais lâcher prise, et tient la nulle jusqu'au bout.",
+        moveSan: ["Ke3", "Ke5", "Kd3", "Kd5", "Kc3", "Ke5", "Kc4", "Ke4"],
+      },
+      {
+        title: "Pions connectés : le roi passe de l'autre côté",
+        fen: "8/8/5pk1/8/4PPK1/8/8/8 w - - 0 1",
+        text: "Deux pions connectés valent bien plus que la somme de leurs cases : ils se couvrent l'un l'autre. La bonne idée est d'amener le roi de l'AUTRE côté, là où il y a le plus d'espace, plutôt que de pousser les pions tout de suite : 1.Rf3! Rf7 2.Re3! Re6 3.Rd4! Rd6 4.f5! — dès que le roi noir doit céder l'opposition, un des deux pions se sacrifie au bon moment pour ouvrir la voie à l'autre, qui promeut. Règle générale à retenir : avancez toujours votre roi et soutenez vos pions — c'est la pièce la plus précieuse de la finale.",
+        moveSan: ["Kf3", "Kf7", "Ke3", "Ke6", "Kd4", "Kd6", "f5"],
+      },
+      {
+        title: "Deux pions contre un roi : le sacrifice qui gagne",
+        fen: "8/1k6/8/8/8/8/PPK5/8 w - - 0 1",
+        text: "Deux pions contre un roi seul : le gain est facile si on connaît la bonne méthode. Poussez d'abord les pions ensemble, puis laissez le roi prendre le relais : 1.b4! Rb6 2.a4! Ra6 3.Rb3! Rb6 4.Rc4! — dès que le roi noir bloque l'avance directe, la technique clé consiste à SACRIFIER un des deux pions au bon moment pour dégager la case de promotion de l'autre. Beaucoup de joueurs croient à tort que la position se referme sur une nulle, alors qu'un simple sacrifice de pion suffit à forcer le passage.",
+        moveSan: ["b4", "Kb6", "a4", "Ka6", "Kb3", "Kb6", "Kc4"],
+      },
+      {
+        title: "Empêcher le pion passé extérieur adverse",
+        fen: "8/8/2p5/1p3k2/5P2/5K2/1P6/8 w - - 0 1",
+        text: "Avec des pions des deux côtés, le premier réflexe adverse — créer un pion passé extérieur avec ...c5 pour détourner le roi blanc — doit être empêché immédiatement : 1.b4! (le seul coup gagnant : il verrouille la case c5 une fois pour toutes) Re6 2.Re4! Rf6 3.f5! — la finale se ramène ensuite à un simple roi et pion contre roi que vous savez déjà gagner.",
+        moveSan: ["b4", "Ke6", "Ke4", "Kf6", "f5", "Kf7", "Ke5"],
+      },
+    ],
+  },
+  "pm-l-avant-poste-du-cavalier": {
+    steps: [
+      {
+        title: "Isaac Boleslavsky – Georgy Lisitsin, USSR Championship 1956",
+        fen: "r4rk1/pp3pbp/3pbnp1/q3p3/4P3/2N1BP2/PPPQ2PP/1K1R1B1R w - - 2 13",
+        text: "Comme dans de nombreuses structures de Dragon, la case d5 est un trou définitif dans le camp noir : le pion c est parti en c5xd4, et Noir vient de jouer ...e5, donc plus aucun pion noir ne pourra jamais chasser une pièce blanche installée en d5.",
+        moveSan: ["a3", "Rfd8", "Nb5", "Qa4"],
+      },
+      {
+        title: "Isaac Boleslavsky – Georgy Lisitsin : coup 16",
+        fen: "r2r2k1/pp3pbp/3p1np1/4p3/q1b1P3/P1N1BP2/1P1Q2PP/1K1R1B1R b - - 1 16",
+        text: "Le Cavalier blanc revient, prêt à sauter sur l'avant-poste d5 dès que possible.",
+        moveSan: ["Qb3", "Bxc4", "Qxc4", "Bg5"],
+      },
+      {
+        title: "Isaac Boleslavsky – Georgy Lisitsin : coup 19",
+        fen: "r2r2k1/pp3pbp/3p1qp1/4p3/4P3/P1N2P2/1P1Q2PP/1K1R3R w - - 0 20",
+        text: "En échangeant le Fou contre le Cavalier f6, Blanc supprime la dernière pièce noire susceptible de surveiller la case d5.",
+        moveSan: ["Nd5"],
+      },
+      {
+        title: "Isaac Boleslavsky – Georgy Lisitsin : coup 20",
+        fen: "r2r2k1/pp3pbp/3p1qp1/3Np3/4P3/P4P2/1P1Q2PP/1K1R3R b - - 1 20",
+        text: "L'avant-poste est pris ! Ce Cavalier centralisé, inattaquable par un pion, coupe la Dame noire de la défense du roque et prépare directement l'assaut sur l'aile roi.",
+        moveSan: ["Qh4", "Qe2", "Bf8", "Qf1"],
+      },
+      {
+        title: "Isaac Boleslavsky – Georgy Lisitsin : coup 27",
+        fen: "2rr1bk1/pp3p1p/3p4/3Np1qR/4P1P1/P4P2/1P6/1K1R1Q2 b - - 1 27",
+        text: "Depuis sa base d'appui en d5, Blanc mobilise toutes ses pièces vers le roi adverse ; la Dame noire, elle, se retrouve isolée loin de sa défense.",
+        moveSan: ["Qg6", "g5", "h6", "Rxh6"],
+      },
+      {
+        title: "Isaac Boleslavsky – Georgy Lisitsin : coup 29",
+        fen: "2rr1bk1/pp3p2/3p2qR/3Np1P1/4P3/P4P2/1P6/1K1R1Q2 b - - 0 29",
+        text: "Le sacrifice décisif exploite directement la domination acquise grâce à l'avant-poste : le Cavalier d5 empêchait toute réorganisation défensive noire pendant que Blanc préparait cette percée.",
+        moveSan: ["Qxg5", "Rh5"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jan Hein Donner, GAK 1963",
+        fen: "r2q1rk1/pb1nbppp/1p2pn2/8/1P6/P4NP1/1B1NPPBP/R2Q1RK1 w - - 1 14",
+        text: "Contrairement à l'exemple sicilien précédent, ici l'avant-poste n'existe pas encore naturellement : c'est Botvinnik qui va le CRÉER de toutes pièces grâce à son expansion de pions a3-b4, puis a4-b5, en écartant les pions noirs qui pourraient un jour contrôler c6.",
+        moveSan: ["Nd4", "Bxg2", "Kxg2", "Qc7"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jan Hein Donner : coup 20",
+        fen: "r1r3k1/pq1nbppp/1p2pn2/1P6/3NP3/P4QP1/1B1N1PKP/R1R5 b - - 0 20",
+        text: "Ce coup fixe définitivement la case c6 comme trou dans le camp noir : plus aucun pion noir (a6, b6) ne pourra jamais la défendre après l'échange à venir sur a6.",
+        moveSan: ["a6", "Nc6"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jan Hein Donner : coup 21",
+        fen: "r1r3k1/1q1nbppp/ppN1pn2/1P6/4P3/P4QP1/1B1N1PKP/R1R5 b - - 1 21",
+        text: "L'avant-poste est occupé ! Le Cavalier blanc plonge en c6, profondément ancré dans le camp noir, attaquant la Dame et désorganisant complètement la coordination des pièces noires (Tours, Dame) qui doivent maintenant se contorsionner pour l'éviter.",
+        moveSan: ["Bf8", "a4", "axb5", "axb5"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jan Hein Donner : coup 25",
+        fen: "r3nbk1/1q1n1ppp/1pN1p3/1P6/4P3/5QP1/1B1N1PKP/3R4 w - - 3 26",
+        text: "Le Cavalier c6 continue de dominer la position même après l'échange des Tours : il empêche toute réorganisation harmonieuse des pièces noires.",
+        moveSan: ["Nc4", "Nc5", "e5", "Rc8"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jan Hein Donner : coup 29",
+        fen: "4nbk1/Rqr2ppp/1pN1p3/1Pn1P3/2N5/5QP1/1B3PKP/8 b - - 4 29",
+        text: "Grâce à la stabilité offerte par l'avant-poste en c6 pendant plusieurs coups, Botvinnik a eu le temps de faire progresser son attaque sur toute la largeur de l'échiquier jusqu'au gain décisif.",
+        moveSan: ["Qxa7", "Nxa7", "Rxa7", "Nxb6"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky, USSR Championship 1945",
+        fen: "r1b2rk1/ppq1bppp/2nppn2/8/3NPP2/2N1B3/PPP1B1PP/R3QRK1 b - - 2 10",
+        text: "Position typique de la Sicilienne Scheveningen. Notez déjà la case d5 : elle ne pourra plus jamais être défendue par un pion noir, puisque les pions c et e ont quitté leur colonne d'origine (c5 a disparu, et e6-e5 est le seul plan naturel pour Noir, ce qui abandonnerait définitivement d5). C'est la naissance potentielle d'un avant-poste pour le Cavalier blanc.",
+        moveSan: ["Nxd4", "Bxd4", "e5"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky : coup 11",
+        fen: "r1b2rk1/ppq1bppp/3p1n2/4p3/3BPP2/2N5/PPP1B1PP/R3QRK1 w - - 0 12",
+        text: "Noir doit jouer ce coup pour ne pas rester passif, mais il concède définitivement la case d5 : plus aucun pion noir ne peut la contrôler, et le Cavalier c6 qui aurait pu la surveiller vient d'être échangé.",
+        moveSan: ["Be3", "Be6", "f5", "Bc4"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky : coup 16",
+        fen: "r3r1k1/pp3ppp/3p1b2/4pP2/2q1P3/2N5/PPP3PP/R3QRK1 w - - 0 17",
+        text: "Dernier gardien potentiel de d5 éliminé : après cet échange, plus aucune pièce noire ne peut contester la case d5.",
+        moveSan: ["Nd5"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky : coup 17",
+        fen: "r3r1k1/pp3ppp/3p1b2/3NpP2/2q1P3/8/PPP3PP/R3QRK1 b - - 1 17",
+        text: "L'avant-poste est occupé ! Le Cavalier blanc s'installe sur d5, à l'abri de toute attaque de pion, soutenu par le pion e4. Il domine des cases clés (b6, c7, f6, e7) et paralyse la coordination des pièces noires.",
+        moveSan: ["Bd8", "c3", "b5", "b3"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky : coup 21",
+        fen: "2rbr1k1/p4ppp/3p4/1pqNpP2/4P3/1PP2R2/P5PP/R3Q2K b - - 4 21",
+        text: "Smyslov peut désormais transférer tranquillement sa Tour vers l'attaque, car le Cavalier sur d5 garantit la stabilité de sa position centrale : Noir n'a aucune contre-chance active.",
+        moveSan: ["Kh8", "f6", "gxf6", "Qh4"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky : coup 24",
+        fen: "2rb2rk/p4p1p/3p1N2/1pq1p3/4P2Q/1PP2R2/P5PP/R6K b - - 0 24",
+        text: "Le Cavalier, depuis son avant-poste, plonge directement dans la position noire pour lancer l'assaut final.",
+        moveSan: ["Rg7", "Rg3", "Bxf6", "Qxf6"],
+      },
+      {
+        title: "Vasily Smyslov – Iosif Rudakovsky : coup 29",
+        fen: "7k/p4prp/5Q2/1pqRp3/4P3/1PP5/P5PP/7K b - - 0 29",
+        text: "Blanc a gagné une pièce décisive ; la partie de la domination positionnelle (l'avant-poste en d5) a directement débouché sur un gain matériel puis la victoire.",
+      },
+    ],
+  },
+  "pm-la-case-faible-dans-le-camp-adverse": {
+    steps: [
+      {
+        title: "Mikhail Botvinnik – Jose Raul Capablanca, AVRO 1938",
+        fen: "r3r1k1/p2q1ppp/1p3n2/n2p4/P1pP4/2P1PPN1/1BQ3PP/4RRK1 b - - 0 18",
+        text: "A cause de la chaîne de pions blancs abîmée (a3, c3 doublé, plus de pion b), la case b3 ne pourra plus jamais être surveillée par un pion blanc : c'est un trou permanent dans le camp blanc.",
+        moveSan: ["Nb3"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jose Raul Capablanca : coup 18",
+        fen: "r3r1k1/p2q1ppp/1p3n2/3p4/P1pP4/1nP1PPN1/1BQ3PP/4RRK1 w - - 1 19",
+        text: "Capablanca occupe immédiatement cette case faible avec son Cavalier, créant un avant-poste inattaquable en plein cœur du camp adverse.",
+        moveSan: ["e4"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jose Raul Capablanca : coup 19",
+        fen: "r3r1k1/p2q1ppp/1p3n2/3p4/P1pPP3/1nP2PN1/1BQ3PP/4RRK1 b - - 0 19",
+        text: "Mais posséder une case faible occupée ne suffit pas si elle reste coupée du reste du jeu : Botvinnik démontre ici qu'une attaque centrale et royale bien menée peut largement compenser - et même l'emporter sur - une concession positionnelle de ce type. C'est une nuance pédagogique essentielle du thème.",
+        moveSan: ["Qxa4", "e5", "Nd7", "Qf2"],
+      },
+      {
+        title: "Mikhail Botvinnik – Jose Raul Capablanca : coup 34",
+        fen: "6k1/p3P2p/1p3Q2/3p3p/2pP4/qnP5/6PP/6K1 b - - 0 34",
+        text: "Le pion passé, poussé jusqu'à la 7e rangée pendant que le Cavalier noir restait spectateur sur b3, illustre la leçon finale : une case faible mal exploitée, ou compensée par une attaque adverse plus rapide ailleurs sur l'échiquier, ne garantit jamais la victoire à elle seule.",
+        moveSan: ["Qc1+", "Kf2", "Qc2+", "Kg3"],
+      },
+      {
+        title: "Robert James Fischer – Boris Spassky, World Chess Championship 1972 1972",
+        fen: "rnr3k1/4qpp1/p3b2p/1Bpp4/8/Q3PN2/PP3PPP/2R1K2R w K - 0 16",
+        text: "Ce coup fixe une faiblesse chronique dans le camp noir : le pion c5 est désormais isolé et ne pourra plus jamais être protégé par un pion. Plus important encore, la case d5 devient un trou permanent - aucun pion noir (ni le c, ni le e) ne pourra plus jamais la contrôler. C'est exactement le genre de case faible que Fischer va exploiter pendant toute la suite de la partie.",
+        moveSan: ["O-O", "Ra7", "Be2", "Nd7"],
+      },
+      {
+        title: "Robert James Fischer – Boris Spassky : coup 20",
+        fen: "2r2qk1/r2n2p1/p3p2p/2pp4/4P3/Q7/PP2BPPP/2R2RK1 b - - 0 20",
+        text: "Fischer ouvre le jeu pour exploiter au maximum la faiblesse structurelle du camp noir.",
+        moveSan: ["d4"],
+      },
+      {
+        title: "Robert James Fischer – Boris Spassky : coup 20",
+        fen: "2r2qk1/r2n2p1/p3p2p/2p5/3pP3/Q7/PP2BPPP/2R2RK1 w - - 0 21",
+        text: "Considéré unanimement par les commentateurs comme le tournant décisif : en figeant la structure, Spassky crée une nouvelle case faible en e6 et abandonne toute perspective de contre-jeu, laissant le Fou clair blanc dominer la diagonale a2-g8 à travers ce complexe de cases claires affaiblies (c5, d5, e6).",
+        moveSan: ["f4", "Qe7", "e5", "Rb8"],
+      },
+      {
+        title: "Robert James Fischer – Boris Spassky : coup 27",
+        fen: "1r3n1k/r3q1p1/7p/p1p1PR2/2Bp4/1P5Q/P5PP/2R3K1 b - - 0 27",
+        text: "Toutes les pièces blanches convergent désormais vers les cases faibles du camp noir (d5, e6, f5) que Noir ne peut plus défendre avec des pions.",
+        moveSan: ["Nh7", "Rcf1", "Qd8", "Qg3"],
+      },
+      {
+        title: "Robert James Fischer – Boris Spassky : coup 41",
+        fen: "4q2k/2r1r3/4PR1p/p1p5/P1Bp1Q1P/1P6/6P1/6K1 b - - 4 41",
+        text: "La domination totale des cases claires (d5, e6, f5) obtenue dès le milieu de partie a fini par asphyxier complètement la position noire, sans possibilité de résistance organisée.",
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov, World Chess Championship 1985 1985",
+        fen: "r2qr1k1/5ppp/p4n2/1pbP1bB1/1n6/N1N2B2/PP1Q1PPP/R4RK1 w - - 0 16",
+        text: "Grâce à l'échange des pions c et e survenu plus tôt, la case d3 ne pourra plus jamais être surveillée par un pion blanc : c'est un trou définitif au cœur même du camp blanc.",
+        moveSan: ["Rad1", "Nd3"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 16",
+        fen: "r2qr1k1/5ppp/p4n2/1pbP1bB1/8/N1Nn1B2/PP1Q1PPP/3R1RK1 w - - 2 17",
+        text: "Un coup devenu légendaire : le Cavalier noir s'installe sur d3, la fameuse case faible identifiée au coup précédent. Inatteignable par un pion, ce Cavalier devient un 'cavalier-pieuvre' (octopus knight) qui va tétaniser la coordination des pièces blanches pendant tout le reste de la partie.",
+        moveSan: ["Nab1", "h6", "Bh4", "b4"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 27",
+        fen: "2r1r1k1/3n1p2/5q1p/3P1bp1/Np6/1P1n2P1/Q4PBP/1N1R1RK1 b - - 1 27",
+        text: "Depuis dix coups déjà, le Cavalier ancré en d3 paralyse littéralement les pièces blanches, qui doivent sans cesse se réorganiser autour de lui sans jamais pouvoir le chasser ni l'échanger.",
+        moveSan: ["Bg6", "d6", "g4", "Qd2"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 34",
+        fen: "2r1r3/5pk1/6bp/8/Np1qnRP1/1P1Q2P1/6BP/1N1R3K b - - 0 34",
+        text: "Blanc parvient enfin à échanger ce Cavalier envahissant, mais beaucoup trop tard :",
+        moveSan: ["Nf2+"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 34",
+        fen: "2r1r3/5pk1/6bp/8/Np1q1RP1/1P1Q2P1/5nBP/1N1R3K w - - 1 35",
+        text: "Le point d'orgue de la partie : depuis son avant-poste, le Cavalier surgit avec un échec à la fourchette décisif sur Roi et Tour, illustrant parfaitement comment une pièce solidement enracinée sur une case faible adverse peut, au moment choisi, se transformer en arme tactique dévastatrice.",
+        moveSan: ["Rxf2", "Bxd3", "Rfd2", "Qe3"],
+      },
+    ],
+  },
+  "pm-le-mauvais-fou": {
+    steps: [
+      {
+        title: "Leonard William Barden – Nicolas Rossolimo, Hastings 1950/51 1950",
+        fen: "2r1k2r/1q2bpp1/p1bp3p/1p1NpP2/1Pn1P1P1/P2Q1B2/2P4P/2BR1RK1 b k - 4 21",
+        text: "Un coup à double tranchant : en échangeant sur d5, Blanc va lui-même fixer des pions sur des cases claires (d5, puis f5, g4 restent déjà là), exactement la couleur de son propre Fou f3.",
+        moveSan: ["Bxd5", "exd5"],
+      },
+      {
+        title: "Leonard William Barden – Nicolas Rossolimo : coup 22",
+        fen: "2r1k2r/1q2bpp1/p2p3p/1p1PpP2/1Pn3P1/P2Q1B2/2P4P/2BR1RK1 b k - 0 22",
+        text: "Voila le prix à payer : désormais Blanc ne possède plus qu'un Fou de cases claires condamné à évoluer derrière sa propre chaîne de pions clairs (d5, f5, g4). Ce Fou devra rivaliser avec le Cavalier noir, bien plus mobile dans une position semi-fermée.",
+        moveSan: ["Bg5", "Rfe1", "Qe7", "Be4"],
+      },
+      {
+        title: "Leonard William Barden – Nicolas Rossolimo : coup 28",
+        fen: "2r1k2r/5pp1/p2p1q2/1p1PpP2/1Pn3Q1/P2B4/2P4P/2R1R1K1 b k - 2 28",
+        text: "Le Fou blanc, en cases claires, reste cantonné à un rôle purement défensif : il n'a plus aucune perspective active tant que la structure de pions clairs de son propre camp bloque ses diagonales.",
+        moveSan: ["Rh4", "Qg3", "Nb6", "Re4"],
+      },
+      {
+        title: "Leonard William Barden – Nicolas Rossolimo : coup 31",
+        fen: "2r1k3/5pp1/p2p1q2/1p1npP1r/1P4R1/P2B2Q1/2P4P/2R3K1 w - - 0 32",
+        text: "Le Cavalier noir, lui, profite pleinement de sa mobilité pour s'emparer du pion d5 et s'installer au centre, tandis que le mauvais Fou blanc ne peut ni le chasser ni compenser cette perte.",
+        moveSan: ["Rxg7", "Nf4", "Rg8+", "Kd7"],
+      },
+      {
+        title: "Leonard William Barden – Nicolas Rossolimo : coup 38",
+        fen: "8/1k3p2/p2p3q/1p2pP1r/1P6/P2P4/7P/2R3QK b - - 0 38",
+        text: "Le mauvais Fou disparaît enfin de l'échiquier, mais beaucoup trop tard : privé pendant toute la partie d'un rôle actif, il n'a jamais pu aider à la défense du Roi blanc, désormais exposé à une attaque décisive.",
+        moveSan: ["Rxh2+"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov, World Chess Championship 1984/85 1984",
+        fen: "rnbqkbnr/pp3ppp/8/2pp4/3P4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 5",
+        text: "La Défense Tarrasch : Noir accepte un pion isolé en d5, une case claire, en échange d'un jeu de pièces actif. Tout l'enjeu stratégique de la partie va se jouer autour de la couleur de cette case.",
+        moveSan: ["g3", "Nf6", "Bg2", "Be7"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 44",
+        fen: "2b5/8/p2k1p2/1p1p1Bpp/3P3P/P4PP1/1PN2K2/8 b - - 0 44",
+        text: "Avec l'échange des derniers Cavaliers, il ne reste plus qu'un Fou noir contre un Cavalier blanc. Or ce Fou est de cases claires - exactement la couleur du pion isolé d5 qu'il doit défendre en permanence : c'est le manuel même du 'mauvais Fou', condamné à rester passif derrière son propre pion central.",
+        moveSan: ["Bxf5", "Ne3", "Bb1", "b4"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 53",
+        fen: "8/8/p2k1p2/1p1p3K/1P1P1N2/P4P2/8/3b4 w - - 7 54",
+        text: "Le Fou noir, mauvais depuis le milieu de partie, en est réduit à errer sans but dans les cases claires (b1, c2, d1) : il ne peut ni attaquer, ni défendre efficacement, pendant que le Roi et le Cavalier blancs devorent méthodiquement les pions noirs.",
+        moveSan: ["Kg6", "Ke7", "Nxd5+", "Ke6"],
+      },
+      {
+        title: "Anatoly Karpov – Garry Kasparov : coup 68",
+        fen: "8/8/3N4/1p6/1PkP4/P3K3/6b1/8 b - - 20 68",
+        text: "Jusqu'au bout, ce Fou reste incapable de coordonner la moindre résistance avec son Roi : l'infinie supériorité du Cavalier blanc, agile sur les deux couleurs de cases, face au Fou noir prisonnier de sa propre couleur, décide entièrement la finale.",
+        moveSan: ["Kb3", "Nxb5", "Ka4", "Nd6"],
+      },
+      {
+        title: "Tigran Petrosian – Bent Larsen, Second Piatigorsky Cup 1966",
+        fen: "1r2r1k1/3bqpb1/n2p1np1/pp5p/3Pp3/PP2P1PP/1B1NNPBK/2RQ1R2 w - - 0 20",
+        text: "Ce coup verrouillé la position : les pions noirs d5 (à venir) et e4 vont s'installer exactement sur la longue diagonale a8-h1, la même que celle du Fou blanc fianchetté en g2. Même fianchetté, ce Fou va se retrouver totalement etouffe par les propres pions de Blanc plus tard, et des maintenant par la chaîne adverse.",
+        moveSan: ["Nf4", "d5"],
+      },
+      {
+        title: "Tigran Petrosian – Bent Larsen : coup 20",
+        fen: "1r2r1k1/3bqpb1/n4np1/pp1p3p/3PpN2/PP2P1PP/1B1N1PBK/2RQ1R2 w - - 0 21",
+        text: "La chaîne de pions noirs d5-e4 obstrue complètement la diagonale du Fou blanc : la preuve qu'un fianchetto ne garantit jamais à lui seul un 'bon Fou' - tout depend de la structure de pions qui l'entoure.",
+        moveSan: ["Qe2", "Qd6", "Rc2", "Rec8"],
+      },
+      {
+        title: "Tigran Petrosian – Bent Larsen : coup 30",
+        fen: "2b3k1/2n2pb1/3q1np1/p2p4/Pp1PpN1P/1P2P1PB/1B2Q2K/5N2 b - - 2 30",
+        text: "Petrosian est contraint d'échanger lui-même ce Fou devenu inutile contre le Fou clair adverse : aveu positionnel que sa pièce était durablement mauvaise.",
+        moveSan: ["Bxh3", "Nxh3", "Bf8", "Kg2"],
+      },
+      {
+        title: "Tigran Petrosian – Bent Larsen : coup 60",
+        fen: "7q/8/2Qb4/p2p1nkn/Pp1Pp1p1/1P2P1P1/6K1/3NBN2 b - - 21 60",
+        text: "Malgré l'échange du mauvais Fou des le coup 30, Petrosian n'est jamais parvenu à effacer complètement le handicap positionnel initial : ses pièces restantes manquent de coordination face aux Cavaliers noirs, très actifs sur les deux couleurs de cases.",
+        moveSan: ["Bxg3", "Bxg3", "Nhxg3"],
+      },
+    ],
+  },
+  "pm-le-pion-isole-de-la-dame": {
+    steps: [
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar, Nottingham 1936",
+        fen: "r1bq1rk1/pp1nbppp/4pn2/6B1/2BP4/2N2N2/PP3PPP/R2Q1RK1 b - - 0 10",
+        text: "Voici de nouveau la structure du pion dame isolé, mais avec les couleurs inversées par rapport à la partie précédente : c'est Blanc, cette fois, qui possede le pion isolé en d4, et qui va l'utiliser comme moteur d'une attaque directe contre le roque noir.",
+        moveSan: ["Nb6", "Bb3", "Bd7", "Qd3"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 12",
+        fen: "r2q1rk1/pp1bbppp/1n2pn2/6B1/3P4/1BNQ1N2/PP3PPP/R4RK1 b - - 4 12",
+        text: "Un coup clé du systeme de Botvinnik : la Dame se place en d3, prête à rejoindre l'aile roi via g3 ou h3, en profitant de l'espace et du développement rapide que procuré l'IQP.",
+        moveSan: ["Nbd5", "Ne5", "Bc6", "Rad1"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 17",
+        fen: "r2q1rk1/pp2bppp/4pn2/3nN1B1/3P1P2/1B5Q/PP4PP/3R1RK1 b - - 0 17",
+        text: "Un enchainement typique avec un IQP : Blanc prépare f4-f5 pour ouvrir les lignes vers le roi noir tant que ses pièces restent actives - il faut attaquer avant que la faiblesse structurelle du pion isolé ne se fasse sentir en finale.",
+        moveSan: ["Rc8", "f5", "exf5", "Rxf5"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 20",
+        fen: "2r2rk1/pp2bNpp/3q1n2/3n1RB1/3P4/1B5Q/PP4PP/3R2K1 b - - 0 20",
+        text: "Le sacrifice qui couronne l'attaque : la dynamique offerte par le pion isolé d4 et l'espace qu'il procuré ont permis à Blanc de construire cette combinaison décisive avant que Noir ne puisse consolider.",
+        moveSan: ["Rxf7", "Bxf6", "Bxf6", "Rxd5"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 22",
+        fen: "2r3k1/pp3rpp/3q1b2/3R4/3P4/1B5Q/PP4PP/3R2K1 b - - 0 22",
+        text: "Toutes les pièces noires s'effondrent sous la pression accumulée depuis le début, une démonstration magistrale du potentiel offensif d'un pion isolé bien soutenu.",
+        moveSan: ["Qc6", "Rd6", "Qe8", "Rd7"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein, St. Petersburg 1914",
+        fen: "r1bqkb1r/5ppp/p1n1pn2/1p6/3P4/2NB1N2/PP3PPP/R1BQ1RK1 b kq - 0 10",
+        text: "Une nouvelle structure à pion dame isolé, mais cette fois du point de vue du camp qui va l'ATTAQUER : Rubinstein, l'un des plus grands spécialistes de la lutte contre l'IQP, va montrer la méthode canonique.",
+        moveSan: ["Nb4"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein : coup 10",
+        fen: "r1bqkb1r/5ppp/p3pn2/1p6/1n1P4/2NB1N2/PP3PPP/R1BQ1RK1 w kq - 1 11",
+        text: "Rubinstein entame immédiatement le blocus de la case d5, juste devant le pion isolé : le Cavalier va s'y installer pour neutraliser toute avancé du pion et empêcher Blanc de gagner de l'espace.",
+        moveSan: ["Bb1", "Nbd5", "Qe2", "Bb7"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein : coup 24",
+        fen: "3r2k1/4r2p/pq2ppp1/1p1NN2n/3P3Q/P7/1P3PPP/R3R1K1 b - - 0 24",
+        text: "Malgré le blocus mis en place, Janowski parvient à maintenir une pression active typique du camp qui possede l'IQP : il continue de chercher des complications tactiques plutôt que de laisser la partie se figer.",
+        moveSan: ["Rxd5", "Nf3", "Kg7", "Qe4"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein : coup 28",
+        fen: "8/4rknp/pq2ppp1/1p1r4/3PQ1P1/P4N2/1P3P1P/2R1R1K1 b - - 0 28",
+        text: "Un exemple instructif : même assiège méthodiquement, le camp du pion isolé conserve des ressources dynamiques (ici une avancé de pions à l'aile roi) tant que les pièces restent sur l'échiquier - la lutte contre l'IQP exige donc de la précision jusqu'au bout.",
+        moveSan: ["Qd6", "Rc8", "Re8", "Rec1"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein : coup 37",
+        fen: "8/R2nk2p/p2qp1p1/1p2P1p1/8/P4Q2/1P3P1P/6K1 b - - 0 37",
+        text: "Le pion isolé d4 disparaît finalement, mais en échange Blanc obtient un pion passé et une position de tours très active : ceci illustre une nuance essentielle du thème - un IQP peut aussi se transformer favorablement en finale s'il est échange au bon moment contre des atouts dynamiques.",
+        moveSan: ["Qxe5", "Qd1", "Qd6", "Qxd6+"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein : coup 40",
+        fen: "8/3n3p/R2kp1p1/1p4p1/8/P7/1P3P1P/6K1 b - - 0 40",
+        text: "A ce stade, la position est objectivement très difficile, sinon perdue, pour Noir : la lutte contre l'IQP a été menée avec maestria par Rubinstein pendant tout le milieu de partie, mais la finale de tours qui en resulte reste extrêmement délicate à manier pour les deux camps.",
+        moveSan: ["Kd5", "Kf1", "g4", "Ra7"],
+      },
+      {
+        title: "David Janowski – Akiba Rubinstein : coup 63",
+        fen: "8/6R1/8/P7/3kp2p/5npp/5P2/7K w - - 0 64",
+        text: "Note factuelle importante pour la leçon : en toute rigueur historique, Janowski laissa ensuite filer le gain dans les complications techniques de cette finale de tours (une régularité bien connue chez ce joueur, célèbre pour perdre des positions gagnées) ; les pions noirs h, g et e finissent par se montrer plus rapides que la tour blanche isolée. Cela ne retire rien à la valeur pédagogique du milieu de partie qui précède : la manière dont Rubinstein a bloqué puis assiège le pion isolé reste un modèle du genre.",
+        moveSan: ["fxg3", "e3"],
+      },
+      {
+        title: "Viktor Korchnoi – Anatoly Karpov, World Chess Championship 1981 1981",
+        fen: "rnbq1rk1/pp2bpp1/4pn1p/8/2BP3B/2N2N2/PP3PPP/2RQK2R b K - 0 10",
+        text: "La position typique du pion dame isolé (IQP) apparait : le pion d4 blanc n'a plus de pion voisin (c ou e) pour le soutenir. En contrepartie, Blanc dispose de pièces actives et d'espace.",
+        moveSan: ["Nc6", "O-O"],
+      },
+      {
+        title: "Viktor Korchnoi – Anatoly Karpov : coup 11",
+        fen: "r1bq1rk1/pp2bpp1/2n1pn1p/8/2BP3B/2N2N2/PP3PPP/2RQ1RK1 b - - 2 11",
+        text: "Une nouveauté préparée par Karpov : au lieu de développer tranquillement, Noir force immédiatement l'échange des Fous de cases noires, retirant à Blanc une pièce essentielle pour attaquer le roque noir - la stratégie classique contre un IQP consiste à simplifier vers un finale ou la faiblesse du pion isolé primera sur sa force dynamique.",
+        moveSan: ["Nh5", "Bxe7", "Nxe7", "Bb3"],
+      },
+      {
+        title: "Viktor Korchnoi – Anatoly Karpov : coup 21",
+        fen: "3r2k1/pp2npp1/2rqp2p/8/3PQ3/1BR3P1/PP3P1P/3R2K1 b - - 2 21",
+        text: "Les échanges de pièces se poursuivent méthodiquement, exactement le plan à suivre contre un IQP : moins il reste de pièces sur l'échiquier, moins le pion isolé peut compter sur un potentiel d'attaque, et plus sa fragilité structurelle pese lourd.",
+        moveSan: ["Rb6", "Qe1", "Qd7", "Rcd3"],
+      },
+      {
+        title: "Viktor Korchnoi – Anatoly Karpov : coup 25",
+        fen: "3r2k1/pp3pp1/2qrp2p/3n4/3P1Q2/1B1R2P1/PP3P1P/3R2K1 w - - 11 26",
+        text: "Le Cavalier noir vient se poster juste devant le pion isolé, sur la case d5 : c'est le blocus classique, la méthode la plus efficace pour neutraliser durablement un pion isolé en l'empêchant même d'avancer.",
+        moveSan: ["Qd2", "Qb6", "Bxd5", "Rxd5"],
+      },
+      {
+        title: "Viktor Korchnoi – Anatoly Karpov : coup 35",
+        fen: "3r2k1/5pp1/7p/pq1rp3/R2P1P2/Q5P1/1P1R3P/6K1 w - - 0 36",
+        text: "Le coup décisif : Noir attaque de front le pion isolé d4, désormais totalement privé de soutien après tous les échanges de pièces qui ont eu lieu depuis le début de partie.",
+        moveSan: ["fxe5", "Rxe5", "Qa1", "Qe8"],
+      },
+      {
+        title: "Viktor Korchnoi – Anatoly Karpov : coup 38",
+        fen: "3rq1k1/5pp1/7p/p3P3/R7/6P1/1P1R3P/Q5K1 b - - 0 38",
+        text: "Le pion isolé tombe enfin, et avec lui l'équilibre de la partie : la faiblesse chronique identifiée des le coup 10 finit par coûter la partie à Blanc.",
+        moveSan: ["Rxd2", "Rxa5", "Qc6", "Ra8+"],
+      },
+    ],
+  },
+  "jh-module-3-la-structure-carlsbad": {
+    steps: [
+      {
+        title: "Anatoly Karpov – Joel Lautier, Dortmund Sparkassen 1995",
+        fen: "r1b1r1k1/pp1nqpp1/2pb1n1p/4p3/2BP4/P1N1PN1P/1PQ2PP1/R1BR2K1 w - - 0 13",
+        text: "La partie devie un instant du schéma Carlsbad \\\"pur\\\" (Blanc reprend sur c4 au lieu d'échanger sur d5), mais Karpov, l'un des plus grands spécialistes de ce type de structure, va neanmoins ramener le jeu vers un final ou le plan de minorité classique fait toute la difference.",
+        moveSan: ["Nh4", "Nf8", "dxe5", "Bxe5"],
+      },
+      {
+        title: "Anatoly Karpov – Joel Lautier : coup 20",
+        fen: "3rrnk1/pp3pp1/1bp1bn1p/4q3/1P6/P2BP1NP/2QBNPP1/R2R2K1 b - - 0 20",
+        text: "Le pion minoritaire s'avancé : même sans la structure Carlsbad symétrique classique, Karpov appliqué la même logique intemporelle - pousser le pion b pour cibler le côté dame noir privé de son pion c (déjà échange au coup 11).",
+        moveSan: ["Ng6", "a4", "a6", "Bc3"],
+      },
+      {
+        title: "Anatoly Karpov – Joel Lautier : coup 27",
+        fen: "3rr1k1/1p3pp1/p1p1bnnp/1P6/P3Pq2/3B1NNP/2Q2PP1/R2R2K1 b - - 0 27",
+        text: "Le coup clé du plan de minorité : Blanc force un échange qui va laisser un pion noir faible sur une colonne ouverte, exactement comme dans le schéma Carlsbad classique.",
+        moveSan: ["axb5", "axb5", "Ne5", "Nxe5"],
+      },
+      {
+        title: "Anatoly Karpov – Joel Lautier : coup 30",
+        fen: "3rr1k1/1p3pp1/2P1bn1p/4q3/4P3/3B2NP/2Q2PP1/R2R2K1 b - - 0 30",
+        text: "Le pion c6 noir tombe finalement, laissant Noir avec un pion c isolé et arriere sur la colonne c désormais grande ouverte pour les Tours blanches - la signature du plan de minorité mène a son terme.",
+        moveSan: ["bxc6", "Rac1", "Rd6", "Qc3"],
+      },
+      {
+        title: "Anatoly Karpov – Joel Lautier : coup 44",
+        fen: "r5k1/6p1/3NPp1p/2pb4/n4PB1/R6P/6P1/6K1 b - - 0 44",
+        text: "Le pion passé e, créé indirectement par toute la pression exercee depuis le coup 20 sur le côté dame, décide la partie : Noir abandonne, incapable d'arrêter la promotion.",
+      },
+      {
+        title: "Tigran Petrosian – Nikolai Krogius, USSR Championship 1959",
+        fen: "rnbqk2r/ppp2pbp/6p1/3p4/3P4/2N2N2/PP2PPPP/R2QKB1R w KQkq - 0 9",
+        text: "Bien que la partie ait commence en Grunfeld, l'échange sur d5 fait apparaitre exactement la structure de pions dite \\\"Carlsbad\\\" : pion d5 noir isolé de son compagnon e (déjà échange), face au pion d4 blanc privé de son pion c (déjà échange lui aussi). Cette structure symétrique sur les colonnes a-b-d-e-f-g-h est le point de départ classique du plan de minorité.",
+        moveSan: ["e3", "O-O", "Bd3", "Nc6"],
+      },
+      {
+        title: "Tigran Petrosian – Nikolai Krogius : coup 12",
+        fen: "r1bq1rk1/ppp1npbp/6p1/3p4/1P1P4/2NBPN2/P4PPP/R2Q1RK1 b - - 0 12",
+        text: "Le plan de minorité commence : Blanc n'a que deux pions (a et b) face aux trois pions noirs (a, b, c) du côté dame, mais c'est précisément cette minorité qui va servir à attaquer, pas à défendre - l'idée centrale de la structure Carlsbad.",
+        moveSan: ["Bf5", "Bxf5", "Nxf5", "b5"],
+      },
+      {
+        title: "Tigran Petrosian – Nikolai Krogius : coup 14",
+        fen: "r2q1rk1/ppp2pbp/6p1/1P1p1n2/3P4/2N1PN2/P4PPP/R2Q1RK1 b - - 0 14",
+        text: "Deuxième temps du plan : Blanc pousse son pion minoritaire jusqu'a b5 pour forcer un échange qui va abimer les pions noirs, quel que soit le sens dans lequel Noir reprend.",
+        moveSan: ["Qd6", "Qb3", "Ne7", "Rfc1"],
+      },
+      {
+        title: "Tigran Petrosian – Nikolai Krogius : coup 18",
+        fen: "r4r1k/pp2npb1/2pq2pp/1P1p4/3P4/1QN1PN2/P1R2PPP/2R3K1 w - - 0 19",
+        text: "Noir est contraint de soutenir son pion d5 avec c6, completant lui-même le squelette Carlsbad et offrant à Blanc la cible fixe qu'il attendait sur la colonne c.",
+        moveSan: ["Na4", "Rab8", "g3", "Kh7"],
+      },
+      {
+        title: "Tigran Petrosian – Nikolai Krogius : coup 22",
+        fen: "1r1r4/p3npbk/2pq2pp/2Np4/3P4/1Q2PNP1/P1R2P1P/2R3K1 w - - 0 23",
+        text: "L'échange caracteristique du plan de minorité : le pion c noir devient faible et arriere sur une colonne c désormais ouverte, tandis que le pion d5 reste isolé - Noir se retrouve avec deux faiblesses permanentes au lieu d'une.",
+        moveSan: ["Qa4", "Qf6", "Kg2", "Ra8"],
+      },
+      {
+        title: "Tigran Petrosian – Nikolai Krogius : coup 36",
+        fen: "r3r3/p5bk/2R4p/3Q4/q4pP1/5N1P/P4PK1/4R3 b - - 0 36",
+        text: "Le second pion faible tombe à son tour : d5 et c6 avaient tous deux été condamnes des le coup 22, et Blanc les recolte l'un après l'autre - la démonstration complète du plan de minorité depuis la case-cible jusqu'au gain matériel décisif.",
+        moveSan: ["Rxe1", "Nxe1", "Rf8", "Nf3"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal, Niksic 1983",
+        fen: "rnbqk2r/ppp2ppp/5n2/3p4/1b1P4/2N5/PPQ1PPPP/R1B1KBNR w KQkq - 0 6",
+        text: "Depuis la Nimzo-indienne, l'échange immédiat sur d5 produit directement la structure Carlsbad : Blanc a perdu son pion c, Noir son pion e, et les deux camps se retrouvent avec des pions symetriques sur les colonnes a, b, d, f, g, h. C'est l'autre grande voie d'acces (avec le Gambit Dame refuse, variante d'échange) vers ce type de position.",
+        moveSan: ["Bg5", "h6", "Bxf6", "Qxf6"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal : coup 13",
+        fen: "rnr3k1/ppp2pp1/4bq1p/3p4/1P1P4/P1Q1P1N1/5PPP/R3KB1R b KQ - 0 13",
+        text: "Le plan de minorité demarre : les deux pions blancs a et b vont s'avancer contre les trois pions noirs a, b et c pour forcer une faiblesse durable, même si Blanc est numeriquement minoritaire de ce côté.",
+        moveSan: ["a5", "Be2", "axb4", "axb4"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal : coup 18",
+        fen: "2r3k1/1pp1qpp1/2n1b2p/1P1p4/3P4/2Q1P1N1/4BPPP/4K2R b K - 0 18",
+        text: "Le pion minoritaire atteint b5 : Noir doit choisir entre laisser Blanc jouer bxc6 (pion c isolé/arriere) ou repousser le Cavalier en abandonnant le controle de c6 - dans les deux cas la structure noire va se fissurer.",
+        moveSan: ["Nd8", "O-O", "c5"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal : coup 19",
+        fen: "2rn2k1/1p2qpp1/4b2p/1Ppp4/3P4/2Q1P1N1/4BPPP/5RK1 w - c6 0 20",
+        text: "Noir tente une contre-poussée immédiate plutôt que de subir passivement, mais la faiblesse structurelle sur les cases noires du côté dame demeure inevitable.",
+        moveSan: ["bxc6", "bxc6"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal : coup 20",
+        fen: "2rn2k1/4qpp1/2p1b2p/3p4/3P4/2Q1P1N1/4BPPP/5RK1 w - - 0 21",
+        text: "Exactement le motif du plan de minorité : le pion c6 noir est désormais isolé (plus de pion b ou d pour le soutenir lateralement sur cette colonne) et la colonne c est ouverte pour les pièces blanches.",
+        moveSan: ["Rc1", "Bd7", "Qa5", "Kf8"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal : coup 32",
+        fen: "2r4k/3q1pp1/4n2p/2pp1Q2/3P3N/4P3/5PPP/2R3K1 w - - 0 33",
+        text: "Noir essaie enfin de liquider sa faiblesse chronique, mais il est trop tard : la pression accumulée depuis le coup 13 a laissé Blanc largement en avancé dans la course.",
+        moveSan: ["dxc5", "Qe7", "g3", "Qd7"],
+      },
+      {
+        title: "Yasser Seirawan – Mikhail Tal : coup 35",
+        fen: "2r4k/3q1pp1/2P1n2p/3p1Q2/7N/4P1P1/5P1P/2R3K1 b - - 0 35",
+        text: "Le pion autrefois faible de Noir devient, après tous ces échanges, un pion passé blanc dangereux tout près de la promotion - illustration frappante de la valeur à long terme du plan de minorité.",
+        moveSan: ["Rxc6", "Rxc6", "Qxc6", "Qxf7"],
+      },
+    ],
+  },
+  "jh-module-4-la-structure-maroczy": {
+    steps: [
+      {
+        title: "Jose Raul Capablanca – Fred Dewhirst Yates, Bad Kissingen 1928",
+        fen: "rnbqkbnr/pp2pp1p/3p2p1/8/2PNP3/8/PP3PPP/RNBQKB1R b KQkq - 0 5",
+        text: "Capablanca installe le Bind par un ordre de coups un peu different (2.Ne2 puis c4), evitant certaines complications tactiques liees a Cb5 ou Cc3 precoce. Le resultat est le même : pions blancs c4 et e4 verrouillant durablement la case d5 face au futur fianchetto noir.",
+        moveSan: ["Bg7", "Nc3", "Nf6", "Be2"],
+      },
+      {
+        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 10",
+        fen: "r1bq1rk1/pp2ppbp/3p1np1/2n5/2PNP3/2N1BP2/PP2B1PP/R2Q1RK1 b - - 0 10",
+        text: "Le coup f3 est une pièce maitresse du plan blanc dans le Bind : il soutient solidement le pion e4 (qui n'est alors plus attaquable par ...Ng4 ou ...Nf6-e4), permettant à Blanc de manoeuvrer tranquillement ses pièces (Qd2, Rac1, Rfd1) sans craindre de contre-jeu tactique immédiat au centre.",
+        moveSan: ["Bd7", "Qd2", "Rc8", "Rfd1"],
+      },
+      {
+        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 20",
+        fen: "3q1rk1/1pr1ppbp/p2pb1p1/4P3/N1P2P2/1P2QB2/P5PP/2RR2K1 w - - 1 21",
+        text: "Toutes les pièces mineures qui pourraient contester la case d5 ou générer du contre-jeu ont été échangées ; Noir se retrouve dans une position purement passive, coincee derrière son pion d6, exactement le scenario que le Bind est cense produire.",
+        moveSan: ["c5"],
+      },
+      {
+        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 21",
+        fen: "3q1rk1/1pr1ppbp/p2pb1p1/2P1P3/N4P2/1P2QB2/P5PP/2RR2K1 b - - 0 21",
+        text: "Le second pilier du Bind se transformé enfin en force offensive : la poussée c5 attaque directement d6 et ouvre les lignes vers le roi noir, illustrant comment l'avantage d'espace statique du début de partie se convertit en attaque concrète en fin de partie.",
+        moveSan: ["Qb8", "exd6", "exd6", "Rxd6"],
+      },
+      {
+        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 32",
+        fen: "5bk1/4qp1p/R3b1p1/4Q3/1p3P2/1P3B2/P5PP/6K1 w - - 0 33",
+        text: "La domination totale des blancs, initiee par le Bind trente coups plus tôt, se conclut par un simple ratissage matériel : Blanc est Tour et pion contre pièces mineures avec une attaque décisive, et Noir n'a plus aucune ressource defensive.",
+        moveSan: ["Be4", "Qd8", "h3", "Bxh3"],
+      },
+      {
+        title: "Bent Larsen – Tigran Petrosian, Second Piatigorsky Cup 1966",
+        fen: "r1bqk1nr/pp1pppbp/2n3p1/8/2PNP3/4B3/PP3PPP/RN1QKB1R b KQkq - 0 6",
+        text: "Le Bind classique contre le Dragon Accéléré : Blanc pousse c4 dès que possible pour empêcher à tout jamais la libération thématique ...d5 de Noir, quitte à retarder Cc3.",
+        moveSan: ["Nf6", "Nc3", "Ng4", "Qxg4"],
+      },
+      {
+        title: "Bent Larsen – Tigran Petrosian : coup 14",
+        fen: "r2qr1k1/pp2ppbp/2bpn1p1/3N4/2P1P3/4B3/PP1QBPPP/3R1RK1 w - - 8 15",
+        text: "Position typique du Bind pleinement installee : pions c4-e4 blancs, pion d6 noir bloqué, Cavalier blanc solidement établi sur l'avant-poste d5. Face au champion du monde en titre Petrosian, Larsen dispose de tout l'espace nécessaire pour lancer une offensive au Roi.",
+        moveSan: ["f4", "Nc7", "f5"],
+      },
+      {
+        title: "Bent Larsen – Tigran Petrosian : coup 16",
+        fen: "r2qr1k1/ppn1ppbp/2bp2p1/3N1P2/2P1P3/4B3/PP1QB1PP/3R1RK1 b - - 0 16",
+        text: "L'espace procuré par le Bind se transformé directement en attaque : la poussée f4-f5 ouvre les lignes contre le roque noir, une démonstration classique du potentiel dynamique (et pas seulement statique) de cette structure.",
+        moveSan: ["Na6", "Bg4", "Nc5", "fxg6"],
+      },
+      {
+        title: "Bent Larsen – Tigran Petrosian : coup 25",
+        fen: "r2q1rk1/pp2ppb1/3pn1Q1/3R4/2P3B1/4BR2/PP4PP/6K1 b - - 0 25",
+        text: "Le coup célèbre de la partie : un sacrifice de Dame base sur une conception profonde plutôt que sur un calcul force jusqu'au mat. Il illustre à merveille comment l'avancé spatiale offerte par le Bind, cumulée à une attaque de pions savamment préparée, peut deboucher sur une explosion tactique même contre l'un des plus grands defenseurs de l'histoire.",
+        moveSan: ["Nf4", "Rxf4", "fxg6", "Be6+"],
+      },
+      {
+        title: "Rudolf Swiderski – Geza Maroczy, Monte Carlo 1904",
+        fen: "rnbqkbnr/pp1ppppp/8/2p5/2P1P3/8/PP1P1PPP/RNBQKBNR b KQkq - 0 2",
+        text: "Coup fondateur : c'est littéralement la naissance du concept. En jouant c4 dès le deuxième coup, Blanc annonce son intention d'installer les pions c4 et e4 ensemble pour contrôler durablement la case d5 et empêcher à jamais la poussée libératrice ...d5 de Noir. Cette partie est la toute première connue à présenter ce qui sera plus tard baptisé le \\\"Maroczy Bind\\\", justement en l'honneur du joueur qui la joue ici... avec les Noirs !",
+        moveSan: ["Nc6", "Nf3", "g6", "d4"],
+      },
+      {
+        title: "Rudolf Swiderski – Geza Maroczy : coup 11",
+        fen: "r2q1rk1/pp2ppbp/2bp1np1/8/2PBP3/2N4P/PP2BPP1/R2Q1RK1 w - - 1 12",
+        text: "La structure typique du Bind est désormais figée sur l'échiquier : pions blancs c4 et e4 côté à côté, pion noir bloqué en d6, fou de cases noires déjà échange. Noir ne pourra plus jamais libérer sa position par ...d5 ; il devra se contenter de manoeuvres lentes sur les colonnes semi-ouvertes.",
+        moveSan: ["Qd3", "Nd7", "Bxg7", "Kxg7"],
+      },
+      {
+        title: "Rudolf Swiderski – Geza Maroczy : coup 25",
+        fen: "5k2/2q1p2p/1p2Q1p1/2p1n3/1P6/7P/4BPP1/6K1 w - - 0 26",
+        text: "Ironie de l'histoire : c'est justement l'un des deux piliers du Bind (le pion c4, pousse en c5) qui se retrouve échange ici, rouvrant la position. Cette partie originelle montre que la technique pour exploiter le Bind n'était pas encore maîtrisée en 1904 : la belle structure statique du début ne suffit pas à elle seule si elle n'est pas suivie d'un plan concret.",
+        moveSan: ["f4", "Nf7", "Bc4", "Qxf4"],
+      },
+      {
+        title: "Rudolf Swiderski – Geza Maroczy : coup 36",
+        fen: "8/4p2p/3n2p1/8/5k2/7P/5KP1/5B2 w - - 1 37",
+        text: "Le créateur du concept, ici avec les pièces noires, prend le dessus dans la finale grâce à l'activité de son Roi et de son Cavalier. Une leçon utile : le Bind procuré un avantage positionnel durable, mais comme tout avantage il doit être transformé avec précision, sans quoi l'adversaire peut retourner la situation.",
+        moveSan: ["Bd3", "Ne4+", "Ke2", "g5"],
+      },
+    ],
+  },
+  "jh-module-11-les-finales-de-tours-pratiques": {
+    steps: [
+      {
+        title: "Alexander Alekhine – Jose Raul Capablanca, Capablanca - Alekhine World Championship 1927",
+        fen: "8/5p1k/5rpp/8/P2R3P/6P1/5PK1/8 b - - 0 50",
+        text: "Les Dames disparaissent et la véritable finale de Tours commence, Blanc disposant d'un pion supplémentaire (a4 contre l'absence de pion a noir) mais Noir conservant des ressources defensives grâce à l'activité potentielle de sa Tour.",
+        moveSan: ["Kg7", "a5"],
+      },
+      {
+        title: "Alexander Alekhine – Jose Raul Capablanca : coup 51",
+        fen: "8/5pk1/5rpp/P7/3R3P/6P1/5PK1/8 b - - 0 51",
+        text: "Premier principe appliqué : la création immédiate d'un pion passé protégé sur l'aile ou l'adversaire est le plus faible. Ce pion a va devenir la cible constante autour de laquelle s'organise toute la stratégie blanche pour le reste de la partie.",
+        moveSan: ["Ra6", "Rd5", "Rf6", "Rd4"],
+      },
+      {
+        title: "Alexander Alekhine – Jose Raul Capablanca : coup 64",
+        fen: "8/5p2/k3r1p1/P6p/5K1P/6P1/R4P2/8 w - - 16 65",
+        text: "Long ballet de Rois : chaque camp cherche à centraliser puis à activer son propre Roi, illustrant le principe cardinal des finales de Tours - contrairement aux autres finales, le Roi doit s'engager très tôt dans le combat plutôt que rester en retrait.",
+        moveSan: ["Kg5", "Re5+", "Kh6", "Rf5"],
+      },
+      {
+        title: "Alexander Alekhine – Jose Raul Capablanca : coup 70",
+        fen: "8/3r1pK1/k5p1/P4P1p/7P/R5P1/8/8 b - - 0 70",
+        text: "Second temps de la technique classique : Alekhine créé un second front (le pion f, puis la case g6) à l'opposé du pion a. La Tour noire, déjà clouée à la surveillance du pion a5, ne peut plus faire face partout à la fois - le principe des \\\"deux faiblesses\\\".",
+        moveSan: ["gxf5", "Kh6", "f4", "gxf4"],
+      },
+      {
+        title: "Alexander Alekhine – Jose Raul Capablanca : coup 81",
+        fen: "8/5R2/2k5/7K/5P1P/8/8/7r w - - 1 82",
+        text: "Le second pion passé (f) est désormais imparable, soutenu par le Roi blanc complètement libre dans le camp adverse, pendant que la Tour noire n'a plus aucune case utile pour l'arrêter - la conclusion logique de la stratégie des deux faiblesses.",
+        moveSan: ["Re7"],
+      },
+      {
+        title: "Jose Raul Capablanca – Savielly Tartakower, New York 1924",
+        fen: "4k3/p1p5/1p3rp1/n2p4/P2P1P2/2PB2P1/6K1/7R b - - 1 29",
+        text: "La finale de Tours proprement dite commence : premier principe appliqué par Capablanca, la prise de possession d'une colonne ouverte (ici la colonne h) pour faire pénétrer la Tour dans le camp adverse.",
+        moveSan: ["Kf8", "Rh7"],
+      },
+      {
+        title: "Jose Raul Capablanca – Savielly Tartakower : coup 30",
+        fen: "5k2/p1p4R/1p3rp1/n2p4/P2P1P2/2PB2P1/6K1/8 b - - 3 30",
+        text: "Deuxième principe classique : la Tour s'installe à la 7e rangée, où elle attaque simultanément les pions noirs et immobilise le Roi adverse - l'un des atouts les plus puissants d'une finale de Tours.",
+        moveSan: ["Rc6", "g4", "Nc4", "g5"],
+      },
+      {
+        title: "Jose Raul Capablanca – Savielly Tartakower : coup 34",
+        fen: "5k2/p1p4R/1pr3p1/3p1BP1/P2P1P2/2P2K2/8/8 b - - 0 34",
+        text: "Ce coup créé le pion passé qui va decider la partie : en échangeant son Fou contre le Cavalier noir, Blanc obtient un pion g passé, libre d'avancer sans plus jamais être inquiete par une pièce mineure noire.",
+        moveSan: ["gxf5", "Kg3"],
+      },
+      {
+        title: "Jose Raul Capablanca – Savielly Tartakower : coup 35",
+        fen: "5k2/p1p4R/1pr5/3p1pP1/P2P1P2/2P3K1/8/8 b - - 1 35",
+        text: "Le coup le plus célèbre de la partie ! Alors que la théorie générale enseigne de garder son Roi à l'abri, Capablanca demontre ici le principe spécifique aux finales de Tours : le Roi doit devenir une pièce active de premier plan. Il sacrifie même deux pions dans la foulee pour l'emmener vers f6, ou il soutiendra à la fois la promotion du pion g et les menaces de mat de la Tour.",
+        moveSan: ["Rxc3+", "Kh4", "Rf3", "g6"],
+      },
+      {
+        title: "Jose Raul Capablanca – Savielly Tartakower : coup 41",
+        fen: "4r2k/p1R5/1p3KP1/3p1p2/P2P4/8/8/8 w - - 1 42",
+        text: "Position modèle : Roi blanc en f6, pion en g6, Tour à la 7e rangée - Alekhine notait que cette configuration precise fait \\\"tomber les pions noirs comme des pommes mures\\\". Le matériel n'a plus d'importance : seule compte la coordination Roi + Tour + pion passé.",
+        moveSan: ["Kxf5", "Re4", "Kf6", "Rf4+"],
+      },
+      {
+        title: "Akiba Rubinstein – Emanuel Lasker, St. Petersburg 1909",
+        fen: "8/p2rk1pp/8/5p2/5R2/4P3/PP4PP/6K1 w - - 0 24",
+        text: "Les Dames sont échangées et la finale de Tours pure commence : matériel à peu près équilibré (Tour et quatre pions chacun), mais Blanc va demontrer que l'activité de la Tour et la qualité de la structure de pions comptent bien plus que le simple decompte matériel.",
+        moveSan: ["Rxf5", "Rd1+", "Kf2", "Rd2+"],
+      },
+      {
+        title: "Akiba Rubinstein – Emanuel Lasker : coup 27",
+        fen: "8/p3k1pp/8/R7/8/4PK2/Pr4PP/8 b - - 1 27",
+        text: "Premier principe illustre : Rubinstein ne se precipite pas pour reprendre des pions, il place d'abord sa Tour de manière active à la 5e rangée, prêt à harceler le Roi et les pions noirs, plutôt que de la laisser passive en défense.",
+        moveSan: ["Rb7", "Ra6", "Kf8", "e4"],
+      },
+      {
+        title: "Akiba Rubinstein – Emanuel Lasker : coup 35",
+        fen: "8/p1r2kp1/R6p/4PK1P/6P1/8/P7/8 b - - 0 35",
+        text: "Deuxième principe : le Roi blanc mène la marche vers l'avant tandis que la majorité de pions centraux et royaux avancé de concert, repoussant peu à peu le Roi noir et reduisant son espace de manoeuvre.",
+        moveSan: ["Rb7", "Rd6", "Ke7", "Ra6"],
+      },
+      {
+        title: "Akiba Rubinstein – Emanuel Lasker : coup 40",
+        fen: "8/pr3kp1/2R4p/4PK1P/6P1/P7/8/8 b - - 0 40",
+        text: "Coup d'attente décisif : la Tour noire est totalement clouée à la défense passive (elle doit surveiller les pions et le Roi ne peut plus bouger sans conceder du terrain), si bien que Noir se trouve pratiquement en zugzwang et abandonne. Démonstration exemplaire du thème \\\"Tour active contre Tour passive\\\" : c'est l'activité, non le matériel, qui a décide la partie.",
+      },
+    ],
+  },
+  "jh-module-6-la-chaine-de-pions-en-francais": {
+    steps: [
+      {
+        title: "Miguel Najdorf – Svetozar Gligoric, Mar del Plata 1953",
+        fen: "r1bq1rk1/ppp2pbp/2np1np1/3Pp3/2P1P3/2N2N2/PP2BPPP/R1BQ1RK1 b - - 0 8",
+        text: "Le coup clé qui verrouillé définitivement le centre : Blanc obtient la chaîne c4-d5 pointant vers l'aile dame, Noir la chaîne d6-e5 pointant vers l'aile roi. C'est exactement cette partie, jouee ici pour la première fois avec ce plan complet, qui a donné son nom à toute la variante \\\"Mar del Plata\\\". Comme les deux chaînes sont verrouillées et pointent chacune vers un côté opposé de l'échiquier, chaque camp sait immédiatement ou est son terrain de jeu : Blanc à l'aile dame, Noir à l'aile roi - une illustration parfaite du principe selon lequel la direction d'une chaîne de pions dicte le plan stratégique.",
+        moveSan: ["Ne7", "Ne1", "Nd7", "Nd3"],
+      },
+      {
+        title: "Miguel Najdorf – Svetozar Gligoric : coup 10",
+        fen: "r1bq1rk1/pppnn1bp/3p2p1/3Ppp2/2P1P3/2NN4/PP2BPPP/R1BQ1RK1 w - - 0 11",
+        text: "Noir lance sa poussée thématique du côté roi, gagnant de l'espace et préparant à terme ...f4 pour attaquer la base de la chaîne blanche côté roi (le pion e4).",
+        moveSan: ["f3", "f4", "Bd2", "Nf6"],
+      },
+      {
+        title: "Miguel Najdorf – Svetozar Gligoric : coup 13",
+        fen: "r1bq1rk1/ppp1n1bp/3p1np1/3Pp3/1PP1Pp2/2NN1P2/P2BB1PP/R2Q1RK1 b - - 0 13",
+        text: "Réponse miroir à l'aile dame : Blanc entame le plan classique d'attaque de minorité/d'expansion (b4-c5) pour ouvrir des lignes contre la base du camp noir plutôt que d'attendre passivement l'assaut adverse.",
+        moveSan: ["g5", "c5", "h5", "Nf2"],
+      },
+      {
+        title: "Miguel Najdorf – Svetozar Gligoric : coup 17",
+        fen: "r1bq2k1/pp3rb1/3p1nn1/3Pp1pp/1P2Pp2/2N2P2/P2BBNPP/2RQ1RK1 w - - 0 18",
+        text: "La course est désormais pleinement engagée des deux côtés de l'échiquier : Blanc a ouvert la colonne c contre la base noire (case c6/pion d6), Noir continue de pousser ses pions g et h contre le roque blanc.",
+        moveSan: ["a4", "Bf8", "a5", "Rg7"],
+      },
+      {
+        title: "Miguel Najdorf – Svetozar Gligoric : coup 30",
+        fen: "3qbbk1/1p6/pN1p1n1n/P2Pp1r1/1P2Pp2/B7/2Q1BNP1/5RK1 w - - 0 31",
+        text: "Le pion g blanc, avancé pour freiner l'assaut, tombe à son tour : la course des deux pions passes/assauts opposés touche a son point culminant.",
+        moveSan: ["Rc1", "Rg3", "Bb2", "Nfg4"],
+      },
+      {
+        title: "Miguel Najdorf – Svetozar Gligoric : coup 40",
+        fen: "5bk1/1p5q/pN1p2b1/P2Pp3/1PR1Pr2/2B1Qp2/5KP1/8 w - - 2 41",
+        text: "Noir arrive le premier au but dans cette course des deux ailes : son assaut de pions transformes en attaque de pièces contre le roi blanc s'avere décisif avant que Blanc n'ait pu concrétiser son avantage à l'aile dame.",
+        moveSan: ["gxf3", "Qh2+", "Ke1", "Qh1+"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe, Karlsbad 1911",
+        fen: "rnbqkbnr/ppp2ppp/4p3/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3",
+        text: "La partie fondatrice du concept, telle qu'analysee par Nimzowitsch lui-même dans \\\"My System\\\". Les pions se verrouillent en diagonale : chaîne blanche d4-e5 contre chaîne noire d5-e6. Selon la règle d'or de Nimzowitsch, une chaîne de pions se combat à sa BASE (le pion le plus en arriere, ici d4 pour Blanc) et non à sa tête (le pion le plus avancé, ici e5).",
+        moveSan: ["c5"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 3",
+        fen: "rnbqkbnr/pp3ppp/4p3/2ppP3/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4",
+        text: "Noir appliqué immédiatement la règle : il attaque la base d4 plutôt que la tête e5, qui n'a aucune importance particuliere en elle-même.",
+        moveSan: ["c3"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 4",
+        fen: "rnbqkbnr/pp3ppp/4p3/2ppP3/3P4/2P5/PP3PPP/RNBQKBNR b KQkq - 0 4",
+        text: "Blanc renforce méthodiquement sa base avant qu'elle ne soit prise d'assaut.",
+        moveSan: ["Nc6", "Nf3", "Qb6", "Bd3"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 7",
+        fen: "r3kbnr/pp1b1ppp/1qn1p3/2PpP3/8/2PB1N2/PP3PPP/RNBQK2R b KQkq - 0 7",
+        text: "Plutôt que de laisser la tension s'eterniser, Blanc cède lui-même sa base d4 contre le pion c5 noir : la chaîne perd un maillon, mais Blanc obtient en échange du temps de développement et conserve le pion e5, désormais un pion isolé avancé, epine dans le camp noir.",
+        moveSan: ["Bxc5", "O-O", "f6"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 8",
+        fen: "r3k1nr/pp1b2pp/1qn1pp2/2bpP3/8/2PB1N2/PP3PPP/RNBQ1RK1 w kq - 0 9",
+        text: "Noir attaque maintenant directement la tête de la chaîne (le pion e5 restant), une méthode moins efficace selon Nimzowitsch, mais c'est tout ce qu'il reste a attaquer.",
+        moveSan: ["b4"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 9",
+        fen: "r3k1nr/pp1b2pp/1qn1pp2/2bpP3/1P6/2PB1N2/P4PPP/RNBQ1RK1 b kq - 0 9",
+        text: "Blanc contre-attaque le fou plutôt que de défendre passivement e5.",
+        moveSan: ["Be7", "Bf4", "fxe5", "Nxe5"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 12",
+        fen: "r3k1nr/pp1bb1pp/1q2p3/3pB3/1P6/2PB4/P4PPP/RN1Q1RK1 b kq - 0 12",
+        text: "Le dernier pion de \\\"l'orgueilleuse famille de la chaîne\\\" (selon les mots memes de Nimzowitsch) est tombe, mais Blanc le remplace aussitôt par une pièce : le Fou s'installe en blocus sur e5, occupant exactement la même case clé. C'est l'idée de la \\\"sur-protection\\\" et du blocus qui prolonge naturellement la théorie de la chaîne de pions.",
+        moveSan: ["Nf6", "Nd2", "O-O", "Nf3"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 27",
+        fen: "2r4k/p2br1p1/1p1q1nB1/4p3/1P1p4/2P1B1R1/P1Q2PPP/4R1K1 w - - 0 28",
+        text: "Noir tente enfin de faire valoir sa propre chaîne (d5-e5 devenu d4-e5) en la poussant en avant, mais il est trop tard : Blanc a déjà retourne toutes ses pièces vers l'attaque du roi noir.",
+        moveSan: ["Bg5", "Rxc3", "Rxc3", "dxc3"],
+      },
+      {
+        title: "Aron Nimzowitsch – Georg Salwe : coup 39",
+        fen: "8/p7/1pbk1p2/8/1P1p3P/P2B4/5PP1/5K2 b - - 0 39",
+        text: "La position est totalement gagnante pour Blanc (pion de plus, fou contre fou dans une finale largement supérieure) ; Salwe abandonne. Cette partie reste la reference historique du chapitre \\\"La chaîne de pions\\\" de Nimzowitsch : attaquer la base plutôt que la tête, et au besoin remplacer un pion tombe par une pièce qui occupe la même case-clé.",
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi, Korchnoi - Spassky Candidates Final 1977/78 1978",
+        fen: "rnbqkbnr/pp3ppp/4p3/2ppP3/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4",
+        text: "Même structure fondamentale que la partie Nimzowitsch-Salwe 1911 : chaînes verrouillées d4-e5 (Blanc) contre d5-e6 (Noir), et Noir attaque tout de suite la base blanche en d4.",
+        moveSan: ["c3", "Nc6", "Nf3", "Bd7"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 7",
+        fen: "r2qkb1r/pp1bnppp/2n1p3/2ppP3/3P4/N1P2N2/PP2BPPP/R1BQK2R b KQkq - 6 7",
+        text: "Idée moderne : au lieu de défendre passivement d4 avec des pions, Blanc amene une pièce (le Cavalier via c2) pour renforcer la base tout en gardant les pions souples.",
+        moveSan: ["cxd4", "cxd4", "Nf5", "Nc2"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 9",
+        fen: "r2qkb1r/pp1b1ppp/4p3/3pPn2/1n1P4/5N2/PPN1BPPP/R1BQK2R w KQkq - 3 10",
+        text: "Noir cible directement la base d4 avec toutes ses pièces plutôt que d'ouvrir immédiatement le jeu par un échange de pions.",
+        moveSan: ["Ne3", "Nxe3", "fxe3", "Be7"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 13",
+        fen: "r2qk2r/pp1bbppp/2n1p3/3pP3/1P1P4/P3PN2/4B1PP/R1BQK2R b KQkq - 0 13",
+        text: "Blanc, la base d4 désormais solidement tenue, bascule vers sa propre expansion à l'aile dame - exactement le miroir du plan de Noir.",
+        moveSan: ["a6", "Rb1", "Na7", "a4"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 20",
+        fen: "r2q1r1k/1p1bb1pp/4pp2/pP1pP3/Pn1P4/4PNQ1/3BB1PP/1R3RK1 w - - 0 21",
+        text: "A son tour, Noir attaque maintenant la tête de la chaîne blanche (le pion e5) par le levier thématique ...f6, exactement comme le prescrit la théorie de Nimzowitsch une fois que la base est hors d'atteinte.",
+        moveSan: ["Rbc1", "f5", "h4", "Rc8"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 28",
+        fen: "4br1k/1p2b1pp/1q2p3/pP1pPp1P/Pn1P2P1/4PN1Q/3BBK2/R7 b - - 0 28",
+        text: "Course typique des deux chaînes de pions opposées : Blanc lance à son tour un assaut sur le roi noir à coups de pions (g4-g5-h5 déjà joue), pendant que la structure centrale reste verrouillee des deux côtés.",
+        moveSan: ["g5", "hxg6", "Bxg6", "g5"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 30",
+        fen: "5r1k/1p2b2p/1q2p1b1/pP1pP1P1/Pn1P1p2/4PN1Q/3BBK2/R7 w - - 0 31",
+        text: "Noir riposte en poussant à son tour son propre pion f, cassant la tête de la chaîne blanche adverse (e3-e5 devenu vulnerable) au moment critique.",
+        moveSan: ["exf4", "Nc2", "Rd1", "Be4"],
+      },
+      {
+        title: "Boris Spassky – Viktor Korchnoi : coup 40",
+        fen: "5r1k/1p5p/6bq/pP2P3/P1QP1b2/5N2/4BK2/6R1 w - - 4 41",
+        text: "Les deux assauts opposés se sont finalement traduits par un chaos tactique ou c'est finalement Noir qui parvient à coordonner ses pièces contre le roi blanc exposé ; Spassky, matériel et position compromis, abandonne.",
+        moveSan: ["Qc3"],
+      },
+    ],
+  },
+  "jh-module-9-la-minorite-d-attaque": {
+    steps: [
+      {
+        title: "Lajos Portisch – Garry Kasparov, Skelleftea World Cup 1989",
+        fen: "rnbqkb1r/pp3ppp/2p2n2/3p4/3P4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 6",
+        text: "La structure Carlsbad classique est en place : Blanc a une majorité de pions à l'aile dame (a,b vs a) tandis que Noir a une majorité à l'aile roi (f,g,h vs f,g,h plus le pion d5 isolé d'un côté). Les deux plans thematiques vont s'affronter directement dans cette partie, contrairement à des démonstrations plus unilaterales du seul plan blanc.",
+        moveSan: ["Qc2", "Na6", "a3", "Nc7"],
+      },
+      {
+        title: "Lajos Portisch – Garry Kasparov : coup 13",
+        fen: "r2q1rk1/ppn1bp1p/2p2np1/3p2B1/1P1P4/P1NQPN2/5PPP/R4RK1 b - - 0 13",
+        text: "Le début classique de l'attaque de minorité : Blanc prépare b4-b5 pour faire exploser la structure de pions noire à l'aile dame.",
+        moveSan: ["Ne4", "Bf4", "Nxc3", "Qxc3"],
+      },
+      {
+        title: "Lajos Portisch – Garry Kasparov : coup 26",
+        fen: "4r3/1p4kp/p1pnrp2/3p2pq/PP1P4/1Q1NP2P/5PP1/2R1R1K1 w - - 0 27",
+        text: "Le signal de départ de la contre-attaque de majorité au roi : Kasparov lance désormais ses propres pions f et g vers l'avant, exactement comme Blanc pousse ses pions a et b de l'autre côté. La partie devient une véritable course entre les deux plans opposés.",
+        moveSan: ["Qd1", "Qg6", "Qc2", "R6e7"],
+      },
+      {
+        title: "Lajos Portisch – Garry Kasparov : coup 29",
+        fen: "4r3/1p2r1k1/p1pn1pq1/3p2pp/PP1P4/3NP2P/2Q2PP1/2RR2K1 w - - 0 30",
+        text: "Le rouleau compresseur des trois pions (f6-g5-h5) continue d'avancer inexorablement vers le roi blanc, pendant que Blanc n'a toujours pas réussi à jouer b4-b5.",
+        moveSan: ["Qb1", "h4", "Qc2", "g4"],
+      },
+      {
+        title: "Lajos Portisch – Garry Kasparov : coup 33",
+        fen: "4r3/1p2r1k1/p1pn1p2/3p4/PP1P1N1p/4P1pP/2R2PP1/3R2K1 w - - 0 34",
+        text: "Même après l'échange des Dames, la poussée de pions noire garde tout son venin : ce pion g3 fixe des faiblesses durables (f2/h3) dans le camp blanc et va servir de point d'appui pour l'infiltration des pièces noires dans la finale.",
+        moveSan: ["Rd3", "Kh6", "Kf1", "Kg5"],
+      },
+      {
+        title: "Lajos Portisch – Garry Kasparov : coup 62",
+        fen: "8/8/2p2p2/1p1p1n1k/1N6/4K2P/8/8 w - - 2 63",
+        text: "Kasparov gagne finalement la course : l'attaque de minorité blanche n'a jamais eu le temps de se concrétiser (b4-b5 n'a même jamais été joue), tandis que l'assaut de majorité noir à la fois créé des faiblesses durables et permis, via la finale de pièces legeres, de recolter tous les pions blancs. Portisch abandonne.",
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren, Sousse Interzonal 1967",
+        fen: "rnbq1rk1/pp2bppp/2p2n2/3p2B1/3P4/2NBP3/PP3PPP/R2QK1NR w KQ - 0 8",
+        text: "Structure Carlsbad classique. Contrairement aux parties ou Blanc mène son plan de minorité tout seul, cette partie illustre le cas ou Noir tente reellement de générer un jeu actif à l'aile roi, mais arrive trop tard dans la course.",
+        moveSan: ["Qc2", "Nbd7", "Nf3", "Re8"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 12",
+        fen: "r1bqrnk1/pp3ppp/2p2b2/3p4/1P1P4/2NBPN2/P1Q2PPP/R4RK1 b - - 0 12",
+        text: "Le début du plan de minorité (b4-b5 à venir), exécute ici de manière très manuelle et methodique.",
+        moveSan: ["Bg4", "Nd2", "Rc8", "Bf5"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 23",
+        fen: "4r1k1/p4p1p/1ppqrnpb/3p4/PP1P4/2NQP2P/2R2PP1/1RN3K1 w - - 2 24",
+        text: "Noir tente de reorienter ses pièces vers l'aile roi (Fou en h6, puis Cavalier vers h5) pour chercher une contre-attaque de majorité, mais ce plan reste trop lent : il n'y a pas encore de véritable poussée de pions f-g-h engagée.",
+        moveSan: ["N1e2", "Nh5", "b5"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 25",
+        fen: "4r1k1/p4p1p/1ppqr1pb/1P1p3n/P2P4/2NQP2P/2R1NPP1/1R4K1 b - - 0 25",
+        text: "Blanc, lui, arrive au bout de son plan bien plus vite : b4-b5 est enfin joue, ouvrant les hostilites à l'aile dame avant que Noir n'ait pu lancer sa propre poussée de pions royale.",
+        moveSan: ["Qd7", "bxc6", "Rxc6"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 26",
+        fen: "4r1k1/p2q1p1p/1pr3pb/3p3n/P2P4/2NQP2P/2R1NPP1/1R4K1 w - - 0 27",
+        text: "La base même de la contre-attaque de majorité noire (les pions f-g-h) n'a jamais eu le temps de bouger : pendant que Noir manoeuvrait ses pièces, Blanc a déjà converti son avantage structurel à l'aile dame.",
+        moveSan: ["Qb5", "Rec8", "Rbc1", "R8c7"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 29",
+        fen: "6k1/p1rq1p1p/1pr3pb/1Q1p3n/P2P2P1/2N1P2P/2R1NP2/2R3K1 b - - 0 29",
+        text: "Ironie du sort : c'est finalement Blanc qui pousse en premier un pion du côté roi (g4), non pas pour attaquer mais pour chasser le Cavalier h5 et etouffer définitivement les dernières ambitions de contre-jeu noires.",
+        moveSan: ["a6", "Qxa6", "Nf6", "Nxd5"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 31",
+        fen: "6k1/2rq1p1p/Qpr2npb/3N4/P2P2P1/4P2P/2R1NP2/2R3K1 b - - 0 31",
+        text: "Le coup décisif : ce coup tactique gagne un pion central et confirme que la course était perdue d'avancé pour Noir - son plan de majorité au roi n'a jamais dépassé le stade des preparatifs.",
+        moveSan: ["Nxg4", "Rxc6", "Qxd5", "Qa8+"],
+      },
+      {
+        title: "Samuel Reshevsky – Lhamsuren Myagmarsuren : coup 33",
+        fen: "Q5k1/2r2p1p/1pR3pb/3q4/P2P2n1/4P2P/4NP2/2R3K1 b - - 1 33",
+        text: "Noir abandonne : sa Dame est clouée et la Tour c6 blanche domine totalement la position. Cette partie illustre le revers de la medaille du thème : quand l'attaque de minorité est menée assez vite et assez précisément, la contre-attaque de majorité au roi peut tout simplement ne jamais avoir le temps d'exister.",
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov, Hastings 1977/78 1978",
+        fen: "rnbqkb1r/pp3ppp/2p2n2/3p4/3P4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 6",
+        text: "Structure Carlsbad issue de la Semi-Slave.",
+        moveSan: ["Bg5", "Bf5", "e3", "Nbd7"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 16",
+        fen: "r3rbk1/1p1n1ppp/2p1qn2/p2p4/1P1P4/P1N1PNB1/2Q2PPP/1R3RK1 b - - 0 16",
+        text: "Le plan de minorité classique est lance.",
+        moveSan: ["b5"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 16",
+        fen: "r3rbk1/3n1ppp/2p1qn2/pp1p4/1P1P4/P1N1PNB1/2Q2PPP/1R3RK1 w - - 0 17",
+        text: "Réponse energique de Sveshnikov : plutôt que d'attendre passivement b4-b5, Noir fixe lui-même la structure du côté dame et reoriente aussitôt son jeu vers une contre-attaque active par les pièces plutôt que par une poussée de pions.",
+        moveSan: ["Ne2", "Nb6", "Nf4", "Qc8"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 19",
+        fen: "r1q1rbk1/5ppp/2p2n2/pp1p4/1PnP4/P2NPNB1/2Q2PPP/1R3RK1 w - - 6 20",
+        text: "Le Cavalier noir s'installe sur un avant-poste avancé (c4) et va servir de fer de lance à toute la contre-attaque : au lieu du classique assaut de pions f-g-h, c'est ici une invasion des pièces mineures qui joue le rôle de contre-jeu face au plan lent de Blanc.",
+        moveSan: ["Ra1", "Ne4"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 20",
+        fen: "r1q1rbk1/5ppp/2p5/pp1p4/1PnPn3/P2NPNB1/2Q2PPP/R4RK1 w - - 8 21",
+        text: "Un second Cavalier vient s'installer sur un avant-poste tout aussi puissant (e4), et Noir contient totalement les ambitions positionnelles blanches en occupant simultanément les deux cases-clés du centre.",
+        moveSan: ["Rfc1", "Re7", "a4", "Rea7"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 27",
+        fen: "q4bk1/3N1ppp/8/1p1p4/2nPn3/3NP1B1/r1Q2PPP/2R3K1 w - - 4 28",
+        text: "La contre-attaque noire atteint désormais directement les abords du roi et de la première rangée blanche : la Tour s'infiltre en a2 et les pièces noires convergent vers le camp blanc.",
+        moveSan: ["Qb3", "Ra3", "Qb1", "Nc3"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 29",
+        fen: "q4bk1/3N1ppp/8/1p1p4/2nP4/r1nNP1B1/5PPP/1QR3K1 w - - 8 30",
+        text: "Le second Cavalier rejoint lui aussi l'assaut final, menacant de fourchettes décisives autour de la Dame et de la Tour blanches.",
+        moveSan: ["Qc2", "b4", "Rf1", "Ra2"],
+      },
+      {
+        title: "Jonathan David Tisdall – Evgeny Sveshnikov : coup 32",
+        fen: "q4bk1/3N1ppp/8/3p4/1p1P4/1QnNP1B1/r2n1PPP/5RK1 w - - 4 33",
+        text: "Coup final qui gagne la Dame ou la qualité par fourchette (menace sur la Dame b3 et la Tour f1) : la contre-attaque active de Noir, plus rapide et plus concrète que le plan de minorité blanc encore inacheve, décide totalement de la partie. Blanc abandonne.",
+      },
+    ],
+  },
+  "jh-module-12-les-finales-de-fous-de-couleurs-opposees": {
+    steps: [
+      {
+        title: "Alexander Alekhine – Edward Lasker, New York 1924",
+        fen: "4rrk1/2p3b1/n1b3p1/pP2pp1p/4n3/P1N2N2/2B3PP/R1B2R1K w - - 0 23",
+        text: "Plutôt que de sauver son Fou de cases claires attaque par b5, Noir prefere lancer une combinaison tactique en prenant le pion e4.",
+        moveSan: ["Nxe4", "fxe4", "bxc6"],
+      },
+      {
+        title: "Alexander Alekhine – Edward Lasker : coup 24",
+        fen: "4rrk1/2p3b1/n1P3p1/p3p2p/4p3/P4N2/2B3PP/R1B2R1K b - - 0 24",
+        text: "Blanc empoche le Fou de cases claires noir : à partir de cet instant, la partie va inevitablement se diriger vers une finale de Fous de couleurs opposées (Blanc conserve ses deux Fous encore un moment, Noir ne garde plus que son Fou de cases noires, celui de g7).",
+        moveSan: ["exf3", "Be4", "fxg2+", "Kxg2"],
+      },
+      {
+        title: "Alexander Alekhine – Edward Lasker : coup 48",
+        fen: "6k1/8/8/2b1p2p/3BB3/8/R6r/4K3 b - - 0 48",
+        text: "Le Fou de cases noires blanc (celui developpe en dernier, via Be3-Bg5-Bc1-Bb2) capture le Cavalier noir : c'est désormais le dernier Fou noir restant (Bc5, cases noires) qui va devoir affronter seul le dernier Fou blanc restant (case claire) dans la finale.",
+        moveSan: ["Bb4+", "Kf1", "Rxa2", "Bd5+"],
+      },
+      {
+        title: "Alexander Alekhine – Edward Lasker : coup 51",
+        fen: "5k2/8/8/7p/1b1p4/8/B7/5K2 w - - 0 52",
+        text: "Le pion noir recapture le Fou de cases noires blanc sur d4 : la position est désormais reduite a Roi + Fou de cases claires + pions blancs contre Roi + Fou de cases noires + pions noirs, la definition même d'une finale de Fous de couleurs opposées. Malgré des pions eparpilles sur les deux ailes (a, d, h...), aucun camp ne peut forcer le gain : le Fou defenseur peut toujours se sacrifier ou bloquer une case clé que l'autre Fou ne controle pas.",
+        moveSan: ["Bb1", "Kg7", "Kg2"],
+      },
+      {
+        title: "Alexander Alekhine – Edward Lasker : coup 53",
+        fen: "8/6k1/8/7p/1b1p4/8/6K1/1B6 b - - 3 53",
+        text: "Position typique de forteresse : les pions restants sont trop eloignes les uns des autres pour que le camp en theorique avantage matériel puisse percer, exactement le phenomene decrit par la théorie des finales de Fous de couleurs opposées. Les deux joueurs conviennent du nul.",
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik, USSR Championship 1955",
+        fen: "r1br2k1/pp2qppp/5n2/3p4/N2b1P2/1P1QP3/P1RB2PP/5RK1 w - - 0 19",
+        text: "L'échange décisif pour la structure de la finale : le Fou de cases noires noir capture le Cavalier blanc en d4.",
+        moveSan: ["Qxd4", "Bf5", "Bb4", "Qd7"],
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik : coup 25",
+        fen: "r2r2k1/p2q2pp/1p3p2/3p4/1B1QbP2/1PR1P3/P5PP/3R2K1 w - - 1 26",
+        text: "A partir d'ici, Noir ne conserve que son Fou de cases claires (celui de c8, passé par f5 puis e4), tandis que Blanc ne conserve que son Fou de cases noires (celui de d2, passé par b4) : la finale de Fous de couleurs opposées est définitivement fixee, avec des pions sur les deux ailes de chaque côté.",
+        moveSan: ["Qd2", "Qg4", "h3", "Qg6"],
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik : coup 59",
+        fen: "8/8/4b1p1/2Bp3p/5P1P/1pK1Pk2/8/8 b - - 3 59",
+        text: "La finale de pièces legeres pures est atteinte : Fou de cases claires + pions noirs eparpilles sur les deux ailes (b3, d5, f-g-h) contre Fou de cases noires + pions blancs. Selon la théorie, une telle position devrait offrir des chances de nulle à Blanc grâce au Fou \\\"de la mauvaise couleur\\\" defensif.",
+        moveSan: ["g5"],
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik : coup 59",
+        fen: "8/8/4b3/2Bp2pp/5P1P/1pK1Pk2/8/8 w - - 0 60",
+        text: "Le coup célèbre (connu dans les analyses classiques sous la forme \\\"...g5!!\\\") : Botvinnik sacrifie ce pion pour ouvrir des lignes et faire progresser son pion d passé, exploitant le fait qu'un seul Fou ne peut jamais contrôler les deux couleurs de cases à la fois.",
+        moveSan: ["fxg5", "d4+"],
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik : coup 60",
+        fen: "8/8/4b3/2B3Pp/3p3P/1pK1Pk2/8/8 w - - 0 61",
+        text: "Le second sacrifice de la combinaison (\\\"...d4+!\\\") : ce pion d passé, désormais soutenu par le Roi noir, va decider de la partie.",
+        moveSan: ["exd4", "Kg3"],
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik : coup 61",
+        fen: "8/8/4b3/2B3Pp/3P3P/1pK3k1/8/8 w - - 1 62",
+        text: "Le Roi noir s'infiltre de facon décisive pendant que le Fou blanc, seul, ne peut à la fois arrêter le pion h et empêcher l'invasion du Roi.",
+        moveSan: ["Ba3", "Kxh4", "Kd3", "Kxg5"],
+      },
+      {
+        title: "Alexander Kotov – Mikhail Botvinnik : coup 65",
+        fen: "8/8/8/3b2k1/3P3p/Bp3K2/8/8 w - - 2 66",
+        text: "Blanc abandonne : le pion h va promouvoir. Cette partie illustre l'autre face du thème : quand les pions passes sont suffisamment eloignes l'un de l'autre (ici les ailes dame et roi) et que le Roi peut activement les soutenir, même une finale de Fous de couleurs opposées devient parfaitement gagnante.",
+      },
+      {
+        title: "Bojan Kurajica – Anatoly Karpov, Skopje 1976",
+        fen: "r1bqkb1r/1pp2ppp/p1p2n2/4p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 6",
+        text: "Blanc échange d'emblee son Fou de cases claires contre le Cavalier : Noir se retrouve donc, des la sortie de l'ouverture, avec la garantie de conserver son propre Fou de cases claires plus longtemps que Blanc son Fou de cases noires, un thème qui va determiner toute la suite.",
+        moveSan: ["Nc3", "Bd6", "d4", "Bb4"],
+      },
+      {
+        title: "Bojan Kurajica – Anatoly Karpov : coup 9",
+        fen: "r1bqk2r/1pp2ppp/p1p5/4N3/3Pn3/2b5/PPP2PPP/R1BQ1RK1 w kq - 0 10",
+        text: "Le second échange de Fous : Noir cède maintenant son Fou de cases noires contre le Cavalier blanc.",
+        moveSan: ["bxc3", "O-O", "Ba3", "Nd6"],
+      },
+      {
+        title: "Bojan Kurajica – Anatoly Karpov : coup 15",
+        fen: "r2qr1k1/1pp3pp/p1p2p2/5b2/2PP4/B7/P1P2PPP/R2Q1RK1 w - - 0 16",
+        text: "Désormais chaque camp ne possede plus qu'un seul Fou, et ils sont de couleurs opposées : Blanc garde le Fou de cases noires (developpe en a3), Noir garde le Fou de cases claires (c8-f5). Matériel egal, mais Karpov va montrer qu'une position supérieure suffit à gagner malgré la reputation de nullite de ce type de finale.",
+        moveSan: ["Qd2", "Be6", "Qc3", "Qd7"],
+      },
+      {
+        title: "Bojan Kurajica – Anatoly Karpov : coup 33",
+        fen: "6k1/2p3p1/2p2p2/2Pb4/p2P3p/B2P1P2/5KPP/8 w - - 0 34",
+        text: "Karpov simplifie méthodiquement vers une finale de Fous purs à deux pions passés bien séparés : Noir aura un pion passé à l'aile dame (a4) et une majorité de pions à l'aile roi (f-g-h contre f-g), exactement le type de configuration où, selon la théorie, le camp fort peut espérer gagner malgré les Fous de couleurs opposées si le Fou adverse ne peut contrôler les deux ailes à la fois.",
+        moveSan: ["g3", "Kf7", "Ke3", "f5"],
+      },
+      {
+        title: "Bojan Kurajica – Anatoly Karpov : coup 53",
+        fen: "8/8/2p5/2Pp4/p2Pb1kp/8/1B3K1P/8 w - - 0 54",
+        text: "Le pion passé a4, laisse pratiquement livre à lui-même à l'aile dame, va bientot commencer sa course pendant que le Roi et le Fou noirs dominent totalement l'aile roi : le Fou blanc, seul, ne peut pas être partout.",
+        moveSan: ["Bc1", "Kh3", "Kg1", "Bg6"],
+      },
+      {
+        title: "Bojan Kurajica – Anatoly Karpov : coup 57",
+        fen: "8/8/2p5/2Pp4/p2P3p/7k/7P/2Bb2K1 w - - 8 58",
+        text: "Zugzwang final : le Fou blanc ne peut plus bouger sans perdre davantage de terrain, et le Roi blanc est totalement paralyse dans le coin. Blanc abandonne : une démonstration devenue célèbre (analysee ensuite comme « enigme de finale » par Karsten Muller) de la facon dont un avantage positionnel suffisant, avec des pions passes sur des ailes opposées, permet de vaincre la tendance au nul des Fous de couleurs opposées.",
       },
     ],
   },

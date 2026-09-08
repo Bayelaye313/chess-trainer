@@ -384,7 +384,7 @@ const PRIORITY_LICHESS_TAGS: readonly string[] = [
 /** Sous ce seuil, une ligne qui ne matche « Sparring Positions » que par un tag générique (`master`, `advantage`…) est ignorée — le module vise explicitement le niveau tournoi (voir le docstring de fichier). Les tags nommés (`master`/`masterVsMaster`/`superGM`) passent déjà rarement sous ce seuil ; ce filtre couvre surtout `crushing`/`advantage`/`middlegame`, bien plus fréquents et sinon trop permissifs. */
 const SPARRING_MIN_RATING = 2000;
 
-/** Plusieurs thèmes du catalogue peuvent partager un même tag Lichess trop générique pour les distinguer (ex. les 5 thèmes "pawnEndgame" — Lichess ne subdivise pas plus finement) — toutes les cibles sont gardées, jamais une seule au hasard de l'ordre du catalogue. */
+/** Plusieurs thèmes du catalogue peuvent partager un même tag Lichess trop générique pour les distinguer (ex. les thèmes "Sparring Positions" qui se partagent "master" en round-robin, voir `SPARRING_POSITION_LICHESS_TAGS`) — toutes les cibles sont gardées, jamais une seule au hasard de l'ordre du catalogue. */
 function buildTagToThemes(): Map<string, string[]> {
   const map = new Map<string, string[]>();
   for (const theme of CURRICULUM_THEMES) {

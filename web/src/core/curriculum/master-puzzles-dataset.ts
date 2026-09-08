@@ -1,9 +1,10 @@
 /**
  * DATASET STATIQUE ET DÉCONNECTÉ — un puzzle réel et distinct par thème, pour
- * chacun des 172 thèmes curatés de l'académie « Apprendre » (141 d'origine +
- * les 14 de la catégorie « Endgame Mastery » + les 9 `pawn_structures` + le
- * thème `pawn_weaknesses` + les 7 `middlegame`, voir le docstring de
- * `catalog.ts`).
+ * chacun des 161 thèmes curatés de l'académie « Apprendre » (141 d'origine +
+ * les 3 de la catégorie « Endgame Mastery » (cahier des charges du
+ * 2026-09-08, remplace les 14 positions pédagogiques d'origine) + les 9
+ * `pawn_structures` + le thème `pawn_weaknesses` + les 7 `middlegame`, voir
+ * le docstring de `catalog.ts`).
  *
  * ## Pourquoi ce fichier remplace tout le pipeline dynamique précédent
  *
@@ -1198,118 +1199,30 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     sourceRef: "Position tactique réelle du corpus d'entraînement — position critique jusqu'au mat forcé, motif authentique (source interne, pas de lien public).",
   },
 
-  // --- Endgame Mastery : 14 positions pédagogiques, une par thème de la catégorie ---
+  // --- Endgame Mastery : 3 positions réelles, une par cours (voir course-lesson.ts) ---
   {
-    themeId: "eg-l-opposition-en-finale-de-pions",
-    fen: "8/8/2k5/8/2P5/8/2K5/8 w - - 0 1",
-    solution: ["c2c3"],
-    solutionSan: ["Kc3"],
-    rating: 1000,
-    sourceRef: "Position pédagogique de démonstration — prendre l'opposition pour garder la main sur le pion.",
-  },
-  {
-    themeId: "eg-la-regle-du-carre",
-    fen: "8/8/8/8/7k/8/P7/7K w - - 0 1",
-    solution: ["a2a4"],
-    solutionSan: ["a4"],
-    rating: 1000,
-    sourceRef: "Position pédagogique de démonstration — le roi noir est hors du carré, le pion court seul.",
-  },
-  {
-    themeId: "eg-le-pion-passe-decisif-en-finale",
-    fen: "8/1P6/8/8/8/6k1/8/6K1 w - - 0 1",
-    solution: ["b7b8q"],
-    solutionSan: ["b8=Q+"],
+    themeId: "eg-mats-de-force-ecrasante",
+    fen: "1k6/7R/1K6/8/8/8/8/8 w - - 30 16",
+    solution: ["h7h8"],
+    solutionSan: ["Rh8#"],
     rating: 900,
-    sourceRef: "Position pédagogique de démonstration — rien n'arrête plus le pion passé.",
+    sourceRef: "Position réelle du chapitre « Overkill mates: Rook Mate » du Complete Endgame Course de Jeremy Silman (AliJradi) — https://lichess.org/study/EXprT7yo/xt92Jlg6.",
   },
   {
-    themeId: "eg-la-percee-de-pions",
-    fen: "7k/8/2p5/1P1P4/8/8/8/K7 w - - 0 1",
-    solution: ["b5b6"],
-    solutionSan: ["b6"],
-    rating: 1100,
-    sourceRef: "Position pédagogique de démonstration — le pion b sort de portée, le duo passe en force.",
+    themeId: "eg-face-au-roi-seul",
+    fen: "8/4k3/8/8/3KP3/8/8/8 w - - 0 1",
+    solution: ["d4e5"],
+    solutionSan: ["Ke5"],
+    rating: 1000,
+    sourceRef: "Position réelle du chapitre « Opposition » de Master The Endgame (1), MungosQerslen — https://lichess.org/study/g57WZOXL/vo2O2arG.",
   },
   {
-    themeId: "eg-le-roi-actif-en-finale-de-pions",
-    fen: "6k1/8/8/8/3P4/8/8/3K4 w - - 0 1",
-    solution: ["d1d2"],
-    solutionSan: ["Kd2"],
-    rating: 950,
-    sourceRef: "Position pédagogique de démonstration — le roi se porte en avant pour escorter son pion.",
-  },
-  {
-    themeId: "eg-la-position-de-lucena",
-    fen: "4K3/4P3/6k1/8/8/8/1r6/2R5 w - - 0 1",
-    solution: ["c1c4"],
-    solutionSan: ["Rc4"],
-    rating: 1500,
-    sourceRef: "Position pédagogique inspirée de la Lucena — la tour rejoint la 4e rangée pour construire le pont.",
-  },
-  {
-    themeId: "eg-la-position-de-philidor",
-    fen: "r2k4/8/8/3K4/3P4/8/8/8 b - - 0 1",
-    solution: ["a8a6"],
-    solutionSan: ["Ra6"],
-    rating: 1500,
-    sourceRef: "Position pédagogique inspirée de Philidor — tenir la 6e rangée avant l'arrivée du pion.",
-  },
-  {
-    themeId: "eg-la-tour-derriere-le-pion-passe",
-    fen: "6k1/8/8/P7/8/6K1/8/7R w - - 0 1",
-    solution: ["h1a1"],
-    solutionSan: ["Ra1"],
+    themeId: "eg-finales-de-pions-le-duel-des-rois",
+    fen: "8/6p1/7k/8/1K6/8/1P6/8 w - - 0 1",
+    solution: ["b4c5"],
+    solutionSan: ["Kc5"],
     rating: 1400,
-    sourceRef: "Position pédagogique de démonstration — règle de Tarrasch, la tour passe derrière son pion.",
-  },
-  {
-    themeId: "eg-couper-le-roi-en-finale-de-tours",
-    fen: "8/8/4k3/8/8/4K3/8/R7 w - - 0 1",
-    solution: ["a1a6"],
-    solutionSan: ["Ra6+"],
-    rating: 1300,
-    sourceRef: "Position pédagogique de démonstration — la tour coupe le roi adverse sur la rangée.",
-  },
-  {
-    themeId: "eg-fous-de-couleurs-opposees-forteresse",
-    fen: "1b3k2/8/8/6P1/8/8/8/1B3K2 b - - 0 1",
-    solution: ["b8d6"],
-    solutionSan: ["Bd6"],
-    rating: 1900,
-    sourceRef: "Position pédagogique de démonstration — le fou noir tient la diagonale, la forteresse dessine nulle.",
-  },
-  {
-    themeId: "eg-le-mauvais-fou-en-finale",
-    fen: "7k/8/8/8/2K5/8/8/b7 w - - 0 1",
-    solution: ["c4b5"],
-    solutionSan: ["Kb5"],
-    rating: 1700,
-    sourceRef: "Position pédagogique de démonstration — le roi infiltre les cases claires, hors de portée du fou noir.",
-  },
-  {
-    themeId: "eg-cavalier-contre-pions-passes",
-    fen: "7k/8/8/8/8/8/1p6/3N3K w - - 0 1",
-    solution: ["d1b2"],
-    solutionSan: ["Nxb2"],
-    rating: 1800,
-    sourceRef: "Position pédagogique de démonstration — le cavalier arrête le pion passé net.",
-  },
-  {
-    themeId: "eg-fou-contre-cavalier-en-finale",
-    fen: "6k1/8/8/8/7n/8/8/B5K1 w - - 0 1",
-    solution: ["a1d4"],
-    solutionSan: ["Bd4"],
-    rating: 1750,
-    sourceRef: "Position pédagogique de démonstration — le fou centralise sur la grande diagonale, portée que le cavalier n'a pas.",
-  },
-  {
-    themeId: "eg-finale-pratique-convertir-l-avantage",
-    fen: "4k3/8/8/8/8/4P3/3K4/8 w - - 0 1",
-    solution: ["d2d3"],
-    solutionSan: ["Kd3"],
-    rating: 1600,
-    sourceRef: "Position pédagogique de démonstration — centraliser le roi pour convertir l'avantage matériel.",
+    sourceRef: "Position réelle du chapitre « King & Pawn vs King & Pawn (Different File) » de Master The Endgame (2), nishka_d — https://lichess.org/study/LNWy0uSa/dtnM1rKE.",
   },
   // ─────────────────────────────────────────────────────────────────────
   // Les 9 thèmes `pawn_structures` — chaque position vient d'une VRAIE
