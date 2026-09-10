@@ -12,11 +12,16 @@
  *    coup indiqué (`expectedMove`) pour avancer — adapté à 2-3 coups d'une
  *    manœuvre précise.
  *  - `CourseLesson` est un cours à LIRE, chapitre par chapitre (bouton
- *    Précédent/Suivant, jamais de coup à trouver) — chaque `CourseStep` est
- *    un chapitre RÉEL de l'étude source, avec sa propre position, son propre
- *    commentaire traduit, et les coups clés qui y sont joués (affichés en
- *    texte SAN sous le diagramme, jamais rejoués case par case : ce module
- *    reste pur, sans dépendance à chess.js, comme `theme-demo.ts`).
+ *    Précédent/Suivant, jamais bloqué par un coup à trouver) — chaque
+ *    `CourseStep` est un chapitre RÉEL de l'étude source, avec sa propre
+ *    position et son propre commentaire traduit. Ce module reste pur, sans
+ *    dépendance à chess.js, comme `theme-demo.ts` : `moveSan` n'y est que du
+ *    texte SAN. Cahier des charges du 2026-09-09, « possibilité de tenter de
+ *    trouver le bon coup, de retenter » : c'est le VIEWER
+ *    (`course-lesson-viewer.tsx`), pas ce module, qui rejoue `moveSan` avec
+ *    chess.js au rendu pour transformer chaque chapitre qui en porte un en
+ *    mini défi « devine le coup » pli par pli — indice et « voir la suite »
+ *    toujours disponibles, jamais de blocage dur.
  *
  * `fen` porte la position qu'affiche le diagramme — le point de départ du
  * chapitre pour les chapitres purement explicatifs, ou la position obtenue
@@ -50,7 +55,12 @@ export interface CourseStep {
   fen: string;
   /** Commentaire pédagogique de ce chapitre, traduit et adapté du texte source. */
   text: string;
-  /** Coups clés joués depuis la position de départ RÉELLE du chapitre — texte seul, jamais rejoué visuellement. */
+  /**
+   * Coups clés joués depuis la position de départ RÉELLE du chapitre — texte
+   * SAN pur ici (ce module n'importe pas chess.js), mais le viewer
+   * (`course-lesson-viewer.tsx`) les rejoue avec chess.js au rendu pour en
+   * faire un défi « devine le coup » interactif, pli par pli.
+   */
   moveSan?: readonly string[];
   arrows?: readonly CourseArrow[];
   highlights?: readonly CourseHighlight[];
@@ -171,6 +181,53 @@ export interface CourseLesson {
  * `pm-doubler-les-pions-adverses` ; Pion passé protégé →
  * `pm-le-pion-passe-protege` ; Colonne ouverte → `pm-la-colonne-ouverte` ;
  * Colonne semi-ouverte → `pm-la-colonne-semi-ouverte`.
+ *
+ * ## Format « étude Lichess complète » : tutoriel + vague de puzzles (2026-09-10)
+ *
+ * Cahier des charges du 2026-09-10 : « Principal UI/UX Architect » — calquer
+ * l'onglet Apprendre sur le modèle interactif des meilleures études Lichess
+ * (référence citée : https://lichess.org/study/kNn68T8l), un chapitre
+ * d'introduction théorique suivi d'une série de puzzles thématiques liés.
+ * `pm-le-mauvais-fou` est le premier thème converti à ce format : ses 4
+ * PREMIERS chapitres (avant les 13 chapitres de parties de maîtres déjà en
+ * place depuis le 2026-09-08, inchangés) forment désormais ce tutoriel —
+ * sourcés des chapitres théoriques (non-"Exercise") de cette même étude de
+ * NoseKnowsAll, `[%csl]`/`[%cal]` du PGN source repris en `highlights`/
+ * `arrows`. Juste après ce tutoriel, `ThemeLesson` bascule sur `ThemeSession`
+ * (bouton « Passer aux exercices »), qui sert maintenant les 8 puzzles
+ * thématiques liés au MÊME thème (`MASTER_PUZZLES_DATASET`, voir son
+ * docstring pour le détail des 8 chapitres "Exercise") via le nouveau HUD
+ * `AcademyPuzzleArena` (`client/features/learn/academy-puzzle-arena.tsx`) —
+ * barre segmentée, transition en fondu enchaîné entre puzzles, son de
+ * validation `esport-audio-synth.ts`. Le badge de palier (Bronze/Argent/Or,
+ * `theme.level`) ne se débloque qu'une fois `completedCount >= totalPuzzles`
+ * ATTEINT APRÈS le tutoriel — mécanisme déjà en place nativement (voir
+ * `LearnScreen`, navigation `lesson` → `session` uniquement), aucune
+ * nouvelle logique de déblocage n'a été nécessaire.
+ *
+ * `pm-l-avant-poste-du-cavalier` est le second thème converti à ce format
+ * (2026-09-10) : ses 4 PREMIERS chapitres (avant les 18 chapitres de parties
+ * de maîtres déjà en place depuis le 2026-09-08, inchangés) forment
+ * désormais ce tutoriel — sourcés des chapitres théoriques (DEFINITION,
+ * UTILITE STRATEGIQUE, CREATION EXEMPLE 1, CAP SUR L'A.P EXEMPLE 2) de
+ * l'étude Lichess d'Antoine01 « L'avant-poste du Cavalier - cours Antoine01 »
+ * (`https://lichess.org/study/AXtMrSMm`), qui alimente aussi les 8 puzzles
+ * de la vague (`MASTER_PUZZLES_DATASET`, voir son docstring). Cette étude
+ * compte 16 chapitres au total, mais seuls 7 portent explicitement
+ * "EXERCICE" dans leur titre — 3 d'entre eux (CAP SUR L'AP EXERCICE 2, 3, 4)
+ * ont dû être ÉCARTÉS de la vague de puzzles car leur ligne PRINCIPALE n'est
+ * PAS le coup recommandé par l'annotateur (le vrai coup fort, marqué "!",
+ * est enterré dans une variante RAV — jouer la ligne principale comme
+ * "solution" aurait enseigné un coup faible ou hors-sujet). Pour combler la
+ * vague à 8 puzzles malgré cela, 4 chapitres nommés "EXEMPLE" dont la ligne
+ * PRINCIPALE porte bien le coup fort (marqué "!" ou explicitement complimenté
+ * dans le commentaire) ont été promus au rang de puzzle plutôt que de
+ * tutoriel — voir le docstring de `master-puzzles-dataset.ts` pour le détail
+ * exercice par exercice.
+ *
+ * Les 28 autres thèmes `positional_mastery` restent au format à un seul
+ * exercice : les convertir de la même façon suppose une étude Lichess réelle
+ * par thème, non encore fournie — voir la mémoire de session pour le suivi.
  */
 export const COURSE_LESSONS: Record<string, CourseLesson> = {
   "ps-formation-caro-kann": {
@@ -1678,6 +1735,45 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
   },
   "pm-l-avant-poste-du-cavalier": {
     steps: [
+      // Les 4 premiers chapitres (Tutoriel) sont nouveaux (2026-09-10) : sourcés
+      // des chapitres THÉORIQUES (non-Exercice) de l'étude Lichess d'Antoine01
+      // « L'avant-poste du Cavalier - cours Antoine01 »
+      // (https://lichess.org/study/AXtMrSMm) — la même étude dont 8 chapitres
+      // alimentent maintenant la vague de puzzles de ce thème dans
+      // `master-puzzles-dataset.ts` (voir son docstring). Les `arrows`/
+      // `highlights` reprennent telles quelles les indications `[%csl]`/
+      // `[%cal]` du PGN source quand elles portent sur la position de départ du
+      // chapitre affichée ici (jamais une indication tirée d'une variante RAV
+      // qui ne s'applique pas à cette position). Les 18 chapitres suivants
+      // (trois parties de maîtres commentées, lot du 2026-09-08) restent
+      // inchangés.
+      {
+        title: "Tutoriel — Qu'est-ce qu'un avant-poste ?",
+        fen: "3bk3/p2p4/1p1p2p1/2p1p1Pp/3nP2P/2N1N3/PPP1P3/3K4 w - - 0 1",
+        text: "Un avant-poste est une case protégée par un de nos pions qui ne peut plus jamais être contrôlée par un pion adverse. Dans cette position, les Blancs peuvent compter sur l'avant-poste d5, mais aussi f6 (malgré la présence du Fou d8) et h6. Les Noirs semblent avoir un avant-poste en d4... mais non ! Cette case peut encore être contrôlée par le pion e2 ou c2 dès qu'ils avanceront d'une case. Le seul véritable avant-poste des Noirs est la case g4.\n\nPRO TIP : avant de baptiser une case « avant-poste », vérifie TOUS les pions adverses qui pourraient encore la rejoindre en avançant — pas seulement ceux déjà alignés sur sa colonne.",
+        highlights: [
+          { square: "d5", color: "green" },
+          { square: "f6", color: "green" },
+          { square: "h6", color: "green" },
+        ],
+      },
+      {
+        title: "Tutoriel — L'utilité stratégique de l'avant-poste",
+        fen: "2r3k1/p2qb1pp/1p1pNr2/2pP4/2P5/1P1Q4/P5PP/4RRK1 w - - 0 1",
+        text: "Un Cavalier est une pièce à courte portée : il a besoin de cases fortes dans le camp adverse pour s'exprimer pleinement. Un Cavalier centralisé sur un avant-poste atteint son plein potentiel dès la 6e rangée (la 3e rangée pour les Noirs) — regarde ce Cavalier blanc en e6, profondément enraciné au cœur de la position noire, inatteignable par le moindre pion.\n\nPRO TIP : plus un Cavalier avance sur un avant-poste protégé, plus il rayonne loin dans le camp adverse — c'est pour ça qu'un avant-poste en 6e/3e rangée vaut largement plus qu'un avant-poste en 4e/5e rangée.",
+      },
+      {
+        title: "Tutoriel — Créer un avant-poste de toutes pièces",
+        fen: "r6r/pppnk3/3p4/3Pp1pp/PPP1Pp2/5P2/1KB3PP/R4R2 b - - 0 1",
+        text: "Un avant-poste n'existe pas toujours naturellement — il faut parfois le CRÉER en poussant ses pions pour écarter définitivement les pions adverses qui pourraient un jour contrôler la case visée. Ici, l'idée la plus forte était 1...a5! : après 2.bxa5 Rxa5, la case a4 devient un avant-poste inattaquable pour le Cavalier d7 (plan Nd7-c5-a4), avec la Tour prête à doubler sur la colonne a. La partie a suivi une voie plus prudente.",
+        moveSan: ["c5", "b5", "b6"],
+      },
+      {
+        title: "Tutoriel — Cap sur l'avant-poste : rediriger sa pièce",
+        fen: "r4rk1/3bppbp/1q4p1/np1pP3/3P4/1P2BN2/4BPPP/R2Q1RK1 w - - 0 18",
+        text: "Repérer un avant-poste ne suffit pas : encore faut-il y conduire sa pièce, parfois en la faisant reculer d'abord pour mieux sauter ensuite. Ici, le développement naturel 18.Bf4 est correct, mais l'idée la plus incisive était 18.Ne1! — le Cavalier recule d'une case pour mieux foncer vers l'avant-poste c5 (Ne1-d3-c5), un détour que beaucoup de joueurs hésitent à jouer instinctivement.\n\nPRO TIP : un Cavalier qui recule n'est pas un Cavalier passif — s'il prépare un saut vers un avant-poste, c'est souvent le coup le plus actif du coup.",
+        moveSan: ["Bf4"],
+      },
       {
         title: "Isaac Boleslavsky – Georgy Lisitsin, USSR Championship 1956",
         fen: "r4rk1/pp3pbp/3pbnp1/q3p3/4P3/2N1BP2/PPPQ2PP/1K1R1B1R w - - 2 13",
@@ -1876,6 +1972,51 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
   },
   "pm-le-mauvais-fou": {
     steps: [
+      // Les 4 premiers chapitres (Tutoriel) sont nouveaux (2026-09-10) : sourcés
+      // des chapitres THÉORIQUES (non-Exercise) de l'étude Lichess de
+      // NoseKnowsAll « Bishops | Slice through the opposition! »
+      // (https://lichess.org/study/kNn68T8l) — la même étude dont les 8
+      // chapitres "Exercise 1" à "Exercise 8" alimentent maintenant la vague de
+      // puzzles de ce thème dans `master-puzzles-dataset.ts` (voir son
+      // docstring). Les `arrows`/`highlights` reprennent telles quelles les
+      // indications `[%csl]`/`[%cal]` du PGN source. Les 13 chapitres suivants
+      // (deux parties de maîtres commentées) restent inchangés.
+      {
+        title: "Tutoriel — La règle de la couleur : bon Fou, mauvais Fou",
+        fen: "r1bq1rk1/pp2bppp/2n1p3/3pP3/2pP4/2P2N2/PPB2PPP/R1BQ1RK1 w Qq - 0 1",
+        text: "Un Fou est dit « bon » quand il évolue sur la couleur OPPOSÉE à celle de ses pions fixes (au centre en général) : libre de ses mouvements, il contrôle souvent beaucoup de cases. Un Fou est dit « mauvais » quand il est coincé sur la MÊME couleur que ses propres pions fixes : ses mouvements sont restreints, il contrôle peu de cases. Ici, les bons Fous de chaque camp sont surlignés en vert, les mauvais en rouge.\n\nPRO TIP : ton mauvais Fou est presque toujours de la même couleur que le bon Fou adverse, et inversement — il peut donc être malin d'échanger ton mauvais Fou contre le bon Fou de l'adversaire, pour lui laisser seulement un mauvais Fou.",
+        moveSan: ["g3", "b5"],
+        highlights: [
+          { square: "c2", color: "green" },
+          { square: "e7", color: "green" },
+          { square: "c1", color: "red" },
+          { square: "c8", color: "red" },
+        ],
+      },
+      {
+        title: "Tutoriel — « Mauvais » ne veut pas dire passif",
+        fen: "r1bqkb1r/pp3ppp/2n1pn2/2pp4/3P1B2/2PBP3/PP1N1PPP/R2QK1NR b KQkq - 0 1",
+        text: "Un Fou « mauvais » n'est pas forcément une mauvaise pièce ! Dans cette position typique du système Londres, le Fou blanc en f4 et le Fou noir en c8 sont tous les deux « mauvais » à cause des pions d bloqués — mais celui de f4 est actif, il contrôle des cases clés, là où celui de c8 restera passif derrière sa chaîne de pions. Noir accepte ici d'échanger son BON Fou contre le mauvais Fou actif adverse : ce mauvais Fou actif vaut mieux que le bon Fou inactif qu'il aurait sinon.",
+        moveSan: ["Bd6", "Bxd6", "Qxd6", "f4"],
+        highlights: [
+          { square: "f4", color: "red" },
+          { square: "f8", color: "green" },
+          { square: "d3", color: "green" },
+          { square: "c8", color: "red" },
+        ],
+      },
+      {
+        title: "Tutoriel — L'horreur du mauvais Fou (Grischuk – Bauer, 2005)",
+        fen: "r3k2r/pp1qbp1p/1np1ppb1/8/3P3N/1BP2QP1/PP1B1P1P/R3K2R w KQkq - 1 15",
+        text: "Grischuk affronte ici les pions doublés en f adverses, position pourtant jouable pour Noir s'il roque côté Dame et attaque sur la colonne g ouverte. Mais après ce roque suivi d'un coup de pion malheureux (f5?!), le Fou noir de g6 — déjà retenu par le Cavalier blanc en h4 — se retrouve emprisonné par son PROPRE pion : un mauvais Fou qui devient, en plus, définitivement passif. PRO TIP : plus les pièces s'échangent, plus ce genre de mauvais Fou pèse lourd dans la balance — Grischuk gagnera cette partie méthodiquement.",
+        moveSan: ["O-O", "f5"],
+      },
+      {
+        title: "Tutoriel — L'exception : un mauvais Fou peut défendre un bon pion",
+        fen: "2r1r3/1pqbppkp/3p2p1/3P4/B6P/5P2/1PPQ2PK/3RR3 w - - 0 1",
+        text: "Exception importante à la règle « il faut activer son mauvais Fou » : quand on a l'avantage d'espace, mieux vaut parfois éviter tous les échanges. Ici, le pion d5 blanc est très fort — le Fou en b3 est techniquement « mauvais », mais il joue un rôle actif essentiel : il défend c2 et d5, et empêche à jamais le pion e adverse d'avancer.\n\nPRO TIP : un mauvais Fou qui défend un bon pion, c'est acceptable — tant que ce pion restreint les pièces adverses et que le reste de tes pièces reste actif.",
+        moveSan: ["Bb3", "Qc5"],
+      },
       {
         title: "Leonard William Barden – Nicolas Rossolimo, Hastings 1950/51 1950",
         fen: "2r1k2r/1q2bpp1/p1bp3p/1p1NpP2/1Pn1P1P1/P2Q1B2/2P4P/2BR1RK1 b k - 4 21",
@@ -3176,6 +3317,285 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
         title: "Loek van Wely – Judit Polgar : coup 30",
         fen: "1b4k1/1p5p/8/1N1p4/P1nBn1q1/4P1P1/R4rKN/7Q w - - 0 31",
         text: "La Tour noire, restée maîtresse de la colonne f semi-ouverte depuis le coup 22, porte le coup décisif : Blanc abandonne devant la perte imminente de matériel et l'attaque irrésistible.",
+      },
+    ],
+  },
+  // Les 5 thèmes ci-dessous (2026-09-10, 2e lot au format Lichess après
+  // `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`) sortent du « 1
+  // exercice, pas de tutoriel » : chacun reprend une partie de maître RÉELLE
+  // déjà présente dans `data/import/academy/PILOT_pm-*.pgn` (sourcée et
+  // pré-commentée en français par une session sœur, voir la mémoire de
+  // session « middlegame-course-pattern ») ou, à défaut de PILOT
+  // disponible (`pm-la-centralisation-des-pieces`), une étude Lichess
+  // distincte trouvée pour l'occasion. Un `CourseStep` par commentaire
+  // source, `fen` = position de départ RÉELLE avant le coup commenté,
+  // `moveSan` = la suite réellement jouée jusqu'au prochain point d'arrêt —
+  // la vague de puzzles correspondante (`master-puzzles-dataset.ts`) mine
+  // d'autres points de décision de la MÊME partie.
+  "pm-la-chaine-de-pions": {
+    steps: [
+      {
+        title: "Efim Bogoljubow – Richard Reti, 1923",
+        fen: "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+        text: "La chaîne de pions blanche e5-d4 s'établit : la case d6 devient un point d'appui potentiel pour Blanc, tandis que la base en d4 reste la cible naturelle des Noirs.",
+        moveSan: ["e5", "Nfd7", "Qg4", "c5"],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 5",
+        fen: "rnbqkb1r/pppn1ppp/4p3/3pP3/3P2Q1/2N5/PPP2PPP/R1B1KBNR b KQkq - 2 5",
+        text: "Réponse classique contre une chaîne de pions : attaquer sa base (d4), jamais son sommet (e5).",
+        moveSan: ["c5", "Nb5", "cxd4"],
+        highlights: [{ square: "e5", color: "red" }],
+        arrows: [{ from: "c5", to: "d4", color: "green" }],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 16",
+        fen: "r3k2r/p2b3p/2p1pp2/3p4/3Nn3/8/PPP2PPP/R1B2RK1 b kq - 0 16",
+        text: "Reti dispose désormais de quatre pions noirs (c5-d5-e6-f6) formant un centre compact et puissant — conséquence directe de l'attaque réussie contre la base de la chaîne blanche initiale.",
+        moveSan: ["c5", "Ne2", "Kf7"],
+        highlights: [
+          { square: "c5", color: "green" },
+          { square: "d5", color: "green" },
+          { square: "e6", color: "green" },
+          { square: "f6", color: "green" },
+        ],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 19",
+        fen: "r6r/p2b1k1p/3npp2/2pp4/8/1P3P2/P1P1N1PP/R1B2RK1 b - - 0 19",
+        text: "La nouvelle chaîne de pions noire (c5-d4-e5) commence à avancer à son tour, repoussant les pièces blanches vers l'arrière.",
+        moveSan: ["e5", "Ba3", "Rac8"],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 21",
+        fen: "2r4r/p2b1k1p/3n1p2/2ppp3/8/BP3P2/P1P1N1PP/3R1RK1 b - - 3 21",
+        text: "En avançant son pion sur une case noire, Reti limite l'action du Fou blanc de cases claires tout en dégageant celle de son propre Fou-dame.",
+        moveSan: ["d4", "Nc1", "Nf5"],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 23",
+        fen: "2r4r/p2b1k1p/5p2/2p1pn2/3p4/BP3P2/P1P2RPP/2NR2K1 b - - 3 23",
+        text: "Le Cavalier s'installe sur un avant-poste créé directement par l'avance de la chaîne de pions.",
+        moveSan: ["Ne3", "Re1", "c4"],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 26",
+        fen: "2r4r/p4k1p/5p2/4p3/bPpp4/B3nP2/P1P1RRPP/2N3K1 b - - 2 26",
+        text: "Début d'une longue promenade du Cavalier à travers tout le camp blanc.",
+        moveSan: ["Nd1", "Rf1", "Nc3"],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 29",
+        fen: "2r4r/p4k1p/5p2/4p3/bPpp4/5P2/PBP2RPP/1nN2RK1 b - - 8 29",
+        text: "Le coup qui donne son nom au thème : la chaîne de pions noire avance encore d'un cran (c3) et repousse le Fou blanc jusqu'à la dernière rangée.",
+        moveSan: ["c3", "Nb3", "Bxb3"],
+        highlights: [
+          { square: "c3", color: "green" },
+          { square: "d4", color: "green" },
+          { square: "e5", color: "green" },
+          { square: "f6", color: "green" },
+        ],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 33",
+        fen: "2rr4/p4k1p/5p2/4p3/1P1p4/1Pp2P2/2Pn1RPP/2B1R1K1 b - - 4 33",
+        text: "Percée au cœur de la chaîne pour obtenir un pion passé.",
+        moveSan: ["d3", "cxd3", "Rxd3"],
+      },
+      {
+        title: "Efim Bogoljubow – Richard Reti : coup 42",
+        fen: "8/p6p/5p2/4p3/1P1k3P/1Pr2P2/2pK2P1/2R5 b - - 0 42",
+        text: "La chaîne de pions initiale, attaquée dès le cinquième coup à sa base, aura fini par produire le pion c passé et décisif qui gagne la partie.",
+        moveSan: ["Rd3+"],
+      },
+    ],
+  },
+  "pm-la-paire-de-fous": {
+    steps: [
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca, New York 1916",
+        fen: "rn2kb1r/1p2pppp/1pp5/3N1b2/3P4/5N2/PP2PPPP/R1B1KB1R b KQkq - 0 8",
+        text: "Les pions dame noirs sont affaiblis, mais en échange deux colonnes ouvertes s'offrent aux Tours noires.",
+        moveSan: ["cxd5", "e3", "Nc6"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 10",
+        fen: "r3kb1r/1p2pppp/1pn5/3p1b2/3P4/4PN2/PP1B1PPP/R3KB1R b KQkq - 2 10",
+        text: "L'un des coups les plus profonds jamais joués, selon Chernev : Capablanca désinstalle volontairement son propre Fou et va même l'enfermer au coup suivant par ...e6. Le plan est ...Na5, ...b5 (le pion protégé par le Fou) et ...Nc4 : si les Blancs prennent le Cavalier, la reprise dégagera les pions noirs ET laissera Capablanca avec l'avantage de la paire de Fous — l'objectif réel de toute la manœuvre.",
+        moveSan: ["Bd7", "Be2", "e6"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 13",
+        fen: "r3k2r/1p1b1ppp/1pnbp3/3p4/3P4/4PN2/PP1BBPPP/R1R3K1 b kq - 3 13",
+        text: "Petit à petit, Capablanca prépare la suite de son plan sans se presser.",
+        moveSan: ["Ke7", "Bc3", "Rhc8"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 15",
+        fen: "r1r5/1p1bkppp/1pnbp3/3p4/3P4/2B1PN2/PP2BPPP/R1R3K1 w - - 6 15",
+        text: "Ce coup crée un trou en b3, une faiblesse organique irrémédiable.",
+        moveSan: ["a3", "Na5"],
+        highlights: [{ square: "b3", color: "red" }],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 15 (suite)",
+        fen: "r1r5/1p1bkppp/1pnbp3/3p4/3P4/P1B1PN2/1P2BPPP/R1R3K1 b - - 0 15",
+        text: "Capablanca poursuit son plan : installer le Cavalier sur c4.",
+        moveSan: ["Na5", "Nd2", "f5"],
+        arrows: [
+          { from: "a5", to: "c4", color: "green" },
+          { from: "b6", to: "b5", color: "green" },
+        ],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 18",
+        fen: "r1r5/1p1bk1pp/3bp3/np1p1p2/3P4/P1B1PPP1/1P1NB2P/R1R3K1 b - - 0 18",
+        text: "Premier plan accompli : les Blancs devront prendre le Cavalier, et la faiblesse restante (le pion b doublé) deviendra une source de force en c4.",
+        moveSan: ["Nc4", "Bxc4", "bxc4"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 31",
+        fen: "r7/3bbk2/4p2p/1p1pPp2/2pP1Pr1/P1B2K2/1P4NP/1R4R1 b - - 4 31",
+        text: "Le Fou-dame noir, silencieux depuis son dixième coup, s'apprête à peser de tout son poids sur la position blanche.",
+        moveSan: ["Rag8", "Be1", "b4"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 32",
+        fen: "6r1/3bbk2/4p2p/1p1pPp2/2pP1Pr1/P4K2/1P4NP/1R2B1R1 b - - 6 32",
+        text: "Un sacrifice qui dégage enfin la diagonale du Fou-dame noir, muet depuis vingt-deux coups.",
+        moveSan: ["b4", "axb4", "Ba4"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 33",
+        fen: "6r1/3bbk2/4p2p/3pPp2/1PpP1Pr1/5K2/1P4NP/1R2B1R1 b - - 0 33",
+        text: "Le Fou se dirige vers c2 puis e4, où il frappera le Cavalier derrière le Roi blanc.",
+        moveSan: ["Ba4", "Ra1", "Bc2"],
+      },
+      {
+        title: "Dawid Janowsky – Jose Raul Capablanca : coup 42",
+        fen: "6r1/R3Bk2/4p3/3pPp2/1PpP1P2/7r/1P3K2/8 b - - 2 42",
+        text: "Aucune pièce ou pion noir ne se trouve sur case blanche — la paire de Fous initiale s'est transformée en domination totale des cases blanches, jusqu'à la victoire finale.",
+        moveSan: ["Rb3"],
+      },
+    ],
+  },
+  "pm-la-securite-du-roi-en-milieu-de-partie": {
+    steps: [
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard, Opéra de Paris 1858",
+        fen: "rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3",
+        text: "Une erreur de développement : ce Fou sort avant que le Roi noir ne soit en sécurité.",
+        moveSan: ["Bg4", "dxe5", "Bxf3"],
+      },
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard : coup 7",
+        fen: "rn1qkb1r/ppp2ppp/5n2/4p3/2B1P3/5Q2/PPP2PPP/RNB1K2R w KQkq - 2 7",
+        text: "La Dame attaque déjà b7 et f7 à la fois — les Noirs n'ont toujours pas roqué, et chaque tempo perdu va se payer cher.",
+        moveSan: ["Qb3", "Qe7"],
+      },
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard : coup 7 (suite)",
+        fen: "rn1qkb1r/ppp2ppp/5n2/4p3/2B1P3/1Q6/PPP2PPP/RNB1K2R b KQkq - 3 7",
+        text: "Ce coup protège f7 mais bloque à jamais le roque noir : le Roi restera au centre pour le reste de la partie, condamnant les Noirs avant même le milieu de partie.",
+        moveSan: ["Qe7", "Nc3", "c6"],
+      },
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard : coup 10",
+        fen: "rn2kb1r/p3qppp/2p2n2/1p2p1B1/2B1P3/1QN5/PPP2PPP/R3K2R w KQkq - 0 10",
+        text: "Morphy sacrifie déjà une pièce pour ouvrir des lignes vers le Roi bloqué au centre — exactement le prix à payer pour un Roi qui n'a jamais trouvé la sécurité du roque.",
+        moveSan: ["Nxb5", "cxb5", "Bxb5+"],
+      },
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard : coup 12",
+        fen: "r3kb1r/p2nqppp/5n2/1B2p1B1/4P3/1Q6/PPP2PPP/R3K2R w KQkq - 1 12",
+        text: "Morphy, lui, a roqué depuis longtemps : son Roi est en sécurité, tandis que celui des Noirs est encore au centre, cible de toutes les pièces blanches développées.",
+        moveSan: ["O-O-O", "Rd8", "Rxd7"],
+      },
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard : coup 16",
+        fen: "4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w k - 0 16",
+        text: "Le sacrifice final, rendu possible uniquement parce que le Roi noir n'a jamais quitté le centre.",
+        moveSan: ["Qb8+", "Nxb8"],
+      },
+      {
+        title: "Paul Morphy – Duc de Brunswick & Comte Isouard : coup 17",
+        fen: "1n2kb1r/p4ppp/4q3/4p1B1/4P3/8/PPP2PPP/2KR4 w k - 0 17",
+        text: "Mat : la totalité de la partie tient en une seule idée — un Roi jamais mis en sécurité finit toujours par être rattrapé, même avec toutes les pièces encore sur l'échiquier.",
+        moveSan: ["Rd8#"],
+      },
+    ],
+  },
+  "pm-la-tour-a-la-7e-rangee": {
+    steps: [
+      {
+        title: "Jose Raul Capablanca – Saviel Tartakower, New York 1924",
+        fen: "4k3/p1p2r1p/1p4p1/n2p4/P2P1P1P/2PB2P1/6K1/R7 w - - 0 27",
+        text: "Capablanca sacrifie déjà des pions pour ouvrir des lignes vers le Roi noir.",
+        moveSan: ["h5", "Rf6", "hxg6"],
+      },
+      {
+        title: "Jose Raul Capablanca – Saviel Tartakower : coup 29",
+        fen: "4k3/p1p5/1p3rp1/n2p4/P2P1P2/2PB2P1/6K1/R7 w - - 0 29",
+        text: "La Tour se dirige vers la colonne ouverte, prête à saisir la 7e rangée au coup suivant.",
+        moveSan: ["Rh1", "Kf8", "Rh7"],
+      },
+      {
+        title: "Jose Raul Capablanca – Saviel Tartakower : coup 30",
+        fen: "5k2/p1p5/1p3rp1/n2p4/P2P1P2/2PB2P1/6K1/7R w - - 2 30",
+        text: "La Tour arrive à la 7e rangée — le coup magique des finales de Tours. Trois effets à la fois : elle attaque tous les pions noirs qui n'ont pas encore bougé, elle peut prendre à revers ceux qui ont avancé, et elle confine le Roi noir à la dernière rangée, l'empêchant de participer au combat.",
+        moveSan: ["Rh7", "Rc6", "g4"],
+      },
+      {
+        title: "Jose Raul Capablanca – Saviel Tartakower : coup 35",
+        fen: "5k2/p1p4R/1pr5/3p1pP1/P2P1P2/2P2K2/8/8 w - - 0 35",
+        text: "Le Roi blanc se dirige vers f6 pour escorter son pion passé et participer aux menaces de mat — deuxième moitié de la formule « Tour à la 7e, Roi à la 6e ».",
+        moveSan: ["Kg3", "Rxc3+", "Kh4"],
+      },
+      {
+        title: "Jose Raul Capablanca – Saviel Tartakower : coup 52",
+        fen: "6k1/2R3P1/1pK5/3P4/r7/8/8/8 w - - 0 52",
+        text: "Le pion d, escorté par le Roi, va promouvoir : quatre pions noirs sont tombés en une demi-douzaine de coups dès l'installation de la Tour en 7e rangée, et toute résistance est désormais vaine.",
+        moveSan: ["d6"],
+      },
+    ],
+  },
+  "pm-la-centralisation-des-pieces": {
+    steps: [
+      {
+        title: "Étude Lichess « Centralizing the pieces » — le Roi actif en finale de Tours",
+        fen: "3r4/1r3kp1/b4p2/p2p4/3b1P2/3P1BP1/P1R2NK1/3R4 b - - 0 1",
+        text: "Noir veut échanger les Tours pour ensuite activer son Roi : sans Tour à défendre, le Roi peut se permettre de marcher au centre.",
+        moveSan: ["Rb2", "Rxb2", "Bxb2"],
+      },
+      {
+        title: "Centralisation du Roi (suite)",
+        fen: "3r4/5kp1/b4p2/p2p4/3b1P2/3P1BPN/P2R2K1/8 b - - 3 4",
+        text: "Le Roi noir n'a plus de Tour à protéger : il fonce vers le centre, exactement le rôle qu'on lui refuse tant que Dames et Tours occupent l'échiquier.",
+        moveSan: ["Ke6", "Rc2", "Kd6"],
+      },
+      {
+        title: "Centralisation du Roi (fin)",
+        fen: "8/6p1/b4p2/p2pkP2/6P1/3PbK1N/P1B5/8 b - - 2 10",
+        text: "Le Roi noir achève sa centralisation : depuis d4, il domine directement les pions blancs et prépare la finale gagnante.",
+        moveSan: ["Kd4"],
+      },
+      {
+        title: "La Dame centralisée attaque des deux côtés à la fois",
+        fen: "8/p2B3k/1p6/1P6/7K/6Q1/6p1/5q2 w - - 0 1",
+        text: "Centraliser la Dame : depuis e5, elle contrôle un maximum de cases tout en couvrant son propre camp et en surveillant la promotion du pion noir en g2.",
+        moveSan: ["Qe5"],
+      },
+      {
+        title: "Centralisation de la Dame contre deux faiblesses",
+        fen: "4r2k/7p/2q5/2p1pQ2/8/P7/6PP/2R4K w - - 0 1",
+        text: "Une Dame centralisée peut basculer d'une faiblesse à l'autre (ici c5 et e5) — l'atout décisif d'une pièce qui contrôle le centre plutôt qu'un seul flanc.",
+        moveSan: ["Qh5", "Re7", "Rd1"],
+      },
+      {
+        title: "Le Cavalier centralisé lance l'attaque de mat",
+        fen: "rn1q1rk1/pbp1bppp/1p3n2/3pN1B1/3P4/2NBP3/PP3PPP/R2QK2R b KQq - 0 1",
+        text: "Le Cavalier blanc est solidement centralisé en e5, soutenu par d4 et pouvant bientôt s'appuyer sur f4 : c'est cette centralisation qui va permettre toute l'attaque qui suit.",
+        moveSan: ["Nbd7", "f4", "c5", "O-O"],
       },
     ],
   },

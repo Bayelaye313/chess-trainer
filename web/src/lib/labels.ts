@@ -6,7 +6,7 @@
  * libellé ne touche jamais aux données.
  */
 import type { EngineLine } from "@/core/analysis/types";
-import type { KeyMomentKind } from "@/core/analysis/timeline";
+import type { KeyMomentKind, TimelinePly } from "@/core/analysis/timeline";
 import type { Termination } from "@/core/chess/termination";
 import type { GamePhase, GameResult, Motif, MoveQuality, WrongMoveHint } from "@/core/chess/types";
 import type { CurriculumLevel } from "@/server/db/schema/curriculum";
@@ -202,6 +202,34 @@ export function arrowsFromEngineLines(
     endSquare: line.uci.slice(2, 4),
     color: ENGINE_ARROW_COLORS[index],
   }));
+}
+
+/** Couleur de la flèche « coup joué » — voir `--engine-arrow-played`, globals.css. */
+const PLAYED_ARROW_COLOR = "color-mix(in srgb, var(--engine-arrow-played) 85%, transparent)";
+
+/**
+ * Flèches « double-flux » de la Revue de partie (cahier des charges §11) —
+ * affichées en permanence, pas seulement en Mode Exploration : le meilleur
+ * coup du moteur (`analysis.bestUci`, déjà calculé à l'import pour LES DEUX
+ * camps — voir le docstring de `TimelinePly`) et, s'il diffère, le coup
+ * réellement joué (`entry.uci`), pour comparer d'un coup d'œil le choix du
+ * joueur à la vérité moteur. Aucune flèche sans analyse disponible (coup non
+ * analysé), et une seule flèche si le coup joué EST le meilleur coup —
+ * superposer deux flèches identiques n'apporterait rien.
+ */
+export function playedVsBestArrows(
+  entry: TimelinePly,
+): { startSquare: string; endSquare: string; color: string }[] {
+  const best = entry.analysis?.bestUci;
+  if (!best) return [];
+
+  const arrows = [
+    { startSquare: best.slice(0, 2), endSquare: best.slice(2, 4), color: ENGINE_ARROW_COLORS[0] },
+  ];
+  if (entry.uci !== best) {
+    arrows.push({ startSquare: entry.uci.slice(0, 2), endSquare: entry.uci.slice(2, 4), color: PLAYED_ARROW_COLOR });
+  }
+  return arrows;
 }
 
 /**

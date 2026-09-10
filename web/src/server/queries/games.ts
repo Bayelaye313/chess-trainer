@@ -7,7 +7,7 @@ import "server-only";
  * aux mutations déclenchées depuis un composant client).
  */
 import { Chess } from "chess.js";
-import { and, asc, desc, eq, gt, inArray, isNotNull, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, like, lt } from "drizzle-orm";
 import { db } from "@/server/db";
 import { moveRowToAnalysedPly } from "@/server/db/mappers";
 import { games, moves, type Game, type GameResult, type MoveRow } from "@/server/db/schema";
@@ -34,6 +34,59 @@ export interface GameSummary {
 
 export const GAMES_PAGE_SIZE = 25;
 
+/**
+ * Nombre maximal de résultats renvoyés par `searchGamesSummary` — une
+ * recherche instantanée n'a pas besoin de pagination, juste d'un plafond
+ * raisonnable pour ne jamais ramener tout l'historique d'un joueur prolifique.
+ */
+const GAMES_SEARCH_LIMIT = 50;
+
+/**
+ * Charge le tally de qualités par partie (coups DU JOUEUR uniquement — voir
+ * commentaire plus bas) et assemble les `GameSummary` — factorisé entre
+ * `listGamesSummary` (page) et `searchGamesSummary` (recherche), même forme
+ * de sortie, seule la requête `gameRows` en amont diffère.
+ */
+async function hydrateGameSummaries(gameRows: Game[]): Promise<GameSummary[]> {
+  if (gameRows.length === 0) return [];
+
+  const moveRows = await db
+    .select({ gameId: moves.gameId, quality: moves.quality, byPlayer: moves.byPlayer })
+    .from(moves)
+    .where(
+      inArray(
+        moves.gameId,
+        gameRows.map((g) => g.id),
+      ),
+    );
+
+  // Compte et précision ne portent que sur le joueur — l'adversaire est
+  // analysé aussi (voir analyse-game.ts) mais ce n'est pas sa précision à lui.
+  const qualitiesByGame = new Map<string, MoveRow["quality"][]>();
+  for (const row of moveRows) {
+    if (!row.byPlayer) continue;
+    const list = qualitiesByGame.get(row.gameId) ?? [];
+    list.push(row.quality);
+    qualitiesByGame.set(row.gameId, list);
+  }
+
+  return gameRows.map((g) => {
+    const qualities = qualitiesByGame.get(g.id) ?? [];
+    return {
+      id: g.id,
+      source: g.source,
+      opponentName: g.opponentName,
+      opponentRating: g.opponentRating,
+      playerColor: g.playerColor,
+      result: g.result,
+      timeControl: g.timeControl,
+      playedAt: g.playedAt,
+      movesAnalysed: qualities.length,
+      accuracy: computeAccuracy(qualities.map((quality) => ({ quality }))),
+    };
+  });
+}
+
 export async function listGamesSummary(
   page = 1,
 ): Promise<{ games: GameSummary[]; hasMore: boolean }> {
@@ -49,45 +102,32 @@ export async function listGamesSummary(
 
   const hasMore = gameRows.length > GAMES_PAGE_SIZE;
   const pageRows = gameRows.slice(0, GAMES_PAGE_SIZE);
-  if (pageRows.length === 0) return { games: [], hasMore: false };
 
-  const moveRows = await db
-    .select({ gameId: moves.gameId, quality: moves.quality, byPlayer: moves.byPlayer })
-    .from(moves)
-    .where(
-      inArray(
-        moves.gameId,
-        pageRows.map((g) => g.id),
-      ),
-    );
+  return { games: await hydrateGameSummaries(pageRows), hasMore };
+}
 
-  // Compte et précision ne portent que sur le joueur — l'adversaire est
-  // analysé aussi (voir analyse-game.ts) mais ce n'est pas sa précision à lui.
-  const qualitiesByGame = new Map<string, MoveRow["quality"][]>();
-  for (const row of moveRows) {
-    if (!row.byPlayer) continue;
-    const list = qualitiesByGame.get(row.gameId) ?? [];
-    list.push(row.quality);
-    qualitiesByGame.set(row.gameId, list);
-  }
+/**
+ * Recherche instantanée (barre de recherche débouncée, onglet « Jouer contre
+ * le Bot ») — filtre sur `opponentName`, qui couvre aussi bien un pseudo
+ * humain (partie importée) qu'un nom de bot (partie locale, voir
+ * `use-play-game.ts`) : un seul champ à interroger. `LIKE` SQLite est déjà
+ * insensible à la casse pour l'ASCII, suffisant pour ce besoin. `query` vide
+ * ne devrait jamais arriver ici (le composant retombe alors sur
+ * `listGamesSummary`), mais renvoie tout de même un résultat cohérent
+ * (aucun filtre) plutôt que de planter.
+ */
+export async function searchGamesSummary(query: string): Promise<GameSummary[]> {
+  const trimmed = query.trim();
+  if (trimmed.length === 0) return [];
 
-  const summaries: GameSummary[] = pageRows.map((g) => {
-    const qualities = qualitiesByGame.get(g.id) ?? [];
-    return {
-      id: g.id,
-      source: g.source,
-      opponentName: g.opponentName,
-      opponentRating: g.opponentRating,
-      playerColor: g.playerColor,
-      result: g.result,
-      timeControl: g.timeControl,
-      playedAt: g.playedAt,
-      movesAnalysed: qualities.length,
-      accuracy: computeAccuracy(qualities.map((quality) => ({ quality }))),
-    };
-  });
+  const gameRows = await db
+    .select()
+    .from(games)
+    .where(and(isNotNull(games.pgn), like(games.opponentName, `%${trimmed}%`)))
+    .orderBy(desc(games.playedAt))
+    .limit(GAMES_SEARCH_LIMIT);
 
-  return { games: summaries, hasMore };
+  return hydrateGameSummaries(gameRows);
 }
 
 export interface SideOverview {

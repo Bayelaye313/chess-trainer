@@ -19,19 +19,53 @@
  * `onComplete` prévient le parent (`ThemeLesson`) une seule fois, dès que la
  * dernière étape est atteinte — c'est CE signal qui débloque le bouton
  * « Passer aux exercices » (jamais avant, cahier des charges explicite).
+ *
+ * Retour utilisateur du 2026-09-09, mêmes deux correctifs que
+ * `CourseLessonViewer` (voir son docstring, source de vérité pour le détail
+ * du mécanisme) : `boardOrientation` suit `turnOf(step.fen)` plutôt que
+ * d'être figé sur Blancs, et un coup faux anime la pièce jusqu'à la case
+ * jouée (`previewWrongMove`) avant de la faire revenir après
+ * `WRONG_MOVE_REVERT_MS`, tremblement + bip via `useErrorShake` (même
+ * mécanisme que le Mode Entraînement des ouvertures, jamais réinventé ici).
  */
 import { useEffect, useRef, useState } from "react";
+import { Chess, type Square } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { useErrorShake } from "@/client/features/openings/error-feedback";
 import type { ThemeDemo } from "@/core/curriculum/theme-demo";
 
 const THREAT_ARROW_COLOR = "var(--quality-blunder)";
 const SOLUTION_ARROW_COLOR = "var(--quality-best)";
+/** Même délai que `CourseLessonViewer` — voir son docstring. */
+const WRONG_MOVE_REVERT_MS = 500;
+
+function turnOf(fen: string): "w" | "b" {
+  return fen.split(" ")[1] === "b" ? "b" : "w";
+}
+
+/** Identique à `previewWrongMove` de `CourseLessonViewer` — voir son docstring (pas de module partagé pour ~10 lignes, chaque appelant reste indépendant comme `buildMovePlan`/`turnOf` le sont déjà entre les deux fichiers). */
+function previewWrongMove(fen: string, from: string, to: string): string | null {
+  try {
+    const chess = new Chess(fen);
+    const piece = chess.remove(from as Square);
+    if (!piece) return null;
+    chess.remove(to as Square);
+    if (!chess.put({ type: piece.type, color: piece.color }, to as Square)) return null;
+    return chess.fen();
+  } catch {
+    return null;
+  }
+}
 
 export function ThemeDemoBoard({ demo, onComplete }: { demo: ThemeDemo; onComplete?: () => void }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [wrongAttempt, setWrongAttempt] = useState(false);
+  const [wrongPreviewFen, setWrongPreviewFen] = useState<string | null>(null);
+  const [errorPulse, setErrorPulse] = useState(0);
+  const shaking = useErrorShake(errorPulse);
   const step = demo.steps[stepIndex];
   const isLastStep = stepIndex === demo.steps.length - 1;
+  const displayFen = wrongPreviewFen ?? step.fen;
 
   // Un seul appel à `onComplete`, même si le joueur revoit la démonstration
   // ensuite (« Revoir » ci-dessous) — débloquer les exercices une fois ne se

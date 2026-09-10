@@ -24,10 +24,12 @@
  * cahier des charges du 2026-09-07) quand le thème en a un : un vrai COURS À
  * PLUSIEURS CHAPITRES (`CourseLessonViewer`) — chaque chapitre sa position
  * réelle et son commentaire traduit, on tourne les pages avec Précédent/
- * Suivant, jamais de coup à trouver. Réservé aux sujets dont la source a
- * assez de matière (ex. « Le pion arriéré », 17 chapitres réels de l'étude
- * Lichess « Pawn Structure » de Yushan) pour être racontés ainsi plutôt qu'en
- * 2-3 étapes.
+ * Suivant. Réservé aux sujets dont la source a assez de matière (ex. « Le
+ * pion arriéré », 17 chapitres réels de l'étude Lichess « Pawn Structure » de
+ * Yushan) pour être racontés ainsi plutôt qu'en 2-3 étapes. Depuis le cahier
+ * des charges du 2026-09-09, chaque chapitre qui porte des coups clés
+ * (`moveSan`) devient un mini défi « devine le coup » interactif — voir le
+ * docstring de `CourseLessonViewer`.
  *
  * À défaut, priorité à `THEME_DEMOS` (`core/curriculum/theme-demo.ts`, cahier
  * des charges du 2026-09-06) quand le thème en a une : une VRAIE séquence de

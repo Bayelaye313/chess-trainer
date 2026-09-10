@@ -2,7 +2,7 @@ import "server-only";
 
 /**
  * Alimentation de l'onglet « Apprendre » : purge la table `curriculum_puzzles`,
- * puis y réinjecte, thème par thème, l'unique exercice réel et vérifié de
+ * puis y réinjecte, thème par thème, le ou les exercices réels et vérifiés de
  * `core/curriculum/master-puzzles-dataset.ts` — 100% statique, 100% hors-ligne.
  *
  * ## Pourquoi ce script a de nouveau changé
@@ -20,21 +20,26 @@ import "server-only";
  * pipeline élaboré au moment de l'exécution.
  *
  * Ici, il n'y a plus de pipeline du tout : `MASTER_PUZZLES_DATASET` porte déjà
- * la position ET la solution de chaque thème, écrites et vérifiées une fois
- * pour toutes (voir son propre docstring, et son test — FEN légale, solution
- * intégralement rejouable, aucune FEN dupliquée). Ce script ne fait plus que
- * projeter ce tableau dans `curriculum_puzzles`, une ligne par thème.
+ * la position ET la solution de chaque exercice, écrites et vérifiées une
+ * fois pour toutes (voir son propre docstring, et son test — FEN légale,
+ * solution intégralement rejouable, aucune FEN dupliquée). Ce script ne fait
+ * plus que projeter ce tableau dans `curriculum_puzzles`, une ligne PAR
+ * EXERCICE — `orderIndex` croissant dans l'ordre du dataset pour un thème qui
+ * en porte plusieurs (voir `DATASET_BY_THEME`/`buildRow` plus bas).
  *
  * ## Ce que ça garantit, et ce que ça ne garantit plus
  *
- * Garanti : chaque thème reçoit EXACTEMENT un exercice, réel et vérifié —
+ * Garanti : chaque thème reçoit au moins un exercice réel et vérifié —
  * jamais une position hors-sujet, jamais deux thèmes qui partagent la même
  * FEN. Ce que ça ne garantit plus (changement de doctrine assumé, écrit noir
  * sur blanc dans `master-puzzles-dataset.ts`) : `totalPuzzles` n'affiche plus
  * 15 à 30 comme la rotation le permettait autrefois — un seul exercice bien
  * choisi vaut mieux que trente variations de la même position. Étendre un
- * thème à plusieurs exercices est une extension future du DATASET, jamais un
- * retour à la mutation géométrique.
+ * thème à plusieurs exercices est désormais RÉALISÉ pour `pm-le-mauvais-fou`
+ * (8 exercices, une vraie "vague de puzzles" — voir le docstring de
+ * `master-puzzles-dataset.ts`), jamais par un retour à la mutation
+ * géométrique : uniquement en ajoutant, thème par thème, d'autres entrées
+ * RÉELLES et sourcées au dataset.
  *
  * Usage :
  *   npm run populate:puzzles
@@ -67,7 +72,18 @@ export interface PopulateOptions {
   dryRun?: boolean;
 }
 
-const DATASET_BY_THEME = new Map<string, MasterPuzzle>(MASTER_PUZZLES_DATASET.map((p) => [p.themeId, p]));
+// Regroupe par `themeId` plutôt qu'une simple `Map<themeId, un seul puzzle>`
+// (bug potentiel depuis le 2026-09-10 : une `Map` construite depuis
+// `.map((p) => [p.themeId, p])` écraserait silencieusement les entrées
+// précédentes d'un même thème, ne gardant que la DERNIÈRE — exactement ce
+// qui arriverait à la vague de 8 puzzles de `pm-le-mauvais-fou`). Chaque
+// thème garde ainsi la totalité de ses entrées, dans l'ordre du dataset.
+const DATASET_BY_THEME = new Map<string, MasterPuzzle[]>();
+for (const puzzle of MASTER_PUZZLES_DATASET) {
+  const existing = DATASET_BY_THEME.get(puzzle.themeId);
+  if (existing) existing.push(puzzle);
+  else DATASET_BY_THEME.set(puzzle.themeId, [puzzle]);
+}
 
 /**
  * Les 6 catégories `lichess_*` (`catalog.ts`, « Saturation Lichess ») sont des
@@ -86,11 +102,11 @@ const LICHESS_TAG_CATEGORIES = new Set([
   "lichess_goals_origin",
 ]);
 
-function buildRow(theme: (typeof CURRICULUM_THEMES)[number], puzzle: MasterPuzzle): NewCurriculumPuzzle {
+function buildRow(theme: (typeof CURRICULUM_THEMES)[number], puzzle: MasterPuzzle, orderIndex: number): NewCurriculumPuzzle {
   return {
-    id: `${theme.id}::master:0`,
+    id: `${theme.id}::master:${orderIndex}`,
     themeId: theme.id,
-    orderIndex: 0,
+    orderIndex,
     fen: puzzle.fen,
     solution: [...puzzle.solution],
     solutionSan: [...puzzle.solutionSan],
@@ -135,8 +151,8 @@ export async function populateThemes(options: PopulateOptions = {}): Promise<Pop
   const results: PopulateThemeResult[] = [];
 
   for (const theme of targetThemes) {
-    const puzzle = DATASET_BY_THEME.get(theme.id);
-    if (!puzzle) {
+    const puzzles = DATASET_BY_THEME.get(theme.id);
+    if (!puzzles || puzzles.length === 0) {
       if (LICHESS_TAG_CATEGORIES.has(theme.category)) {
         // Attendu — voir le docstring de `LICHESS_TAG_CATEGORIES` : ce n'est
         // jamais une erreur, juste un réservoir pas encore importé.
@@ -149,9 +165,13 @@ export async function populateThemes(options: PopulateOptions = {}): Promise<Pop
       results.push({ themeId: theme.id, target: theme.totalPuzzles, inserted: 0, totalPuzzles: 0, error: "aucune entrée dans MASTER_PUZZLES_DATASET" });
       continue;
     }
-    const row = buildRow(theme, puzzle);
-    allRows.push(row);
-    results.push({ themeId: theme.id, target: theme.totalPuzzles, inserted: 1, totalPuzzles: 1 });
+    // Une ligne par puzzle du thème (1 pour l'immense majorité, 8 pour une
+    // vague comme `pm-le-mauvais-fou` — voir le docstring de
+    // `master-puzzles-dataset.ts`), `orderIndex` croissant dans l'ordre du
+    // dataset : c'est cet ordre que `getThemeSession` sert séquentiellement
+    // (`orderIndex >= completedCount`, voir `server/queries/curriculum.ts`).
+    puzzles.forEach((puzzle, orderIndex) => allRows.push(buildRow(theme, puzzle, orderIndex)));
+    results.push({ themeId: theme.id, target: theme.totalPuzzles, inserted: puzzles.length, totalPuzzles: puzzles.length });
   }
 
   if (!dryRun) {

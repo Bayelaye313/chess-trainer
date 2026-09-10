@@ -65,12 +65,39 @@ const CURATED_THEME_IDS = new Set(
 );
 
 describe("MASTER_PUZZLES_DATASET", () => {
-  it("a exactement une entrée par thème CURATÉ du catalogue — 161 au total", () => {
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(161);
+  it("couvre les 161 thèmes CURATÉS du catalogue, au moins une entrée chacun", () => {
+    // Depuis le 2026-09-10, `themeId` n'est plus forcément unique dans le
+    // tableau : `pm-le-mauvais-fou` et `pm-l-avant-poste-du-cavalier` portent
+    // chacun 8 entrées (une vague de puzzles, voir le docstring d'en-tête)
+    // plutôt qu'1 — la COUVERTURE (chaque thème curaté représenté) reste
+    // l'invariant, pas la longueur ligne-à-ligne.
     const datasetIds = new Set(MASTER_PUZZLES_DATASET.map((p) => p.themeId));
     expect(datasetIds.size).toBe(161);
     for (const id of CURATED_THEME_IDS) expect(datasetIds.has(id)).toBe(true);
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
+  });
+
+  it("247 entrées au total — 154 thèmes à 1 exercice + 7 vagues (2 de 8, 4 de 15, 1 de 17)", () => {
+    // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
+    // (8 chacun, voir plus haut) puis un 2e lot de 5 thèmes convertis « au
+    // format Lichess » (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
+    // `pm-la-securite-du-roi-en-milieu-de-partie`, `pm-la-centralisation-des-pieces`
+    // et `pm-la-paire-de-fous` (15 chacun), `pm-la-chaine-de-pions` (17, une
+    // partie source plus riche en points de décision réels).
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(247);
+    const expectedWaveSize: Record<string, number> = {
+      "pm-le-mauvais-fou": 8,
+      "pm-l-avant-poste-du-cavalier": 8,
+      "pm-la-tour-a-la-7e-rangee": 15,
+      "pm-la-securite-du-roi-en-milieu-de-partie": 15,
+      "pm-la-centralisation-des-pieces": 15,
+      "pm-la-chaine-de-pions": 17,
+      "pm-la-paire-de-fous": 15,
+    };
+    for (const [themeId, size] of Object.entries(expectedWaveSize)) {
+      const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);
+      expect(wave, themeId).toHaveLength(size);
+    }
   });
 
   it("n'a AUCUNE entrée pour les 56 thèmes `lichess_*` — réservoirs purs, alimentés seulement par le pipeline d'import", () => {

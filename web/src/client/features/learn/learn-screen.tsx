@@ -7,8 +7,14 @@
  *
  *  - `modules`  (NIVEAU 1) : grille de `ModuleCard`, une par catégorie du
  *    catalogue, anneau de progression "X/Y thèmes maîtrisés".
- *  - `themes`   (NIVEAU 2) : au clic sur un module, `ThemePath` — la frise
- *    de progression des thèmes de cette catégorie.
+ *  - `themes`   (NIVEAU 2) : au clic sur un module, `CourseCurriculum` —
+ *    l'accordéon des 3 paliers de compétence (Bronze/Argent/Or = `theme.level`)
+ *    de cette catégorie, cahier des charges du 2026-09-09 : « toujours plier
+ *    les 3 niveaux en 3 bulles », y compris pour les petits modules à un seul
+ *    palier peuplé (ex. `endgame_mastery`) — un seul composant pour toutes
+ *    les catégories plutôt qu'un choix au cas par cas. Remplace l'ancienne
+ *    frise plate `ThemePath` (toujours disponible dans ce dossier si besoin
+ *    futur, mais plus référencée ici).
  *  - `lesson`   : Page de Cours (`ThemeLesson`, audit UX du 2026-09-02) —
  *    AU CLIC SUR UN THÈME, on n'accède plus jamais directement à l'échiquier :
  *    un cours (Objectif + Idées clés + diagramme, `resolveLessonContent`)
@@ -31,10 +37,10 @@
 import { useState } from "react";
 import { getCurriculumOverview } from "@/server/actions/curriculum";
 import type { CurriculumCategoryOverview, CurriculumThemeOverview } from "@/server/queries/curriculum";
+import { CourseCurriculum } from "./course-curriculum";
 import { ModuleCard } from "./module-card";
 import { moduleIcon } from "./module-icon";
 import { ThemeLesson } from "./theme-lesson";
-import { ThemePath } from "./theme-path";
 import { ThemeSession } from "./theme-session";
 
 export type LearnView =
@@ -139,7 +145,7 @@ export function LearnScreen({
             {masteredCount > 1 ? "s" : ""}
           </p>
         </div>
-        <ThemePath
+        <CourseCurriculum
           themes={category.themes}
           onSelectTheme={(themeId) => setView({ kind: "lesson", categoryId: category.id, themeId })}
         />

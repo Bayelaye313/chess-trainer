@@ -56,6 +56,13 @@
   --engine-arrow-best: #22c55e;
   --engine-arrow-second: #38bdf8;
   --engine-arrow-alt: #f4bf44;
+  /**
+   * Coup réellement joué, en Revue de partie hors Exploration — voir
+   * `lib/labels.ts#playedVsBestArrows`. Distincte de `--engine-arrow-best`
+   * (la vérité du moteur) : les deux flèches doivent rester visuellement
+   * différenciables quand elles coexistent sur l'échiquier.
+   */
+  --engine-arrow-played: #f97316;
 }
 
 @theme inline {
@@ -151,3 +158,38 @@ body {
 .animate-shake-error {
   animation: shake-error 0.35s ease-in-out both;
 }
+
+/**
+ * Extension "Accords d'Élite" / "Mission Briefing" (cahier des charges du
+ * 2026-09-09) — jetons PUREMENT ADDITIFS pour `CourseCurriculum` et
+ * `MissionBriefing` (voir `client/features/learn/theme-config.ts`). Aucun
+ * jeton existant modifié : les couleurs de qualité de coup et
+ * `CURRICULUM_LEVEL_*` (`lib/labels.ts`) restent l'unique sémantique
+ * "facile/dur" et "correct/erreur" de l'app — les jetons `--tier-*`
+ * ci-dessous ne servent qu'au liseré décoratif des paliers Bronze/Argent/Or.
+ */
+:root {
+  --tier-bronze: #c2793a;
+  --tier-silver: #b6c2d1;
+  --tier-gold: #eab308;
+
+  /** Voile de l'overlay Mission Briefing — plus sombre que `--background` pur pour laisser deviner le contenu derrière. */
+  --mission-overlay: rgb(2 6 23 / 92%);
+}
+
+@theme inline {
+  --color-tier-bronze: var(--tier-bronze);
+  --color-tier-silver: var(--tier-silver);
+  --color-tier-gold: var(--tier-gold);
+  --color-mission-overlay: var(--mission-overlay);
+}
+
+/**
+ * Pas de keyframes CSS pour l'entrée du Mission Briefing / la Mission
+ * Checklist ici : ces animations sont pilotées par `motion` côté composant
+ * (`theme-config.ts`, `BRIEFING_*`/`CHECKLIST_*`) — voir le cahier des
+ * charges du 2026-09-09, "bibliothèques UI modernes avec animations". Les
+ * jetons de couleur ci-dessus restent en CSS car ce sont des VALEURS, pas des
+ * animations — `motion` les consomme via `var(--tier-*)`/classes Tailwind
+ * comme tout le reste du thème.
+ */

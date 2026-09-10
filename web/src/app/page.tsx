@@ -1,6 +1,6 @@
 import { PlayScreen } from "@/client/features/play/play-screen";
 import { LinkedAccounts } from "@/client/features/home/linked-accounts";
-import { RecentGamesList } from "@/client/features/home/recent-games-list";
+import { GamesSearchList } from "@/client/features/home/games-search-list";
 import { MistakesShortcutCard } from "@/client/features/home/mistakes-shortcut-card";
 import { ReportSummaryCard } from "@/client/features/home/report-summary-card";
 import { TrainingRecommendationsCard } from "@/client/features/reviews/training-recommendations-card";
@@ -55,14 +55,7 @@ export default async function HomePage({
           Parties récentes
         </h2>
         <div className="mt-3">
-          <RecentGamesList
-            games={games}
-            page={page}
-            hasMore={hasMore}
-            pageSize={GAMES_PAGE_SIZE}
-            paginationHref={(target) => `/?page=${target}`}
-            gameHref={(id) => `/analyse/${id}`}
-          />
+          <GamesSearchList games={games} page={page} hasMore={hasMore} pageSize={GAMES_PAGE_SIZE} />
         </div>
       </section>
     </div>

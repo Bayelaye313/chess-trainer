@@ -105,6 +105,22 @@ describe("groupMistakesByFamily", () => {
     expect(groups[0].reviewedCount).toBe(1);
   });
 
+  it("normalise la criticité sur l'erreur la plus répétée de TOUT le journal, pas seulement de son groupe", () => {
+    const games = [
+      // Ruy Lopez : la même déviation répétée 3 fois — le pire du journal.
+      game({ gameId: "g1", fenBefore: "fen-a", actualUci: "a" }),
+      game({ gameId: "g2", fenBefore: "fen-a", actualUci: "a" }),
+      game({ gameId: "g3", fenBefore: "fen-a", actualUci: "a" }),
+      // Scotch Game : une seule occurrence, groupe famille différent.
+      game({ gameId: "g4", fenBefore: "fen-b", actualUci: "b", openingName: "Scotch Game" }),
+    ];
+    const groups = groupMistakesByFamily(games, new Set());
+    const flat = flattenMistakes(groups);
+
+    expect(flat.find((m) => m.key === "fen-a|a")?.criticality).toBe(1);
+    expect(flat.find((m) => m.key === "fen-b|b")?.criticality).toBeCloseTo(1 / 3);
+  });
+
   it("trie les erreurs d'une sous-variante par occurrences décroissantes puis par ply croissant", () => {
     const games = [
       game({ gameId: "g1", fenBefore: "fen-a", actualUci: "a", ply: 9 }),

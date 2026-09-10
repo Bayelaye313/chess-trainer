@@ -32,18 +32,25 @@
  * s'intercalant automatiquement entre deux, jusqu'au mat final.
  *
  * `CoachBubble` (voir son docstring) accompagne la séance sans jamais
- * remplacer `ProgressBar` : la description du thème sert de bulle « brief »
- * pendant la recherche, puis de bulle « debrief » reliée à la suite trouvée
- * une fois un puzzle validé — capturée AVANT le rechargement du suivant
- * (`lastSolved`, voir `handleSolved`), affichée jusqu'à la prochaine
- * résolution.
+ * remplacer la barre de progression : la description du thème sert de bulle
+ * « brief » pendant la recherche, puis de bulle « debrief » reliée à la
+ * suite trouvée une fois un puzzle validé — capturée AVANT le rechargement
+ * du suivant (`lastSolved`, voir `handleSolved`), affichée jusqu'à la
+ * prochaine résolution.
+ *
+ * Depuis le 2026-09-10, l'échiquier + la progression ne sont plus rendus nus
+ * ici : `AcademyPuzzleArena` (`academy-puzzle-arena.tsx`) enveloppe
+ * `PuzzleBoard` d'un HUD « e-sport » (barre segmentée, une case par puzzle
+ * de la vague, fondu enchaîné entre deux puzzles, son de validation) — ce
+ * composant-ci reste seul responsable du chargement réseau
+ * (`getThemePuzzleSession`/`submitThemePuzzleSolved`) et de la bulle Coach,
+ * l'Arena n'étant que la couche de présentation.
  */
 import { useEffect, useState } from "react";
-import { PuzzleBoard } from "@/client/features/board/puzzle-board";
 import { getThemePuzzleSession, submitThemePuzzleSolved } from "@/server/actions/curriculum";
 import type { ThemeSession as ThemeSessionData } from "@/server/queries/curriculum";
+import { AcademyPuzzleArena } from "./academy-puzzle-arena";
 import { CoachBubble } from "./coach-bubble";
-import { ProgressBar } from "./progress-bar";
 
 type SessionState =
   | { status: "loading" }
@@ -101,13 +108,6 @@ export function ThemeSession({
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-semibold">{title}</h1>
-          {state.status === "session" && (
-            <ProgressBar
-              completed={state.session.completedCount}
-              total={state.session.totalPuzzles}
-              className="mt-2 max-w-xs"
-            />
-          )}
         </div>
         <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
           ← Retour aux thèmes
@@ -143,15 +143,16 @@ export function ThemeSession({
       )}
 
       {state.status === "session" && state.session.puzzle && (
-        <PuzzleBoard
-          key={state.session.puzzle.id}
+        <AcademyPuzzleArena
           puzzle={{
             id: state.session.puzzle.id,
             fenBefore: state.session.puzzle.fen,
             solution: state.session.puzzle.solution,
             solutionSan: state.session.puzzle.solutionSan,
           }}
-          onComplete={handleSolved}
+          completedCount={state.session.completedCount}
+          totalPuzzles={state.session.totalPuzzles}
+          onSolved={handleSolved}
         />
       )}
 

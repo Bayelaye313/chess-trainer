@@ -27,6 +27,14 @@ export interface OpeningMistakeEntry {
   actualSan: string;
   /** Nombre de parties importées distinctes où CETTE déviation précise a été observée. */
   gameCount: number;
+  /**
+   * Jauge de criticité (§12b) — `gameCount` normalisé sur `[0, 1]` par
+   * rapport à l'erreur la PLUS répétée de TOUT le journal (pas seulement de
+   * sa sous-variante) : une jauge à moitié pleine signifie toujours « deux
+   * fois moins répétée que la pire erreur du joueur », comparable d'un bout à
+   * l'autre du journal plutôt que relative à un groupe local.
+   */
+  criticality: number;
   /** `true` dès que cette déviation a déjà été corrigée avec succès au moins une fois — voir `server/db/schema/opening-mistake-review.ts`. */
   reviewed: boolean;
   /** La plus récente — c'est elle que rejoue `OpeningMistakeExercise`/`OpeningMistakeExplorer`. */
@@ -98,11 +106,23 @@ export function groupMistakesByFamily(
       expectedSan: game.expectedSan,
       actualSan: game.actualSan,
       gameCount: 1,
+      // Placeholder — la vraie valeur n'est connue qu'une fois `maxGameCount`
+      // calculé plus bas (voir la boucle de normalisation).
+      criticality: 0,
       reviewed: reviewedKeys.has(key),
       mostRecent: game,
       family,
       subVariation,
     });
+  }
+
+  // Dénominateur commun de la jauge de criticité — l'erreur la plus répétée
+  // de TOUT le journal, tous groupes confondus (voir le docstring de
+  // `OpeningMistakeEntry.criticality`). `gameCount` est déjà final ici : le
+  // seul passage qui l'incrémente est la boucle précédente.
+  let maxGameCount = 1;
+  for (const entry of entries.values()) {
+    if (entry.gameCount > maxGameCount) maxGameCount = entry.gameCount;
   }
 
   const families = new Map<string, OpeningFamilyGroup>();
@@ -132,6 +152,7 @@ export function groupMistakesByFamily(
       expectedSan: entry.expectedSan,
       actualSan: entry.actualSan,
       gameCount: entry.gameCount,
+      criticality: entry.gameCount / maxGameCount,
       reviewed: entry.reviewed,
       mostRecent: entry.mostRecent,
     };

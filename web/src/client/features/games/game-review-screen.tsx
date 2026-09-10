@@ -5,9 +5,10 @@ import Link from "next/link";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
 import { useEngine } from "@/client/engine/engine-context";
 import { buildCoachMessage, buildGameCoachFindings } from "@/core/analysis/coach-narrative";
+import { buildLiveCommentaryFeed } from "@/core/analysis/live-commentary";
 import { findKeyMoments, type TimelinePly } from "@/core/analysis/timeline";
 import { isReviewable } from "@/core/chess/types";
-import { arrowsFromEngineLines, OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
+import { arrowsFromEngineLines, OPPONENT_MOVE_SQUARE_COLOR, playedVsBestArrows, qualitySquareColor } from "@/lib/labels";
 import type { Game } from "@/server/db/schema";
 import type { GameOverview as GameOverviewData } from "@/server/queries/games";
 import { EvaluationBar, type EvalScore } from "../board/evaluation-bar";
@@ -19,9 +20,14 @@ import { CoachReportPanel } from "./coach-report";
 import { EvalGraph } from "./eval-graph";
 import { GameOverview } from "./game-overview";
 import { KeyMomentsNav } from "./key-moments-nav";
+import { LiveBroadcastPanel } from "./live-broadcast-panel";
 import { type DrillMistake, MistakesDrillBoard } from "./mistakes-drill-board";
+import { classifyMoveFx, type MoveFxKind } from "@/core/analysis/move-fx";
+import { MoveFxOverlay } from "./move-fx-overlay";
 import { MoveList } from "./move-list";
+import { PostGameReport } from "./post-game-report";
 import { RetryBoard } from "./retry-board";
+import { useMoveFx } from "./use-move-fx";
 import { logTrainingEvent } from "@/server/actions/training";
 
 /**
@@ -173,6 +179,31 @@ export function GameReviewScreen({
   // codes couleur/badge se reportent sur le DERNIER coup exploré (neutre tant
   // que son évaluation n'est pas encore revenue du moteur).
   const currentEntry = currentPly > 0 ? timeline[currentPly - 1] : null;
+
+  // Type de coup pour le son/l'overlay (§11b) — dérivé de `currentEntry`, pas
+  // un state : `null` dans tout mode annexe (Exploration/Drill/Retry/
+  // Correction), où rejouer un son n'aurait pas de sens.
+  const fxKind: MoveFxKind | null = useMemo(() => {
+    if (explore.isExploring || drillActive || retryPly !== null || repertoireCorrection) return null;
+    return currentEntry ? classifyMoveFx(currentEntry) : null;
+  }, [explore.isExploring, drillActive, retryPly, repertoireCorrection, currentEntry]);
+
+  // Le SON reste un effet de bord impératif (appel Web Audio), déclenché
+  // UNIQUEMENT quand `currentPly` change réellement — jamais au montage, ni
+  // quand seul un mode annexe bascule sans faire avancer la partie.
+  // `lastFxPlyRef` retient le dernier ply déjà traité, initialisé à
+  // `currentPly` pour que le tout premier passage de l'effet ne joue rien.
+  // Aucun `setState` dans cet effet (react-hooks/set-state-in-effect) :
+  // `moveFx.playFx` est un appel impératif, pas une mise à jour de rendu —
+  // l'overlay, lui, suit `fxKind` directement (dérivé ci-dessus).
+  const moveFx = useMoveFx();
+  const lastFxPlyRef = useRef(currentPly);
+  useEffect(() => {
+    if (lastFxPlyRef.current === currentPly) return;
+    lastFxPlyRef.current = currentPly;
+    if (fxKind) moveFx.playFx(fxKind);
+  }, [currentPly, fxKind, moveFx]);
+
   // Bulle du Coach pour le coup actuellement affiché — `null` hors
   // exploration, coup adverse, ou coup sain (voir `buildCoachMessage`).
   // Le bilan de fin de revue (`coachFindings`), lui, ne dépend pas de
@@ -182,6 +213,13 @@ export function GameReviewScreen({
     [currentEntry, deviation],
   );
   const coachFindings = useMemo(() => buildGameCoachFindings(timeline), [timeline]);
+  // Live Broadcast (§12a) : avance avec `currentPly`, jamais toute la partie
+  // d'un coup — mêmes deux camps que le journal des coups (`MoveList`), pas
+  // que ceux du joueur.
+  const liveCommentaryLines = useMemo(
+    () => buildLiveCommentaryFeed(timeline, currentPly, deviation),
+    [timeline, currentPly, deviation],
+  );
   const lastExplorerMove = explore.explorerMoves[explore.explorerMoves.length - 1] ?? null;
   const exploreQuality = explore.evaluation.status === "ready" ? explore.evaluation.evaluated.quality : null;
 
@@ -201,16 +239,15 @@ export function GameReviewScreen({
       : null;
   }, [explore.isExploring, explore.evaluation, currentPly, currentEntry]);
 
-  // Flèches dégradées (vert/bleu/ambre) matérialisant les lignes du moteur —
-  // uniquement en Mode Exploration, seul moment où une analyse MultiPV étendue
-  // vient d'être faite (voir `use-explore-mode.ts`). La navigation normale du
-  // timeline lit des données déjà importées (un seul `bestUci`, pas de lignes
-  // candidates) : pas de flèches hors exploration, pour ne jamais relancer le
-  // moteur au simple fil des touches ← →.
-  const arrows = useMemo(
-    () => (explore.evaluation.status === "ready" ? arrowsFromEngineLines(explore.evaluation.evaluated.bestLines) : []),
-    [explore.evaluation],
-  );
+  // Flèches dégradées (vert/bleu/ambre) matérialisant les lignes du moteur en
+  // Mode Exploration (analyse MultiPV étendue, voir `use-explore-mode.ts`).
+  // Hors exploration, « double-flux » (§11) : meilleur coup moteur vs coup
+  // réellement joué, pour LES DEUX camps — `analysis.bestUci` est déjà connu
+  // depuis l'import, aucun appel moteur supplémentaire au fil des touches ← →.
+  const arrows = useMemo(() => {
+    if (explore.evaluation.status === "ready") return arrowsFromEngineLines(explore.evaluation.evaluated.bestLines);
+    return currentEntry ? playedVsBestArrows(currentEntry) : [];
+  }, [explore.evaluation, currentEntry]);
 
   const boardHighlightColor = explore.isExploring
     ? lastExplorerMove
@@ -232,9 +269,15 @@ export function GameReviewScreen({
   const badgeSquare = explore.isExploring ? (lastExplorerMove?.to ?? null) : currentEntry?.analysis ? currentEntry.uci.slice(2, 4) : null;
   const badgeQuality = explore.isExploring ? exploreQuality : (currentEntry?.analysis?.quality ?? null);
 
+  // Overlay du son/animation (§11b) : posé sur la case d'arrivée du coup
+  // COURANT — `fxKind` est déjà `null` en Exploration/Drill/Retry/Correction
+  // (voir sa définition plus haut), donc `fxSquare` l'est aussi dans ces cas.
+  const fxSquare = fxKind ? highlightTo : null;
+
   const squareRenderer: SquareRenderer = ({ square, children }) => (
     <div style={{ width: "100%", height: "100%", ...(boardSquareStyles[square] ?? {}) }}>
       {children}
+      {fxKind && fxSquare && square === fxSquare && <MoveFxOverlay key={`fx-${currentPly}`} kind={fxKind} />}
       {badgeQuality && square === badgeSquare && (
         <span className="pointer-events-none absolute right-0.5 top-0.5">
           <QualityBadge quality={badgeQuality} />
@@ -381,6 +424,15 @@ export function GameReviewScreen({
                 >
                   Suivant →
                 </button>
+                <button
+                  type="button"
+                  onClick={moveFx.toggleMuted}
+                  aria-label={moveFx.muted ? "Activer le son des coups" : "Couper le son des coups"}
+                  title={moveFx.muted ? "Activer le son des coups" : "Couper le son des coups"}
+                  className="rounded-md border border-border px-3 py-1.5 text-sm"
+                >
+                  {moveFx.muted ? "🔇" : "🔈"}
+                </button>
               </div>
             </div>
           )}
@@ -395,6 +447,8 @@ export function GameReviewScreen({
           <KeyMomentsNav moments={keyMoments} onSelect={goToPly} />
 
           <CoachReportPanel findings={coachFindings} />
+
+          <PostGameReport overview={overview} keyMoments={keyMoments} />
 
           {!drillActive && mistakes.length > 0 && (
             <div className="rounded-lg border border-border bg-surface p-4 text-center">
@@ -426,6 +480,8 @@ export function GameReviewScreen({
               />
             </div>
           </div>
+
+          <LiveBroadcastPanel lines={liveCommentaryLines} />
 
           <GameOverview overview={overview} />
         </div>

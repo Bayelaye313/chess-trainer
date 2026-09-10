@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv client/features/games/move-fx.ts core/analysis/move-fx.ts)",
+      "Bash(mv client/features/games/move-fx.test.ts core/analysis/move-fx.test.ts)"
+    ]
+  }
+}

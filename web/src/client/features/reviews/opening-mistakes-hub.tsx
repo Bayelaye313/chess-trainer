@@ -51,6 +51,31 @@ function ReviewedBadge() {
   );
 }
 
+/**
+ * Jauge de criticité (§12b) — largeur proportionnelle à `criticality`
+ * (`opening-mistake-groups.ts`, déjà normalisée sur l'erreur la plus répétée
+ * du journal entier), couleur qui monte du jaune (`--quality-inaccuracy`) au
+ * rouge (`--quality-blunder`) avec l'intensité : mêmes jetons que
+ * `TAG_ACCENT_CLASS` du reste de la Revue, pas de nouvelle palette.
+ */
+function CriticalityGauge({ criticality }: { criticality: number }) {
+  const percent = Math.round(criticality * 100);
+  return (
+    <span className="flex w-24 shrink-0 items-center gap-1.5" title={`Criticité : ${percent}%`}>
+      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted">
+        <span
+          className="block h-full rounded-full"
+          style={{
+            width: `${Math.max(percent, 4)}%`,
+            backgroundColor: `color-mix(in srgb, var(--quality-blunder) ${percent}%, var(--quality-inaccuracy))`,
+          }}
+        />
+      </span>
+      <span className="w-8 shrink-0 text-right text-[11px] font-medium text-foreground-muted">{percent}%</span>
+    </span>
+  );
+}
+
 function OpeningMistakeCard({
   mistake,
   onTrain,
@@ -70,8 +95,11 @@ function OpeningMistakeCard({
           </span>
           {mistake.reviewed && <ReviewedBadge />}
         </span>
-        <span className="mt-1 block text-xs text-foreground-muted">
-          {mistake.gameCount} partie{mistake.gameCount > 1 ? "s" : ""} importée{mistake.gameCount > 1 ? "s" : ""}
+        <span className="mt-1 flex flex-wrap items-center gap-3">
+          <span className="text-xs text-foreground-muted">
+            {mistake.gameCount} partie{mistake.gameCount > 1 ? "s" : ""} importée{mistake.gameCount > 1 ? "s" : ""}
+          </span>
+          <CriticalityGauge criticality={mistake.criticality} />
         </span>
       </span>
       <span className="flex shrink-0 gap-2">
