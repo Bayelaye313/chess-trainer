@@ -77,7 +77,7 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("394 entrées au total — 142 thèmes à 1 exercice + 19 vagues", () => {
+  it("431 entrées au total — 139 thèmes à 1 exercice + 22 vagues", () => {
     // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
     // (8 chacun) puis un 2e lot de 5 thèmes convertis « au format Lichess »
     // (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
@@ -100,8 +100,13 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // `pm-transformer-un-avantage` (13, Caruana–Shankland, Sinquefield Cup
     // 2021), `pm-la-technique-de-simplification` (14, Carlsen–Nepomniachtchi,
     // Championnat du Monde 2021 partie 6) et `pm-le-complexe-de-cases-de-couleur`
-    // (13, Pachman–Fischer, Olympiade de La Havane 1966).
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(394);
+    // (13, Pachman–Fischer, Olympiade de La Havane 1966) — puis un 3e et
+    // dernier lot « Palier Or » (même jour, même méthode) :
+    // `pm-le-fou-contre-trois-pions` (13, Fischer–Spassky, Reykjavik 1972
+    // partie 1), `pm-la-forteresse-defensive` (13, Hawkins–Gormally, 2008)
+    // et `pm-la-superiorite-de-l-aile-dame` (14, Marshall–Capablanca, New
+    // York 1909 partie 23).
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(431);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -122,6 +127,9 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "pm-transformer-un-avantage": 13,
       "pm-la-technique-de-simplification": 14,
       "pm-le-complexe-de-cases-de-couleur": 13,
+      "pm-le-fou-contre-trois-pions": 13,
+      "pm-la-forteresse-defensive": 13,
+      "pm-la-superiorite-de-l-aile-dame": 14,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

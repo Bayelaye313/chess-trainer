@@ -4229,4 +4229,165 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // Les 3 thèmes ci-dessous (2026-09-11, 3e et dernier lot du « Palier Or »)
+  // sortent eux aussi de 3 parties de maîtres RÉELLES (aucun fichier PILOT
+  // n'existait pour ces thèmes) sourcées sur le web puis rejouées et
+  // vérifiées coup par coup avec chess.js avant rédaction :
+  //  - `pm-le-fou-contre-trois-pions` : Bobby Fischer – Boris Spassky,
+  //    Reykjavik 1972, Partie 1 — la référence de tous les livres qui
+  //    discutent la règle « Fou = trois pions » (29...Bxh2?? piège le Fou
+  //    noir, capturé pour seulement 2 pions).
+  //  - `pm-la-forteresse-defensive` : Jonathan Hawkins – Daniel Gormally,
+  //    2008 (étude Lichess « Fortresses », lichess.org/study/0ZcX3Bkx) —
+  //    1.e5 plante le premier pion d'une forteresse patiemment construite
+  //    jusqu'à la nulle théorique.
+  //  - `pm-la-superiorite-de-l-aile-dame` : Frank Marshall – Jose Raul
+  //    Capablanca, New York 1909, partie 23 du match — une majorité de
+  //    pions née au 4e coup, transformée en pion passé décisif (31...b3!).
+  // La vague de puzzles correspondante (`master-puzzles-dataset.ts`) mine
+  // d'autres points de décision réels de ces 3 mêmes parties.
+  "pm-le-fou-contre-trois-pions": {
+    steps: [
+      {
+        title: "Fischer – Spassky, Reykjavik 1972, Partie 1 — un Fou vaut-il vraiment trois pions ?",
+        fen: "5k2/pp4pp/3bpp2/1P6/8/P2KP3/5PPP/2B5 b - - 0 1",
+        text: "Une finale de Fous de même couleur de cases semble parfaitement nulle. Mais Fischer, en zeitnot, tente 1...Bxh2?, estimant qu'un pion de plus (avec un autre à suivre) vaut bien le risque. 2.g3! est la réponse immédiate : la case de fuite g1 est fermée, et le Fou noir commence déjà à manquer d'air.",
+        moveSan: ["Bxh2", "g3", "h5", "Ke2", "h4", "Kf3"],
+      },
+      {
+        title: "Le piège se referme",
+        fen: "5k2/pp4p1/4pp2/1P6/7p/P3PKP1/5P1b/2B5 b - - 1 4",
+        text: "4...Ke7 5.Kg2! Le Roi blanc vient directement fermer la dernière case de fuite du Fou noir. Après 5...hxg3 6.fxg3 Bxg3, le Fou grappille un second pion — mais 7.Kxg3! encaisse la facture : le Fou est perdu pour de bon, capturé sans aucune compensation supplémentaire.",
+        moveSan: ["Ke7", "Kg2", "hxg3", "fxg3", "Bxg3", "Kxg3"],
+      },
+      {
+        title: "Le bilan matériel réel",
+        fen: "8/pp2k1p1/4pp2/1P6/8/P3P1K1/8/2B5 b - - 0 7",
+        text: "Après la chute du Fou, le bilan est clair : les Blancs ont gagné un Fou complet contre seulement deux pions (h2 et g3) — pas trois. C'est précisément la leçon de cette partie devenue légendaire : la règle empirique « un Fou vaut trois pions » ne dit rien sur la SÉCURITÉ de la pièce qui va les capturer. Ici, Fischer a évalué la valeur des pions sans vérifier si son Fou pouvait s'échapper ensuite.",
+        moveSan: ["Kd6", "a4", "Kd5", "Ba3", "Ke4", "Bc5", "a6", "b6"],
+      },
+      {
+        title: "Les Noirs cherchent des contre-chances",
+        fen: "8/1p4p1/pP2pp2/2B5/P3k3/4P1K1/8/8 b - - 0 11",
+        text: "Réduits à un Roi et des pions contre un Roi, un Fou et des pions, les Noirs tentent 21...f5? pour créer de l'activité, mais après 22.Kh4! f4 23.exf4 Kxf4, les Blancs restent maîtres du jeu, Fou et pion d'avance.",
+        moveSan: ["f5", "Kh4", "f4", "exf4", "Kxf4", "Kh5", "Kf5", "Be3"],
+      },
+      {
+        title: "Le Fou blanc restreint le dernier pion noir",
+        fen: "8/1p4p1/pP2p3/5k1K/P7/4B3/8/8 b - - 3 15",
+        text: "Le Fou blanc navigue entre e3, f2, h4 et g5, toujours en embuscade contre les derniers pions noirs (e5, e4) — exactement le rôle qu'un Fou seul peut jouer efficacement contre des pions non soutenus : les bloquer un par un tout en laissant le Roi blanc faire le travail décisif ailleurs.",
+        moveSan: ["Ke4", "Bf2", "Kf5", "Bh4", "e5", "Bg5", "e4", "Be3"],
+      },
+      {
+        title: "Le Roi blanc part chercher les pions du camp adverse",
+        fen: "8/1p4p1/pP6/5k1K/P3p3/4B3/8/8 b - - 1 19",
+        text: "37...Kf6 38.Kg4! Le Roi blanc, débarrassé de toute inquiétude grâce à son Fou qui tient la position seul, part maintenant récolter les pions noirs restants un par un.",
+        moveSan: ["Kf6", "Kg4", "Ke5", "Kg5", "Kd5", "Kf5", "a5", "Bf2"],
+      },
+      {
+        title: "La conversion finale",
+        fen: "8/1p4p1/1P6/p2k1K2/P3p3/8/5B2/8 b - - 1 23",
+        text: "45...g5 46.Kxg5! Le dernier pion noir tombe. Le Fou blanc, resté en sécurité toute la partie, a fini par valoir infiniment plus que les deux pions qu'il avait fallu sacrifier pour le piéger — Fischer abandonnera quelques coups plus tard. Depuis, cette partie est LA référence de tous les livres qui discutent la règle « Fou = trois pions ».",
+        moveSan: ["g5", "Kxg5", "Kc4", "Kf5", "Kb4", "Kxe4", "Kxa4", "Kd5", "Kb4", "Kd6"],
+      },
+    ],
+  },
+  "pm-la-forteresse-defensive": {
+    steps: [
+      {
+        title: "Hawkins – Gormally, 2008 — planter un pion pour construire la forteresse à venir",
+        fen: "r4rk1/pp1qppb1/2n3p1/7p/3PP2P/2R1BP2/P3N1P1/1Q3K1R w - - 0 1",
+        text: "1.e5! restreint le Fou g7 noir et fixe un grand centre de pions — mais cette avancée, jouée dans une position où les Blancs sont objectivement moins bien, est aussi le premier pas d'un plan de défense à très long terme : créer des points d'appui fixes autour desquels bâtir, coup après coup, une forteresse imprenable.",
+        moveSan: ["e5", "e6", "Kf2", "Ne7", "Rb3", "b6", "Bg5", "Rac8"],
+      },
+      {
+        title: "Simplifier vers la finale la plus défendable",
+        fen: "2r2rk1/p2qnpb1/1p2p1p1/4P1Bp/3P3P/1R3P2/P3NKP1/1Q5R w - - 2 5",
+        text: "5.Qe4! propose l'échange des Dames — exactement ce qu'il faut quand on doit défendre une position inférieure : moins de pièces sur l'échiquier, moins de moyens pour l'adversaire de créer des complications imprévisibles.",
+        moveSan: ["Qe4", "Rc4", "g4", "hxg4", "fxg4", "Qd5", "Qf3", "Qxf3+"],
+      },
+      {
+        title: "h5-h6 : le pion qui va nourrir toute la forteresse",
+        fen: "5rk1/p3npb1/1p2p1p1/4P1B1/2rP2PP/1R3q2/P3NK2/7R w - - 0 9",
+        text: "10.h5! puis 12.h6! lancent le pion h très loin dans le camp noir. Ce pion n'est pas seulement une menace de promotion : il OBLIGE le Fou noir à rester cloué sur h8 pour l'empêcher d'avancer — la toute première pierre du mur défensif que les Blancs vont construire.",
+        moveSan: ["Rxf3", "Nd5", "h5", "gxh5", "gxh5", "Kh7", "h6", "Bh8"],
+      },
+      {
+        title: "Les péripéties tactiques ne changent rien au plan de fond",
+        fen: "5r1b/p4p1k/1p2p2P/3nP1B1/2rP4/5R2/P3NK2/7R w - - 1 13",
+        text: "Une série d'échanges et d'escarmouches tactiques fait tomber du matériel des deux côtés, mais le plan de fond reste identique : garder le pion h vivant et garder le Fou noir cloué à sa garde.",
+        moveSan: ["Nf4", "Rc2+", "Kg3", "Rg8", "Kh4", "Nxf4", "Rxf4", "Rg2"],
+      },
+      {
+        title: "h7 : le pion arrive à un coup de la promotion",
+        fen: "6rb/p4p1k/1p2p2P/4P1B1/3P1R1K/8/P5r1/7R w - - 1 17",
+        text: "18.h7! Le pion atteint la 7e rangée. Même très en retard au matériel, les Blancs disposent maintenant d'un atout qui vaut, à lui seul, presque une pièce : aucune finale n'est vraiment perdue tant qu'une telle menace de promotion reste vivante.",
+        moveSan: ["Rxf7+", "Kg6", "h7", "Ra8", "Re7", "Rxg5", "Rxe6+", "Kf5"],
+      },
+      {
+        title: "Construire le mur : Tour et Roi entourent le pion h7",
+        fen: "r6b/p6P/1p2R3/4Pkr1/3P3K/8/P7/7R w - - 1 21",
+        text: "Après une série d'échanges, la position se clarifie : Tour et Roi blancs prennent position pour garder le pion h7 et contenir la majorité noire à l'aile Dame. Chaque coup vise désormais un seul objectif : ne rien laisser passer.",
+        moveSan: ["Rf1+", "Kxe6", "Kxg5", "Rd8", "Rf4", "b5", "Kh6", "a5", "Rg4", "b4", "Rg8", "Ke7"],
+      },
+      {
+        title: "La forteresse tient : nulle théorique",
+        fen: "3r2Rb/4k2P/7K/p3P3/1p1P4/8/P7/8 w - - 2 27",
+        text: "Malgré un pion de moins puis deux, les Blancs manœuvrent avec une précision totale (34...Rb4! zugzwang évité de justesse) jusqu'à atteindre, au 35e coup, une finale Tour+pion contre Tour+Fou parfaitement nulle en théorie. La partie fut donnée nulle après 50 coups : la forteresse, patiemment construite depuis le tout premier coup 1.e5, a parfaitement tenu.",
+        moveSan: ["Kg5", "a4", "Kf5", "b3", "axb3", "axb3", "Ke4", "b2", "Rg1", "Rb8", "Rb1", "Ke6", "Kd3", "Kd5", "Kc3", "Rc8+", "Kxb2", "Kxd4"],
+      },
+    ],
+  },
+  "pm-la-superiorite-de-l-aile-dame": {
+    steps: [
+      {
+        title: "Marshall – Capablanca, New York 1909 (partie 23) — la majorité de pions naît dès l'ouverture",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Après 3...c5 4.cxd5 exd5, la structure de pions est fixée dès le 4e coup : les Noirs auront une majorité de pions à l'aile Dame (a7, b7, c5 contre a2, b2 des Blancs), les Blancs une majorité au centre-Roi. Capablanca va démontrer, dans cette dernière partie du match, comment cette seule majorité suffit à gagner une partie de Grand Maître.",
+        moveSan: ["d4", "d5", "c4", "e6", "Nc3", "c5", "cxd5", "exd5", "Nf3", "Nc6", "g3", "Be6", "Bg2", "Be7", "O-O", "Nf6"],
+      },
+      {
+        title: "Les complications tactiques n'effacent pas l'avantage structurel",
+        fen: "r2qk2r/pp2bppp/2n1bn2/2pp4/3P4/2N2NP1/PP2PPBP/R1BQ1RK1 w kq - 5 9",
+        text: "Une série d'échanges tactiques autour du centre (9...Ne4, 11.Ne5, 12.Nxe4) fait tomber plusieurs pièces, mais la structure de pions posée au 4e coup reste identique : quoi qu'il arrive tactiquement, la majorité de pions à l'aile Dame de Capablanca reste intacte et attend son heure.",
+        moveSan: ["Bg5", "Ne4", "Bxe7", "Qxe7", "Ne5", "Nxd4", "Nxe4", "dxe4", "e3", "Nf3+", "Nxf3", "exf3", "Qxf3", "O-O"],
+      },
+      {
+        title: "Mobiliser la majorité : ...b5 puis ...c4",
+        fen: "r4rk1/pp2qppp/4b3/2p5/8/4PQP1/PP3PBP/R4RK1 w - - 1 16",
+        text: "18...b5! puis 19...c4! commencent la marche de la majorité. Ce n'est pas encore décisif, mais chaque pas de ces pions réduit d'autant l'espace de manœuvre des pièces blanches à l'aile Dame.",
+        moveSan: ["Rfc1", "Rab8", "Qe4", "Qc7", "Rc3", "b5", "a3", "c4"],
+      },
+      {
+        title: "Simplifier encore : moins de pièces, plus le pion avance vite",
+        fen: "1r3rk1/p1q2ppp/4b3/1p6/2p1Q3/P1R1P1P1/1P3PBP/R5K1 w - - 0 20",
+        text: "Capablanca échange une paire de Tours (21...Rxd1+) — exactement le bon réflexe quand on possède une majorité de pions : moins il reste de pièces adverses, plus les pions passés futurs seront difficiles à arrêter.",
+        moveSan: ["Bf3", "Rfd8", "Rd1", "Rxd1+", "Bxd1", "Rd8", "Bf3", "g6"],
+      },
+      {
+        title: "L'échange des Dames confirme le plan",
+        fen: "3r2k1/p1q2p1p/4b1p1/1p6/2p1Q3/P1R1PBP1/1P3P1P/6K1 w - - 0 24",
+        text: "24...Qe5! propose l'échange des Dames. Après 25.Qe4 Qxe4 26.Bxe4, les Dames quittent l'échiquier : sans elles, la majorité de pions à l'aile Dame devient l'unique facteur qui compte sur l'échiquier.",
+        moveSan: ["Qc6", "Qe5", "Qe4", "Qxe4", "Bxe4", "Rd1+", "Kg2", "a5"],
+      },
+      {
+        title: "b4 : la majorité devient un pion passé",
+        fen: "6k1/5p1p/4b1p1/pp6/2p1B3/P1R1P1P1/1P3PKP/3r4 w - - 0 28",
+        text: "27...b4! Après 28.axb4 axb4, les Noirs obtiennent un pion b passé et soutenu — la transformation complète de « majorité de pions » en « pion passé », l'aboutissement naturel de tout le plan initié dès le 4e coup.",
+        moveSan: ["Rc2", "b4", "axb4", "axb4", "Bf3", "Rb1", "Be2", "b3"],
+      },
+      {
+        title: "Le pion passé décide la partie",
+        fen: "6k1/5p1p/4b1p1/8/2p5/1p2P1P1/1PR1BPKP/1r6 w - - 2 31",
+        text: "31...b3! avance encore. Après 33...c3! 34.bxc3 b2!, le pion, désormais à un pas de la promotion, force la Tour blanche à un sacrifice de qualité pour l'arrêter (35.Rxb2 Rxd1) — les Noirs restent avec un matériel décisif.",
+        moveSan: ["Rd2", "Rc1", "Bd1", "c3", "bxc3", "b2", "Rxb2", "Rxd1", "Rc2", "Bf5", "Rb2", "Rc1", "Rb3", "Be4+", "Kh3", "Rc2"],
+      },
+      {
+        title: "La conversion technique",
+        fen: "6k1/5p1p/6p1/8/4b3/1RP1P1PK/2r2P1P/8 w - - 8 40",
+        text: "Le reste n'est plus que de la technique pure : Capablanca simplifie, active sa Tour et son Fou, et encaisse méthodiquement son avantage matériel et positionnel jusqu'à l'abandon de Marshall au 49e coup — la démonstration parfaite de la supériorité de l'aile Dame, du 4e coup jusqu'au tout dernier.",
+        moveSan: ["f4", "h5", "g4", "hxg4+", "Kxg4", "Rxh2", "Rb4", "f5+", "Kg3", "Re2", "Rc4", "Rxe3+", "Kh4", "Kg7", "Rc7+", "Kf6", "Rd7", "Bg2", "Rd6+", "Kg7"],
+      },
+    ],
+  },
 };
