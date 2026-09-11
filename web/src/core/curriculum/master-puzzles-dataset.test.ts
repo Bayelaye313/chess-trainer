@@ -77,7 +77,7 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("357 entrées au total — 145 thèmes à 1 exercice + 16 vagues", () => {
+  it("394 entrées au total — 142 thèmes à 1 exercice + 19 vagues", () => {
     // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
     // (8 chacun) puis un 2e lot de 5 thèmes convertis « au format Lichess »
     // (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
@@ -95,8 +95,13 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // de maîtres réelles sourcées sur le web) : `pm-la-restriction-des-pieces-adverses`
     // (13, Botvinnik–Sorokin, URSS 1931), `pm-la-surprotection-nimzowitsch`
     // (14, Nimzowitsch–Salwe, Karlsbad 1911) et `pm-le-blocus-du-pion-passe`
-    // (13, Sämisch–Nimzowitsch, Copenhague 1923, « The Immortal Zugzwang Game »).
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(357);
+    // (13, Sämisch–Nimzowitsch, Copenhague 1923, « The Immortal Zugzwang
+    // Game ») — puis un 2e lot « Palier Or » (même jour, même méthode) :
+    // `pm-transformer-un-avantage` (13, Caruana–Shankland, Sinquefield Cup
+    // 2021), `pm-la-technique-de-simplification` (14, Carlsen–Nepomniachtchi,
+    // Championnat du Monde 2021 partie 6) et `pm-le-complexe-de-cases-de-couleur`
+    // (13, Pachman–Fischer, Olympiade de La Havane 1966).
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(394);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -114,6 +119,9 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "pm-la-restriction-des-pieces-adverses": 13,
       "pm-la-surprotection-nimzowitsch": 14,
       "pm-le-blocus-du-pion-passe": 13,
+      "pm-transformer-un-avantage": 13,
+      "pm-la-technique-de-simplification": 14,
+      "pm-le-complexe-de-cases-de-couleur": 13,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

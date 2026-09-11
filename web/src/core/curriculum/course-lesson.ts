@@ -4073,4 +4073,160 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // Les 3 thèmes ci-dessous (2026-09-11, 2e lot du « Palier Or ») sortent
+  // eux aussi de 3 parties de maîtres RÉELLES (aucun fichier PILOT
+  // n'existait pour ces thèmes) sourcées sur le web puis rejouées et
+  // vérifiées coup par coup avec chess.js avant rédaction :
+  //  - `pm-transformer-un-avantage` : Fabiano Caruana – Sam Shankland,
+  //    Sinquefield Cup 2021 (PGN officiel du tournoi,
+  //    theweekinchess.com/assets/files/pgn/sinqcup21.pgn) — un léger
+  //    avantage d'espace se transforme, coup après coup, en attaque de mat.
+  //  - `pm-la-technique-de-simplification` : Magnus Carlsen – Ian
+  //    Nepomniachtchi, Championnat du Monde 2021, Partie 6, la plus longue
+  //    partie de l'histoire des Mondiaux (136 coups) — 26.Qxc8! Rxc8
+  //    27.Rxc8! échange la Dame contre deux Tours pour simplifier.
+  //  - `pm-le-complexe-de-cases-de-couleur` : Ludek Pachman – Bobby
+  //    Fischer, Olympiade de La Havane 1966 — les Blancs perdent tour à
+  //    tour leurs deux Fous puis leur dernier Cavalier, abandonnant à
+  //    jamais les cases claires au Fou noir (33...Bxa2!, 39...Bxa4!).
+  // La vague de puzzles correspondante (`master-puzzles-dataset.ts`) mine
+  // d'autres points de décision réels de ces 3 mêmes parties.
+  "pm-transformer-un-avantage": {
+    steps: [
+      {
+        title: "Caruana – Shankland, Sinquefield Cup 2021 — un petit avantage à transformer",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Face au système Londres, les Noirs développent normalement. Après quelques coups seulement, les Blancs disposent d'un léger avantage d'espace et d'une meilleure coordination des pièces — rien de décisif en soi, mais exactement le genre de petit plus qu'il va falloir transformer, coup après coup, en quelque chose de concret.",
+        moveSan: ["d4", "Nf6", "Nf3", "g6", "Bf4", "Bg7", "e3", "d6", "h3", "c5", "Nbd2", "cxd4", "exd4", "O-O", "Be2", "Qb6"],
+      },
+      {
+        title: "Fermer le centre pour préparer la suite",
+        fen: "rnb2rk1/pp2ppbp/1q1p1np1/8/3P1B2/5N1P/PPPNBPP1/R2QK2R w KQ - 3 9",
+        text: "9.Nc4 Qc7 10.Ne3! réoriente le Cavalier vers e3, une case idéale pour surveiller d5 et f5. Après 12...e5, les Noirs ferment le centre ; 15...e4 fixe définitivement la structure — les Blancs vont devoir transformer leur avantage d'espace en activité de pièces plutôt qu'en pression centrale directe.",
+        moveSan: ["Nc4", "Qc7", "Ne3", "Nc6", "c3", "e5", "Bh2", "Qe7", "O-O", "e4", "Ne1", "d5", "N1c2", "Be6"],
+      },
+      {
+        title: "f3 : ouvrir des lignes vers le Roi noir",
+        fen: "r4rk1/pp2qpbp/2n1bnp1/3p4/3Pp3/2P1N2P/PPN1BPPB/R2Q1RK1 w - - 2 16",
+        text: "17.f3! est le premier signe de transformation : les Blancs convertissent leur avantage de structure en ouverture de lignes vers le Roi noir. Après 18...fxe4 19.fxe4, la colonne f est ouverte et toutes les pièces blanches (Dame, Tours, Fou) convergent vers l'aile Roi.",
+        moveSan: ["Qe1", "Nd7", "f3", "f5", "fxe4", "fxe4", "Bf4", "Rf7", "Qg3", "Nf6", "Rf2", "Qd7", "Raf1", "Raf8"],
+      },
+      {
+        title: "Le Cavalier centralisé en e5 change encore la nature de l'avantage",
+        fen: "5rk1/pp1q1rbp/2n1bnp1/3p4/3PpB2/2P1N1QP/PPN1BRP1/5RK1 w - - 8 23",
+        text: "23.Ne5! plante un Cavalier intouchable au centre de l'échiquier, transformant l'avantage spatial en un avant-poste dominant. Après l'échange 24...Bxe5 25.Bxe5, les Blancs gardent un Fou monstrueux sur les cases noires, contrôlant toute la diagonale a1-h8 autour du Roi noir.",
+        moveSan: ["Qh4", "Ne8", "Ng4", "Nd6", "Nce3", "Ne7", "Ne5", "Bxe5"],
+      },
+      {
+        title: "Regrouper les dernières pièces pour l'assaut final",
+        fen: "5rk1/pp1qnr1p/3nb1p1/3pb3/3PpB1Q/2P1N2P/PP2BRP1/5RK1 w - - 0 27",
+        text: "26.Ng4! puis 27.Qg5 amènent les dernières pièces blanches vers l'aile Roi. L'avantage positionnel accumulé depuis vingt coups est maintenant prêt à se transformer en attaque directe.",
+        moveSan: ["Bxe5", "Ndf5", "Ng4", "h5", "Qg5", "hxg4"],
+      },
+      {
+        title: "La transformation décisive : sacrifice de qualité",
+        fen: "5rk1/pp1qnr2/4b1p1/3pBnQ1/3Pp1p1/2P4P/PP2BRP1/5RK1 w - - 0 30",
+        text: "30.gxf5! Rxf5 31.Rxf5! Rxf5 32.Rxf5! Bxf5 — les Blancs acceptent une série d'échanges de Tours qui, sur l'échiquier, semble neutre en matériel, mais transforme en réalité tout l'avantage positionnel accumulé en attaque directe contre le Roi noir désormais totalement dégarni.",
+        moveSan: ["hxg4", "Ng7", "Qh6", "Nef5", "gxf5", "Rxf5", "Rxf5", "Rxf5", "Rxf5", "Bxf5"],
+      },
+      {
+        title: "Qxg6! — la conversion finale",
+        fen: "6k1/pp1q2n1/6pQ/3pBb2/3Pp3/2P5/PP2B1P1/6K1 w - - 0 35",
+        text: "33.g4! chasse le Fou noir, et 34.Qxg6! est le coup qui encaisse tout : l'avantage de départ — un peu d'espace et une meilleure coordination — s'est transformé, coup après coup, en une attaque de mat imparable. Les Noirs ont abandonné peu après.",
+        moveSan: ["g4", "Be6", "Qxg6", "Qf7", "Qh6", "e3", "Bf3"],
+      },
+    ],
+  },
+  "pm-la-technique-de-simplification": {
+    steps: [
+      {
+        title: "Carlsen – Nepomniachtchi, Championnat du Monde 2021, Partie 6 — la partie la plus longue de l'histoire des Mondiaux",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Une Catalane calme où les Noirs acceptent de rendre le pion c5 pris au passage. Rien ne laisse présager que cette partie va durer 136 coups et devenir la plus longue de l'histoire des championnats du monde — Carlsen va simplement, méthodiquement, simplifier la position pendant des heures jusqu'à ce qu'une seule petite erreur suffise.",
+        moveSan: ["d4", "Nf6", "Nf3", "d5", "g3", "e6", "Bg2", "Be7", "O-O", "O-O", "b3", "c5", "dxc5", "Bxc5", "c4", "dxc4"],
+      },
+      {
+        title: "Premiers échanges : simplifier sans rien lâcher",
+        fen: "rnbq1rk1/pp3ppp/4pn2/2b5/2p5/1P3NP1/P3PPBP/RNBQ1RK1 w - - 0 9",
+        text: "17.Bxf6! échange le Fou contre le Cavalier noir, abîmant volontairement la structure de pions noire (17...gxf6). 18.Rac1! Nd4 19.Nxd4 Bxd4 poursuit les échanges — Carlsen ne cherche pas la complication, il cherche la position la plus simple possible où son léger avantage reste réel.",
+        moveSan: ["Qc2", "Qe7", "Nbd2", "Nc6", "Nxc4", "b5", "Nce5", "Nb4"],
+      },
+      {
+        title: "Le Roi vient au jeu tôt",
+        fen: "r1b2rk1/p3qppp/4pn2/1pb1N3/1n6/1P3NP1/P1Q1PPBP/R1B2RK1 w - - 2 13",
+        text: "20.Qa2! Bxg2 21.Kxg2 — les Blancs acceptent même de perdre leur Fou-roi si cela simplifie la position vers une finale où l'activité du Roi blanc compte plus que n'importe quelle pièce mineure. C'est une autre facette de la technique de simplification : ne jamais craindre d'échanger si la position qui en résulte est plus facile à jouer pour soi.",
+        moveSan: ["Qb2", "Bb7", "a3", "Nc6", "Nd3", "Bb6", "Bg5", "Rfd8"],
+      },
+      {
+        title: "Qxc8! — la Dame contre deux Tours",
+        fen: "r2r2k1/pb2qppp/1bn1pn2/1p4B1/8/PP1N1NP1/1Q2PPBP/R4RK1 w - - 5 17",
+        text: "25.Rd2 Rac8 26.Qxc8! Rxc8 27.Rxc8! est LE moment-clé du chapitre : les Blancs échangent volontairement leur Dame contre les deux Tours noires. Ce n'est pas un sacrifice — matériellement c'est équilibré — mais c'est une simplification radicale : Carlsen préfère une finale Dame contre deux Tours et Cavalier, plus simple à manier sur la durée, à une position où les pièces lourdes restent sur l'échiquier avec leurs complications propres.",
+        moveSan: ["Bxf6", "gxf6", "Rac1", "Nd4", "Nxd4", "Bxd4", "Qa2", "Bxg2"],
+      },
+      {
+        title: "La technique s'installe pour la longue durée",
+        fen: "r2r2k1/p3qp1p/4pp2/1p6/3b4/PP1N2P1/Q3PPbP/2R2RK1 w - - 0 21",
+        text: "Après les grands échanges, la partie entre dans sa phase de technique pure : chaque camp grignote, chaque camp manœuvre. 33...Bxa3 grappille un pion, mais la position reste extrêmement difficile à gagner pour l'un comme pour l'autre — c'est exactement le genre de finale simplifiée où seule une patience infinie fait la différence.",
+        moveSan: ["Kxg2", "Qb7+", "Kg1", "Qe4", "Qc2", "a5", "Rfd1", "Kg7", "Rd2", "Rac8"],
+      },
+      {
+        title: "Le grignotage continue, coup après coup",
+        fen: "2rr4/5pkp/4pp2/pp6/3bq3/PP1N2P1/2QRPP1P/2R3K1 w - - 4 26",
+        text: "Les pièces s'échangent encore par endroits, les pions tombent des deux côtés (39...Qxb4, 41...Qb3), mais la position reste globalement équilibrée sur le papier. C'est précisément dans ce genre de position — simplifiée, techniquement égale, mais psychologiquement épuisante — que la technique de Carlsen fait la différence sur la durée.",
+        moveSan: ["Qxc8", "Rxc8", "Rxc8", "Qd5", "b4", "a4", "e3", "Be5", "h4", "h5", "Kh2", "Bb2", "Rc5", "Qd6"],
+      },
+      {
+        title: "Vers le record : 136 coups avant la faute fatale",
+        fen: "8/5pk1/3qpp2/1pR4p/pP5P/P2NP1P1/1b1R1P1K/8 w - - 4 33",
+        text: "La partie va se poursuivre encore près de 70 coups sur ce même mode : manœuvres patientes, aucune complication inutile, la position toujours simplifiée à l'extrême. Nepomniachtchi tient bon pendant des heures, jusqu'à ce qu'une inexactitude, au bout de 136 coups, laisse enfin Carlsen porter le coup fatal — la partie la plus longue de l'histoire des championnats du monde, et l'une des démonstrations les plus pures de la technique de simplification.",
+        moveSan: ["Rd1", "Bxa3", "Rxb5", "Qd7", "Rc5", "e5", "Rc2", "Qd5", "Rdd2", "Qb3", "Ra2", "e4", "Nc5", "Qxb4", "Nxe4", "Qb3", "Rac2", "Bf8", "Nc5", "Qb5", "Nd3", "a3", "Nf4", "Qa5", "Ra2", "Bb4", "Rd3", "Kh6", "Rd1", "Qa4", "Rda1", "Bd6", "Kg1", "Qb3", "Ne2", "Qd3"],
+      },
+    ],
+  },
+  "pm-le-complexe-de-cases-de-couleur": {
+    steps: [
+      {
+        title: "Pachman – Fischer, Olympiade de La Havane 1966 — un seul Fou de chaque couleur va rester",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Après une série d'échanges dans les douze premiers coups, les DEUX fous à cases noires quittent l'échiquier (8...Bxd4 9.exd4), puis le Fou à cases claires blanc disparaît à son tour (11.Bxc4 Nxc4!). Résultat : les Blancs ne conservent plus qu'un Fou à cases NOIRES, les Noirs qu'un Fou à cases CLAIRES. Toute la partie va désormais se jouer autour de ce déséquilibre de couleur.",
+        moveSan: ["d4", "Nf6", "Nf3", "c5", "c4", "cxd4", "Nxd4", "e6", "e3", "Nc6", "Be2", "d5", "Nc3", "Bc5", "O-O", "Bxd4", "exd4", "dxc4", "Be3", "Na5", "Bxc4", "Nxc4"],
+      },
+      {
+        title: "Les Dames s'échangent, la structure blanche se fixe sur les cases noires",
+        fen: "r1bqk2r/pp3ppp/4pn2/8/2nP4/2N1B3/PP3PPP/R2Q1RK1 w kq - 0 12",
+        text: "12.Qa4+ Bd7 13.Qxc4 Bc6 14.Bg5 Qa5 15.Qc5! propose l'échange des Dames. Après 15...Qxc5 16.dxc5, le pion blanc se fixe sur c5 — une case NOIRE, la couleur du seul Fou qu'il reste aux Blancs. Chaque nouveau pion blanc qui se fixera sur une case noire laissera un peu plus les cases claires sans défense.",
+        moveSan: ["Qa4+", "Bd7", "Qxc4", "Bc6", "Bg5", "Qa5", "Qc5", "Qxc5", "dxc5"],
+      },
+      {
+        title: "Le Fou noir manœuvre, les cases claires restent abandonnées",
+        fen: "r3k2r/pp3ppp/2b1pn2/2P3B1/8/2N5/PP3PPP/R4RK1 b kq - 0 16",
+        text: "Pendant une vingtaine de coups, le Fou blanc navigue entre e3, d4 et f2 — toujours sur des cases noires, jamais capable d'aider à défendre les cases claires. Fischer regroupe patiemment son Cavalier (Ne5, Nd7, Ne5, Ng6, Nf4) sans se presser : le complexe de cases claires ne va nulle part, il peut prendre tout son temps pour l'exploiter.",
+        moveSan: ["a5", "Rfd1", "h5", "h4", "Nd7", "Be3", "Ne5", "Bd4", "Nd7", "b3", "Rg8", "Be3", "Ne5", "f3", "Ng6", "Bf2", "Nf4", "Be3"],
+      },
+      {
+        title: "Nxd5 Bxd5 — plus aucune pièce blanche ne peut jamais toucher les cases claires",
+        fen: "r3k1r1/1p3pp1/2b1p3/p1P4p/5n1P/1PN1BP2/P5P1/R2R2K1 b q - 4 25",
+        text: "26.Nxd5! Bxd5 échange le dernier Cavalier blanc. À partir de cet instant précis, les Blancs n'ont plus AUCUNE pièce capable de contrôler une case claire — seulement des pions et un Fou à cases noires. Le complexe de cases claires est désormais une faiblesse permanente, structurelle, pour le reste de la partie.",
+        moveSan: ["Nd5", "Nxd5", "Bxd5"],
+      },
+      {
+        title: "Bxa2! — le Fou clair noir croque un premier pion",
+        fen: "r3k1r1/1p3pp1/4p3/p1Pb3p/7P/1P2BP2/P5P1/R2R2K1 w q - 0 27",
+        text: "Après un long regroupement des Tours et une marche du Roi blanc, 31...a4 32.Rxa4 Rxa4 33.bxa4 Bxa2! est la première récolte concrète : le pion a2, sur une case claire, tombe simplement parce qu'aucune pièce blanche ne pouvait plus jamais le défendre. C'est la conséquence directe, dix coups plus tard, de l'échange des Cavaliers.",
+        moveSan: ["Rd4", "Kd7", "Rc1", "Kc6", "Rc3", "f6", "f4", "Rgd8", "Kf2", "a4", "Rxa4", "Rxa4", "bxa4", "Bxa2"],
+      },
+      {
+        title: "Bxa4! — une seconde case claire tombe",
+        fen: "3r4/1p4p1/2k1pp2/2P4p/P4P1P/2R1B3/b4KP1/8 w - - 0 34",
+        text: "34.Rc2 Bd5 puis, après un nouveau regroupement, 39...Bxa4! récolte un second pion sur case claire. Le Fou noir se promène librement dans le camp blanc, sur des cases qu'aucune pièce blanche ne pourra plus jamais contester.",
+        moveSan: ["Rc2", "Bd5", "Rb2", "Ra8", "Rb4", "Ra5", "g3", "Kc7", "Bd4", "Bc6", "Be3", "Bxa4"],
+      },
+      {
+        title: "Position désespérée — l'abandon",
+        fen: "8/1pk3p1/4pp2/r1P4p/bR3P1P/4B1P1/5K2/8 w - - 0 40",
+        text: "40.Rd4 Bd7 41.Rd2 Ra8 42.Rb2 Rb8 43.Rd2 : les Blancs ne peuvent plus qu'attendre, deux pions de moins et un complexe de cases claires totalement abandonné. La partie fut ajournée puis abandonnée sans reprise — la démonstration de Fischer était déjà complète.",
+        moveSan: ["Rd4", "Bd7", "Rd2", "Ra8", "Rb2", "Rb8", "Rd2"],
+      },
+    ],
+  },
 };
