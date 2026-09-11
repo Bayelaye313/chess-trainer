@@ -67,11 +67,14 @@ export function ThemeSession({
   themeId,
   description,
   onExit,
+  onReview,
 }: {
   themeId: string;
   /** Description du thème (`CurriculumThemeOverview.description`) — déjà connue de `LearnScreen` avant navigation, jamais rechargée ici. `null` seulement si `LearnScreen` n'a pas trouvé le thème (garde défensive, voir son docstring). */
   description: string | null;
   onExit: () => void;
+  /** Bascule vers `ThemeReviewSession` (`theme-review-session.tsx`) — proposé une fois le thème maîtrisé, voir plus bas. */
+  onReview: () => void;
 }) {
   const [state, setState] = useState<SessionState>({ status: "loading" });
   const [lastSolved, setLastSolved] = useState<LastSolved | null>(null);
@@ -192,13 +195,24 @@ export function ThemeSession({
               </p>
             </>
           )}
-          <button
-            type="button"
-            onClick={onExit}
-            className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-          >
-            Retour aux thèmes
-          </button>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onExit}
+              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+            >
+              Retour aux thèmes
+            </button>
+            {state.session.totalPuzzles > 0 && state.session.completedCount >= state.session.totalPuzzles && (
+              <button
+                type="button"
+                onClick={onReview}
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface-muted"
+              >
+                🔁 Revoir les puzzles
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -212,6 +212,39 @@ export async function getThemeSession(themeId: string, userId: string = LOCAL_US
   };
 }
 
+/** Session de révision d'un thème : la vague complète, jamais tronquée par la progression. */
+export interface ThemeReviewSession {
+  themeId: string;
+  title: string;
+  puzzles: ThemePuzzle[];
+}
+
+/**
+ * Sert TOUTE la vague d'un thème d'un coup, dans l'ordre — pour le mode
+ * « Revoir les puzzles » (`theme-review-session.tsx`). Contrairement à
+ * `getThemeSession`, ceci ne lit NI n'écrit jamais `userThemeProgress` :
+ * une session de révision est un rejeu à part, qui ne fait jamais bouger le
+ * curseur `completedCount` de la vraie progression (voir le docstring de
+ * `submitThemeReviewSolved` côté action — il n'en existe volontairement
+ * aucune, la révision ne poste jamais rien au serveur). `null` seulement si
+ * le thème n'existe pas ; un thème sans exercice renvoie `puzzles: []`,
+ * jamais un puzzle inventé (même garde défensive que `getThemeSession`).
+ */
+export async function getThemeReviewSession(themeId: string): Promise<ThemeReviewSession | null> {
+  await ensureCurriculumSeeded();
+
+  const [theme] = await db.select().from(curriculumThemes).where(eq(curriculumThemes.id, themeId)).limit(1);
+  if (!theme) return null;
+
+  const puzzles = await db
+    .select()
+    .from(curriculumPuzzles)
+    .where(eq(curriculumPuzzles.themeId, themeId))
+    .orderBy(asc(curriculumPuzzles.orderIndex));
+
+  return { themeId: theme.id, title: theme.title, puzzles };
+}
+
 /**
  * Valide un puzzle résolu : avance le curseur linéaire d'un cran (jamais deux
  * fois pour le même puzzle grâce au verrou `graded` côté client, comme

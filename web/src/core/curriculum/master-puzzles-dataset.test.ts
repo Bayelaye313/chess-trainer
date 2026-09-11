@@ -77,7 +77,7 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("431 entrées au total — 139 thèmes à 1 exercice + 22 vagues", () => {
+  it("496 entrées au total — 138 thèmes à 1 exercice + 23 vagues", () => {
     // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
     // (8 chacun) puis un 2e lot de 5 thèmes convertis « au format Lichess »
     // (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
@@ -105,8 +105,23 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // `pm-le-fou-contre-trois-pions` (13, Fischer–Spassky, Reykjavik 1972
     // partie 1), `pm-la-forteresse-defensive` (13, Hawkins–Gormally, 2008)
     // et `pm-la-superiorite-de-l-aile-dame` (14, Marshall–Capablanca, New
-    // York 1909 partie 23).
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(431);
+    // York 1909 partie 23) — ce qui clôt le Palier Or (10/10 thèmes avancés
+    // en vague). Enfin, sprint de clôture du 2026-09-11 : 4 des 8 thèmes
+    // `positional_mastery` du Palier BRONZE encore à 1 seul exercice
+    // reçoivent eux aussi leur vague, sourcés depuis la MÊME partie déjà
+    // citée dans leur `COURSE_LESSONS` existant (aucune nouvelle recherche) :
+    // `pm-cavalier-contre-fou-qui-domine` (13, Karpov–Unzicker, Nice 1974,
+    // « Squeeze Play »), `pm-les-pions-pendants` (15, Petrosian–Geller,
+    // Amsterdam Candidates 1956, ronde 10 — partie nulle réelle, PAS un
+    // abandon noir malgré une note antérieure), `pm-doubler-les-pions-adverses`
+    // (13, Lasker–Capablanca, Saint-Petersbourg 1914) et
+    // `pm-le-pion-passe-protege` (14, Aronian–Anand, Morelia-Linares 2007,
+    // « Levon For Good ») — puis, premier chantier du cursus Jesper Hall
+    // (même jour) : `jh-module-1-structures-de-pions-symetriques` (15,
+    // Rubinstein–Salwe, Lodz 1908, « The Backward Pawn »), qui remplace son
+    // unique ligne théorique générique par une vague réelle, sourcée sur le
+    // web faute de fichier PILOT pour ce cursus.
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(496);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -130,6 +145,11 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "pm-le-fou-contre-trois-pions": 13,
       "pm-la-forteresse-defensive": 13,
       "pm-la-superiorite-de-l-aile-dame": 14,
+      "pm-cavalier-contre-fou-qui-domine": 13,
+      "pm-les-pions-pendants": 15,
+      "pm-doubler-les-pions-adverses": 13,
+      "pm-le-pion-passe-protege": 14,
+      "jh-module-1-structures-de-pions-symetriques": 15,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

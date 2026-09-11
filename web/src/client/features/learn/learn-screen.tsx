@@ -41,13 +41,15 @@ import { CourseCurriculum } from "./course-curriculum";
 import { ModuleCard } from "./module-card";
 import { moduleIcon } from "./module-icon";
 import { ThemeLesson } from "./theme-lesson";
+import { ThemeReviewSession } from "./theme-review-session";
 import { ThemeSession } from "./theme-session";
 
 export type LearnView =
   | { kind: "modules" }
   | { kind: "themes"; categoryId: string }
   | { kind: "lesson"; categoryId: string; themeId: string }
-  | { kind: "session"; categoryId: string; themeId: string };
+  | { kind: "session"; categoryId: string; themeId: string }
+  | { kind: "review"; categoryId: string; themeId: string };
 
 function BackButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
@@ -90,6 +92,23 @@ export function LearnScreen({
         themeId={view.themeId}
         description={found?.theme.description ?? null}
         onExit={() => refreshAndGoTo({ kind: "themes", categoryId: view.categoryId })}
+        onReview={() => setView({ kind: "review", categoryId: view.categoryId, themeId: view.themeId })}
+      />
+    );
+  }
+
+  if (view.kind === "review") {
+    const found = findTheme(categories, view.categoryId, view.themeId);
+    return (
+      <ThemeReviewSession
+        // `key` force un remontage complet à chaque entrée en révision — même
+        // schéma que `ThemeLesson` : repartir d'un état local propre
+        // (`reviewIndex`/`attempt` à 0) plutôt que de porter un état résiduel
+        // d'une précédente session de révision sur un AUTRE thème.
+        key={view.themeId}
+        themeId={view.themeId}
+        description={found?.theme.description ?? null}
+        onExit={() => setView({ kind: "themes", categoryId: view.categoryId })}
       />
     );
   }
@@ -148,6 +167,7 @@ export function LearnScreen({
         <CourseCurriculum
           themes={category.themes}
           onSelectTheme={(themeId) => setView({ kind: "lesson", categoryId: category.id, themeId })}
+          onReviewTheme={(themeId) => setView({ kind: "review", categoryId: category.id, themeId })}
         />
       </div>
     );

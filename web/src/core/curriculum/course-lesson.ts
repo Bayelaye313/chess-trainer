@@ -2209,6 +2209,99 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // `jh-module-1-structures-de-pions-symetriques` (2026-09-11, cahier des
+  // charges « tout nouveau chantier » du cursus Jesper Hall, aucun fichier
+  // PILOT disponible) : 7 chapitres tirés de la partie réelle Akiba
+  // Rubinstein – Georg Salwe, Lodz 1908 (Gambit Dame refusé, Défense
+  // Tarrasch, dite « The Backward Pawn » — chessgames.com/perl/chessgame?
+  // gid=1119705, confirmée indépendamment par chess.com/lessons/silmans-
+  // lessons-in-strategy-2/rubinstein-salwe-lodz-1908 et par l'étude Lichess
+  // https://lichess.org/study/jgR5G5hW). Choix de cette partie : après
+  // 4.cxd5 exd5, la position semble parfaitement symétrique sur les
+  // colonnes centrales — exactement l'illusion que ce module veut démonter.
+  // Les 75 demi-coups de la partie ont été rejoués et vérifiés intégralement
+  // avec chess.js avant rédaction (voir `course-lesson.test.ts`) ; la même
+  // partie alimente aussi la vague de 15 puzzles de
+  // `MASTER_PUZZLES_DATASET` pour ce thème.
+  "jh-module-1-structures-de-pions-symetriques": {
+    steps: [
+      {
+        title: "Akiba Rubinstein – Georg Salwe, Lodz 1908",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Tournoi de Lodz 1908 : Rubinstein (Blancs) affronte Georg Salwe dans un Gambit Dame refusé, Défense Tarrasch. PRO TIP de Jesper Hall : une structure de pions symétrique — où chaque camp a exactement les mêmes pions, en miroir — ne décide JAMAIS rien par elle-même ; c'est l'activité relative des pièces qui va créer, case après case, la première vraie différence entre les deux camps.",
+        moveSan: ["d4", "d5", "Nf3", "c5"],
+      },
+      {
+        title: "Rubinstein – Salwe : coup 4 — la fausse symétrie se construit",
+        fen: "rnbqkbnr/pp2pppp/8/2pp4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3",
+        text: "Après 3...e6, Rubinstein force l'échange central : cxd5 exd5 va reconstituer un pion noir sur d5 en face du pion blanc d4 — à première vue, la structure semble redevenir parfaitement symétrique sur les colonnes centrales.",
+        moveSan: ["c4", "e6", "cxd5", "exd5"],
+        highlights: [
+          { square: "d4", color: "green" },
+          { square: "d5", color: "green" },
+        ],
+        arrows: [
+          { from: "c4", to: "d5", color: "green" },
+          { from: "e6", to: "d5", color: "green" },
+        ],
+      },
+      {
+        title: "Rubinstein – Salwe : coup 8 — une symétrie trompeuse",
+        fen: "rnbqkbnr/pp3ppp/8/2pp4/3P4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 5",
+        text: "PRO TIP : regardez mieux. Blanc n'a plus qu'UN seul pion central (d4, sur une colonne d ouverte pour sa Dame), tandis que Noir traîne DEUX pions centraux (c5 ET d5) sur la même zone — la colonne c, déjà privée de son pion blanc, appartient virtuellement à Rubinstein depuis ce coup. La symétrie n'est qu'apparente : l'asymétrie réelle, invisible au premier regard, se cache dans ce déséquilibre de colonnes.",
+        highlights: [
+          { square: "d4", color: "green" },
+          { square: "c5", color: "red" },
+          { square: "d5", color: "red" },
+        ],
+        arrows: [{ from: "a1", to: "c1", color: "green" }],
+      },
+      {
+        title: "Rubinstein – Salwe : coup 14 — la rupture qui grave la faiblesse",
+        fen: "r1bqkb1r/pp3ppp/2n2n2/2pp4/3P4/2N2NP1/PP2PPBP/R1BQK2R b KQkq - 2 7",
+        text: "Salwe cède lui-même la tension sur d4 : après cxd4 Nxd4 Qb6 Nxc6 bxc6, son pion b7 reprend sur c6 — Noir se retrouve avec un pion c6 arriéré et un pion d5 isolé, deux cibles permanentes sur la colonne c que Rubinstein vient tout juste de rendre entièrement sienne. PRO TIP : c'est exactement le moment à repérer — transformer l'asymétrie latente (case c5, colonne c) en faiblesse structurelle concrète et durable.",
+        moveSan: ["cxd4", "Nxd4", "Qb6", "Nxc6", "bxc6"],
+        highlights: [
+          { square: "c6", color: "red" },
+          { square: "d5", color: "red" },
+        ],
+      },
+      {
+        title: "Rubinstein – Salwe : coup 23 — centraliser les pièces lourdes sur la colonne c",
+        fen: "r5k1/pqr2ppp/2p1b3/2Rp4/3Q4/4PPP1/PP3R1P/5BK1 w - - 1 23",
+        text: "PRO TIP de Jesper Hall : dans une position devenue asymétrique, doublez vos pièces lourdes sur LA colonne qui compte — ici la colonne c, ouverte depuis le coup 8. Rfc2 amène la seconde Tour derrière la première, et la Dame blanche contrôle déjà d4 : trois pièces lourdes convergent vers les deux mêmes cibles, c6 et d5.",
+        moveSan: ["Rfc2", "Qb6"],
+        highlights: [
+          { square: "c6", color: "red" },
+          { square: "d5", color: "red" },
+          { square: "c5", color: "green" },
+        ],
+        arrows: [{ from: "f2", to: "c2", color: "green" }],
+      },
+      {
+        title: "Rubinstein – Salwe : coup 27 — Rxc6!, la percée décisive",
+        fen: "1r4k1/r4ppp/pqp1b3/R2p4/1P1Q4/P3PPP1/2R4P/5BK1 w - - 1 27",
+        text: "Le fruit de toute la manoeuvre : Rxc6! élimine définitivement le pion arriéré, et après Qxc6 Qxa7, Rubinstein ramasse aussi le second point faible — exactement le principe des « deux faiblesses » : attaquer tour à tour deux cibles jusqu'à ce que l'adversaire ne puisse plus les défendre toutes les deux à la fois.",
+        moveSan: ["Rxc6", "Qxc6", "Qxa7"],
+        highlights: [
+          { square: "c6", color: "red" },
+          { square: "a7", color: "red" },
+        ],
+        arrows: [{ from: "c2", to: "c6", color: "green" }],
+      },
+      {
+        title: "Rubinstein – Salwe : coup 35 — la 7e rangée, puis le pion qui décide",
+        fen: "r5k1/1q3p2/3Qb1p1/p1Rp3p/1P5P/P3PPP1/4BK2/8 w - - 0 35",
+        text: "Dernier acte : Rc7 envahit la 7e rangée et immobilise totalement les pièces noires, pendant que le pion b, soutenu par la Dame et la Tour, s'avance b5-b6-b7 sans que Noir ne puisse rien y opposer. Salwe abandonne : une structure 100% symétrique au coup 4 a fini, 34 coups plus tard, entièrement dominée par l'activité des pièces blanches — la démonstration complète du PRO TIP de ce module.",
+        moveSan: ["Rc7", "Qb8", "b5", "a4", "b6", "Ra5", "b7"],
+        highlights: [
+          { square: "c7", color: "green" },
+          { square: "b7", color: "green" },
+        ],
+        arrows: [{ from: "c5", to: "c7", color: "green" }],
+      },
+    ],
+  },
   "jh-module-3-la-structure-carlsbad": {
     steps: [
       {

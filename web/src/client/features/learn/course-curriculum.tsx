@@ -48,10 +48,13 @@ const ThemeRow = memo(function ThemeRow({
   theme,
   index,
   onSelect,
+  onReview,
 }: {
   theme: CurriculumThemeOverview;
   index: number;
   onSelect: () => void;
+  /** Bascule vers `ThemeReviewSession` sans repasser par le cours — proposé uniquement sur un thème déjà maîtrisé (`done`), voir plus bas. */
+  onReview: () => void;
 }) {
   const done = isThemeDone(theme);
   // Même garde-fou que `ThemePath` (cahier des charges du 2026-09-06) : un
@@ -60,38 +63,53 @@ const ThemeRow = memo(function ThemeRow({
   const empty = theme.totalPuzzles === 0;
 
   return (
-    <motion.button
-      type="button"
-      onClick={onSelect}
+    // `motion.div` plutôt que `motion.button` depuis le sprint de clôture du
+    // 2026-09-11 : un thème maîtrisé porte désormais DEUX actions (reprendre
+    // le cours, revoir la vague) — deux `<button>` réels côte à côte, jamais
+    // un bouton imbriqué dans un autre (invalide en HTML, invisible aux
+    // lecteurs d'écran).
+    <motion.div
       whileHover={{ y: -2, boxShadow: GLOW.card }}
-      whileTap={{ scale: 0.98 }}
       transition={SPRING}
-      className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left ${
+      className={`flex w-full items-center gap-1 rounded-lg border px-2 py-1.5 ${
         empty ? "border-dashed border-border/60 bg-surface/60" : "border-border bg-surface"
       }`}
     >
-      <span
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
-          done ? "border-best bg-best/10 text-best" : "border-border text-foreground-muted"
-        }`}
-        aria-hidden="true"
-      >
-        {done ? "✓" : index + 1}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className={`block truncate text-sm font-medium ${empty ? "text-foreground-muted" : "text-foreground"}`}>
-          {theme.title}
+      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-1.5 text-left">
+        <span
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+            done ? "border-best bg-best/10 text-best" : "border-border text-foreground-muted"
+          }`}
+          aria-hidden="true"
+        >
+          {done ? "✓" : index + 1}
         </span>
-        <span className="mt-0.5 block truncate text-xs text-foreground-muted">{theme.description}</span>
-      </span>
-      {empty ? (
-        <span className="shrink-0 text-xs font-medium text-inaccuracy">⚠️ En attente</span>
-      ) : (
-        <span className="shrink-0 font-mono text-xs text-foreground-muted">
-          {theme.completedCount}/{theme.totalPuzzles}
+        <span className="min-w-0 flex-1">
+          <span className={`block truncate text-sm font-medium ${empty ? "text-foreground-muted" : "text-foreground"}`}>
+            {theme.title}
+          </span>
+          <span className="mt-0.5 block truncate text-xs text-foreground-muted">{theme.description}</span>
         </span>
+        {empty ? (
+          <span className="shrink-0 text-xs font-medium text-inaccuracy">⚠️ En attente</span>
+        ) : (
+          <span className="shrink-0 font-mono text-xs text-foreground-muted">
+            {theme.completedCount}/{theme.totalPuzzles}
+          </span>
+        )}
+      </button>
+      {done && (
+        <button
+          type="button"
+          onClick={onReview}
+          title="Revoir les puzzles"
+          aria-label="Revoir les puzzles"
+          className="shrink-0 rounded-md px-2 py-1.5 text-base hover:bg-surface-muted"
+        >
+          🔁
+        </button>
       )}
-    </motion.button>
+    </motion.div>
   );
 });
 
@@ -100,11 +118,13 @@ const TierSection = memo(function TierSection({
   themes,
   open,
   onSelectTheme,
+  onReviewTheme,
 }: {
   level: CurriculumLevel;
   themes: readonly CurriculumThemeOverview[];
   open: boolean;
   onSelectTheme: (themeId: string) => void;
+  onReviewTheme: (themeId: string) => void;
 }) {
   const meta = TIER_META[level];
   const masteredCount = useMemo(() => themes.filter(isThemeDone).length, [themes]);
@@ -157,7 +177,12 @@ const TierSection = memo(function TierSection({
           >
             {themes.map((theme, index) => (
               <motion.li key={theme.id} variants={ACCORDION_ROW_VARIANTS}>
-                <ThemeRow theme={theme} index={index} onSelect={() => onSelectTheme(theme.id)} />
+                <ThemeRow
+                  theme={theme}
+                  index={index}
+                  onSelect={() => onSelectTheme(theme.id)}
+                  onReview={() => onReviewTheme(theme.id)}
+                />
               </motion.li>
             ))}
           </motion.ul>
@@ -170,10 +195,13 @@ const TierSection = memo(function TierSection({
 export function CourseCurriculum({
   themes,
   onSelectTheme,
+  onReviewTheme,
   defaultExpandedLevel,
 }: {
   themes: readonly CurriculumThemeOverview[];
   onSelectTheme: (themeId: string) => void;
+  /** Bouton « 🔁 » de `ThemeRow` sur un thème déjà maîtrisé — bascule directement en mode Révision sans repasser par le cours. */
+  onReviewTheme: (themeId: string) => void;
   /** Palier initialement déplié — par défaut le premier palier (Bronze → Argent → Or) qui contient encore un thème non terminé. */
   defaultExpandedLevel?: CurriculumLevel;
 }) {
@@ -215,6 +243,7 @@ export function CourseCurriculum({
           themes={byLevel.get(level) ?? []}
           open={expandedLevels.includes(level)}
           onSelectTheme={onSelectTheme}
+          onReviewTheme={onReviewTheme}
         />
       ))}
     </Accordion.Root>

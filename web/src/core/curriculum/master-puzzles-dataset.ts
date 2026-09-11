@@ -89,6 +89,34 @@
  * Les 28 autres thèmes `positional_mastery` restent à 1 exercice chacun :
  * étendre chacun en vague demande une étude Lichess source par thème, non
  * encore fournie — voir la mémoire de session pour le suivi.
+ *
+ * ## État au 2026-09-11 (sprint de clôture)
+ *
+ * Les 10 thèmes `positional_mastery` de niveau `advanced` (« Palier Or »,
+ * voir `catalog.ts#levelForIndex`) portent maintenant TOUS une vague
+ * (22 vagues au total à ce stade). Puis 4 des 8 thèmes de niveau `beginner`
+ * (« Palier Bronze ») encore à 1 seul exercice ont eux aussi reçu une vague
+ * (13-15 entrées chacun, voir leurs commentaires plus bas) : ces 4 n'ont
+ * demandé AUCUNE nouvelle recherche de source — la partie de maître utilisée
+ * est celle déjà citée dans le `COURSE_LESSONS` existant de chaque thème,
+ * simplement rejouée plus loin (`chess.js`) pour en extraire davantage de
+ * positions de décision réelles. 26 vagues au total désormais ; 4 thèmes
+ * `positional_mastery` de niveau `beginner` restent à 1 seul exercice
+ * (`pm-la-case-faible-dans-le-camp-adverse`, `pm-le-pion-isole-de-la-dame`,
+ * `pm-la-colonne-ouverte`, `pm-la-colonne-semi-ouverte`) — même méthode
+ * disponible pour un prochain lot, voir la mémoire de session.
+ *
+ * ## Cursus Jesper Hall — premier chantier (2026-09-11)
+ *
+ * `jh-module-1-structures-de-pions-symetriques` est le premier thème du
+ * cursus `jesper_hall_course` à sortir du format « 1 ligne théorique
+ * générique » : son unique entrée (une ouverture rejouée sans lien avec un
+ * module précis) est remplacée par une vague de 15 positions réelles, toutes
+ * tirées de la même partie que son tutoriel (`COURSE_LESSONS`, voir
+ * `course-lesson.ts`) — Akiba Rubinstein – Georg Salwe, Lodz 1908. Aucun
+ * fichier PILOT n'existait pour ce cursus : la partie a été sourcée sur le
+ * web puis intégralement rejouée et vérifiée avec chess.js avant rédaction.
+ * 23 vagues au total désormais (482 → 496 entrées).
  */
 
 export interface MasterPuzzle {
@@ -567,13 +595,118 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     rating: 1600,
     sourceRef: "NoseKnowsAll — « Bishops | Slice through the opposition! », Exercise 8 : Bishop activation V, Sicilienne Kalachnikov (lichess.org/study/kNn68T8l).",
   },
+  // Vague de 13 puzzles (2026-09-11, sprint de clôture) — Anatoly Karpov –
+  // Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (partie
+  // surnommée « Squeeze Play », https://www.chessgames.com/perl/chessgame?gid=1067846,
+  // même fichier PILOT réel que celui qui alimente déjà `COURSE_LESSONS`
+  // pour ce thème sur d'autres parties). Karpov ferme méthodiquement l'aile
+  // roi (31.f5 g5) jusqu'à ce que le Fou noir n'ait plus une seule case où
+  // s'exprimer, puis l'échange (35.Bh5!, 41.Bxf7+) pour ne garder que ses
+  // deux Cavaliers pleinement fonctionnels — la démonstration manuelle
+  // (mécanique, `chess.js`, aucune position inventée) du thème.
   {
     themeId: "pm-cavalier-contre-fou-qui-domine",
-    fen: "r1b2rk1/ppq2ppp/2n1pn2/2p5/2BP4/P1P1PN2/5PPP/R1BQ1RK1 w - - 1 11",
-    solution: ["c4d3","e6e5","d1c2"],
-    solutionSan: ["Bd3","e5","Qc2"],
-    rating: 1481,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
+    fen: "r1b2rk1/2q1bppp/p1np1n2/1pp1p3/3PP3/2P2N1P/PPBN1PP1/R1BQR1K1 w - - 3 13",
+    solution: ["d4d5"],
+    solutionSan: ["d5"],
+    rating: 1320,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "1rbn1rk1/2q1bppp/3p1n2/1ppPp3/4P3/2P2N1P/1PBN1PP1/R1BQR1K1 w - - 0 16",
+    solution: ["b2b4"],
+    solutionSan: ["b4"],
+    rating: 1360,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "1rb2rk1/1nq1bppp/3p1n2/1ppPp3/1P2P3/2P2N1P/2BN1PP1/R1BQR1K1 w - - 1 17",
+    solution: ["d2f1"],
+    solutionSan: ["Nf1"],
+    rating: 1400,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r4rk1/1nqbbppp/3p1n2/1ppPp3/1P2P3/2P1BN1P/2B2PP1/R2QRNK1 w - - 5 19",
+    solution: ["d1d2"],
+    solutionSan: ["Qd2"],
+    rating: 1440,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1r3k1/1nqbbp1p/3p1np1/1ppPp3/1P2P3/2PBBN1P/3Q1PP1/R3RNK1 w - - 0 21",
+    solution: ["f1g3"],
+    solutionSan: ["Ng3"],
+    rating: 1480,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1r2bk1/1nqb1p1p/3p1np1/1ppPp3/1P2P3/2PBBNNP/3Q1PP1/R3R1K1 w - - 2 22",
+    solution: ["a1a2"],
+    solutionSan: ["Ra2"],
+    rating: 1520,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1rq1bk1/Bnnb1p1p/3p2p1/1p1Pp3/1Pp1P3/2P2NNP/R1BQ1PP1/4R1K1 w - - 6 26",
+    solution: ["e1a1"],
+    solutionSan: ["Rea1"],
+    rating: 1560,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1r1bbk1/Bnn1qp1p/3p2p1/1p1Pp3/1Pp1P3/2P2NNP/R2Q1PP1/RB4K1 w - - 10 28",
+    solution: ["g3e2"],
+    solutionSan: ["Ne2"],
+    rating: 1600,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1rnbbk1/B1n1qp1p/3p2p1/1p1Pp3/1Pp1P3/2P2N1P/R2QNPP1/RB4K1 w - - 12 29",
+    solution: ["f3h2"],
+    solutionSan: ["Nh2"],
+    rating: 1640,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1rnb1k1/B1n1qpbp/3p2p1/1p1Pp3/1Pp1P3/2P4P/R2QNPPN/RB4K1 w - - 14 30",
+    solution: ["f2f4"],
+    solutionSan: ["f4"],
+    rating: 1680,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1rnb1k1/B1n1q1bp/3p1pp1/1p1Pp3/1Pp1PP2/2P4P/R2QN1PN/RB4K1 w - - 0 31",
+    solution: ["f4f5"],
+    solutionSan: ["f5"],
+    rating: 1720,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1r3k1/Bnn1qbb1/3p1p1p/1p1PpPp1/1Pp1P3/2P3NP/R2Q2PN/R2B2K1 w - - 0 35",
+    solution: ["d1h5"],
+    solutionSan: ["Bh5"],
+    rating: 1760,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
+  },
+  {
+    themeId: "pm-cavalier-contre-fou-qui-domine",
+    fen: "r1rnq1k1/B1n2bb1/3p1p1p/1p1PpPpB/1Pp1P3/R1P1N1NP/R5P1/3Q2K1 w - - 12 41",
+    solution: ["h5f7"],
+    solutionSan: ["Bxf7+"],
+    rating: 1800,
+    sourceRef: "Anatoly Karpov – Wolfgang Unzicker, Olympiade de Nice, ronde 4, 18 juin 1974 (« Squeeze Play »)",
   },
   {
     themeId: "pm-le-pion-isole-de-la-dame",
@@ -583,29 +716,367 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     rating: 1333,
     sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
   },
+  // Vague de 15 puzzles (2026-09-11, sprint de clôture) — Tigran Petrosian –
+  // Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956 (ECO D34,
+  // 145 demi-coups, source : archive pgnmentor.com/players/Petrosian.zip,
+  // même partie que celle déjà citée dans `COURSE_LESSONS` pour ce thème —
+  // 4 des FEN ci-dessous sont d'ailleurs identiques aux étapes déjà
+  // vérifiées du cours). Les pions pendants noirs c6/d5 naissent après
+  // 11...bxc6, puis Petrosian les bloque, les grignote (91.Nxc6) et pousse
+  // son pion a jusqu'à la 7e rangée avant que la partie ne se solde par la
+  // nulle (résultat réel « 1/2-1/2 » — la partie ne s'est PAS terminée par
+  // un abandon noir, contrairement à une note antérieure de ce fichier).
   {
     themeId: "pm-les-pions-pendants",
-    fen: "r1bqk2r/pp2bppp/2n1p3/3n4/2BP4/2N2N2/PP3PPP/R1BQK2R w KQkq - 1 9",
-    solution: ["e1g1","e8g8","f1e1"],
-    solutionSan: ["O-O","O-O","Re1"],
-    rating: 1488,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
+    fen: "r1b2rk1/p3bppp/1qp2n2/3p4/5B2/2N3P1/PP2PPBP/R2Q1RK1 w - - 0 12",
+    solution: ["d1c2"],
+    solutionSan: ["Qc2"],
+    rating: 1300,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "r4rk1/p2nbppp/2p1b3/3p4/N7/4B1P1/PP2PPBP/R4RK1 w - - 1 16",
+    solution: ["f1d1"],
+    solutionSan: ["Rfd1"],
+    rating: 1335,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "r1r3k1/p2n1ppp/2p5/3p4/N2B2b1/bP4P1/P3PPBP/R2R2K1 w - - 3 19",
+    solution: ["d1d2"],
+    solutionSan: ["Rd2"],
+    rating: 1370,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "r3r1k1/p2n1ppp/2p5/3p1b2/N2B4/bP2P1P1/P2R1PBP/R5K1 w - - 1 21",
+    solution: ["d4b2"],
+    solutionSan: ["Bb2"],
+    rating: 1405,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "r3r1k1/p4ppp/1np5/3p1b2/N7/1P2P1P1/PR3PBP/R5K1 w - - 1 23",
+    solution: ["a4c5"],
+    solutionSan: ["Nc5"],
+    rating: 1440,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "r1r3k1/5ppp/1np5/p1Np1b2/8/1P2P1P1/PR3PBP/2R3K1 w - - 2 25",
+    solution: ["e3e4"],
+    solutionSan: ["e4"],
+    rating: 1475,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "rr4k1/6pp/1np2pb1/p1Np4/4PP2/1P4PB/PR5P/2R3K1 w - - 2 28",
+    solution: ["e4e5"],
+    solutionSan: ["e5"],
+    rating: 1510,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "rr4k1/6pp/2p3b1/2NpP3/P1n5/6PB/PR5P/2R3K1 w - - 1 31",
+    solution: ["b2b8"],
+    solutionSan: ["Rxb8+"],
+    rating: 1545,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "6k1/6pp/2p1P3/2Np4/P1n5/6PB/P6P/1b4K1 w - - 0 34",
+    solution: ["h3f1"],
+    solutionSan: ["Bf1"],
+    rating: 1580,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "2n2k2/6pp/2p1P3/P1Np4/8/P5P1/7P/1b3BK1 w - - 1 37",
+    solution: ["g1f2"],
+    solutionSan: ["Kf2"],
+    rating: 1615,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "8/n5pp/2pkP3/P1Np1b2/3K4/P5P1/4B2P/8 w - - 9 41",
+    solution: ["a5a6"],
+    solutionSan: ["a6"],
+    rating: 1650,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "2n5/2k3pp/P1p5/N1Kp4/P7/6Pb/4B2P/8 w - - 4 46",
+    solution: ["a5c6"],
+    solutionSan: ["Nxc6"],
+    rating: 1685,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "8/3n2pp/P1k1K3/8/P7/6P1/7P/8 w - - 0 51",
+    solution: ["a6a7"],
+    solutionSan: ["a7"],
+    rating: 1720,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "n7/Pk5p/8/P5K1/6p1/6P1/7P/8 w - - 2 56",
+    solution: ["g5g4"],
+    solutionSan: ["Kxg4"],
+    rating: 1755,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+  {
+    themeId: "pm-les-pions-pendants",
+    fen: "8/4n2p/k7/P5PP/6K1/8/8/8 w - - 1 71",
+    solution: ["g4f4"],
+    solutionSan: ["Kf4"],
+    rating: 1790,
+    sourceRef: "Tigran Petrosian – Efim Geller, Amsterdam Candidates, ronde 10, 14 avril 1956",
+  },
+
+  // Vague de 13 puzzles (2026-09-11, sprint de clôture) — Emanuel Lasker –
+  // Jose Raul Capablanca, tournoi final de Saint-Petersbourg, 27 avril 1914
+  // (le tout premier coup, 4.Bxc6!, est LA partie fondatrice du thème) —
+  // même fichier PILOT réel que celui qui alimente déjà `COURSE_LESSONS`
+  // pour ce thème sur cette partie précise (3 FEN ci-dessous, coups 15/35/42,
+  // identiques aux étapes déjà vérifiées du cours).
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+    solution: ["b5c6"],
+    solutionSan: ["Bxc6"],
+    rating: 1310,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
   },
   {
     themeId: "pm-doubler-les-pions-adverses",
-    fen: "rn1q1rk1/pbp2ppp/1p2pn2/3p2B1/2PP4/P1Q2P2/1P2P1PP/R3KBNR w KQ - 0 9",
-    solution: ["e2e3","b8d7","f1d3"],
-    solutionSan: ["e3","Nbd7","Bd3"],
-    rating: 1454,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
+    fen: "r1b1kbnr/1pp2ppp/p1p5/8/3qP3/5N2/PPP2PPP/RNB1K2R w KQkq - 0 7",
+    solution: ["f3d4"],
+    solutionSan: ["Nxd4"],
+    rating: 1345,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "r1b2rk1/1pp1nppp/p1pb4/8/3NP3/2N5/PPP2PPP/R1B2RK1 w - - 5 10",
+    solution: ["f2f4"],
+    solutionSan: ["f4"],
+    rating: 1380,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "r1b1r1k1/1pp1n1pp/p1pb1p2/8/4PP2/1NN5/PPP3PP/R1B2RK1 w - - 0 12",
+    solution: ["f4f5"],
+    solutionSan: ["f5"],
+    rating: 1415,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "r3r1k1/1b2n1pp/pppp1p2/5P2/4P3/1NN5/PPP3PP/R4RK1 w - - 0 15",
+    solution: ["b3d4"],
+    solutionSan: ["Nd4"],
+    rating: 1450,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "3rr1k1/1b2n1pp/pppp1p2/5P2/3NP3/2N5/PPP3PP/R4RK1 w - - 2 16",
+    solution: ["d4e6"],
+    solutionSan: ["Ne6"],
+    rating: 1485,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "2n1r1k1/1b1r2pp/p1ppNp2/1p3P2/4P3/2N5/PPP2RPP/3R2K1 w - - 0 19",
+    solution: ["f2d2"],
+    solutionSan: ["Rfd2"],
+    rating: 1520,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "b1n1r3/4rkpp/p1ppNp2/1p3P2/1P2P3/P1N5/2PR2PP/3R2K1 w - - 1 22",
+    solution: ["g1f2"],
+    solutionSan: ["Kf2"],
+    rating: 1555,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "b1n1r3/r4kp1/2ppNp1p/pp3P2/1P2P1P1/P1NR4/2P2K1P/3R4 w - - 0 25",
+    solution: ["h2h4"],
+    solutionSan: ["h4"],
+    rating: 1590,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "b1n3r1/4rk2/2ppNppp/1p3P2/1P2PKPP/2NR4/2P5/3R4 w - - 0 29",
+    solution: ["d3g3"],
+    solutionSan: ["Rg3"],
+    rating: 1625,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "b5r1/3r1k2/1nppNp2/1p3Pp1/1P2P1P1/2N2K1R/2P5/3R4 w - - 2 33",
+    solution: ["f3g3"],
+    solutionSan: ["Kg3"],
+    rating: 1660,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "4k1r1/1b1r4/1np1Np2/1p2pPp1/1P4P1/2N3KR/2P5/7R w - - 0 36",
+    solution: ["c3e4"],
+    solutionSan: ["Ne4"],
+    rating: 1695,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+  {
+    themeId: "pm-doubler-les-pions-adverses",
+    fen: "4k1r1/3b4/2p2p2/1p1npPp1/1P2N1P1/6KR/2P5/7R w - - 0 39",
+    solution: ["h3h7"],
+    solutionSan: ["Rh7"],
+    rating: 1730,
+    sourceRef: "Emanuel Lasker – Jose Raul Capablanca, Tournoi final, Saint-Petersbourg, 27 avril 1914",
+  },
+
+  // Vague de 14 puzzles (2026-09-11, sprint de clôture) — Levon Aronian –
+  // Viswanathan Anand, Morelia-Linares, ronde 5, 22 février 2007 (« Levon
+  // For Good », source : archive pgnmentor.com/players/Aronian.zip) — même
+  // partie que celle déjà citée dans `COURSE_LESSONS` pour ce thème (les 4
+  // FEN des coups 19/31/37/44 y sont déjà vérifiées). Le pion d devient
+  // passé ET protégé dès 19.d5 (soutenu par le pion e4), un second pion
+  // passé (le pion a) le rejoint à partir du coup 37, et les deux
+  // s'avancent de concert jusqu'à la promotion (44.a8=Q!).
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "r4rk1/pp1n1ppp/1qp1pnb1/8/3PP2P/1QN5/PP3PBP/R1B1R1K1 w - - 1 15",
+    solution: ["b3b6"],
+    solutionSan: ["Qxb6"],
+    rating: 1360,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
   },
   {
     themeId: "pm-le-pion-passe-protege",
-    fen: "r1bqkb1r/1p3ppp/p4n2/3Pp1B1/3n4/N1N5/PPP2PPP/R2QKB1R w KQkq - 1 10",
-    solution: ["a3c4","c8g4","f1e2"],
-    solutionSan: ["Nc4","Bg4","Be2"],
-    rating: 1334,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
+    fen: "r3r1k1/1p1n1ppp/1pp1pnb1/8/3PPB1P/2N5/PP3PBP/R3R1K1 w - - 2 17",
+    solution: ["a1d1"],
+    solutionSan: ["Rad1"],
+    rating: 1395,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "r3r1k1/1p1n1ppp/2p1pnb1/1p6/3PPB1P/2N5/PP3PBP/3RR1K1 w - - 0 18",
+    solution: ["f4d6"],
+    solutionSan: ["Bd6"],
+    rating: 1430,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "r3r1k1/1p1n1ppp/2pB1nb1/1p2p3/3PP2P/2N5/PP3PBP/3RR1K1 w - - 0 19",
+    solution: ["d4d5"],
+    solutionSan: ["d5"],
+    rating: 1465,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "r3r1k1/1p1n2pp/2pB1pb1/3Pp3/p3Pn1P/1PN5/5P1P/3RRBK1 w - - 0 23",
+    solution: ["b3a4"],
+    solutionSan: ["bxa4"],
+    rating: 1500,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "2r3k1/rp1n1bpp/2pB1p2/3Pp3/P3Pn1P/2N5/5P1P/1R1R1BK1 w - - 5 26",
+    solution: ["c3e2"],
+    solutionSan: ["Ne2"],
+    rating: 1535,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "2r2nk1/rp3bpp/3B1p2/3Pp3/P6P/8/4BP1P/1R1R2K1 w - - 1 29",
+    solution: ["e2b5"],
+    solutionSan: ["Bb5"],
+    rating: 1570,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "r1r3k1/1p2Bbpp/5pn1/1B1Pp3/P6P/8/5P1P/1R1R2K1 w - - 5 31",
+    solution: ["d5d6"],
+    solutionSan: ["d6"],
+    rating: 1605,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "r1r3k1/1p1B1bpp/2nP1p2/4p3/P6P/8/5P1P/1R1R2K1 w - - 2 33",
+    solution: ["b1b7"],
+    solutionSan: ["Rxb7"],
+    rating: 1640,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "1R2brk1/6pp/3P1p2/4p3/P2n3P/8/5P1P/1R4K1 w - - 4 37",
+    solution: ["a4a5"],
+    solutionSan: ["a5"],
+    rating: 1675,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "1R2brk1/6pp/3P1p2/P3p3/7P/8/5P1P/1n2K3 w - - 0 40",
+    solution: ["a5a6"],
+    solutionSan: ["a6"],
+    rating: 1710,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "1R3rk1/6pp/P1bP1p2/4p3/7P/8/5P1P/1n2K3 w - - 1 41",
+    solution: ["a6a7"],
+    solutionSan: ["a7"],
+    rating: 1745,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "5R2/P2k2pp/2b2p2/4p3/7P/8/5P1P/1n2K3 w - - 0 44",
+    solution: ["a7a8q"],
+    solutionSan: ["a8=Q"],
+    rating: 1780,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
+  },
+  {
+    themeId: "pm-le-pion-passe-protege",
+    fen: "R7/3k2p1/5p2/4p2p/7P/8/5P1P/1n2K3 w - - 0 46",
+    solution: ["a8a7"],
+    solutionSan: ["Ra7+"],
+    rating: 1815,
+    sourceRef: "Levon Aronian – Viswanathan Anand, Morelia-Linares, ronde 5, 22 fevrier 2007 (« Levon For Good »)",
   },
   {
     themeId: "pm-la-colonne-ouverte",
@@ -2309,13 +2780,137 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     rating: 1600,
     sourceRef: "Étude Lichess « Centralizing the pieces », chapitre « Kapitel 6 » (lichess.org/study/yhXzfSss) : mat livré par la Dame, dernière pièce blanche à converger vers le Roi noir depuis le centre.",
   },
+  // `jh-module-1-structures-de-pions-symetriques` : 15 puzzles (2026-09-11,
+  // premier chantier du cursus Jesper Hall, aucun fichier PILOT disponible),
+  // tirés de la même partie réelle que le tutoriel
+  // `COURSE_LESSONS["jh-module-1-structures-de-pions-symetriques"]`
+  // (`course-lesson.ts`) : Akiba Rubinstein – Georg Salwe, Lodz 1908, « The
+  // Backward Pawn » (chessgames.com/perl/chessgame?gid=1119705, confirmée
+  // par chess.com/lessons/silmans-lessons-in-strategy-2/rubinstein-salwe-
+  // lodz-1908). Les 15 positions couvrent la fin du milieu de partie et la
+  // finale (coups 17 à 38), depuis la simplification Bxe7 jusqu'à la marche
+  // du pion b vers la promotion qui force l'abandon noir — chaque FEN et
+  // chaque solution rejouées et vérifiées avec chess.js depuis la partie
+  // intégrale (75 demi-coups), aucune variante RAV impliquée.
   {
     themeId: "jh-module-1-structures-de-pions-symetriques",
-    fen: "r2qkb1r/pb1n1ppp/2p1pn2/1p6/3P4/2NBPN2/PP3PPP/R1BQK2R w KQkq - 2 9",
-    solution: ["e1g1","a7a6","e3e4"],
-    solutionSan: ["O-O","a6","e4"],
-    rating: 1760,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
+    fen: "r3r1k1/p2nbppp/2p1b3/1qBp4/N7/5PP1/PP2PRBP/2RQ2K1 w - - 5 17",
+    solution: ["c5e7", "e8e7"],
+    solutionSan: ["Bxe7", "Rxe7"],
+    rating: 1480,
+    sourceRef: "Rubinstein – Salwe, Lodz 1908 « The Backward Pawn » (chessgames.com/perl/chessgame?gid=1119705) : 17.Bxe7 simplifie vers une position où les faiblesses noires de la colonne c vont peser de plus en plus lourd.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/p2nrppp/2p1b3/1q1p4/N7/5PP1/PP2PRBP/2RQ2K1 w - - 0 18",
+    solution: ["d1d4"],
+    solutionSan: ["Qd4"],
+    rating: 1460,
+    sourceRef: "Rubinstein – Salwe, 1908 : 18.Qd4 centralise la Dame blanche sur la grande diagonale, visant déjà a7 et le pion isolé d5.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r3r1k1/p2n1ppp/2p1b3/1q1p4/N2Q4/5PP1/PP2PRBP/2R3K1 w - - 2 19",
+    solution: ["g2f1"],
+    solutionSan: ["Bf1"],
+    rating: 1440,
+    sourceRef: "Rubinstein – Salwe, 1908 : 19.Bf1 replie le Fou sur une diagonale plus utile, libérant la case g2 et préparant e3-Nc5.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r1r3k1/p2n1ppp/2p1b3/1q1p4/N2Q4/5PP1/PP2PR1P/2R2BK1 w - - 4 20",
+    solution: ["e2e3", "b5b7"],
+    solutionSan: ["e3", "Qb7"],
+    rating: 1450,
+    sourceRef: "Rubinstein – Salwe, 1908 : 20.e3 prépare tranquillement le saut Nc5, sans jamais relâcher la pression sur la colonne c.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r1r3k1/pq1n1ppp/2p1b3/3p4/N2Q4/4PPP1/PP3R1P/2R2BK1 w - - 1 21",
+    solution: ["a4c5", "d7c5", "c1c5"],
+    solutionSan: ["Nc5", "Nxc5", "Rxc5"],
+    rating: 1520,
+    sourceRef: "Rubinstein – Salwe, 1908 : 21.Nc5! force l'échange et recentralise la Tour blanche sur c5, juste devant les deux cibles noires c6 et d5.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/pqr2ppp/2p1b3/2Rp4/3Q4/4PPP1/PP3R1P/5BK1 w - - 1 23",
+    solution: ["f2c2", "b7b6"],
+    solutionSan: ["Rfc2", "Qb6"],
+    rating: 1470,
+    sourceRef: "Rubinstein – Salwe, 1908 : 23.Rfc2 double les Tours sur la colonne c — trois pièces lourdes blanches convergent désormais vers c6 et d5.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/p1r2ppp/1qp1b3/2Rp4/3Q4/4PPP1/PPR4P/5BK1 w - - 3 24",
+    solution: ["b2b4", "a7a6"],
+    solutionSan: ["b4", "a6"],
+    rating: 1460,
+    sourceRef: "Rubinstein – Salwe, 1908 : 24.b4 gagne de l'espace à l'aile dame et prépare le prochain coup, Ra5.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/2r2ppp/pqp1b3/2Rp4/1P1Q4/4PPP1/P1R4P/5BK1 w - - 0 25",
+    solution: ["c5a5", "a8b8"],
+    solutionSan: ["Ra5", "Rb8"],
+    rating: 1500,
+    sourceRef: "Rubinstein – Salwe, 1908 : 25.Ra5 lance la Tour à l'assaut du pion a6, tout en libérant la case c5 pour la seconde Tour.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "1r4k1/r4ppp/pqp1b3/R2p4/1P1Q4/P3PPP1/2R4P/5BK1 w - - 1 27",
+    solution: ["c2c6", "b6c6", "d4a7"],
+    solutionSan: ["Rxc6", "Qxc6", "Qxa7"],
+    rating: 1580,
+    sourceRef: "Rubinstein – Salwe, 1908 : 27.Rxc6! élimine le pion arriéré, puis 28.Qxa7 ramasse aussi l'autre faiblesse — le principe des deux faiblesses illustré d'un seul coup.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/Q4ppp/p1q1b3/R2p4/1P6/P3PPP1/7P/5BK1 w - - 1 29",
+    solution: ["a7c5", "c6b7"],
+    solutionSan: ["Qc5", "Qb7"],
+    rating: 1500,
+    sourceRef: "Rubinstein – Salwe, 1908 : 29.Qc5 recentralise la Dame après le gain de pion, maintenant le Roi et le pion d5 noirs sous pression constante.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/1q3p2/p3b1p1/R1Qp3p/1P6/P3PPP1/4BK1P/8 w - - 0 32",
+    solution: ["c5d6", "b7c8"],
+    solutionSan: ["Qd6", "Qc8"],
+    rating: 1540,
+    sourceRef: "Rubinstein – Salwe, 1908 : 32.Qd6 pénètre au plus profond du camp noir, clouant la Dame adverse à la défense de la 8e rangée.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "r5k1/1q3p2/3Qb1p1/p1Rp3p/1P5P/P3PPP1/4BK2/8 w - - 0 35",
+    solution: ["c5c7", "b7b8"],
+    solutionSan: ["Rc7", "Qb8"],
+    rating: 1560,
+    sourceRef: "Rubinstein – Salwe, 1908 : 35.Rc7 envahit la 7e rangée — les pièces noires n'ont plus aucun coup actif disponible.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "rq4k1/2R2p2/3Qb1p1/p2p3p/1P5P/P3PPP1/4BK2/8 w - - 2 36",
+    solution: ["b4b5", "a5a4"],
+    solutionSan: ["b5", "a4"],
+    rating: 1490,
+    sourceRef: "Rubinstein – Salwe, 1908 : 36.b5 lance la marche du pion passé, soutenu par la Dame et la Tour déjà en position dominante.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "rq4k1/2R2p2/3Qb1p1/1P1p3p/p6P/P3PPP1/4BK2/8 w - - 0 37",
+    solution: ["b5b6", "a8a5"],
+    solutionSan: ["b6", "Ra5"],
+    rating: 1500,
+    sourceRef: "Rubinstein – Salwe, 1908 : 37.b6 rapproche encore le pion de la promotion — Noir ne peut plus que regarder.",
+  },
+  {
+    themeId: "jh-module-1-structures-de-pions-symetriques",
+    fen: "1q4k1/2R2p2/1P1Qb1p1/r2p3p/p6P/P3PPP1/4BK2/8 w - - 1 38",
+    solution: ["b6b7"],
+    solutionSan: ["b7"],
+    rating: 1450,
+    sourceRef: "Rubinstein – Salwe, 1908 : 38.b7, dernier coup de la partie — la promotion est désormais inévitable et Salwe abandonne, une structure 100% symétrique au coup 4 entièrement domptée par l'activité des pièces blanches.",
   },
   {
     themeId: "jh-module-2-jouer-contre-l-isolani",
