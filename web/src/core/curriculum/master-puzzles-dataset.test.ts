@@ -77,7 +77,7 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("496 entrées au total — 138 thèmes à 1 exercice + 23 vagues", () => {
+  it("535 entrées au total — 135 thèmes à 1 exercice + 26 vagues", () => {
     // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
     // (8 chacun) puis un 2e lot de 5 thèmes convertis « au format Lichess »
     // (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
@@ -120,8 +120,17 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // (même jour) : `jh-module-1-structures-de-pions-symetriques` (15,
     // Rubinstein–Salwe, Lodz 1908, « The Backward Pawn »), qui remplace son
     // unique ligne théorique générique par une vague réelle, sourcée sur le
-    // web faute de fichier PILOT pour ce cursus.
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(496);
+    // web faute de fichier PILOT pour ce cursus. Puis, second chantier
+    // `jesper_hall_course` (2026-09-11, « Lot 2 » — structures de pions du
+    // milieu de partie) : `jh-module-2-jouer-contre-l-isolani` (14,
+    // Portisch-Karpov, Milan 1975, la partie isolani/E54 authentique — pas
+    // celle initialement citée par erreur), `jh-module-3-la-structure-carlsbad`
+    // (14, Petrosian-Krogius, URSS ch26 Tbilisi 1959, le modèle d'attaque de
+    // minorité déjà cité par l'article Wikipédia « Minority attack ») et
+    // `jh-module-4-la-structure-maroczy` (14, Lutz-Vokac, Dortmund-B 1991,
+    // sourcée via l'étude Lichess S5BJsGLV) remplacent chacune leur unique
+    // ligne théorique par une vague réelle de 14 puzzles.
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(535);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -150,6 +159,9 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "pm-doubler-les-pions-adverses": 13,
       "pm-le-pion-passe-protege": 14,
       "jh-module-1-structures-de-pions-symetriques": 15,
+      "jh-module-2-jouer-contre-l-isolani": 14,
+      "jh-module-3-la-structure-carlsbad": 14,
+      "jh-module-4-la-structure-maroczy": 14,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

@@ -2302,196 +2302,176 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // Modules 2-4 (2026-09-11, « Lot 2 » du cursus Jesper Hall — structures de
+  // pions du milieu de partie), chacun 7 chapitres tirés d'UNE partie réelle
+  // authentique, parsée et vérifiée coup par coup avec chess.js
+  // (`course-lesson.test.ts`) ; la même partie alimente aussi la vague de 14
+  // puzzles du thème dans `MASTER_PUZZLES_DATASET`. Les 3 sources initialement
+  // désignées par le cahier des charges ont dû être vérifiées puis en partie
+  // remplacées : « Botvinnik–Vidmar, Nottingham 1936 » (assignée à Carlsbad)
+  // s'est révélée être un isolani/IQP classique (« IQP Perfection »), et
+  // « Gligoric–Fischer, Zagreb 1970 » (assignée à Maroczy) n'existe pas telle
+  // quelle (la seule Gligoric-Fischer de 1970 est une Benoni à l'Interzonal de
+  // Palma de Mallorca) — l'utilisateur a confirmé, après vérification
+  // présentée, de chercher de vrais substituts plutôt que de forcer ces deux
+  // parties hors-sujet.
+  //  - `jh-module-2` : Lajos Portisch – Anatoly Karpov, Milan 1975 (E54,
+  //    Nimzo-indienne, 1/2-1/2, pgnmentor.com/players/Karpov.zip) — Portisch
+  //    joue avec l'isolani, Karpov le bloque en Noir et tient la nulle.
+  //  - `jh-module-3` : Tigran Petrosian – Nikolai Krogius, URSS ch26,
+  //    Tbilisi 1959 (D91, Grünfeld, 1-0, pgnmentor.com/players/Petrosian.zip)
+  //    — cité par l'article Wikipédia « Minority attack » comme un des trois
+  //    modèles canoniques de l'attaque de minorité en structure Carlsbad.
+  //  - `jh-module-4` : Christopher Lutz – Marek Vokac, Dortmund-B 1991 (B38,
+  //    Dragon accéléré, 1-0, étude Lichess https://lichess.org/study/S5BJsGLV
+  //    « The Maroczy Bind: Every Pawn Structure Explained ») — le Bind blanc
+  //    (c4+e4) mené jusqu'au sacrifice décisif Bxh7+.
+  "jh-module-2-jouer-contre-l-isolani": {
+    steps: [
+      {
+        title: "Portisch – Karpov, Milan 1975",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Une Nimzo-indienne classique : Portisch installe le centre avec d4/c4/Nc3, Karpov développe et prépare la rupture ...c5. Le duel qui va suivre décide qui, des deux, héritera d'un pion isolé sur la colonne d — et comment l'autre camp va s'en servir.",
+        moveSan: ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "e3", "c5"],
+      },
+      {
+        title: "La naissance de l'isolani",
+        fen: "rnbq1rk1/pp3ppp/4pn2/8/1bBp4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 9",
+        text: "Blanc doit reprendre sur d4 : exd4 est le seul coup qui garde l'équilibre matériel, mais il accepte du même coup un pion isolé sur d4 — plus de pion c ni de pion e pour le soutenir. À partir de cet instant précis, toute la partie va se jouer autour de cette unique faiblesse structurelle.",
+        moveSan: ["exd4"],
+        highlights: [{ square: "d4", color: "red" }],
+        arrows: [{ from: "e3", to: "d4", color: "red" }],
+      },
+      {
+        title: "Le blocus : le cavalier sur d5",
+        fen: "2rq1rk1/pb2bppp/1pn1pn2/6B1/2BP4/P1NQ1N2/1P3PPP/2RR2K1 b - - 4 14",
+        text: "PRO TIP de Jesper Hall : contre l'isolani, on bloque d'abord avec un CAVALIER — jamais un fou — posté exactement devant le pion, hors de portée de tout pion adverse. Le Cf6-d5 de Karpov est un manuel à lui seul : depuis cette case, aucun pion blanc ne peut jamais le déloger.",
+        moveSan: ["Nd5"],
+        highlights: [{ square: "d5", color: "green" }, { square: "d4", color: "red" }],
+        arrows: [{ from: "f6", to: "d5", color: "green" }],
+      },
+      {
+        title: "Portisch échange le bloqueur",
+        fen: "2rq1rk1/pb2bppp/1pn1p3/3n2B1/2BP4/P1NQ1N2/1P3PPP/2RR2K1 w - - 5 15",
+        text: "Le camp qui POSSÈDE l'isolani ne peut pas laisser un cavalier s'installer éternellement sur la case de blocus : Portisch l'échange sur-le-champ. Une cascade de prises de pièces mineures s'ensuit ; le matériel reste égal, mais la position se simplifie nettement — exactement le genre de moment où chaque camp doit juger si la simplification sert le bloqueur (moins d'attaquants) ou le possesseur de l'isolani (moins de pièces à défendre).",
+        moveSan: ["Bxd5", "Bxg5", "Nxg5", "Qxg5"],
+      },
+      {
+        title: "L'échange des dames",
+        fen: "2rr2k1/pb3pp1/1pn1p2p/6q1/3PB3/P1N1Q3/1P3PPP/2RR2K1 w - - 2 19",
+        text: "Les dames quittent l'échiquier — un moment charnière pour les deux plans. Le second PRO TIP du module dit que le camp AVEC l'isolani doit éviter les échanges pour garder ses chances dynamiques : ce troc volontaire de dames est donc une concession de Portisch, signe qu'il joue désormais sur la valeur structurelle et spatiale du centre plutôt que sur une attaque directe au roi.",
+        moveSan: ["Qxg5", "hxg5"],
+      },
+      {
+        title: "d4-d5 ! La percée centrale",
+        fen: "2rr2k1/pb3pp1/1pn1p3/6p1/3PB3/P1N5/1P3PPP/2RR2K1 w - - 0 20",
+        text: "Même sans les dames, le pion isolé garde une arme : la percée centrale. Portisch le pousse une dernière fois et l'échange contre une activité de pièces totale — le fou qui reprend sur d5 se retrouve magnifiquement centralisé, largement de quoi compenser la disparition du pion.",
+        moveSan: ["d5", "exd5", "Rxd5", "Rxd5", "Bxd5"],
+        highlights: [{ square: "d5", color: "green" }],
+        arrows: [{ from: "d4", to: "d5", color: "green" }],
+      },
+      {
+        title: "Le bilan : Karpov tient la nulle",
+        fen: "8/4n1p1/1p1k1p2/p5p1/3KB3/P4P2/1P4PP/8 b - - 3 34",
+        text: "Trente-quatre coups après la naissance de l'isolani, la position se simplifie en une pure finale fou contre cavalier. Le cavalier de Karpov, parfaitement placé et soutenu par une structure de pions saine, maintient l'équilibre — la démonstration qu'un DÉFENSEUR n'a pas besoin de gagner pour réussir : neutraliser le dynamisme de l'isolani jusqu'à une finale nulle, face à l'un des tout meilleurs joueurs du monde de l'époque, EST la victoire de cette technique.",
+      },
+    ],
+  },
   "jh-module-3-la-structure-carlsbad": {
     steps: [
       {
-        title: "Anatoly Karpov – Joel Lautier, Dortmund Sparkassen 1995",
-        fen: "r1b1r1k1/pp1nqpp1/2pb1n1p/4p3/2BP4/P1N1PN1P/1PQ2PP1/R1BR2K1 w - - 0 13",
-        text: "La partie devie un instant du schéma Carlsbad \\\"pur\\\" (Blanc reprend sur c4 au lieu d'échanger sur d5), mais Karpov, l'un des plus grands spécialistes de ce type de structure, va neanmoins ramener le jeu vers un final ou le plan de minorité classique fait toute la difference.",
-        moveSan: ["Nh4", "Nf8", "dxe5", "Bxe5"],
+        title: "Petrosian – Krogius, Tbilisi 1959",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Cette partie ne commence pas en Gambit Dame refusé mais en défense Grünfeld/Est-indienne — la preuve que la structure Carlsbad peut naître de bien des ordres de coups différents, pas seulement de la Variante d'échange classique.",
+        moveSan: ["d4", "Nf6", "Nf3", "g6", "c4", "Bg7", "Nc3", "d5"],
       },
       {
-        title: "Anatoly Karpov – Joel Lautier : coup 20",
-        fen: "3rrnk1/pp3pp1/1bp1bn1p/4q3/1P6/P2BP1NP/2QBNPP1/R2R2K1 b - - 0 20",
-        text: "Le pion minoritaire s'avancé : même sans la structure Carlsbad symétrique classique, Karpov appliqué la même logique intemporelle - pousser le pion b pour cibler le côté dame noir privé de son pion c (déjà échange au coup 11).",
-        moveSan: ["Ng6", "a4", "a6", "Bc3"],
+        title: "La structure Carlsbad apparaît",
+        fen: "rnbqk2r/ppp1ppbp/6p1/3p2B1/2PPn3/2N2N2/PP2PPPP/R2QKB1R w KQkq - 2 6",
+        text: "La séquence 6.cxd5 Nxg5 7.Nxg5 e6 8.Nf3 exd5 fait apparaître, quelques coups plus tard, exactement le squelette Carlsbad : pion d4 blanc privé de son pion c, pion d5 noir privé de son pion e — le point de départ classique du plan de minorité.",
+        moveSan: ["cxd5", "Nxg5", "Nxg5", "e6", "Nf3", "exd5"],
       },
       {
-        title: "Anatoly Karpov – Joel Lautier : coup 27",
-        fen: "3rr1k1/1p3pp1/p1p1bnnp/1P6/P3Pq2/3B1NNP/2Q2PP1/R2R2K1 b - - 0 27",
-        text: "Le coup clé du plan de minorité : Blanc force un échange qui va laisser un pion noir faible sur une colonne ouverte, exactement comme dans le schéma Carlsbad classique.",
-        moveSan: ["axb5", "axb5", "Ne5", "Nxe5"],
+        title: "Le plan blanc : b4, jamais le pion c",
+        fen: "r1bq1rk1/ppp1npbp/6p1/3p4/3P4/2NBPN2/PP3PPP/R2Q1RK1 w - - 5 12",
+        text: "PRO TIP de Jesper Hall sur l'attaque de minorité : le camp attaquant pousse SES pions a et b vers l'aile dame adverse — mais ne touche JAMAIS à son propre pion c. C'est l'échange qui doit venir de l'adversaire, pas de vous.",
+        moveSan: ["b4"],
+        highlights: [{ square: "b4", color: "green" }, { square: "c6", color: "red" }],
       },
       {
-        title: "Anatoly Karpov – Joel Lautier : coup 30",
-        fen: "3rr1k1/1p3pp1/2P1bn1p/4q3/4P3/3B2NP/2Q2PP1/R2R2K1 b - - 0 30",
-        text: "Le pion c6 noir tombe finalement, laissant Noir avec un pion c isolé et arriere sur la colonne c désormais grande ouverte pour les Tours blanches - la signature du plan de minorité mène a son terme.",
-        moveSan: ["bxc6", "Rac1", "Rd6", "Qc3"],
+        title: "Bxf5 puis b5 : préparer la fissure",
+        fen: "r2q1rk1/ppp1npbp/6p1/3p1b2/1P1P4/2NBPN2/P4PPP/R2Q1RK1 w - - 1 13",
+        text: "Petrosian échange d'abord la pièce qui pourrait gêner sa poussée, puis enfonce le clou avec b5 — la minorité (deux pions a/b) s'apprête à forcer un échange qui va abîmer les pions noirs, quel que soit le sens dans lequel Noir reprend.",
+        moveSan: ["Bxf5", "Nxf5", "b5"],
       },
       {
-        title: "Anatoly Karpov – Joel Lautier : coup 44",
-        fen: "r5k1/6p1/3NPp1p/2pb4/n4PB1/R6P/6P1/6K1 b - - 0 44",
-        text: "Le pion passé e, créé indirectement par toute la pression exercee depuis le coup 20 sur le côté dame, décide la partie : Noir abandonne, incapable d'arrêter la promotion.",
-      },
-      {
-        title: "Tigran Petrosian – Nikolai Krogius, USSR Championship 1959",
-        fen: "rnbqk2r/ppp2pbp/6p1/3p4/3P4/2N2N2/PP2PPPP/R2QKB1R w KQkq - 0 9",
-        text: "Bien que la partie ait commence en Grunfeld, l'échange sur d5 fait apparaitre exactement la structure de pions dite \\\"Carlsbad\\\" : pion d5 noir isolé de son compagnon e (déjà échange), face au pion d4 blanc privé de son pion c (déjà échange lui aussi). Cette structure symétrique sur les colonnes a-b-d-e-f-g-h est le point de départ classique du plan de minorité.",
-        moveSan: ["e3", "O-O", "Bd3", "Nc6"],
-      },
-      {
-        title: "Tigran Petrosian – Nikolai Krogius : coup 12",
-        fen: "r1bq1rk1/ppp1npbp/6p1/3p4/1P1P4/2NBPN2/P4PPP/R2Q1RK1 b - - 0 12",
-        text: "Le plan de minorité commence : Blanc n'a que deux pions (a et b) face aux trois pions noirs (a, b, c) du côté dame, mais c'est précisément cette minorité qui va servir à attaquer, pas à défendre - l'idée centrale de la structure Carlsbad.",
-        moveSan: ["Bf5", "Bxf5", "Nxf5", "b5"],
-      },
-      {
-        title: "Tigran Petrosian – Nikolai Krogius : coup 14",
-        fen: "r2q1rk1/ppp2pbp/6p1/1P1p1n2/3P4/2N1PN2/P4PPP/R2Q1RK1 b - - 0 14",
-        text: "Deuxième temps du plan : Blanc pousse son pion minoritaire jusqu'a b5 pour forcer un échange qui va abimer les pions noirs, quel que soit le sens dans lequel Noir reprend.",
-        moveSan: ["Qd6", "Qb3", "Ne7", "Rfc1"],
-      },
-      {
-        title: "Tigran Petrosian – Nikolai Krogius : coup 18",
-        fen: "r4r1k/pp2npb1/2pq2pp/1P1p4/3P4/1QN1PN2/P1R2PPP/2R3K1 w - - 0 19",
-        text: "Noir est contraint de soutenir son pion d5 avec c6, completant lui-même le squelette Carlsbad et offrant à Blanc la cible fixe qu'il attendait sur la colonne c.",
-        moveSan: ["Na4", "Rab8", "g3", "Kh7"],
-      },
-      {
-        title: "Tigran Petrosian – Nikolai Krogius : coup 22",
-        fen: "1r1r4/p3npbk/2pq2pp/2Np4/3P4/1Q2PNP1/P1R2P1P/2R3K1 w - - 0 23",
-        text: "L'échange caracteristique du plan de minorité : le pion c noir devient faible et arriere sur une colonne c désormais ouverte, tandis que le pion d5 reste isolé - Noir se retrouve avec deux faiblesses permanentes au lieu d'une.",
-        moveSan: ["Qa4", "Qf6", "Kg2", "Ra8"],
-      },
-      {
-        title: "Tigran Petrosian – Nikolai Krogius : coup 36",
-        fen: "r3r3/p5bk/2R4p/3Q4/q4pP1/5N1P/P4PK1/4R3 b - - 0 36",
-        text: "Le second pion faible tombe à son tour : d5 et c6 avaient tous deux été condamnes des le coup 22, et Blanc les recolte l'un après l'autre - la démonstration complète du plan de minorité depuis la case-cible jusqu'au gain matériel décisif.",
-        moveSan: ["Rxe1", "Nxe1", "Rf8", "Nf3"],
-      },
-      {
-        title: "Yasser Seirawan – Mikhail Tal, Niksic 1983",
-        fen: "rnbqk2r/ppp2ppp/5n2/3p4/1b1P4/2N5/PPQ1PPPP/R1B1KBNR w KQkq - 0 6",
-        text: "Depuis la Nimzo-indienne, l'échange immédiat sur d5 produit directement la structure Carlsbad : Blanc a perdu son pion c, Noir son pion e, et les deux camps se retrouvent avec des pions symetriques sur les colonnes a, b, d, f, g, h. C'est l'autre grande voie d'acces (avec le Gambit Dame refuse, variante d'échange) vers ce type de position.",
-        moveSan: ["Bg5", "h6", "Bxf6", "Qxf6"],
-      },
-      {
-        title: "Yasser Seirawan – Mikhail Tal : coup 13",
-        fen: "rnr3k1/ppp2pp1/4bq1p/3p4/1P1P4/P1Q1P1N1/5PPP/R3KB1R b KQ - 0 13",
-        text: "Le plan de minorité demarre : les deux pions blancs a et b vont s'avancer contre les trois pions noirs a, b et c pour forcer une faiblesse durable, même si Blanc est numeriquement minoritaire de ce côté.",
-        moveSan: ["a5", "Be2", "axb4", "axb4"],
-      },
-      {
-        title: "Yasser Seirawan – Mikhail Tal : coup 18",
-        fen: "2r3k1/1pp1qpp1/2n1b2p/1P1p4/3P4/2Q1P1N1/4BPPP/4K2R b K - 0 18",
-        text: "Le pion minoritaire atteint b5 : Noir doit choisir entre laisser Blanc jouer bxc6 (pion c isolé/arriere) ou repousser le Cavalier en abandonnant le controle de c6 - dans les deux cas la structure noire va se fissurer.",
-        moveSan: ["Nd8", "O-O", "c5"],
-      },
-      {
-        title: "Yasser Seirawan – Mikhail Tal : coup 19",
-        fen: "2rn2k1/1p2qpp1/4b2p/1Ppp4/3P4/2Q1P1N1/4BPPP/5RK1 w - c6 0 20",
-        text: "Noir tente une contre-poussée immédiate plutôt que de subir passivement, mais la faiblesse structurelle sur les cases noires du côté dame demeure inevitable.",
+        title: "bxc6 : la faiblesse est créée",
+        fen: "1r1r4/pp2npbk/2pq2pp/1PNp4/3P4/1Q2PNP1/P1R2P1P/2R3K1 w - - 3 22",
+        text: "L'instant précis où le plan de minorité aboutit : bxc6 bxc6 laisse le pion c6 noir arriéré sur une colonne c désormais grande ouverte — la cible fixe qui va peser pour le reste de la partie.",
         moveSan: ["bxc6", "bxc6"],
+        highlights: [{ square: "c6", color: "red" }],
+        arrows: [{ from: "b5", to: "c6", color: "green" }],
       },
       {
-        title: "Yasser Seirawan – Mikhail Tal : coup 20",
-        fen: "2rn2k1/4qpp1/2p1b2p/3p4/3P4/2Q1P1N1/4BPPP/5RK1 w - - 0 21",
-        text: "Exactement le motif du plan de minorité : le pion c6 noir est désormais isolé (plus de pion b ou d pour le soutenir lateralement sur cette colonne) et la colonne c est ouverte pour les pièces blanches.",
-        moveSan: ["Rc1", "Bd7", "Qa5", "Kf8"],
+        title: "Le point culminant : Nxc6 et Rxc6",
+        fen: "r3r3/p3npbk/2p4p/N2p1qp1/Q2P4/4PNPP/P1R2PK1/2R5 w - - 1 28",
+        text: "Après une longue phase de regroupement (Na4-c5-b7-a5), Petrosian récolte tout simplement la faiblesse c6 et plante sa tour dessus — la terre promise de toute attaque de minorité réussie.",
+        moveSan: ["Nxc6", "Qe4", "Rc5", "f5", "Qc2", "Nxc6", "Rxc6"],
       },
       {
-        title: "Yasser Seirawan – Mikhail Tal : coup 32",
-        fen: "2r4k/3q1pp1/4n2p/2pp1Q2/3P3N/4P3/5PPP/2R3K1 w - - 0 33",
-        text: "Noir essaie enfin de liquider sa faiblesse chronique, mais il est trop tard : la pression accumulée depuis le coup 13 a laissé Blanc largement en avancé dans la course.",
-        moveSan: ["dxc5", "Qe7", "g3", "Qd7"],
-      },
-      {
-        title: "Yasser Seirawan – Mikhail Tal : coup 35",
-        fen: "2r4k/3q1pp1/2P1n2p/3p1Q2/7N/4P1P1/5P1P/2R3K1 b - - 0 35",
-        text: "Le pion autrefois faible de Noir devient, après tous ces échanges, un pion passé blanc dangereux tout près de la promotion - illustration frappante de la valeur à long terme du plan de minorité.",
-        moveSan: ["Rxc6", "Rxc6", "Qxc6", "Qxf7"],
+        title: "La conversion",
+        fen: "r3r3/p5bk/2R4p/3p4/3Pqp2/5NPP/P1Q2PK1/2R5 w - - 0 33",
+        text: "Krogius tente un coup de désespoir tactique (Bxd4) mais Petrosian consolide sans se troubler puis gagne aussi le pion d5 — la pression positionnelle accumulée depuis le coup 12 se transforme en domination matérielle totale. Blanc gagne quelques coups plus tard.",
+        moveSan: ["g4", "Bxd4", "Qd2", "Bg7", "Re1", "Qa4", "Qxd5"],
       },
     ],
   },
   "jh-module-4-la-structure-maroczy": {
     steps: [
       {
-        title: "Jose Raul Capablanca – Fred Dewhirst Yates, Bad Kissingen 1928",
-        fen: "rnbqkbnr/pp2pp1p/3p2p1/8/2PNP3/8/PP3PPP/RNBQKB1R b KQkq - 0 5",
-        text: "Capablanca installe le Bind par un ordre de coups un peu different (2.Ne2 puis c4), evitant certaines complications tactiques liees a Cb5 ou Cc3 precoce. Le resultat est le même : pions blancs c4 et e4 verrouillant durablement la case d5 face au futur fianchetto noir.",
-        moveSan: ["Bg7", "Nc3", "Nf6", "Be2"],
+        title: "Lutz – Vokac, Dortmund 1991",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Un Dragon accéléré : Blanc installe immédiatement les deux piliers du Bind Maroczy, les pions c4 et e4, avant même de développer son cavalier roi.",
+        moveSan: ["d4", "g6", "c4", "Bg7", "Nf3", "c5", "e4"],
       },
       {
-        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 10",
-        fen: "r1bq1rk1/pp2ppbp/3p1np1/2n5/2PNP3/2N1BP2/PP2B1PP/R2Q1RK1 b - - 0 10",
-        text: "Le coup f3 est une pièce maitresse du plan blanc dans le Bind : il soutient solidement le pion e4 (qui n'est alors plus attaquable par ...Ng4 ou ...Nf6-e4), permettant à Blanc de manoeuvrer tranquillement ses pièces (Qd2, Rac1, Rfd1) sans craindre de contre-jeu tactique immédiat au centre.",
-        moveSan: ["Bd7", "Qd2", "Rc8", "Rfd1"],
+        title: "Les deux piliers : c4 et e4",
+        fen: "rnbqk1nr/pp1pppbp/6p1/8/2PNP3/8/PP3PPP/RNBQKB1R b KQkq - 0 5",
+        text: "PRO TIP de Jesper Hall sur le Bind : les pions c4 et e4 interdisent à jamais ...d5 (contrôlé par c4) et rendent ...b5 improductif (repris par c4) — Noir doit désormais chercher son contre-jeu par les pièces, jamais par les pions centraux.",
+        highlights: [{ square: "c4", color: "green" }, { square: "e4", color: "green" }, { square: "d5", color: "red" }],
+        arrows: [{ from: "c4", to: "d5", color: "red" }, { from: "e4", to: "d5", color: "red" }],
       },
       {
-        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 20",
-        fen: "3q1rk1/1pr1ppbp/p2pb1p1/4P3/N1P2P2/1P2QB2/P5PP/2RR2K1 w - - 1 21",
-        text: "Toutes les pièces mineures qui pourraient contester la case d5 ou générer du contre-jeu ont été échangées ; Noir se retrouve dans une position purement passive, coincee derrière son pion d6, exactement le scenario que le Bind est cense produire.",
-        moveSan: ["c5"],
+        title: "Na1 ! Éviter tous les échanges",
+        fen: "1rrqb1k1/1p1nppbp/2np2p1/3N4/p1P1P3/1N2BP2/PP1QB1PP/2RR3K w - - 0 19",
+        text: "Second PRO TIP, à l'inverse de la lutte contre l'isolani : le camp qui TIENT le Bind veut GARDER un maximum de pièces sur l'échiquier, car c'est le nombre de pièces qui amplifie l'effet d'étouffement. Lutz retraite lui-même son cavalier plutôt que d'autoriser le moindre échange.",
+        moveSan: ["Na1"],
+        highlights: [{ square: "a1", color: "green" }],
       },
       {
-        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 21",
-        fen: "3q1rk1/1pr1ppbp/p2pb1p1/2P1P3/N4P2/1P2QB2/P5PP/2RR2K1 b - - 0 21",
-        text: "Le second pilier du Bind se transformé enfin en force offensive : la poussée c5 attaque directement d6 et ouvre les lignes vers le roi noir, illustrant comment l'avantage d'espace statique du début de partie se convertit en attaque concrète en fin de partie.",
-        moveSan: ["Qb8", "exd6", "exd6", "Rxd6"],
+        title: "b4 : l'espace continue de grandir",
+        fen: "2rqb1k1/1r2ppbp/1pnp2p1/2nN4/p1P1P2B/5P2/PPNQB1PP/1R1R3K w - - 8 24",
+        text: "Même en évitant les échanges de pièces, Blanc continue de gagner de l'espace avec les pions : b4 puis la reprise axb3 consolident l'aile dame sans jamais relâcher la pression.",
+        moveSan: ["b4", "axb3", "axb3"],
       },
       {
-        title: "Jose Raul Capablanca – Fred Dewhirst Yates : coup 32",
-        fen: "5bk1/4qp1p/R3b1p1/4Q3/1p3P2/1P3B2/P5PP/6K1 w - - 0 33",
-        text: "La domination totale des blancs, initiee par le Bind trente coups plus tôt, se conclut par un simple ratissage matériel : Blanc est Tour et pion contre pièces mineures avec une attaque décisive, et Noir n'a plus aucune ressource defensive.",
-        moveSan: ["Be4", "Qd8", "h3", "Bxh3"],
+        title: "e5 ! La percée centrale du Bind",
+        fen: "r2q2k1/4pbbp/1pnpnpp1/3N4/1PP1PPBB/4N3/r5PP/1R1RQ2K w - - 3 31",
+        text: "L'arme ultime du Bind : avec Noir totalement corseté, Blanc ouvre enfin le centre avec e5. Nxf6+ force la reprise exf6, puis Rxd8+ enlève la dame noire contre une simple tour — un gain matériel décisif.",
+        moveSan: ["e5", "dxe5", "Nxf6+", "exf6", "Rxd8+", "Rxd8"],
+        highlights: [{ square: "e5", color: "green" }],
+        arrows: [{ from: "e4", to: "e5", color: "green" }],
       },
       {
-        title: "Bent Larsen – Tigran Petrosian, Second Piatigorsky Cup 1966",
-        fen: "r1bqk1nr/pp1pppbp/2n3p1/8/2PNP3/4B3/PP3PPP/RN1QKB1R b KQkq - 0 6",
-        text: "Le Bind classique contre le Dragon Accéléré : Blanc pousse c4 dès que possible pour empêcher à tout jamais la libération thématique ...d5 de Noir, quitte à retarder Cc3.",
-        moveSan: ["Nf6", "Nc3", "Ng4", "Qxg4"],
+        title: "Bxh7 ! Le sacrifice qui décide",
+        fen: "4rb1k/r4b1p/1p3P2/1P3BQ1/2P5/7P/6P1/3R3K w - - 3 47",
+        text: "Le coup qui couronne toute la partie : des années — ou plutôt des dizaines de coups — à restreindre les pièces noires payent enfin par un sacrifice direct à l'aile roi.",
+        moveSan: ["Bxh7", "Kxh7"],
       },
       {
-        title: "Bent Larsen – Tigran Petrosian : coup 14",
-        fen: "r2qr1k1/pp2ppbp/2bpn1p1/3N4/2P1P3/4B3/PP1QBPPP/3R1RK1 w - - 8 15",
-        text: "Position typique du Bind pleinement installee : pions c4-e4 blancs, pion d6 noir bloqué, Cavalier blanc solidement établi sur l'avant-poste d5. Face au champion du monde en titre Petrosian, Larsen dispose de tout l'espace nécessaire pour lancer une offensive au Roi.",
-        moveSan: ["f4", "Nc7", "f5"],
-      },
-      {
-        title: "Bent Larsen – Tigran Petrosian : coup 16",
-        fen: "r2qr1k1/ppn1ppbp/2bp2p1/3N1P2/2P1P3/4B3/PP1QB1PP/3R1RK1 b - - 0 16",
-        text: "L'espace procuré par le Bind se transformé directement en attaque : la poussée f4-f5 ouvre les lignes contre le roque noir, une démonstration classique du potentiel dynamique (et pas seulement statique) de cette structure.",
-        moveSan: ["Na6", "Bg4", "Nc5", "fxg6"],
-      },
-      {
-        title: "Bent Larsen – Tigran Petrosian : coup 25",
-        fen: "r2q1rk1/pp2ppb1/3pn1Q1/3R4/2P3B1/4BR2/PP4PP/6K1 b - - 0 25",
-        text: "Le coup célèbre de la partie : un sacrifice de Dame base sur une conception profonde plutôt que sur un calcul force jusqu'au mat. Il illustre à merveille comment l'avancé spatiale offerte par le Bind, cumulée à une attaque de pions savamment préparée, peut deboucher sur une explosion tactique même contre l'un des plus grands defenseurs de l'histoire.",
-        moveSan: ["Nf4", "Rxf4", "fxg6", "Be6+"],
-      },
-      {
-        title: "Rudolf Swiderski – Geza Maroczy, Monte Carlo 1904",
-        fen: "rnbqkbnr/pp1ppppp/8/2p5/2P1P3/8/PP1P1PPP/RNBQKBNR b KQkq - 0 2",
-        text: "Coup fondateur : c'est littéralement la naissance du concept. En jouant c4 dès le deuxième coup, Blanc annonce son intention d'installer les pions c4 et e4 ensemble pour contrôler durablement la case d5 et empêcher à jamais la poussée libératrice ...d5 de Noir. Cette partie est la toute première connue à présenter ce qui sera plus tard baptisé le \\\"Maroczy Bind\\\", justement en l'honneur du joueur qui la joue ici... avec les Noirs !",
-        moveSan: ["Nc6", "Nf3", "g6", "d4"],
-      },
-      {
-        title: "Rudolf Swiderski – Geza Maroczy : coup 11",
-        fen: "r2q1rk1/pp2ppbp/2bp1np1/8/2PBP3/2N4P/PP2BPP1/R2Q1RK1 w - - 1 12",
-        text: "La structure typique du Bind est désormais figée sur l'échiquier : pions blancs c4 et e4 côté à côté, pion noir bloqué en d6, fou de cases noires déjà échange. Noir ne pourra plus jamais libérer sa position par ...d5 ; il devra se contenter de manoeuvres lentes sur les colonnes semi-ouvertes.",
-        moveSan: ["Qd3", "Nd7", "Bxg7", "Kxg7"],
-      },
-      {
-        title: "Rudolf Swiderski – Geza Maroczy : coup 25",
-        fen: "5k2/2q1p2p/1p2Q1p1/2p1n3/1P6/7P/4BPP1/6K1 w - - 0 26",
-        text: "Ironie de l'histoire : c'est justement l'un des deux piliers du Bind (le pion c4, pousse en c5) qui se retrouve échange ici, rouvrant la position. Cette partie originelle montre que la technique pour exploiter le Bind n'était pas encore maîtrisée en 1904 : la belle structure statique du début ne suffit pas à elle seule si elle n'est pas suivie d'un plan concret.",
-        moveSan: ["f4", "Nf7", "Bc4", "Qxf4"],
-      },
-      {
-        title: "Rudolf Swiderski – Geza Maroczy : coup 36",
-        fen: "8/4p2p/3n2p1/8/5k2/7P/5KP1/5B2 w - - 1 37",
-        text: "Le créateur du concept, ici avec les pièces noires, prend le dessus dans la finale grâce à l'activité de son Roi et de son Cavalier. Une leçon utile : le Bind procuré un avantage positionnel durable, mais comme tout avantage il doit être transformé avec précision, sans quoi l'adversaire peut retourner la situation.",
-        moveSan: ["Bd3", "Ne4+", "Ke2", "g5"],
+        title: "La conversion",
+        fen: "5b2/r4b1k/1p3P2/1P4Q1/2P1R3/7P/6P1/7K b - - 0 49",
+        text: "Technique de clôture classique : échanger les tours pour simplifier vers une position matériellement et positionnellement gagnante — la démonstration complète du Bind, depuis l'installation des pions c4/e4 jusqu'au sacrifice décisif.",
       },
     ],
   },
