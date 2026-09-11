@@ -77,14 +77,26 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("247 entrées au total — 154 thèmes à 1 exercice + 7 vagues (2 de 8, 4 de 15, 1 de 17)", () => {
+  it("357 entrées au total — 145 thèmes à 1 exercice + 16 vagues", () => {
     // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
-    // (8 chacun, voir plus haut) puis un 2e lot de 5 thèmes convertis « au
-    // format Lichess » (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
+    // (8 chacun) puis un 2e lot de 5 thèmes convertis « au format Lichess »
+    // (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
     // `pm-la-securite-du-roi-en-milieu-de-partie`, `pm-la-centralisation-des-pieces`
     // et `pm-la-paire-de-fous` (15 chacun), `pm-la-chaine-de-pions` (17, une
-    // partie source plus riche en points de décision réels).
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(247);
+    // partie source plus riche en points de décision réels) — puis un 3e lot
+    // de 6 thèmes de plus, sourcés depuis les derniers fichiers PILOT
+    // `positional_mastery` restés inutilisés : `pm-l-avantage-d-espace` (12),
+    // `pm-le-complexe-de-cases-faibles` (15, 2 parties réelles du même
+    // fichier PILOT), `pm-les-coups-de-rupture` (12),
+    // `pm-prophylaxie-anticiper-le-plan-adverse` (15),
+    // `pm-activite-des-pieces-contre-materiel` (13),
+    // `pm-evaluer-un-echange-de-pieces` (12) — puis un 1er lot « Palier Or »
+    // (2026-09-11, aucun fichier PILOT disponible pour ces thèmes : parties
+    // de maîtres réelles sourcées sur le web) : `pm-la-restriction-des-pieces-adverses`
+    // (13, Botvinnik–Sorokin, URSS 1931), `pm-la-surprotection-nimzowitsch`
+    // (14, Nimzowitsch–Salwe, Karlsbad 1911) et `pm-le-blocus-du-pion-passe`
+    // (13, Sämisch–Nimzowitsch, Copenhague 1923, « The Immortal Zugzwang Game »).
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(357);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -93,6 +105,15 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "pm-la-centralisation-des-pieces": 15,
       "pm-la-chaine-de-pions": 17,
       "pm-la-paire-de-fous": 15,
+      "pm-l-avantage-d-espace": 12,
+      "pm-le-complexe-de-cases-faibles": 15,
+      "pm-les-coups-de-rupture": 12,
+      "pm-prophylaxie-anticiper-le-plan-adverse": 15,
+      "pm-activite-des-pieces-contre-materiel": 13,
+      "pm-evaluer-un-echange-de-pieces": 12,
+      "pm-la-restriction-des-pieces-adverses": 13,
+      "pm-la-surprotection-nimzowitsch": 14,
+      "pm-le-blocus-du-pion-passe": 13,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

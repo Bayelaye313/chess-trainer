@@ -3599,4 +3599,478 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // Les 6 thèmes ci-dessous (2026-09-10, 3e lot au format Lichess) sortent
+  // des 6 fichiers PILOT `positional_mastery` restés inutilisés depuis le
+  // 2e lot (voir le commentaire au-dessus de `pm-la-chaine-de-pions`) —
+  // chacun reprend une partie de maître RÉELLE déjà présente dans
+  // `data/import/academy/PILOT_pm-*.pgn`, pré-commentée en français et
+  // vérifiée coup par coup avec python-chess côté source, puis rejouée et
+  // revérifiée ici avec chess.js. Un `CourseStep` par commentaire source
+  // (`[%csl]`/`[%cal]` repris en `highlights`/`arrows` quand présents),
+  // `fen` = position de départ RÉELLE avant le coup commenté, `moveSan` = la
+  // suite réellement jouée jusqu'au prochain point d'arrêt — la vague de
+  // puzzles correspondante (`master-puzzles-dataset.ts`) mine d'autres
+  // points de décision de la MÊME partie (ou d'une seconde partie réelle sur
+  // le même thème, pour `pm-le-complexe-de-cases-faibles`, dont le PILOT
+  // porte 2 chapitres).
+  "pm-l-avantage-d-espace": {
+    steps: [
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar, 1946",
+        fen: "2kr3r/ppp2ppp/1nb1p3/8/3PP3/PP2KPP1/3N3P/R1R2B2 w - - 0 23",
+        text: "Le plan des Blancs : gagner de l'espace à l'aile dame pour disloquer les pions noirs et ouvrir une colonne.",
+        moveSan: ["a4", "Be8", "a5"],
+        arrows: [
+          { from: "a4", to: "a5", color: "green" },
+          { from: "a5", to: "a6", color: "green" },
+          { from: "a6", to: "b7", color: "green" },
+        ],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 24",
+        fen: "2krb2r/ppp2ppp/1n2p3/P7/3PP3/1P2KPP1/3N3P/R1R2B2 b - - 0 24",
+        text: "Les pièces noires sont toutes revenues sur la première rangée, totalement comprimées par l'avance des pions blancs.",
+        moveSan: ["Na8", "a6", "b6"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 31",
+        fen: "1k1r3r/p1nb2pp/Ppp1pp2/8/1P1PP3/N1R1KPP1/7P/2R2B2 w - - 4 31",
+        text: "Selon Fine, cela vaut la peine de donner un pion pour installer une tour en 7e rangée — conséquence directe de l'espace accumulé depuis vingt coups.",
+        moveSan: ["b5", "Nxb5", "Bxb5"],
+        arrows: [{ from: "c3", to: "c7", color: "green" }],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 35",
+        fen: "k1r4r/pR1b2pp/Pp2pp2/1p6/3PP3/N3KPP1/7P/2R5 w - - 4 35",
+        text: "Botvinnik sacrifie la qualité pour garder sa tour en 7e rangée.",
+        moveSan: ["Rxd7", "Rxc1", "Nxb5"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 59",
+        fen: "8/2k5/5N2/3Pp1P1/4P3/5PK1/8/7r w - - 5 59",
+        text: "Domination totale : la tour noire n'a plus qu'une seule case correcte sur la colonne h.",
+        moveSan: ["Kg2", "Rh8", "g6"],
+      },
+      {
+        title: "Mikhail Botvinnik – Milan Vidmar : coup 60",
+        fen: "7r/2k5/5N2/3Pp1P1/4P3/5P2/6K1/8 w - - 7 60",
+        text: "Le pion g va promouvoir : l'avantage d'espace initial, transformé en domination totale des cases et des pièces adverses, se conclut par la promotion d'un pion oublié à l'autre bout de l'échiquier.",
+        moveSan: ["g6"],
+      },
+    ],
+  },
+  "pm-le-complexe-de-cases-faibles": {
+    steps: [
+      {
+        title: "Dragoslav Andric – Daja, 1949",
+        fen: "rnq2rk1/1bp2ppp/1p3b2/p2Pp3/P1P1P3/B1P3P1/2QN2BP/R4RK1 b - - 2 17",
+        text: "Un seul défenseur noir se trouve près du roi : c'est lui qu'il faut éliminer pour faire apparaître le complexe de cases faibles noires (f6, h6 et les environs immédiats du roi).",
+        moveSan: ["Rd8", "Rxf6", "gxf6"],
+      },
+      {
+        title: "Dragoslav Andric – Daja : coup 18",
+        fen: "rnqr2k1/1bp2ppp/1p3b2/p2Pp3/P1P1P3/B1P3P1/2QN2BP/R4RK1 w - - 3 18",
+        text: "Le sacrifice qui déclenche tout : en échangeant contre le fou défenseur, les Blancs vont pouvoir installer leurs pièces sur les cases noires désormais indéfendables.",
+        moveSan: ["Rxf6", "gxf6", "Qd1"],
+      },
+      {
+        title: "Dragoslav Andric – Daja : coup 19",
+        fen: "rnqr2k1/1bp2p1p/1p3p2/p2Pp3/P1P1P3/B1P3P1/2QN2BP/R5K1 w - - 0 19",
+        text: "La menace Qh5 suivie de Bh3-f5 vise précisément le réseau de cases noires autour du roi.",
+        moveSan: ["Qd1", "c5", "Qh5"],
+        arrows: [
+          { from: "d1", to: "h5", color: "green" },
+          { from: "g2", to: "h3", color: "green" },
+          { from: "h3", to: "f5", color: "green" },
+        ],
+      },
+      {
+        title: "Dragoslav Andric – Daja : coup 22",
+        fen: "rn3qk1/1b3p1p/1p1r1p2/p1pPp2Q/P1P1P3/B1P3PB/3N3P/R5K1 w - - 4 22",
+        text: "Menace de mat immédiat — le fou s'installe sur une case noire désormais totalement indéfendable.",
+        moveSan: ["Bf5", "Qg7", "Nf3"],
+      },
+      {
+        title: "Dragoslav Andric – Daja : coup 24",
+        fen: "r5k1/1b1n1pqp/1p1r1p2/p1pPpB1Q/P1P1P3/B1P2NP1/7P/R5K1 w - - 8 24",
+        text: "Menace Bh6, occupant une autre case noire critique.",
+        moveSan: ["Bc1", "Kh8", "Bh6"],
+      },
+      {
+        title: "Dragoslav Andric – Daja : coup 27",
+        fen: "r5qk/1b1r1p1p/1p3p1B/p1pPp2Q/P1P1P3/2P2NP1/7P/R5K1 w - - 0 27",
+        text: "Un second sacrifice, exploitant à fond le complexe de cases faibles créé depuis le dix-huitième coup.",
+        moveSan: ["Nxe5", "fxe5", "Qxe5+"],
+      },
+      {
+        title: "Dragoslav Andric – Daja : coup 37",
+        fen: "6k1/7p/1p6/p1p5/P3P3/2P3P1/7P/5bK1 w - - 0 37",
+        text: "Toute l'attaque, depuis le sacrifice de qualité au 18e coup, aura consisté à exploiter méthodiquement un unique complexe de cases noires autour du roi adverse — la démonstration exemplaire du concept.",
+        moveSan: ["Kxf1"],
+      },
+    ],
+  },
+  "pm-les-coups-de-rupture": {
+    steps: [
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg, Hastings 1895",
+        fen: "1n6/4k2p/p3ppp1/1pPp4/3P1PP1/3NP3/P3K2P/8 w - - 1 27",
+        text: "Premier coup de rupture : la menace est 28.fxe6 Kxe6 29.Nf4+, qui fait tomber le pion d vital. Un simple échange par 26...gxf5 27.gxf5 exf5 28.Nf4 laisserait déjà les Blancs avec deux pions passés connectés.",
+        moveSan: ["f5", "g5", "Nb4"],
+      },
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg : coup 28",
+        fen: "1n6/4k2p/p3pp2/1pPp1Pp1/3P2P1/3NP3/P3K2P/8 w - - 0 28",
+        text: "Le cavalier s'infiltre pour éliminer un maximum de pions.",
+        moveSan: ["Nb4", "a5", "c6"],
+      },
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg : coup 29",
+        fen: "1n6/4k2p/4pp2/ppPp1Pp1/1N1P2P1/4P3/P3K2P/8 w - - 0 29",
+        text: "Deuxième coup de rupture : si le cavalier est pris, 30.c7 gagne immédiatement.",
+        moveSan: ["c6", "Kd6", "fxe6"],
+      },
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg : coup 30",
+        fen: "1n6/7p/2Pkpp2/pp1p1Pp1/1N1P2P1/4P3/P3K2P/8 w - - 1 30",
+        text: "Troisième rupture — les Blancs sacrifient sans relâche pour ouvrir des lignes vers la promotion.",
+        moveSan: ["fxe6", "Nxc6", "Nxc6"],
+      },
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg : coup 32",
+        fen: "8/7p/2k1Pp2/pp1p2p1/3P2P1/4P3/P3K2P/8 w - - 0 32",
+        text: "Quatrième coup de rupture, magnifique : Pillsbury s'assure ainsi deux pions passés connectés, exactement le but de toute la séquence depuis le coup 27.",
+        moveSan: ["e4", "dxe4", "d5+"],
+      },
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg : coup 33",
+        fen: "8/7p/2k1Pp2/pp4p1/3Pp1P1/8/P3K2P/8 w - - 0 33",
+        text: "Cinquième et dernier coup de rupture de la séquence — le pion d, impossible à capturer, poursuit sa marche.",
+        moveSan: ["d5+", "Kd6", "Ke3"],
+      },
+      {
+        title: "Harry Nelson Pillsbury – Isidor Gunsberg : coup 40",
+        fen: "8/8/3kP2P/3P2p1/1pK2p2/p7/P6P/8 w - - 0 40",
+        text: "Cinq coups de rupture consécutifs, calculés avec précision par Pillsbury dans une position qui semblait pourtant totalement équilibrée, décident finalement de la partie et du tournoi.",
+        moveSan: ["h7"],
+      },
+    ],
+  },
+  "pm-prophylaxie-anticiper-le-plan-adverse": {
+    steps: [
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter, 1898",
+        fen: "rnbqk1nr/ppp1bppp/3p4/3Pp3/2B1P3/5N2/PPP2PPP/RNBQK2R w KQkq - 1 6",
+        text: "Premier coup prophylactique : au lieu du naturel Nc3, Tarrasch empêche d'abord ...f5, qui aurait attaqué la base de sa chaîne de pions e4-d5. Selon Tarrasch lui-même, ne jamais laisser l'adversaire se développer librement est le tout premier principe de l'attaque positionnelle.",
+        moveSan: ["Bd3", "Nf6", "c4"],
+        highlights: [
+          { square: "c3", color: "red" },
+          { square: "c4", color: "red" },
+        ],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 8",
+        fen: "rnbq1rk1/ppp1bppp/3p1n2/3Pp3/2P1P3/3B1N2/PP3PPP/RNBQK2R w KQ - 1 8",
+        text: "Deuxième coup prophylactique : empêche ...Bg4 et prépare g4 contre une future tentative noire de libération par ...Ne8 et ...f5.",
+        moveSan: ["h3", "c6", "Nc3"],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 12",
+        fen: "r1bqnrk1/ppn1bppp/2pp4/3Pp3/2P1P3/2NBBN1P/PP3PP1/R2Q1RK1 w - - 6 12",
+        text: "La dame soutient à l'avance la case f5, clé de toute la stratégie de restriction.",
+        moveSan: ["Qc2", "cxd5", "cxd5"],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 14",
+        fen: "r1bqnrk1/ppn1bp1p/3p2p1/3Pp3/4P3/2NBBN1P/PPQ2PP1/R4RK1 w - - 0 14",
+        text: "Force le cavalier noir à boucher f5 : il sera désormais cloué et incapable de soutenir le coup libérateur ...f5.",
+        moveSan: ["Bh6", "Ng7", "g4"],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 17",
+        fen: "r1bqnr1k/pp2bpnp/3p2pB/3Pp3/4P1P1/2NB1N1P/PPQ2P1K/R4R2 w - - 3 17",
+        text: "Tarrasch anticipe déjà l'ouverture de la colonne g si jamais ...f5 finissait par être joué.",
+        moveSan: ["Rg1", "Bd7", "Rg2"],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 27",
+        fen: "2rq1rn1/p2bb1n1/1p1p1pkp/3Pp1p1/4P1PP/2NBBN2/PP1Q1PR1/6KR w - - 4 27",
+        text: "Le cavalier blanc se dirige vers f5 via f1 et g3 — l'aboutissement de toute la stratégie préparée dès le coup 6.",
+        moveSan: ["Nh2", "Rc7", "Nf1"],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 39",
+        fen: "1q4n1/p4kbR/1prpnp2/4p1p1/4P1P1/4BQN1/PP3PR1/6K1 w - - 0 39",
+        text: "Le cavalier atteint enfin la case idéale préparée depuis le tout début de la partie.",
+        moveSan: ["Nf5", "Qc8", "Rgh2"],
+      },
+      {
+        title: "Siegbert Tarrasch – Jackson Showalter : coup 42",
+        fen: "2q5/p3nknR/1prp1p2/4p1B1/4P1P1/5Q2/PP3P1R/6K1 b - - 0 42",
+        text: "Showalter joue ce coup puis abandonne sans attendre la réponse : aucune gaffe noire identifiable dans toute la partie, seulement une asphyxie positionnelle méthodique.",
+        moveSan: ["Qe6"],
+      },
+    ],
+  },
+  "pm-activite-des-pieces-contre-materiel": {
+    steps: [
+      {
+        title: "Frank Marshall – Jose Raul Capablanca, 1918",
+        fen: "r2r2k1/pb3ppp/1pp1q3/8/4P3/2Q2N2/PP3PPP/2R1R1K1 w - - 0 18",
+        text: "Marshall pose un piège tactique.",
+        moveSan: ["Nd4", "Qe5", "Nxc6"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 18 (suite)",
+        fen: "r2r2k1/pb3ppp/1pp1q3/8/3NP3/2Q5/PP3PPP/2R1R1K1 b - - 1 18",
+        text: "Le coup clé de toute la partie : plutôt que d'entrer dans les complications tactiques de Marshall, Capablanca sacrifie volontairement un pion. À cet instant, le bénéfice n'est pas évident — les dames vont disparaître et peu de matériel restera pour attaquer — mais Capablanca a calculé que l'activité de ses pièces vaudra bien plus qu'un pion.",
+        moveSan: ["Qe5", "Nxc6", "Qxc3"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 20",
+        fen: "r2r2k1/pb3ppp/1pN5/8/4P3/2R5/PP3PPP/4R1K1 b - - 0 20",
+        text: "La tour domine déjà la 7e rangée — premier versement de la « compensation » pour le pion sacrifié.",
+        moveSan: ["Rd2", "Rb1", "Re8"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 21",
+        fen: "r5k1/pb3ppp/1pN5/8/4P3/2R5/PP1r1PPP/1R4K1 b - - 2 21",
+        text: "Cette tour attaque le centre et se prépare à basculer contre le roi blanc.",
+        moveSan: ["Re8", "e5", "g5"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 22",
+        fen: "4r1k1/pb3ppp/1pN5/4P3/8/2R5/PP1r1PPP/1R4K1 b - - 0 22",
+        text: "Coup magistral : empêche f4, crée une case de fuite pour le roi, et menace de gagner un pion.",
+        moveSan: ["g5", "h4", "gxh4"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 24",
+        fen: "4r1k1/pb3p1p/1pN5/4P3/7p/2R5/PP1r1PP1/4R1K1 b - - 1 24",
+        text: "Sans perdre de temps à ramasser des pions, attaque directe sur le cavalier qui doit désormais être défendu par les deux tours blanches à la fois.",
+        moveSan: ["Re6", "Rec1", "Kg7"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 30",
+        fen: "8/pb3pkp/2N3r1/1p2P3/1P6/P1R3Pp/r4P2/2R3K1 b - - 0 30",
+        text: "Coup d'attente : les Blancs sont totalement paralysés, chaque coup possible perd quelque chose.",
+        moveSan: ["a6", "e6", "Rxe6"],
+      },
+      {
+        title: "Frank Marshall – Jose Raul Capablanca : coup 39",
+        fen: "8/1b3p1p/p7/1p3Nk1/1P3PP1/P1R5/r5rp/2R2K2 b - - 0 39",
+        text: "L'activité totale des pièces noires, achetée pour le prix d'un seul pion au 18e coup, se solde par la reddition complète des Blancs.",
+        moveSan: ["Kxf4"],
+      },
+    ],
+  },
+  "pm-evaluer-un-echange-de-pieces": {
+    steps: [
+      {
+        title: "Akiba Rubinstein – Oldrich Duras, 1908",
+        fen: "2r1kb1r/p3pppp/6b1/4N3/1P4P1/P3P3/1B3P1P/R3K2R w KQk - 1 18",
+        text: "Les deux fous noirs pourraient offrir une résistance gênante : Rubinstein évalue qu'il vaut mieux en échanger un, même au prix de céder la colonne h à la tour noire.",
+        moveSan: ["Nxg6", "hxg6", "Bd4"],
+      },
+      {
+        title: "Akiba Rubinstein – Oldrich Duras : coup 21",
+        fen: "2r1kb1r/4p1p1/p4pp1/8/1P1B2P1/P3P3/3K1P1P/R6R w k - 0 21",
+        text: "Le moment clé du thème : ce coup pose une vraie question d'évaluation aux Noirs — échanger les tours (ce qui simplifie vers une finale gagnante pour les Blancs) ou abandonner la colonne ouverte. Aucune des deux options ne convient aux Noirs.",
+        moveSan: ["Rac1", "Rxc1", "Rxc1"],
+      },
+      {
+        title: "Akiba Rubinstein – Oldrich Duras : coup 22",
+        fen: "4kb1r/4p1p1/p4pp1/8/1P1B2P1/P3P3/3K1P1P/2r4R w k - 0 22",
+        text: "Rubinstein reprend avec la tour, pas avec le roi : en finale, la tour doit rester active, pas immobile à h1 à garder un pion. C'est le point pédagogique central — la pièce qui reprend n'est jamais un détail anodin, elle détermine toute l'activité future.",
+        moveSan: ["Rxc1", "e5", "Bc5"],
+      },
+      {
+        title: "Akiba Rubinstein – Oldrich Duras : coup 27",
+        fen: "5k2/6p1/R4pp1/8/1P2p1P1/P3P3/4KPr1/8 b - - 0 27",
+        text: "Le matériel est désormais égal, mais Rubinstein a évalué depuis longtemps que ses deux pions passés connectés valent bien plus qu'un simple décompte de points.",
+        moveSan: ["Rxg4", "Ra7", "Rg1"],
+      },
+      {
+        title: "Akiba Rubinstein – Oldrich Duras : coup 39",
+        fen: "4R3/6p1/5p2/5k2/4p1p1/4P3/4KP2/8 w - - 3 39",
+        text: "La chaîne de décisions d'échange, depuis le dix-huitième coup jusqu'à la finale de tours, aura été la clé de toute la victoire de Rubinstein.",
+        moveSan: ["Kf1"],
+      },
+    ],
+  },
+  // Les 3 thèmes ci-dessous (2026-09-11, 1er lot du « Palier Or ») sortent de
+  // 3 parties de maîtres RÉELLES (aucun fichier PILOT n'existait pour ces
+  // thèmes) sourcées sur le web puis rejouées et vérifiées coup par coup
+  // avec chess.js avant rédaction (aucune position tapée à la main) :
+  //  - `pm-la-restriction-des-pieces-adverses` : Mikhail Botvinnik – Nikolay
+  //    Sorokin, Championnat d'URSS 1931 (étude Lichess « IM Jeremy Silman's
+  //    Lessons in Strategy », https://lichess.org/study/e2P29Eva/SKXizPgx) —
+  //    14.b3! condamne le Cavalier noir à rester sur a5 jusqu'à la fin.
+  //  - `pm-la-surprotection-nimzowitsch` : Aron Nimzowitsch – Georg Salwe,
+  //    Karlsbad 1911, dite « Overprotection Racket »
+  //    (https://www.chessgames.com/perl/chessgame?gid=1000795) — Nimzowitsch
+  //    accumule Cavalier, Fou ET Tour sur la case e5 déjà largement tenue.
+  //  - `pm-le-blocus-du-pion-passe` : Friedrich Sämisch – Aron Nimzowitsch,
+  //    Copenhague 1923, « The Immortal Zugzwang Game »
+  //    (https://en.wikipedia.org/wiki/Immortal_Zugzwang_Game) — 21...Rxf2!!
+  //    crée un pion passé e4 authentique, que 24.Qe3! doit ensuite bloquer.
+  // La vague de puzzles correspondante (`master-puzzles-dataset.ts`) mine
+  // d'autres points de décision réels de ces 3 mêmes parties.
+  "pm-la-restriction-des-pieces-adverses": {
+    steps: [
+      {
+        title: "Botvinnik – Sorokin, URSS 1931 — l'avantage blanc avant restriction",
+        fen: "r1b2rk1/1p3pp1/pn3n1p/2q1p3/P3P3/2N2N2/BP1RQPPP/3R2K1 w - - 0 1",
+        text: "Les Blancs ont un développement plus rapide, des pièces plus actives, une pression sur le pion e5 noir et le contrôle total de la colonne d ouverte. 1.Qe3! propose l'échange des Dames : après 1...Qxe3 2.fxe3, les Noirs perdent leur meilleure pièce défensive et leur structure de pions se fissure — exactement le genre de finale où restreindre les pièces adverses va devenir le thème central de la partie.",
+        moveSan: ["Qe3", "Qxe3", "fxe3"],
+      },
+      {
+        title: "Chasser le Cavalier vers le bord",
+        fen: "r1b2rk1/1p3pp1/pn3n1p/4p3/P3P3/2N1PN2/BP1R2PP/3R2K1 b - - 0 2",
+        text: "2...Bg4 développe une pièce en clouant le Cavalier f3 sur la Tour d1. Mais 3.a5! est le vrai coup à retenir : il attaque le Cavalier b6 et gagne de l'espace en même temps. Le Cavalier n'a que 3...Nc8, une case passive — le tout premier pas vers sa restriction totale.",
+        moveSan: ["Bg4", "a5", "Nc8"],
+      },
+      {
+        title: "Regroupement et nouvelles concessions",
+        fen: "r1n2rk1/1p3pp1/p4n1p/P3p3/4P1b1/2N1PN2/BP1R2PP/3R2K1 w - - 1 4",
+        text: "4.Rc1! est facile à manquer : les Blancs n'ont plus besoin de deux Tours sur la colonne d, alors ils revendiquent aussi la colonne c tout en sortant du clouage. Après l'échange 4...Bxf3 5.gxf3, le pion e4 est renforcé. Suit un ballet de pièces (Nd5, Nc6, Nxf6+) qui abîme encore la structure de pions noire (5...gxf6) et prépare l'invasion de la 7e rangée.",
+        moveSan: ["Rc1", "Bxf3", "gxf3", "Ne7", "Nd5", "Nc6", "Nxf6+", "gxf6"],
+      },
+      {
+        title: "Invasion de la 7e rangée",
+        fen: "r4rk1/1p3p2/p1n2p1p/P3p3/4P3/4PP2/BP1R3P/2R3K1 w - - 0 8",
+        text: "8.Rd7! est une pénétration décisive : suivant la règle qu'une Tour à la 7e rangée vaut un pion, les Blancs sacrifient leur pion a5 pour créer des menaces contre b7 et f7. 9.Kf2! active le Roi, menace Rg1+, et ose les Noirs à manger le pion a5. 9...Nxa5 croque le pion — mais dégage la colonne c pour les Blancs, et surtout éloigne encore plus le Cavalier du centre de l'action.",
+        moveSan: ["Rd7", "Rab8", "Kf2", "Nxa5"],
+      },
+      {
+        title: "b3! — la restriction totale du Cavalier",
+        fen: "1r3rk1/1p1R1p2/p4p1p/n3p3/4P3/4PP2/BP3K1P/2R5 w - - 0 10",
+        text: "10.Rcc7 double les Tours sur la 7e rangée et force pratiquement le gain du pion f7. Après les échanges de Tours, 13.Bd5! place le Fou sur sa case la plus imposante, empêchant à jamais la Tour noire d'utiliser la colonne d. Puis 14.b3! est le coup thème de tout le chapitre : il domine complètement le Cavalier noir. Un coup comme 14.Ra7 aurait laissé un peu de contre-jeu avec 14...Nc4, mais maintenant le pauvre Cavalier reste bloqué sur le bord de l'échiquier pour le reste de la partie. Ne jamais arrêter de chercher à restreindre les pièces adverses.",
+        moveSan: ["Rcc7", "Rbc8", "Rxf7", "Rxc7", "Rxc7+", "Kh8", "Bd5", "b5", "b3"],
+        highlights: [{ square: "a5", color: "red" }],
+        arrows: [{ from: "b2", to: "b3", color: "green" }],
+      },
+      {
+        title: "La méthode : améliorer chaque pièce, puis le Roi",
+        fen: "5r1k/2R5/p4p1p/np1Bp3/4P3/1P2PP2/5K1P/8 b - - 0 14",
+        text: "Remarquez la méthode : les Blancs ont d'abord rendu leur Tour meilleure que celle des Noirs, puis leur Fou meilleur que le Cavalier. Maintenant, avec 15.Kg3, ils tournent tranquillement leur attention vers leur propre Roi. Chaque pièce blanche est amenée à donner le meilleur d'elle-même. 16.Kh4 amène le Roi dans l'attaque — les Noirs sont totalement démunis, la victoire n'est plus qu'une question de temps.",
+        moveSan: ["Rd8", "Kg3", "f5", "Kh4", "fxe4", "fxe4"],
+      },
+      {
+        title: "Marquer le temps — le Cavalier toujours prisonnier",
+        fen: "3r3k/2R5/p6p/np1Bp3/4P2K/1P2P3/7P/8 b - - 0 17",
+        text: "17.Rd6 met en place une ultime ligne de défense. 18.Kh5 continue le plan commencé quelques coups plus tôt : le Roi blanc vise maintenant h6. 19.h3 laisse les Noirs s'asseoir et souffrir — Botvinnik améliore d'abord sa position au maximum avant d'encaisser ses avantages. 20.h4 continue ce jeu du chat et de la souris, qui use moralement l'adversaire, réduit à des coups d'attente pendant que son Cavalier reste totalement hors jeu sur a5.",
+        moveSan: ["Rd6", "Kh5", "Rf6", "h3", "Rd6", "h4", "Rb6"],
+      },
+      {
+        title: "La restriction paie : l'infiltration finale",
+        fen: "7k/2R5/pr5p/np1Bp2K/4P2P/1P2P3/8/8 w - - 1 21",
+        text: "21.Kg4 menace Kf5 suivi de Kxe5. 22.Ra7 attache la Tour noire à la défense du pion a6. 22...Rb6 tente un sacrifice de pion pour redonner vie au Cavalier — par exemple 23.Kf5 permettrait 23...Nc6. Mais 23.Re7! ne menace pas seulement de prendre le pion e5 (une menace impossible à parer) : il empêche aussi 23...Nc6 à cause de 24.Re6, qui clouerait et gagnerait le Cavalier. Les Noirs ont abandonné ici : le Cavalier resté restreint sur a5 depuis le coup 14 n'a jamais pu revenir dans la partie.",
+        moveSan: ["Kg4", "Rf6", "Ra7", "Rb6", "Re7"],
+      },
+    ],
+  },
+  "pm-la-surprotection-nimzowitsch": {
+    steps: [
+      {
+        title: "Française Avance — la pointe e5 à protéger",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Après 3.e5, les Blancs obtiennent une pointe de pion avancée en e5. Toute la partie va tourner autour de cette case : Nimzowitsch va la protéger, la sur-protéger, puis l'utiliser comme tremplin pour l'attaque — l'exemple le plus célèbre de son concept de « surprotection ».",
+        moveSan: ["e4", "e6", "d4", "d5", "e5", "c5", "c3", "Nc6"],
+      },
+      {
+        title: "Développement et première tension",
+        fen: "r1bqkbnr/pp3ppp/2n1p3/2ppP3/3P4/2P5/PP3PPP/RNBQKBNR w KQkq - 1 5",
+        text: "Les Blancs développent tranquillement pendant que les Noirs visent le pion b2 avec ...Qb6. 7.dxc5 Bxc5 libère la diagonale du Fou noir mais laisse le pion e5 comme unique atout central des Blancs — d'autant plus précieux qu'il est désormais isolé du reste de la structure.",
+        moveSan: ["Nf3", "Qb6", "Bd3", "Bd7", "dxc5", "Bxc5"],
+      },
+      {
+        title: "Bf4 avant même l'attaque — le réflexe de surprotection",
+        fen: "r3k1nr/pp1b1ppp/1qn1p3/2bpP3/8/2PB1N2/PP3PPP/RNBQK2R w KQkq - 0 8",
+        text: "8...f6 attaque directement le pion e5. Au lieu de simplement le défendre une fois, 10.Bf4! ajoute un défenseur supplémentaire à la pointe AVANT même qu'elle ne soit vraiment menacée de disparaître — le réflexe de surprotection de Nimzowitsch : jamais content d'un point fort simplement « assez défendu ».",
+        moveSan: ["O-O", "f6", "b4", "Be7", "Bf4", "fxe5"],
+      },
+      {
+        title: "Première occupation de la case e5",
+        fen: "r3k1nr/pp1bb1pp/1qn1p3/3pp3/1P3B2/2PB1N2/P4PPP/RN1Q1RK1 w kq - 0 11",
+        text: "Après les échanges forcés sur e5, le Fou blanc atterrit sur la case elle-même. Ce n'est encore qu'une occupation — la vraie surprotection, où plusieurs pièces défendent une case déjà solide, arrive dans les coups suivants.",
+        moveSan: ["Nxe5", "Nxe5", "Bxe5"],
+      },
+      {
+        title: "Regrouper pour revenir sur e5",
+        fen: "r3k1nr/pp1bb1pp/1q2p3/3pB3/1P6/2PB4/P4PPP/RN1Q1RK1 b kq - 0 12",
+        text: "Les Blancs manœuvrent patiemment leur Cavalier (Nd2-f3) dans le seul but de pouvoir revenir occuper e5 une seconde fois. Ce genre de détour, qui semble perdre du temps, est typique de la stratégie de Nimzowitsch : construire un point fort qu'aucune pièce adverse ne pourra jamais déloger.",
+        moveSan: ["Nf6", "Nd2", "O-O", "Nf3", "Bd6", "Qe2", "Rac8", "Bd4", "Qc7"],
+      },
+      {
+        title: "La surprotection : Ne5 ET Rae1 sur la même case",
+        fen: "2r2rk1/ppqb2pp/3bpn2/3p4/1P1B4/2PB1N2/P3QPPP/R4RK1 w - - 9 17",
+        text: "17.Ne5! replace le Cavalier sur la pointe. Puis 18.Rae1! est le coup emblématique de tout le chapitre : la Tour vient soutenir une case déjà parfaitement défendue par le Fou et le Cavalier. C'est la définition même de la surprotection — accumuler plus de défenseurs qu'il n'en faut sur une case-clé, pour que chaque pièce impliquée gagne en liberté d'action ailleurs sur l'échiquier. Après l'échange 18...Bxe5 19.Bxe5, un Fou occupe désormais e5, toujours soutenu par la Tour e1.",
+        moveSan: ["Ne5", "Be8", "Rae1", "Bxe5", "Bxe5"],
+        highlights: [{ square: "e5", color: "green" }],
+        arrows: [{ from: "a1", to: "e1", color: "green" }],
+      },
+      {
+        title: "Le point fort libère l'attaque",
+        fen: "2r1brk1/ppq3pp/4pn2/3pB3/1P6/2PB4/P3QPPP/4RRK1 b - - 0 19",
+        text: "Une fois e5 rendu inattaquable, les pièces blanches restantes sont libres de basculer vers le Roi noir : 22.Re3! puis 23.Rg3 transfèrent la Tour sur l'aile Roi, et 24.Bxh7! sacrifie un pion pour arracher l'abri du Roi noir — la récompense directe de tous les coups « lents » de surprotection joués plus tôt.",
+        moveSan: ["Qc6", "Bd4", "Bd7", "Qc2", "Rf7", "Re3", "b6", "Rg3", "Kh8", "Bxh7", "e5"],
+      },
+      {
+        title: "La conversion : combinaison gagnante",
+        fen: "2r4k/p2b1rpB/1pq2n2/3pp3/1P1B4/2P3R1/P1Q2PPP/5RK1 w - - 0 25",
+        text: "25.Bg6! maintient l'étau. Après quelques échanges forcés, 28.Bg5! attaque la Tour c8 clouée sur la Dame et gagne la qualité (28...Rxc3 29.Rxc3 dxc3 30.Qxc3) : le matériel supplémentaire, combiné à l'activité de pièces acquise grâce à la surprotection initiale de e5, suffit à Nimzowitsch pour conduire cette partie jusqu'au gain.",
+        moveSan: ["Bg6", "Re7", "Re1", "Qd6", "Be3", "d4", "Bg5", "Rxc3", "Rxc3", "dxc3", "Qxc3", "Kg8", "a3"],
+      },
+    ],
+  },
+  "pm-le-blocus-du-pion-passe": {
+    steps: [
+      {
+        title: "Étude « La partie immortelle du zugzwang » — mise en place",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Sämisch – Nimzowitsch, Copenhague, mars 1923 : une Indienne de Dame catalane où les Noirs préparent tranquillement la rupture centrale ...d5. Cette partie reste célèbre pour sa fin : la position finale est un rare exemple de zugzwang en plein milieu de partie, obtenu après que les Noirs aient méthodiquement bloqué et restreint le jeu blanc — dont un pion passé qui va naître au fil des coups suivants.",
+        moveSan: ["d4", "Nf6", "c4", "e6", "Nf3", "b6", "g3", "Bb7", "Bg2", "Be7", "Nc3", "O-O", "O-O", "d5"],
+      },
+      {
+        title: "La structure se fixe",
+        fen: "rn1q1rk1/pbp1bppp/1p2pn2/3p4/2PP4/2N2NP1/PP2PPBP/R1BQ1RK1 w - - 0 8",
+        text: "8.Ne5 c6 9.cxd5 cxd5 fixe un pion noir isolé en d5, tandis que les Blancs développent leur Fou en Bf4. Rien n'indique encore qu'un pion passé va apparaître au centre — la partie en donne l'impression d'un jeu de position tranquille.",
+        moveSan: ["Ne5", "c6", "cxd5", "cxd5", "Bf4", "a6"],
+      },
+      {
+        title: "Manœuvres des deux côtés",
+        fen: "rn1q1rk1/1b2bppp/pp2pn2/3pN3/3P1B2/2N3P1/PP2PPBP/R2Q1RK1 w - - 0 11",
+        text: "Les Noirs gagnent de l'espace à l'aile Dame (...b5) pendant que les Blancs regroupent leurs pièces. 15...Nh5 puis 16...f5 préparent une expansion à l'aile Roi — c'est cette poussée ...f5 qui va, quelques coups plus tard, transformer la structure centrale.",
+        moveSan: ["Rc1", "b5", "Qb3", "Nc6", "Nxc6", "Bxc6", "h3", "Qd7", "Kh2", "Nh5", "Bd2", "f5"],
+      },
+      {
+        title: "20.e4?! — la naissance du pion passé",
+        fen: "r4rk1/3qb1pp/p1b1p3/1p1p1p1n/3P4/1QN3PP/PP1BPPBK/2R2R2 w - - 0 17",
+        text: "Cherchant du contre-jeu, les Blancs jouent 20.e4?!. Après 20...fxe4, ils récupèrent la tension au centre mais, comme on va le voir au coup suivant, cette décision va leur coûter très cher : elle prépare, sans qu'ils s'en doutent encore, la création d'un pion noir passé sur la colonne e.",
+        moveSan: ["Qd1", "b4", "Nb1", "Bb5", "Rg1", "Bd6", "e4", "fxe4"],
+      },
+      {
+        title: "Rxf2! — le sacrifice qui crée le pion passé",
+        fen: "r4rk1/3q2pp/p2bp3/1b1p3n/1p1Pp3/6PP/PP1B1PBK/1NRQ2R1 w - - 0 21",
+        text: "21.Qxh5 regagne la pièce, mais 21...Rxf2!! est le coup qui décide de tout le reste de la partie. En échange de la qualité, les Noirs suppriment le SEUL pion blanc (f2) qui aurait jamais pu capturer leur pion e4 en route vers la promotion. À partir de cet instant précis, le pion e4 noir est un véritable pion passé — irrattrapable par aucun pion blanc, seules des pièces pourront désormais l'arrêter. Créer proprement le pion passé est la première étape du blocus ; le bloquer vient ensuite.",
+        moveSan: ["Qxh5", "Rxf2"],
+        highlights: [{ square: "e4", color: "red" }],
+      },
+      {
+        title: "Qe3! — le blocus (par la pièce la plus mal adaptée)",
+        fen: "r5k1/3q2pp/p2bp3/1b1p3Q/1p1Pp3/6PP/PP1B1rBK/1NR3R1 w - - 0 22",
+        text: "Après 22.Qg5 Raf8 23.Kh1 R8f5, les Blancs n'ont plus le choix : 24.Qe3! place la Dame directement devant le pion passé e4, sur la seule case qui l'empêche d'avancer. C'est un blocus au sens plein du terme — sauf que la Dame est, selon la théorie de Nimzowitsch lui-même, la PIRE pièce bloqueuse possible : elle immobilise la pièce la plus puissante de l'échiquier sur une tâche purement défensive. Que les Blancs en soient réduits à bloquer avec leur Dame montre à quel point leur position est déjà désespérée.",
+        moveSan: ["Qg5", "Raf8", "Kh1", "R8f5", "Qe3"],
+        highlights: [{ square: "e4", color: "red" }],
+        arrows: [{ from: "g5", to: "e3", color: "green" }],
+      },
+      {
+        title: "Bd3! puis h6 — le zugzwang final",
+        fen: "6k1/3q2pp/p2bp3/1b1p1r2/1p1Pp3/4Q1PP/PP1B1rB1/1NR3RK b - - 5 24",
+        text: "24...Bd3! attaque immédiatement la bloqueuse : le Fou noir s'installe au cœur du camp blanc et chasse la Dame de sa case de blocus. Après 25.Rce1 (les Blancs réorganisent tant bien que mal leur défense), le tranquille 25...h6 est le coup qui a donné son nom à la partie : ce non-coup ne menace rien de direct, mais chaque pièce blanche est déjà tellement occupée à restreindre et bloquer les Noirs — retenir le pion passé e4, couvrir la 1re rangée, éviter les mats de couloir — qu'aucun coup blanc ne reste inoffensif. C'est le zugzwang en plein milieu de partie, résultat direct du blocus imposé quelques coups plus tôt.",
+        moveSan: ["Bd3", "Rce1", "h6"],
+      },
+    ],
+  },
 };
