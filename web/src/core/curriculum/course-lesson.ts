@@ -2475,6 +2475,144 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // Modules 5 et 7 (2026-09-11, « Lot 3 » du cursus Jesper Hall — clôture des
+  // structures de pions du milieu de partie), même méthode que le Lot 2 :
+  // 7 chapitres tirés d'UNE partie réelle authentique, parsée et vérifiée
+  // coup par coup avec chess.js (`course-lesson.test.ts`) ; la même partie
+  // alimente aussi la vague de 14 puzzles du thème dans
+  // `MASTER_PUZZLES_DATASET`. Sur les 3 sources désignées par le cahier des
+  // charges, DEUX ont dû être vérifiées puis remplacées (même schéma qu'au
+  // Lot 2, présenté à l'utilisateur via question avant rédaction) :
+  //  - `jh-module-5` : « Fischer–Andersson, Belgrade 1970 » n'existe pas —
+  //    la vraie partie s'est jouée à Siegen (exhibition en marge de
+  //    l'Olympiade), pas à Belgrade. Gardée telle quelle, ville corrigée :
+  //    Robert Fischer – Ulf Andersson, Siegen 1970 (1-0, 43 coups,
+  //    chessgames.com/perl/chessgame?gid=1019452) — LA partie fondatrice du
+  //    Hérisson citée par l'article Wikipédia « Hedgehog (chess) » (« one of
+  //    the first games to feature this method of development »), qui a
+  //    d'ailleurs convaincu Andersson lui-même de devenir un spécialiste du
+  //    Hérisson après cette défaite.
+  //  - `jh-module-6` (chaîne de pions) : Nimzowitsch–Salwe, Karlsbad 1911
+  //    confirmée correcte — mais son thème catalogue avait déjà 21 chapitres
+  //    narratifs depuis le 2026-09-08 (voir plus haut) ; voir la note juste
+  //    avant `jh-module-6-la-chaine-de-pions-en-francais` plus bas pour la
+  //    méthode retenue (préfixe tutoriel, pas de remplacement).
+  //  - `jh-module-7` : « Botvinnik–Vidmar, Nottingham 1936 » est EXACTEMENT
+  //    la partie déjà écartée pour Carlsbad au Lot 2 (un classique de
+  //    l'isolani, pas des pions doublés) — recyclée par erreur par le cahier
+  //    des charges. Remplacée par Aron Nimzowitsch – Jose Raul Capablanca,
+  //    Saint-Pétersbourg 1914 (0-1, 42 coups,
+  //    chessgames.com/perl/chessgame?gid=1102386, « Burn the Witsch! ») :
+  //    9.Nxc6 bxc6 double authentiquement les pions c noirs, puis toute la
+  //    seconde moitié de la partie montre Capablanca compenser entièrement
+  //    cette faiblesse par l'activité de ses pièces — un premier chapitre
+  //    volontairement nuancé sur le thème plutôt qu'une démonstration à sens
+  //    unique.
+  "jh-module-5-le-herisson-hedgehog": {
+    steps: [
+      {
+        title: "Fischer – Andersson, Siegen 1970",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Une partie d'exhibition disputée en marge de l'Olympiade de Siegen, mais promise à devenir historique : Fischer adopte 1.b3, une mise en place dite « Hérisson inversé » — Blanc joue avec les pions restreints (b3, c4, e3) et le Fou fianchetto typiques du Hérisson noir, mais avec un temps de plus. PRO TIP de Jesper Hall : cette partie a tellement impressionné Andersson lui-même qu'il en est devenu, dans le camp adverse, l'un des plus grands spécialistes du vrai Hérisson.",
+        moveSan: ["b3", "e5", "Bb2", "Nc6", "c4", "Nf6", "e3", "Be7"],
+        highlights: [
+          { square: "b3", color: "green" },
+          { square: "c4", color: "green" },
+          { square: "e3", color: "green" },
+        ],
+      },
+      {
+        title: "La patience avant tout : ne rien précipiter",
+        fen: "r1bqk2r/ppppbppp/2n2n2/4p3/2P5/1P2P3/PB1P1PPP/RN1QKBNR w KQkq - 1 5",
+        text: "PRO TIP : le principe numéro un du Hérisson (dans un sens comme dans l'autre) est de ne fixer aucun pion avant d'avoir fini son développement. Fischer prend neuf coups pour ranger toutes ses pièces (a3, Qc2, d3, Nf3, Be2) sans jamais toucher à sa structure de pions b3-c4-e3 — la flexibilité reste entière tant que l'adversaire n'a pas révélé son propre plan.",
+        moveSan: ["a3", "O-O", "Qc2", "Re8", "d3", "Bf8", "Nf3", "a5", "Be2"],
+      },
+      {
+        title: "Andersson ouvre le centre — et perd le Hérisson",
+        fen: "r1bqrbk1/1ppp1ppp/2n2n2/p3p3/2P5/PP1PPN2/1BQ1BPPP/RN2K2R b KQ - 1 9",
+        text: "En jouant ...d5, Andersson renonce précisément à la retenue qui caractérise le Hérisson : le centre s'ouvre, ses pièces se dégagent, mais avec elles disparaît la principale arme défensive de la structure — la case d5 elle-même, que Fischer reprend aussitôt à son compte. PRO TIP : contre un Hérisson (ou son inverse), c'est souvent l'impatience du camp restreint qui offre à l'autre son premier vrai point d'appui.",
+        moveSan: ["d5", "cxd5", "Nxd5", "Nbd2", "f6", "O-O", "Be6"],
+        highlights: [{ square: "d5", color: "red" }],
+      },
+      {
+        title: "Kh1, Rg1, g4 : la méthode qui a donné son nom à la partie",
+        fen: "r2qrbk1/1pp3pp/2n1bp2/p2np3/8/PP1PPN2/1BQNBPPP/R4RK1 w - - 2 13",
+        text: "Le plan devenu manuel depuis cette partie précise, cité par l'article Wikipédia consacré au Hérisson : le Roi se met à l'abri sur h1, la Tour vient sur la colonne g AVANT que le pion g n'avance, puis g4 lance l'assaut. PRO TIP de Jesper Hall : contre une structure restreinte et sans contre-jeu central immédiat, une majorité de pions à l'aile roi doit toujours avancer précédée de ses pièces, jamais l'inverse.",
+        moveSan: ["Kh1", "Qd7", "Rg1", "Rad8", "Ne4", "Qf7", "g4"],
+        highlights: [{ square: "h1", color: "green" }, { square: "g1", color: "green" }],
+        arrows: [{ from: "g2", to: "g4", color: "green" }],
+      },
+      {
+        title: "Le second PRO TIP : la danse des pièces avant la percée",
+        fen: "3rr1k1/1pp2qbp/2n1bpp1/p2np3/4N1P1/PP1PPNR1/1BQ1BP1P/R6K w - - 2 18",
+        text: "Fischer double ses Tours derrière le pion g (Rag1) puis lance son Cavalier dans une longue série de sauts (Nc5-Nh4-Ne4-Nf5-Nc5) qui semblent ne rien faire — en réalité, chaque saut pousse une pièce noire à reculer d'une case, grignotant peu à peu l'espace de manœuvre d'Andersson jusqu'à l'étouffement complet.",
+        moveSan: ["Rag1", "Nb6", "Nc5", "Bc8", "Nh4", "Nd7", "Ne4", "Nf8", "Nf5", "Be6", "Nc5", "Ne7"],
+      },
+      {
+        title: "La percée : Nxg7 ! puis g5 !",
+        fen: "3rrnk1/1pp1nqbp/4bpp1/p1N1pN2/6P1/PP1PP1R1/1BQ1BP1P/6RK w - - 14 24",
+        text: "Le fruit de toute la manœuvre précédente : Nxg7 arrache le rempart du roi noir, puis g5 chasse le Cavalier tout juste réinstallé et prépare gxf6+, ouvrant définitivement les lignes contre un roi noir désormais totalement exposé.",
+        moveSan: ["Nxg7", "Kxg7", "g5", "Nf5", "Rf3", "b6", "gxf6+", "Kh8", "Nxe6", "Rxe6"],
+        highlights: [{ square: "g7", color: "red" }],
+      },
+      {
+        title: "Bxd6+, le coup qui décide",
+        fen: "5k2/2p2q1p/1p1n1Pn1/p3B1Q1/4PP2/PP5R/3r4/6RK w - - 3 43",
+        text: "Le clou final : Bxd6+ est un échec auquel Noir n'a aucune bonne réponse, la Dame blanche en g5 et la Tour h3 surveillant déjà toutes les issues autour du roi acculé — Andersson abandonne. Retenir la leçon complète : patience dans le développement, structure restreinte gardée flexible aussi longtemps que possible, puis assaut méthodique Kh1-Rg1-g4 d'un seul côté — exactement le manuel que Wikipédia cite comme fondateur du Hérisson moderne.",
+        moveSan: ["Bxd6+"],
+      },
+    ],
+  },
+  "jh-module-7-structures-a-pions-doubles": {
+    steps: [
+      {
+        title: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Le tournoi le plus légendaire de l'histoire pré-moderne : Lasker, Capablanca, Alekhine, Tarrasch, Marshall et Nimzowitsch s'y affrontent tous. Face au futur théoricien de « Mon Système », Capablanca choisit une défense Steinitz différée contre l'Espagnole. PRO TIP de Jesper Hall pour ce module : les pions doublés ont mauvaise réputation, mais cette partie va montrer à la fois comment ils naissent ET comment ils peuvent être entièrement compensés.",
+        moveSan: ["e4", "e5", "Nf3", "Nc6", "Nc3", "Nf6", "Bb5", "d6", "d4", "Bd7"],
+      },
+      {
+        title: "Bxc6 : Nimzowitsch échange son bon Fou",
+        fen: "r2qkb1r/pppb1ppp/2np1n2/1B2p3/3PP3/2N2N2/PPP2PPP/R1BQK2R w KQkq - 1 6",
+        text: "Premier temps du plan : Nimzowitsch cède volontairement la paire de Fous en échangeant sur c6. Ce choix n'a de sens qu'en vue d'une seconde opération, quelques coups plus tard, sur cette même case c6 — préparer la naissance de pions doublés chez l'adversaire vaut parfois de céder un léger avantage immédiat.",
+        moveSan: ["Bxc6", "Bxc6", "Qd3", "exd4", "Nxd4"],
+        highlights: [{ square: "c6", color: "green" }],
+      },
+      {
+        title: "Nxc6 ! bxc6 — les pions doublés naissent",
+        fen: "r2qkb1r/ppp2p1p/2bp1np1/8/3NP3/2NQ4/PPP2PPP/R1B1K2R w KQkq - 0 9",
+        text: "Le moment clé du thème : en échangeant son Cavalier contre le Fou noir revenu sur c6, Nimzowitsch force Noir à reprendre du pion b — Capablanca se retrouve avec deux pions sur la colonne c (c6 et c7), doublés et incapables de se défendre mutuellement. PRO TIP : des pions doublés créent presque toujours un SECOND défaut collatéral — ici, la colonne b totalement ouverte pour les pièces blanches.",
+        moveSan: ["Nxc6", "bxc6"],
+        highlights: [{ square: "c6", color: "red" }, { square: "c7", color: "red" }],
+        arrows: [{ from: "b7", to: "c6", color: "red" }],
+      },
+      {
+        title: "La Dame blanche exploite aussitôt la faiblesse",
+        fen: "r2qkb1r/p1p2p1p/2pp1np1/8/4P3/2NQ4/PPP2PPP/R1B1K2R w KQkq - 0 10",
+        text: "Sans perdre un instant, Nimzowitsch envoie sa Dame sur les cases fraîchement affaiblies par l'échange : Qa6 puis Qb7 grignotent déjà le pion a7. PRO TIP : la vraie faiblesse d'un pion doublé n'est presque jamais le pion lui-même, mais l'espace et les cases que sa disparition ou son immobilité laissent aux pièces adverses.",
+        moveSan: ["Qa6", "Qd7", "Qb7", "Rc8", "Qxa7"],
+      },
+      {
+        title: "La réponse de Capablanca : l'activité plutôt que la passivité",
+        fen: "2r1r1k1/2p2pbp/2ppq1p1/8/2n1P3/2N2P2/PPPBQ1PP/R4RK1 w - - 5 19",
+        text: "Plutôt que de défendre indéfiniment ses pions faibles, Capablanca choisit exactement le remède classique : l'activité maximale de ses pièces. Son Cavalier saute sur c4, sa Dame prend des postes agressifs — la meilleure défense contre une structure abîmée n'est presque jamais statique. PRO TIP de Jesper Hall : des pions doublés ne sont un handicap réel QUE si le camp qui les possède reste passif.",
+        moveSan: ["Rab1", "Ra8", "a4", "Nxd2", "Qxd2", "Qc4"],
+      },
+      {
+        title: "Le paiement en retour : Rxb2",
+        fen: "1r4k1/2p2p1p/2pp2p1/6Q1/Prq1P3/2N2P2/1PP3PP/3R3K w - - 2 28",
+        text: "La boucle se ferme : la colonne b, ouverte par le tout premier échange (9...bxc6) qui avait créé les pions doublés noirs, sert désormais de rampe d'accès à la Tour noire — qui vient croquer le pion b2 blanc. La compensation est déjà totale.",
+        moveSan: ["h4", "Rxb2"],
+        highlights: [{ square: "b2", color: "red" }],
+      },
+      {
+        title: "Nimzowitsch abandonne",
+        fen: "6k1/r1p2p1p/2p3p1/2qp4/7R/2N2P2/1rPQ2PK/8 w - - 0 42",
+        text: "Nimzowitsch, matériel et position totalement compromis, joue son dernier coup avant d'abandonner. Le bilan complet du module : oui, les pions doublés sont une faiblesse structurelle réelle (Nxc6/bxc6 puis Qa6/Qb7 le montrent) — mais l'activité des pièces, le plan choisi ici par Capablanca, peut totalement l'annuler, voire la retourner contre son adversaire. Un premier chapitre volontairement nuancé, avant des démonstrations plus tranchées ailleurs dans le catalogue.",
+        moveSan: ["Nd1"],
+      },
+    ],
+  },
   "jh-module-11-les-finales-de-tours-pratiques": {
     steps: [
       {
@@ -2562,8 +2700,62 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // Préfixe tutoriel du 2026-09-11 (Lot 3) : `jh-module-6-la-chaine-de-pions-en-francais`
+  // portait déjà, depuis le 2026-09-08, 21 chapitres narratifs (3 parties
+  // réelles complètes — Najdorf-Gligoric, Nimzowitsch-Salwe, Spassky-Korchnoi,
+  // voir plus haut) mais aucun tutoriel théorique. Même méthode que
+  // `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier` (2026-09-10) : les 6
+  // chapitres ci-dessous sont PRÉFIXÉS avant les 21 existants, INCHANGÉS —
+  // jamais un remplacement. Sourcés de la même partie Nimzowitsch–Salwe,
+  // Karlsbad 1911 déjà utilisée plus loin dans ce thème (chapitres 7 à 15) et
+  // par `pm-la-surprotection-nimzowitsch`, mais volontairement limités à ses
+  // tout premiers coups (1 à 7) : le principe « attaquer la base, pas la
+  // tête » qui donne son nom au chapitre « The Pawn-Chain » de « Mon Système ».
   "jh-module-6-la-chaine-de-pions-en-francais": {
     steps: [
+      {
+        title: "La chaîne se verrouille : d4-e5 contre d5-e6",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Dès le troisième coup, la Défense française prend sa forme la plus caractéristique : Blanc pousse e5, verrouillant deux chaînes de pions diagonales imbriquées — d4-e5 pour Blanc, d5-e6 pour Noir. PRO TIP de Jesper Hall : dans une chaîne de pions, chaque maillon a un rôle précis — la BASE (le pion le plus en arrière, ici d4) est toujours le point faible ; la TÊTE (le pion le plus avancé, ici e5) est en général bien défendue et sans grand intérêt à attaquer directement.",
+        moveSan: ["e4", "e6", "d4", "d5", "e5"],
+        highlights: [
+          { square: "d4", color: "red" },
+          { square: "e5", color: "green" },
+        ],
+      },
+      {
+        title: "Noir applique aussitôt la règle d'or",
+        fen: "rnbqkbnr/ppp2ppp/4p3/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3",
+        text: "...c5 ! Noir n'attend pas une seconde pour appliquer le principe fondamental : viser la BASE de la chaîne adverse (d4), jamais sa tête. C'est exactement ce réflexe — canonisé depuis par Nimzowitsch lui-même dans « Mon Système » à partir de CETTE partie précise — que ce module veut vous transmettre.",
+        moveSan: ["c5"],
+        highlights: [{ square: "d4", color: "red" }],
+        arrows: [{ from: "c5", to: "d4", color: "red" }],
+      },
+      {
+        title: "Blanc renforce sa base avant l'assaut",
+        fen: "rnbqkbnr/pp3ppp/4p3/2ppP3/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4",
+        text: "Réponse logique : c3 vient étayer la base d4 avant même qu'elle ne soit sérieusement menacée. PRO TIP : protéger une base MENACÉE est une nécessité ; la protéger par anticipation, avant la menace, est un signe de maîtrise.",
+        moveSan: ["c3"],
+        highlights: [{ square: "d4", color: "green" }],
+      },
+      {
+        title: "Chaque camp développe vers son propre flanc",
+        fen: "rnbqkbnr/pp3ppp/4p3/2ppP3/3P4/2P5/PP3PPP/RNBQKBNR b KQkq - 0 4",
+        text: "Les pièces se placent naturellement en fonction de la direction de la chaîne : le Cavalier noir vient sur c6 pour appuyer la pression sur d4, la Dame se poste en b6 sur la même diagonale, pendant que le Fou blanc se dirige vers d3, sur la diagonale qui deviendra utile à l'aile roi — exactement là où pointe la tête e5 de sa propre chaîne.",
+        moveSan: ["Nc6", "Nf3", "Qb6", "Bd3", "Bd7"],
+      },
+      {
+        title: "Céder un maillon plutôt que le défendre indéfiniment",
+        fen: "r3kbnr/pp1b1ppp/1qn1p3/2ppP3/3P4/2PB1N2/PP3PPP/RNBQK2R w KQkq - 5 7",
+        text: "Plutôt que de prolonger la défense de d4 coup après coup, Blanc cède lui-même ce maillon contre le pion c5 noir. PRO TIP : perdre un pion de la chaîne n'est pas nécessairement une erreur — ici, Blanc gagne du temps de développement et conserve intacte sa tête e5, désormais une véritable épine isolée dans le camp noir.",
+        moveSan: ["dxc5", "Bxc5"],
+        highlights: [{ square: "e5", color: "green" }],
+      },
+      {
+        title: "Un premier aperçu du principe en place",
+        fen: "r3k1nr/pp1b1ppp/1qn1p3/2bpP3/8/2PB1N2/PP3PPP/RNBQK2R w KQkq - 0 8",
+        text: "La base d4 a disparu, mais le principe qu'elle illustrait reste entier — et c'est loin d'être la fin de l'histoire de cette chaîne de pions dans cette partie. Les chapitres qui suivent explorent le thème à travers trois parties de maîtres bien distinctes : Najdorf-Gligoric (la variante qui a donné son nom au plan complet des deux chaînes opposées), CETTE partie Nimzowitsch-Salwe rejouée en intégralité jusqu'à l'abandon noir, puis Spassky-Korchnoi (la même structure fondamentale reprise à l'ère moderne).",
+      },
       {
         title: "Miguel Najdorf – Svetozar Gligoric, Mar del Plata 1953",
         fen: "r1bq1rk1/ppp2pbp/2np1np1/3Pp3/2P1P3/2N2N2/PP2BPPP/R1BQ1RK1 b - - 0 8",

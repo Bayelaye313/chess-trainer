@@ -3248,30 +3248,77 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     rating: 1720,
     sourceRef: "Lutz – Vokac, Dortmund 1991 (48.Rd4 Re4 49.Rxe4) : conversion technique vers le gain.",
   },
-  {
-    themeId: "jh-module-5-le-herisson-hedgehog",
-    fen: "rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1 w kq - 0 9",
-    solution: ["f1d1","a7a6","b2b3"],
-    solutionSan: ["Rd1","a6","b3"],
-    rating: 1699,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-6-la-chaine-de-pions-en-francais",
-    fen: "r1b1kb1r/pp3ppp/1qn1p3/3pPn2/3P4/2N2N2/PP2BPPP/R1BQK2R w KQkq - 3 9",
-    solution: ["c3a4","b6a5","c1d2"],
-    solutionSan: ["Na4","Qa5+","Bd2"],
-    rating: 1689,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-7-structures-a-pions-doubles",
-    fen: "rn1q1rk1/pbp2ppp/1p1ppn2/8/2P5/P1Q2NP1/1P1PPPBP/R1B1K2R w KQ - 0 9",
-    solution: ["e1g1","b8d7","d2d4"],
-    solutionSan: ["O-O","Nbd7","d4"],
-    rating: 1703,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
+  // `jh-module-5-le-herisson-hedgehog` : 14 exercices (2026-09-11, Lot 3 du
+  // cursus Jesper Hall), tirés de la partie RÉELLE Robert Fischer – Ulf
+  // Andersson, Siegen 1970 (chessgames.com/perl/chessgame?gid=1019452) — LA
+  // partie fondatrice du Hérisson citée par l'article Wikipédia « Hedgehog
+  // (chess) ». Le cahier des charges désignait « Belgrade 1970 », qui
+  // n'existe pas : la partie réelle s'est jouée à Siegen, gardée telle
+  // quelle une fois la ville corrigée (voir docstring de `course-lesson.ts`
+  // pour le détail de la vérification).
+  ...[
+    { fen: "r1bqrbk1/1ppp1ppp/2n2n2/p3p3/2P5/PP1PPN2/1BQ2PPP/RN2KB1R w KQ - 0 9", solution: ["f1e2"], solutionSan: ["Be2"], rating: 1500, sourceRef: "Fischer – Andersson, Siegen 1970 (9.Be2) : dernier coup de développement avant que la tension centrale ne se résolve." },
+    { fen: "r1bqrbk1/1ppp1ppp/2n2n2/p3p3/2P5/PP1PPN2/1BQ1BPPP/RN2K2R b KQ - 1 9", solution: ["d7d5"], solutionSan: ["d5"], rating: 1520, sourceRef: "Fischer – Andersson, Siegen 1970 (9...d5) : Andersson ouvre lui-même le centre, renonçant à la retenue du Hérisson." },
+    { fen: "r1bqrbk1/1pp2ppp/2n2n2/p2pp3/2P5/PP1PPN2/1BQ1BPPP/RN2K2R w KQ - 0 10", solution: ["c4d5"], solutionSan: ["cxd5"], rating: 1540, sourceRef: "Fischer – Andersson, Siegen 1970 (10.cxd5) : Fischer clarifie aussitôt la position centrale." },
+    { fen: "r1bqrbk1/1pp2ppp/2n5/p2np3/8/PP1PPN2/1BQ1BPPP/RN2K2R w KQ - 0 11", solution: ["b1d2"], solutionSan: ["Nbd2"], rating: 1560, sourceRef: "Fischer – Andersson, Siegen 1970 (11.Nbd2) : le Cavalier rejoint le jeu avant tout engagement à l'aile roi." },
+    { fen: "r2qrbk1/1pp3pp/2n1bp2/p2np3/8/PP1PPN2/1BQNBPPP/R4RK1 w - - 2 13", solution: ["g1h1"], solutionSan: ["Kh1"], rating: 1580, sourceRef: "Fischer – Andersson, Siegen 1970 (13.Kh1) : premier temps du plan devenu manuel — le Roi se met hors de la colonne g avant qu'elle ne s'ouvre." },
+    { fen: "r3rbk1/1ppq2pp/2n1bp2/p2np3/8/PP1PPN2/1BQNBPPP/R4R1K w - - 4 14", solution: ["f1g1"], solutionSan: ["Rg1"], rating: 1600, sourceRef: "Fischer – Andersson, Siegen 1970 (14.Rg1) : la Tour rejoint la colonne g AVANT l'avance du pion, jamais l'inverse." },
+    { fen: "3rrbk1/1pp2qpp/2n1bp2/p2np3/4N3/PP1PPN2/1BQ1BPPP/R5RK w - - 8 16", solution: ["g2g4"], solutionSan: ["g4"], rating: 1620, sourceRef: "Fischer – Andersson, Siegen 1970 (16.g4) : l'assaut de pions commence enfin, pièces déjà en place." },
+    { fen: "3rr1k1/1pp2qbp/2n1bpp1/p2np3/4N1P1/PP1PPNR1/1BQ1BP1P/R6K w - - 2 18", solution: ["a1g1"], solutionSan: ["Rag1"], rating: 1640, sourceRef: "Fischer – Andersson, Siegen 1970 (18.Rag1) : la seconde Tour double sur la colonne g." },
+    { fen: "2brr1k1/1pp2qbp/1nn2pp1/p1N1p3/6P1/PP1PPNR1/1BQ1BP1P/6RK w - - 6 20", solution: ["f3h4"], solutionSan: ["Nh4"], rating: 1660, sourceRef: "Fischer – Andersson, Siegen 1970 (20.Nh4) : le Cavalier poursuit sa longue danse de regroupement avant la percée." },
+    { fen: "3rrnk1/1pp1nqbp/4bpp1/p1N1pN2/6P1/PP1PP1R1/1BQ1BP1P/6RK w - - 14 24", solution: ["f5g7","g8g7"], solutionSan: ["Nxg7","Kxg7"], rating: 1680, sourceRef: "Fischer – Andersson, Siegen 1970 (24.Nxg7 Kxg7) : le sacrifice qui arrache le rempart du roi noir." },
+    { fen: "3rrn2/1pp1nqkp/4bpp1/p1N1p3/6P1/PP1PP1R1/1BQ1BP1P/6RK w - - 0 25", solution: ["g4g5"], solutionSan: ["g5"], rating: 1700, sourceRef: "Fischer – Andersson, Siegen 1970 (25.g5) : le pion chasse le Cavalier tout juste réinstallé." },
+    { fen: "3rrn2/2p2qkp/1p2bpp1/p1N1pnP1/8/PP1PPR2/1BQ1BP1P/6RK w - - 0 27", solution: ["g5f6"], solutionSan: ["gxf6+"], rating: 1720, sourceRef: "Fischer – Andersson, Siegen 1970 (27.gxf6+) : la percée de pions ouvre définitivement les lignes." },
+    { fen: "3rrn1k/2p2q1p/1p2bPp1/p1N1pn2/8/PP1PPR2/1BQ1BP1P/6RK w - - 1 28", solution: ["c5e6","e8e6"], solutionSan: ["Nxe6","Rxe6"], rating: 1740, sourceRef: "Fischer – Andersson, Siegen 1970 (28.Nxe6 Rxe6) : clearance tactique qui prépare la percée centrale d4." },
+    { fen: "5k2/2p2q1p/1p1n1Pn1/p3B1Q1/4PP2/PP5R/3r4/6RK w - - 3 43", solution: ["e5d6"], solutionSan: ["Bxd6+"], rating: 1760, sourceRef: "Fischer – Andersson, Siegen 1970 (43.Bxd6+) : le coup final, Andersson abandonne." },
+  ].map((p) => ({ themeId: "jh-module-5-le-herisson-hedgehog", ...p })),
+  // `jh-module-6-la-chaine-de-pions-en-francais` : 14 exercices de plus
+  // (2026-09-11, Lot 3), tirés de la même partie Nimzowitsch–Salwe, Karlsbad
+  // 1911 déjà utilisée par le tutoriel ci-dessus (`COURSE_LESSONS`) et par
+  // `pm-la-surprotection-nimzowitsch` — plis DISTINCTS de ceux déjà
+  // sélectionnés par cette dernière (aucune collision de FEN), centrés sur
+  // le développement et la manœuvre base/tête plutôt que sur la
+  // surprotection de e5.
+  ...[
+    { fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", solution: ["e2e4"], solutionSan: ["e4"], rating: 1500, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (1.e4) : le tout premier coup de la partie fondatrice du chapitre « The Pawn-Chain »." },
+    { fen: "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", solution: ["d2d4"], solutionSan: ["d4"], rating: 1515, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (2.d4) : Blanc installe le second pion central avant le verrouillage." },
+    { fen: "rnbqkbnr/pp3ppp/4p3/2ppP3/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4", solution: ["c2c3"], solutionSan: ["c3"], rating: 1530, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (4.c3) : la base d4 est renforcée par anticipation." },
+    { fen: "r1bqkbnr/pp3ppp/2n1p3/2ppP3/3P4/2P5/PP3PPP/RNBQKBNR w KQkq - 1 5", solution: ["g1f3"], solutionSan: ["Nf3"], rating: 1545, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (5.Nf3) : développement naturel avant tout engagement." },
+    { fen: "r1b1kbnr/pp3ppp/1qn1p3/2ppP3/3P4/2P2N2/PP3PPP/RNBQKB1R w KQkq - 3 6", solution: ["f1d3"], solutionSan: ["Bd3"], rating: 1560, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (6.Bd3) : le Fou se dirige vers l'aile roi, dans l'axe de la tête e5." },
+    { fen: "r3k1nr/pp1b1ppp/1qn1p3/2bpP3/8/2PB1N2/PP3PPP/RNBQK2R w KQkq - 0 8", solution: ["e1g1"], solutionSan: ["O-O"], rating: 1575, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (8.O-O) : Blanc met son Roi à l'abri avant les opérations à venir." },
+    { fen: "r3k1nr/pp1b2pp/1qn1pp2/2bpP3/8/2PB1N2/PP3PPP/RNBQ1RK1 w kq - 0 9", solution: ["b2b4"], solutionSan: ["b4"], rating: 1590, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (9.b4) : premier signe de l'expansion à l'aile dame." },
+    { fen: "r3k2r/pp1bb1pp/1q2pn2/3pB3/1P6/2PB4/P4PPP/RN1Q1RK1 w kq - 1 13", solution: ["b1d2"], solutionSan: ["Nd2"], rating: 1605, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (13.Nd2) : regroupement du Cavalier vers l'aile roi." },
+    { fen: "r4rk1/pp1bb1pp/1q2pn2/3pB3/1P6/2PB4/P2N1PPP/R2Q1RK1 w - - 3 14", solution: ["d2f3"], solutionSan: ["Nf3"], rating: 1620, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (14.Nf3) : le Cavalier reprend sa route vers e5." },
+    { fen: "r4rk1/pp1b2pp/1q1bpn2/3pB3/1P6/2PB1N2/P4PPP/R2Q1RK1 w - - 5 15", solution: ["d1e2"], solutionSan: ["Qe2"], rating: 1635, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (15.Qe2) : la Dame se prépare à rejoindre l'aile roi." },
+    { fen: "2r1brk1/pp4pp/2q1pn2/3pB3/1P6/2PB4/P3QPPP/4RRK1 w - - 1 20", solution: ["e5d4"], solutionSan: ["Bd4"], rating: 1650, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (20.Bd4) : le Fou recule mais garde la grande diagonale sous contrôle." },
+    { fen: "2r3k1/pp1b1rpp/2q1pn2/3p4/1P1B4/2PB4/P1Q2PPP/4RRK1 w - - 5 22", solution: ["e1e3"], solutionSan: ["Re3"], rating: 1665, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (22.Re3) : la Tour se prépare à basculer vers l'aile roi." },
+    { fen: "2r3k1/p2b1rpp/1pq1pn2/3p4/1P1B4/2PBR3/P1Q2PPP/5RK1 w - - 0 23", solution: ["e3g3"], solutionSan: ["Rg3"], rating: 1680, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (23.Rg3) : la Tour rejoint la colonne g, l'assaut final se prépare." },
+    { fen: "7k/p2br1p1/1p1q1nB1/4p1B1/1P1p4/2r3R1/P1Q2PPP/4R1K1 w - - 0 29", solution: ["g3c3","d4c3"], solutionSan: ["Rxc3","dxc3"], rating: 1695, sourceRef: "Nimzowitsch – Salwe, Karlsbad 1911 (29.Rxc3 dxc3) : le dernier maillon de la chaîne noire tombe, réduisant la contre-attaque à néant." },
+  ].map((p) => ({ themeId: "jh-module-6-la-chaine-de-pions-en-francais", ...p })),
+  // `jh-module-7-structures-a-pions-doubles` : 14 exercices (2026-09-11, Lot
+  // 3), tirés de la partie RÉELLE Aron Nimzowitsch – Jose Raul Capablanca,
+  // Saint-Pétersbourg 1914 (chessgames.com/perl/chessgame?gid=1102386,
+  // « Burn the Witsch! »). Le cahier des charges désignait
+  // « Botvinnik–Vidmar, Nottingham 1936 » — exactement la partie déjà
+  // écartée pour Carlsbad au Lot 2 (un isolani, pas des pions doublés) —
+  // remplacée après vérification présentée à l'utilisateur (voir docstring
+  // de `course-lesson.ts`).
+  ...[
+    { fen: "r2qkb1r/pppb1ppp/2np1n2/1B2p3/3PP3/2N2N2/PPP2PPP/R1BQK2R w KQkq - 1 6", solution: ["b5c6"], solutionSan: ["Bxc6"], rating: 1500, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (6.Bxc6) : Nimzowitsch cède la paire de Fous en préparation du plan sur c6." },
+    { fen: "r2qkb1r/ppp2ppp/2bp1n2/8/3pP3/2NQ1N2/PPP2PPP/R1B1K2R w KQkq - 0 8", solution: ["f3d4"], solutionSan: ["Nxd4"], rating: 1520, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (8.Nxd4) : reprise centrale avant l'opération décisive." },
+    { fen: "r2qkb1r/ppp2p1p/2bp1np1/8/3NP3/2NQ4/PPP2PPP/R1B1K2R w KQkq - 0 9", solution: ["d4c6","b7c6"], solutionSan: ["Nxc6","bxc6"], rating: 1540, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (9.Nxc6 bxc6) : les pions c noirs sont doublés — le thème du module naît ici." },
+    { fen: "r2qkb1r/p1p2p1p/2pp1np1/8/4P3/2NQ4/PPP2PPP/R1B1K2R w KQkq - 0 10", solution: ["d3a6"], solutionSan: ["Qa6"], rating: 1560, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (10.Qa6) : la Dame blanche s'engouffre aussitôt dans les cases affaiblies." },
+    { fen: "r3kb1r/p1pq1p1p/Q1pp1np1/8/4P3/2N5/PPP2PPP/R1B1K2R w KQkq - 2 11", solution: ["a6b7"], solutionSan: ["Qb7"], rating: 1580, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (11.Qb7) : la Dame continue de grignoter l'aile dame noire." },
+    { fen: "2r1kb1r/pQpq1p1p/2pp1np1/8/4P3/2N5/PPP2PPP/R1B1K2R w KQk - 4 12", solution: ["b7a7"], solutionSan: ["Qxa7"], rating: 1600, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (12.Qxa7) : un premier pion tombe, fruit direct de la faiblesse structurelle." },
+    { fen: "2r1r1k1/2p2pbp/2ppq1p1/8/2n1P3/2N2P2/PPPBQ1PP/R4RK1 w - - 5 19", solution: ["a1b1"], solutionSan: ["Rab1"], rating: 1620, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (19.Rab1) : Nimzowitsch se met en position de défendre b2, désormais visé en retour." },
+    { fen: "r3r1k1/2p2pbp/2ppq1p1/8/2n1P3/2N2P2/PPPBQ1PP/1R3RK1 w - - 7 20", solution: ["a2a4"], solutionSan: ["a4"], rating: 1640, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (20.a4) : Blanc poursuit son expansion à l'aile dame." },
+    { fen: "r3r1k1/2p2pbp/2ppq1p1/8/P1n1P3/2N2P2/1PPBQ1PP/1R3RK1 b - - 0 20", solution: ["c4d2","e2d2"], solutionSan: ["Nxd2","Qxd2"], rating: 1660, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (20...Nxd2 21.Qxd2) : Capablanca échange pour garder l'initiative, pas pour simplifier passivement." },
+    { fen: "r5k1/2p2pbp/2pp2p1/8/Prq1P3/2N1QP2/1PP3PP/1R1R2K1 w - - 5 24", solution: ["e3g5"], solutionSan: ["Qg5"], rating: 1680, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (24.Qg5) : Nimzowitsch cherche des complications, la position déjà tendue." },
+    { fen: "1r4k1/2p2p1p/2pp2p1/6Q1/PrqbP3/2N2P2/1PP3PP/1R1R3K w - - 9 26", solution: ["d1d4","c4d4"], solutionSan: ["Rxd4","Qxd4"], rating: 1700, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (26.Rxd4 Qxd4) : échange central, la Dame noire prend une position dominante." },
+    { fen: "1r4k1/2p2p1p/2pp2p1/6Q1/Prq1P2P/2N2P2/1PP3P1/3R3K b - - 0 28", solution: ["b4b2"], solutionSan: ["Rxb2"], rating: 1720, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (28...Rxb2) : la Tour noire referme la boucle ouverte par bxc6 dix-neuf coups plus tôt." },
+    { fen: "r5k1/P1p2p1p/2pp2p1/2q5/4P3/2N2P2/1rPQ2P1/R6K w - - 1 37", solution: ["e4e5","c5e5"], solutionSan: ["e5","Qxe5"], rating: 1740, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (37.e5 Qxe5) : un second pion blanc tombe, la compensation dépasse maintenant la faiblesse initiale." },
+    { fen: "6k1/r1p2p1p/2p3p1/2qp4/7R/2N2P2/1rPQ2PK/8 w - - 0 42", solution: ["c3d1"], solutionSan: ["Nd1"], rating: 1760, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (42.Nd1) : dernier coup avant l'abandon de Nimzowitsch." },
+  ].map((p) => ({ themeId: "jh-module-7-structures-a-pions-doubles", ...p })),
   {
     themeId: "jh-module-8-le-roque-oppose-et-l-attaque-de-pions",
     fen: "r1bq1rk1/pp2ppbp/2n3p1/2p5/2BPP3/2P1B3/P3NPPP/R2QK2R w KQ - 4 10",

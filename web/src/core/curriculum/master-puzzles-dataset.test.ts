@@ -129,8 +129,21 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // minorité déjà cité par l'article Wikipédia « Minority attack ») et
     // `jh-module-4-la-structure-maroczy` (14, Lutz-Vokac, Dortmund-B 1991,
     // sourcée via l'étude Lichess S5BJsGLV) remplacent chacune leur unique
-    // ligne théorique par une vague réelle de 14 puzzles.
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(535);
+    // ligne théorique par une vague réelle de 14 puzzles. Puis Lot 3
+    // (2026-09-11, même jour, clôture des structures de pions du milieu de
+    // partie) : `jh-module-5-le-herisson-hedgehog` (14, Fischer-Andersson,
+    // Siegen 1970 — « Belgrade 1970 » du cahier des charges n'existe pas,
+    // même partie gardée ville corrigée, LA partie fondatrice du Hérisson
+    // selon Wikipédia), `jh-module-6-la-chaine-de-pions-en-francais` (14 de
+    // plus, Nimzowitsch-Salwe Karlsbad 1911 — même partie que le tutoriel
+    // ajouté à `COURSE_LESSONS` et que `pm-la-surprotection-nimzowitsch`,
+    // plis distincts, aucune collision de FEN) et
+    // `jh-module-7-structures-a-pions-doubles` (14, Nimzowitsch-Capablanca,
+    // Saint-Pétersbourg 1914 — « Botvinnik-Vidmar Nottingham 1936 » du
+    // cahier des charges est exactement la partie déjà écartée pour Carlsbad
+    // au Lot 2, un isolani et non des pions doublés) remplacent chacune leur
+    // unique ligne théorique par une vague réelle de 14 puzzles.
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(574);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -162,6 +175,9 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "jh-module-2-jouer-contre-l-isolani": 14,
       "jh-module-3-la-structure-carlsbad": 14,
       "jh-module-4-la-structure-maroczy": 14,
+      "jh-module-5-le-herisson-hedgehog": 14,
+      "jh-module-6-la-chaine-de-pions-en-francais": 14,
+      "jh-module-7-structures-a-pions-doubles": 14,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);
