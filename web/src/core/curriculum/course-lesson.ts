@@ -151,6 +151,15 @@ export interface CourseLesson {
  * `jh-module-11-les-finales-de-tours-pratiques` ; Fous de couleurs opposées →
  * `jh-module-12-les-finales-de-fous-de-couleurs-opposees`.
  *
+ * Lot 6 (2026-09-12) ajoute deux modules de plus, tous deux avec un premier
+ * tutoriel réel (aucun contenu préexistant) : `jh-module-14-l-art-de-la-conversion`
+ * (7 chapitres, Fischer–Taimanov, Vancouver 1971 Candidats partie 4, 71 coups)
+ * et `jh-module-15-fou-contre-cavalier-mode-d-emploi` (6 chapitres,
+ * Capablanca–Steiner, exhibition d'échecs vivants de Los Angeles 1933, mat en
+ * 25 coups — partie qui alimente aussi 5 puzzles de
+ * `pm-la-securite-du-roi-en-milieu-de-partie` sous un angle différent, voir
+ * le commentaire détaillé au-dessus de son entrée).
+ *
  * **Piège rencontré, à surveiller sur tout futur lot de cette bibliothèque :**
  * les fichiers `PILOT_03_*` à `PILOT_09_*` (21 des 30 parties du premier
  * lot) ont été enregistrés par la session source sans accents français (bug
@@ -3457,6 +3466,129 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // (2026-09-12, Lot 6) `jh-module-14` : Fischer (Blancs) – Taimanov (Noirs),
+  // Vancouver 1971, Candidats quart de finale, partie 4 (B47, Sicilienne
+  // Taimanov/Bastrikov), 71 coups, 1-0 (abandon). LA partie assignée par le
+  // cahier des charges, vérifiée exacte (couleurs et ronde). 141 demi-coups
+  // intégralement rejoués et vérifiés avec chess.js — la plus longue partie
+  // de tout le cursus Jesper Hall à ce jour, parfaite pour « l'art de la
+  // conversion » : Fischer transforme un minuscule avantage structurel
+  // (Fou contre Cavalier, pion c5 noir isolé) en victoire par quarante coups
+  // de restriction patiente avant le moindre gain matériel concret.
+  "jh-module-14-l-art-de-la-conversion": {
+    steps: [
+      {
+        title: "Robert James Fischer – Mark Taimanov, Vancouver 1971 (Candidats, partie 4)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Sicilienne Taimanov : une mise en place flexible, rien d'agressif encore. PRO TIP de Jesper Hall pour tout ce module : l'art de la conversion ne se joue JAMAIS dans un unique coup brillant — il se construit sur des dizaines de coups patients, en restreignant méthodiquement les ressources de l'adversaire AVANT même de songer à gagner la moindre chose concrète. Cette partie de 71 coups, la plus longue démonstration technique du cursus, en est l'exemple parfait.",
+        moveSan: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "Qc7", "Nc3", "e6", "g3", "a6", "Bg2", "Nf6"],
+      },
+      {
+        title: "Fischer – Taimanov : coups 8 à 13, la mise en place",
+        fen: "r1b1kb1r/1pqp1ppp/p1n1pn2/8/3NP3/2N3P1/PPP2PBP/R1BQK2R w KQkq - 2 8",
+        text: "Échange au centre, développement classique des deux camps (Bc5, Bf4, Qd2, Rad1, e5, Be3) — rien ne distingue encore cette position d'un milieu de partie ordinaire. C'est précisément le piège : la conversion se prépare bien avant qu'elle ne devienne visible.",
+        moveSan: ["O-O", "Nxd4", "Qxd4", "Bc5", "Bf4", "d6", "Qd2", "h6", "Rad1", "e5", "Be3", "Bg4"],
+      },
+      {
+        title: "Fischer – Taimanov : coup 14, Bxc5! — la première graine de la conversion",
+        fen: "r3k2r/1pq2pp1/p2p1n1p/2b1p3/4P1b1/2N1B1P1/PPPQ1PBP/3R1RK1 w kq - 2 14",
+        text: "Fischer échange volontairement son Fou contre celui de Taimanov, acceptant de laisser Noir avec un pion c5 isolé après ...dxc5. PRO TIP : une conversion réussie commence souvent par CRÉER, à peu de frais, une faiblesse durable et fixe — ici une cible que Fischer visera méthodiquement pendant les cinquante coups suivants, bien avant de songer à la capturer.",
+        moveSan: ["Bxc5", "dxc5", "f3", "Be6", "f4", "Rd8"],
+        highlights: [{ square: "c5", color: "red" }],
+      },
+      {
+        title: "Fischer – Taimanov : coup 17, Nd5! — la combinaison qui juge la finale AVANT de la forcer",
+        fen: "3rk2r/1pq2pp1/p3bn1p/2p1p3/4PP2/2N3P1/PPPQ2BP/3R1RK1 w k - 1 17",
+        text: "Nd5! force une cascade d'échanges (Bxd5, exd5, e4, Rfe1, Rxd5, Rxe4+) menant tout droit à un échange de Dames (23...Qxb1... ici Qd7 puis Qxd7+ Kxd7). PRO TIP central du module : AVANT de forcer une telle séquence, Fischer a déjà jugé la finale de Tour + Fou contre Tour + Cavalier qui en résultera — le pion c5 isolé, le Fou de cases claires supérieur au Cavalier, et un Roi noir qui devra défendre seul les deux ailes. Simplifier n'est un progrès que si la position simplifiée est authentiquement meilleure.",
+        moveSan: ["Nd5", "Bxd5", "exd5", "e4", "Rfe1", "Rxd5", "Rxe4+", "Kd8", "Qe2", "Rxd1+", "Qxd1+", "Qd7", "Qxd7+", "Kxd7"],
+        highlights: [{ square: "d5", color: "green" }, { square: "c5", color: "red" }],
+      },
+      {
+        title: "Fischer – Taimanov : coups 24 à 44, quarante coups de restriction silencieuse",
+        fen: "7r/1p1k1pp1/p4n1p/2p5/4RP2/6P1/PPP3BP/6K1 w - - 0 24",
+        text: "Re5, b6, Bf1, a5, Bc4 : Fischer fixe d'abord les pions noirs a6/c5/b6 sur des cases où son Fou pourra toujours les attaquer, jamais son Cavalier adverse les défendre efficacement. PRO TIP : ce qui suit (non détaillé coup par coup ici) est l'essence même de l'art de la conversion — près de vingt coups supplémentaires où le Roi blanc migre tranquillement vers le centre puis l'aile dame (Kg2-f3-e2-d3-c4-b5-a6), le Fou surveille inlassablement les deux faiblesses noires, et Noir ne peut STRICTEMENT RIEN faire d'autre qu'attendre. Aucun gain matériel n'est encore visible — et c'est exactement le but.",
+        moveSan: ["Re5", "b6", "Bf1", "a5", "Bc4"],
+        highlights: [{ square: "a6", color: "red" }, { square: "c5", color: "red" }],
+        arrows: [{ from: "c4", to: "a6", color: "green" }],
+      },
+      {
+        title: "Fischer – Taimanov : coup 45, la finale pure Fou contre Cavalier est atteinte",
+        fen: "8/8/1pnk2p1/pBp2p1p/P4P1P/2P3P1/1P2K3/8 w - - 0 45",
+        text: "Après l'échange des dernières Tours (44.Rxd6 Kxd6), il ne reste plus que Roi, Fou et pions blancs contre Roi, Cavalier et pions noirs — exactement la finale que Fischer avait jugée gagnante vingt-huit coups plus tôt. PRO TIP : regardez le réseau de cases que le Fou va maintenant tisser (e8-f7-b3-d1-f3) pour forcer le Roi noir en zugzwang, pendant que le Cavalier noir, simple spectateur, ne peut jamais couvrir les deux ailes à la fois.",
+        moveSan: ["Kd3", "Ne7", "Be8", "Kd5", "Bf7+", "Kd6", "Kc4", "Kc6", "Be8+", "Kb7", "Kb5"],
+        arrows: [
+          { from: "e8", to: "f7", color: "green" },
+          { from: "f7", to: "b3", color: "green" },
+          { from: "b3", to: "d1", color: "green" },
+          { from: "d1", to: "f3", color: "green" },
+        ],
+      },
+      {
+        title: "Fischer – Taimanov : coup 62, Bxg6! — la restriction devient enfin un gain matériel",
+        fen: "3kB3/4n3/Kp4p1/p1p2p1p/P4P1P/2P3P1/1P6/8 w - - 34 62",
+        text: "Après encore quinze coups de la même patience (Ka6, Bd5-c4-f7-e8, le Cavalier noir ballotté sans jamais trouver de case sûre), Fischer sacrifie enfin son Fou contre le pion g6 : Bxg6! Nxg6 Kxb6 — son Roi engloutit ensuite b6 puis c5, et la course de pions à l'aile dame (b4, a5, b5) décide la partie. PRO TIP de conclusion : la restriction n'est jamais une fin en soi — elle prépare le moment, souvent un sacrifice minime, où l'avantage statique devient enfin un gain matériel concret et irréversible. Noir abandonne, son Cavalier isolé ne pouvant arrêter le pion b.",
+        moveSan: ["Bxg6", "Nxg6", "Kxb6", "Kd7", "Kxc5", "Ne7", "b4", "axb4", "cxb4", "Nc8", "a5", "Nd6", "b5", "Ne4+", "Kb6", "Kc8", "Kc6", "Kb8", "b6"],
+        highlights: [{ square: "g6", color: "red" }],
+      },
+    ],
+  },
+  // (2026-09-12, Lot 6) `jh-module-15` : Capablanca (Blancs) – Steiner (Noirs),
+  // exhibition d'échecs vivants, Los Angeles 1933 (C49, Quatre Cavaliers
+  // Espagnole Symétrique), 25 coups, 1-0 (mat). LA partie assignée par le
+  // cahier des charges, vérifiée exacte (couleurs, lieu, année, mat final
+  // Qb4#). 49 demi-coups intégralement rejoués et vérifiés avec chess.js.
+  // Cette même partie alimente déjà 5 puzzles de
+  // `pm-la-securite-du-roi-en-milieu-de-partie` (étude Lichess « King safety »
+  // de FM Heineccius) — la lecture ici est délibérément différente : pas la
+  // sécurité du roi, mais le sacrifice ciblé des DEUX Fous blancs (11.Bxf6!
+  // puis 12.Bxe6!) pour ouvrir les deux ailes noires à la fois, exactement le
+  // critère que Jesper Hall demande d'évaluer AVANT de choisir son camp entre
+  // Fou et Cavalier. Aucune position choisie ici (voir `master-puzzles-dataset.ts`)
+  // ne coïncide avec celles déjà utilisées pour ce thème.
+  "jh-module-15-fou-contre-cavalier-mode-d-emploi": {
+    steps: [
+      {
+        title: "Jose Raul Capablanca – Herman Steiner, Los Angeles 1933 (exhibition d'échecs vivants)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Quatre Cavaliers, variante symétrique de l'Espagnole : chaque camp clou le Cavalier adverse avec son Fou. PRO TIP de Jesper Hall pour tout ce module : avant même de choisir ton camp entre Fou et Cavalier, demande-toi QUELLE couleur de cases neutralise le Fou adverse — ou, comme dans cette partie, cherche directement à obtenir la paire de Fous elle-même plutôt que de rester dans la symétrie.",
+        moveSan: ["e4", "e5", "Nf3", "Nc6", "Nc3", "Nf6", "Bb5", "Bb4", "O-O", "O-O", "d3", "d6"],
+      },
+      {
+        title: "Capablanca – Steiner : coup 7, Bg5! — la paire de Fous naît de l'échange adverse",
+        fen: "r1bq1rk1/ppp2ppp/2np1n2/1B2p3/1b2P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 0 7",
+        text: "Bg5 renouvelle la pression sur le Cavalier f6 ; Noir répond Bxc3, échangeant SON Fou contre le Cavalier c3. Après 8.bxc3, Blanc conserve ses DEUX Fous (b5 et g5) contre un Cavalier en moins, pendant que Noir se retrouve avec un seul Fou (encore sur c8) et deux Cavaliers. PRO TIP : cette asymétrie — paire de Fous contre paire de Cavaliers — est exactement le déséquilibre que ce module enseigne à exploiter.",
+        moveSan: ["Bg5", "Bxc3", "bxc3", "Ne7"],
+        highlights: [{ square: "b4", color: "red" }, { square: "b5", color: "green" }, { square: "g5", color: "green" }],
+      },
+      {
+        title: "Capablanca – Steiner : coups 9-10, repositionner le Cavalier, garder les Fous actifs",
+        fen: "r1bq1rk1/ppp1nppp/3p1n2/1B2p1B1/4P3/2PP1N2/P1P2PPP/R2Q1RK1 w - - 1 9",
+        text: "Nh4, en route vers f5, pendant que Noir joue c6 et développe enfin son propre Fou en e6. PRO TIP : avec la paire de Fous, chaque camp cherche à garder ses pièces mineures ACTIVES sur des diagonales ouvertes — jamais à les figer derrière ses propres pions, ce qui annulerait tout l'avantage du coup 7.",
+        moveSan: ["Nh4", "c6", "Bc4", "Be6"],
+      },
+      {
+        title: "Capablanca – Steiner : coups 11-12, Bxf6! puis Bxe6! — le critère d'ouverture des deux ailes",
+        fen: "r2q1rk1/pp2nppp/2ppbn2/4p1B1/2B1P2N/2PP4/P1P2PPP/R2Q1RK1 w - - 2 11",
+        text: "LE moment-clé du module, et son paradoxe assumé : Capablanca sacrifie SES DEUX FOUS l'un après l'autre (Bxf6! gxf6, puis Bxe6! fxe6), forçant Noir à reprendre avec des pions et à doubler ses pions g ET ses pions e — brisant d'un coup l'abri du roi ET la structure centrale, sur les DEUX ailes à la fois. PRO TIP de Jesper Hall : la paire de Fous n'a de valeur que tant qu'elle sert un plan — ici, ouvrir les deux ailes pour l'attaque qui suit. Un Fou qui a fini ce travail peut, et doit, se sacrifier lui-même plutôt que de rester en spectateur.",
+        moveSan: ["Bxf6", "gxf6", "Bxe6", "fxe6"],
+        highlights: [{ square: "f6", color: "red" }, { square: "e6", color: "red" }],
+        arrows: [{ from: "g5", to: "f6", color: "green" }, { from: "c4", to: "e6", color: "green" }],
+      },
+      {
+        title: "Capablanca – Steiner : coups 13 à 19, l'assaut sur l'aile roi",
+        fen: "r2q1rk1/pp2n2p/2pppp2/4p3/4P2N/2PP4/P1P2PPP/R2Q1RK1 w - - 0 13",
+        text: "Les deux Fous ont disparu, mais leur travail de démolition reste : Qg4+, f4, Qh5+, puis le sacrifice de qualité Rxf6! achèvent d'exposer le Roi noir, contraint de fuir à pied jusqu'au centre de l'échiquier. PRO TIP : c'est la CONSÉQUENCE directe des coups 11-12 — sans Fou noir pour couvrir les cases sombres autour du roi, chaque pièce blanche restante frappe plus fort qu'elle ne le devrait.",
+        moveSan: ["Qg4+", "Kf7", "f4", "Rg8", "Qh5+", "Kg7", "fxe5", "dxe5", "Rxf6", "Kxf6", "Rf1+", "Nf5", "Nxf5", "exf5"],
+      },
+      {
+        title: "Capablanca – Steiner : coups 20 à 25, bascule vers l'aile dame et mat",
+        fen: "r2q2r1/pp5p/2p2k2/4pp1Q/4P3/2PP4/P1P3PP/5RK1 w - - 0 20",
+        text: "Rxf5+ chasse le Roi noir vers l'aile DAME cette fois (Ke7, Kd6, Kc5) — la seconde aile, ouverte dès le coup 9 (...c6), s'avère tout aussi vulnérable : Qxb7! puis Rxc6+! arrachent les derniers points d'appui noirs avant le mat Qb4#. PRO TIP de conclusion : un Roi privé de son Fou protecteur ne trouve plus refuge nulle part — ni à l'aile roi, ni à l'aile dame. C'est exactement pour forcer ce résultat que la paire de Fous s'est sacrifiée elle-même aux coups 11 et 12.",
+        moveSan: ["Rxf5+", "Ke7", "Qf7+", "Kd6", "Rf6+", "Kc5", "Qxb7", "Qb6", "Rxc6+", "Qxc6", "Qb4#"],
+        highlights: [{ square: "b7", color: "red" }, { square: "c6", color: "red" }],
+      },
+    ],
+  },
   "pm-cavalier-contre-fou-qui-domine": {
     steps: [
       {
@@ -4972,6 +5104,319 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
         fen: "6k1/5p1p/6p1/8/4b3/1RP1P1PK/2r2P1P/8 w - - 8 40",
         text: "Le reste n'est plus que de la technique pure : Capablanca simplifie, active sa Tour et son Fou, et encaisse méthodiquement son avantage matériel et positionnel jusqu'à l'abandon de Marshall au 49e coup — la démonstration parfaite de la supériorité de l'aile Dame, du 4e coup jusqu'au tout dernier.",
         moveSan: ["f4", "h5", "g4", "hxg4+", "Kxg4", "Rxh2", "Rb4", "f5+", "Kg3", "Re2", "Rc4", "Rxe3+", "Kh4", "Kg7", "Rc7+", "Kf6", "Rd7", "Bg2", "Rd6+", "Kg7"],
+      },
+    ],
+  },
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-16` : Aron
+  // Nimzowitsch (Blancs) – Akiba Rubinstein (Noirs), Dresde 1926, ronde 5
+  // (A34, Anglaise Symétrique), 46 coups, 1-0 — élue meilleure partie du
+  // tournoi, et Nimzowitsch lui-même la considérait comme le sommet de sa
+  // carrière. La partie assignée à l'origine par le cahier des charges
+  // (« Rubinstein–Nimzowitsch, San Sebastian 1912 ») EXISTE bien
+  // (chessgames gid=1102356, A55, 1-0) mais est une mêlée tactique tranchée
+  // par un double aveuglement mutuel (mat en 2 raté par les deux joueurs au
+  // coup 25) — aucun contenu de plan à long terme. Remplacée, avec
+  // validation utilisateur, par ce vrai modèle historique du thème : la
+  // manœuvre de regroupement Cg3-h1-f2-h3-g5! (coups 18-30), suivie de
+  // l'ouverture d'un second front à l'aile dame (26.b4!) sans jamais
+  // relâcher la pression à l'aile roi. 91 demi-coups intégralement rejoués
+  // et vérifiés avec chess.js.
+  "jh-module-16-construire-un-plan-a-long-terme": {
+    steps: [
+      {
+        title: "Aron Nimzowitsch – Akiba Rubinstein, Dresde 1926 (meilleure partie du tournoi)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Anglaise symétrique : après les échanges du centre (4.cxd5 Cxd5 5.e4 Cb4), la position semble presque banale. PRO TIP de Jesper Hall pour tout ce module : NE JOUEZ JAMAIS un plan à long terme sans avoir d'abord identifié une cible durable — ici, Nimzowitsch a repéré dès l'ouverture que le Cavalier noir b4, repoussé un jour ou l'autre, laissera des cases affaiblies autour du roi noir. Tout le reste de la partie n'est que l'exécution patiente de ce diagnostic initial.",
+        moveSan: ["c4", "c5", "Nf3", "Nf6", "Nc3", "d5", "cxd5", "Nxd5", "e4", "Nb4", "Bc4", "e6", "O-O", "N8c6"],
+      },
+      {
+        title: "Nimzowitsch – Rubinstein : coups 10-11, Ce2-g3 — premier maillon du plan",
+        fen: "r1bqkb1r/pp3ppp/4p3/8/1nBpP3/2NP4/PP3PPP/R1BQ1RK1 w kq - 0 10",
+        text: "Ne2 puis Ng3 : un coup qui ne menace rien d'immédiat et ressemble à une simple mise en place. PRO TIP : un plan à long terme démarre presque toujours par une étape modeste, invisible pour l'adversaire — ce Cavalier va bientôt entamer un voyage bien plus surprenant encore, mais chaque étape doit d'abord sembler anodine pour ne pas alerter le camp adverse.",
+        moveSan: ["Ne2", "a6", "Ng3", "Bd6"],
+      },
+      {
+        title: "Nimzowitsch – Rubinstein : coup 18, Ch1 !? — le point culminant du regroupement",
+        fen: "r1b2r1k/1pq3pp/p1nb4/5p2/2Bp1P2/3P1QN1/PP1BR1PP/5RK1 w - - 0 18",
+        text: "LE coup que Nimzowitsch lui-même considérait comme la clé de toute la partie : le Cavalier retourne sur la pire case théorique de l'échiquier — mais c'est le seul chemin vers f2, puis h3, puis enfin g5, une case qu'aucune pièce mineure noire ne pourra jamais contester. PRO TIP : ne craignez jamais un coup qui semble affreux À COURT TERME s'il sert un plan clairement identifié à long terme — jugez un coup par sa destination finale, pas par l'apparence de la case qu'il traverse.",
+        moveSan: ["Nh1", "Bd7", "Nf2", "Rae8"],
+        arrows: [{ from: "g3", to: "h1", color: "green" }, { from: "h1", to: "f2", color: "green" }],
+        highlights: [{ square: "g5", color: "green" }],
+      },
+      {
+        title: "Nimzowitsch – Rubinstein : coup 22, Ch3 — le Cavalier atteint enfin sa cible",
+        fen: "3n1r1k/1pqb2pp/p2b4/5p2/2Bp1P2/3P1Q2/PP1BRNPP/6K1 w - - 1 22",
+        text: "Nh3, avant-dernière étape : le Cavalier menace directement Ng5, et Noir doit déjà commencer à composer avec cette perspective. PRO TIP : au fur et à mesure qu'un plan à long terme approche de son terme, chaque coup redevient concret et menaçant — le camp qui a patienté vingt coups plus tôt récolte maintenant l'initiative avec un temps d'avance sur l'adversaire, qui découvre le danger trop tard.",
+        moveSan: ["Nh3", "Bc6", "Qh5", "g6"],
+        arrows: [{ from: "f2", to: "h3", color: "green" }],
+        highlights: [{ square: "g5", color: "green" }],
+      },
+      {
+        title: "Nimzowitsch – Rubinstein : coup 26, b4! — ouvrir un second front sans relâcher le premier",
+        fen: "3n1r2/1pq3kp/p1b3p1/2b2p2/2Bp1P2/3P3N/PP1BRQPP/6K1 w - - 4 26",
+        text: "b4! surgit à l'opposé de l'échiquier, alors que la pression à l'aile roi (Dh4, Ch3-g5) est toujours à son maximum. PRO TIP essentiel : un plan à long terme n'est pas forcément à sens unique — Nimzowitsch ouvre ici un DEUXIÈME front pendant que le premier tient toujours l'adversaire occupé, l'obligeant à défendre sur deux tableaux à la fois avec des pièces qui ne suffisent plus.",
+        moveSan: ["b4", "Bb6", "Qh4", "Re8"],
+        arrows: [{ from: "b2", to: "b4", color: "green" }],
+      },
+      {
+        title: "Nimzowitsch – Rubinstein : coups 28-30, Te5 et Cg5 — les cases préparées entrent en jeu",
+        fen: "3nr3/1pq3kp/pbb3p1/5p2/1PBp1P1Q/3P3N/P2BR1PP/6K1 w - - 3 28",
+        text: "Re5! puis, après l'élimination du Cavalier f7, Ng5 : la Tour et le Cavalier occupent enfin les cases que toute la manœuvre précédente avait préparées. PRO TIP : un plan mûrit par accumulation — chaque coup isolé semblait modeste, mais leur somme installe maintenant deux pièces blanches sur des postes que Noir ne peut contester nulle part.",
+        moveSan: ["Re5", "Nf7", "Bxf7", "Qxf7", "Ng5", "Qg8"],
+        arrows: [{ from: "e2", to: "e5", color: "green" }],
+        highlights: [{ square: "f7", color: "red" }],
+      },
+      {
+        title: "Nimzowitsch – Rubinstein : coups 33-36, la convergence des deux ailes tranche la partie",
+        fen: "6q1/1p4kp/pbb3p1/5pN1/1P1p1P2/3P4/P2B2PP/4Q1K1 w - - 2 33",
+        text: "Qe7+! chasse le roi noir, puis b5! relance immédiatement l'attaque à l'aile dame préparée au coup 26 — les deux plans, kingside et queenside, convergent enfin l'un vers l'autre et Noir ne peut plus parer les deux à la fois : la paire de Fous tombe. PRO TIP de conclusion : un plan à long terme bien exécuté ne se termine JAMAIS par un seul grand coup spectaculaire, mais par la convergence tranquille de plusieurs menaces préparées bien à l'avance — exactement ce qui distingue Nimzowitsch, ici, de son propre adversaire.",
+        moveSan: ["Qe7+", "Kh8", "b5", "Qg7", "Qxg7+", "Kxg7", "bxc6", "bxc6"],
+        highlights: [{ square: "c6", color: "red" }],
+      },
+    ],
+  },
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-17` : Robert James
+  // Fischer (Blancs) – Lhamsuren Myagmarsuren (Noirs), Interzonal de Sousse
+  // 1967, ronde 3 (A07, Attaque Indienne du Roi), 31 coups, 1-0 — partie
+  // assignée par le cahier des charges, vérifiée exacte (chessgames
+  // gid=1044267). Illustre le passage d'un registre à l'autre : une
+  // construction tranquille par principes généraux (registre intuitif),
+  // suivie d'une course de pions/attaque calculée avec précision jusqu'au
+  // dernier tempo (registre du calcul). 61 demi-coups intégralement rejoués
+  // et vérifiés avec chess.js.
+  "jh-module-17-calcul-et-intuition-positionnelle": {
+    steps: [
+      {
+        title: "Robert James Fischer – Lhamsuren Myagmarsuren, Interzonal de Sousse 1967",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Attaque Indienne du Roi : structure calme, développement naturel, rien de forcé pour l'instant. PRO TIP de Jesper Hall pour tout ce module : dans une position calme comme celle-ci, jugez par l'INTUITION — espace, sécurité du roi, activité des pièces — jamais par un calcul en profondeur qui serait ici une pure perte de temps.",
+        moveSan: ["e4", "e6", "d3", "d5", "Nd2", "Nf6", "g3", "c5", "Bg2", "Nc6", "Ngf3", "Be7", "O-O", "O-O"],
+      },
+      {
+        title: "Fischer – Myagmarsuren : coup 8, e5! — décision intuitive qui fixe les plans",
+        fen: "r1bq1rk1/pp2bppp/2n1pn2/2pp4/4P3/3P1NP1/PPPN1PBP/R1BQ1RK1 w - - 6 8",
+        text: "e5! ferme le centre et fixe durablement les plans des deux camps — Blanc jouera à l'aile roi (h4-h5, Cf1-e3-g5 ou h3), Noir à l'aile dame (b5-b4-a4). Ce choix ne se calcule pas, il se JUGE par expérience et par principes : quel plan votre structure favorise-t-elle ?",
+        moveSan: ["e5", "Nd7", "Re1", "b5"],
+      },
+      {
+        title: "Fischer – Myagmarsuren : coup 16, Bh3! — la prophylaxie tranquille avant la bascule",
+        fen: "r2q1rk1/3nbppp/b3p3/n1ppP3/p4B1P/P2PNNP1/2P2PB1/R2QR1K1 w - - 3 16",
+        text: "Bh3, dernier coup purement positionnel : la diagonale c8-h3 est neutralisée et le Fou vise déjà e6/d7 sans qu'aucune pièce noire ne soit directement attaquée. PRO TIP : c'est le tout dernier moment du registre intuitif — la position va basculer au coup suivant, il faut la sentir venir.",
+        moveSan: ["Bh3", "d4", "Nf1", "Nb6"],
+      },
+      {
+        title: "Fischer – Myagmarsuren : coup 18, Cg5! — le signal du passage au calcul",
+        fen: "r2q1rk1/4bppp/bn2p3/n1p1P3/p2p1B1P/P2P1NPB/2P2P2/R2QRNK1 w - - 2 18",
+        text: "Ng5! change tout : le Cavalier menace des prises concrètes (Bxg5 forcé, sinon Cxe6 ou Cxh7). PRO TIP essentiel : DÈS QU'un coup crée une menace directe, un échec ou une prise possible, arrêtez d'évaluer par intuition et commencez à CALCULER chaque ligne jusqu'au bout — se tromper de registre ici coûte la partie.",
+        moveSan: ["Ng5", "Nd5", "Bd2", "Bxg5", "Bxg5", "Qd7"],
+        arrows: [{ from: "f3", to: "g5", color: "green" }],
+        highlights: [{ square: "d5", color: "red" }],
+      },
+      {
+        title: "Fischer – Myagmarsuren : coups 22-23, Cc3 et Bf6 — la partie devient une course calculée",
+        fen: "r1r3k1/3q1ppp/b3p3/n1pnP1BQ/p2p3P/P2P2PB/2P2P2/R3RNK1 w - - 3 22",
+        text: "Noir tente sa propre contre-chance calculée (...Nc3, une fourchette potentielle sur d1/e2), pendant que Fischer verrouille toutes les issues avec Bf6!. À partir d'ici, chaque coup des deux camps doit être vérifié plusieurs coups à l'avance — l'intuition seule ne suffit plus à départager les lignes.",
+        moveSan: ["Nd2", "Nc3", "Bf6", "Qe8"],
+      },
+      {
+        title: "Fischer – Myagmarsuren : coups 26-27, la course des pions passés — calcul pur des tempos",
+        fen: "r1r1q1k1/5p1p/b3pBp1/n1p1P1Q1/p2pn2P/P2P2PB/2P2P2/R3R1K1 w - - 0 26",
+        text: "Rxe4! c4 h5 cxd3 : Noir pousse son pion c vers la promotion pendant que Fischer avance son attaque de mat à l'aile roi — une pure course de vitesse où seul un compte EXACT des tempos permet de savoir qui arrive le premier. PRO TIP : dans une course calculée, comptez toujours les coups des DEUX côtés avant de choisir votre propre coup, jamais un seul camp à la fois.",
+        moveSan: ["Rxe4", "c4", "h5", "cxd3", "Rh4", "Ra7"],
+      },
+      {
+        title: "Fischer – Myagmarsuren : coups 30-31, Dh6! puis Dxh7+ — le calcul gagne d'un tempo exact",
+        fen: "2r1q1k1/r4p1p/b3pBp1/n3P1QP/p2p3R/P5P1/2p2PB1/R5K1 w - - 0 30",
+        text: "Qh6! puis Qxh7+ : le pion c noir n'est plus qu'à deux cases de la promotion (il en est à c2), mais le mat blanc arrive un coup plus tôt. PRO TIP de conclusion : ce dénouement est la preuve du module — Fischer a joué intuitivement pendant quinze coups, puis a calculé jusqu'au bout à partir du coup 18, sans jamais confondre les deux registres.",
+        moveSan: ["Qh6", "Qf8", "Qxh7+"],
+        highlights: [{ square: "h7", color: "red" }],
+      },
+    ],
+  },
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-18` : Deep Blue
+  // (Blancs, IBM) – Garry Kasparov (Noirs), Philadelphie 1996, Partie 1 (B22,
+  // Sicilienne Alapin), 37 coups, 1-0 — première victoire d'un ordinateur sur
+  // un champion du monde en titre dans des conditions de tournoi standard.
+  // Couleurs corrigées par rapport au cahier des charges (« Kasparov–Deep
+  // Blue ») : c'est Deep Blue qui a les Blancs, validé par l'utilisateur.
+  // Illustre l'évaluation dynamique (23.d5!?, sacrifice de pion pour
+  // l'activité — Kasparov lui-même : « j'aurais peut-être joué 23.d5 moi-même
+  // ») contre l'évaluation statique (18.Bxf6!, endommager durablement la
+  // structure noire). 73 demi-coups intégralement rejoués et vérifiés avec
+  // chess.js.
+  "jh-module-18-evaluation-dynamique-contre-statique": {
+    steps: [
+      {
+        title: "Deep Blue – Garry Kasparov, Philadelphie 1996, Partie 1 (Sicilienne Alapin)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Sicilienne Alapin, choisie par l'équipe IBM précisément pour éviter les lignes où Kasparov possédait une préparation approfondie. PRO TIP de Jesper Hall pour tout ce module : une évaluation STATIQUE compte le matériel et la structure de pions ; une évaluation DYNAMIQUE compte l'activité et l'initiative — la vraie force d'un joueur (ou d'une machine) se voit dans sa capacité à peser les deux à chaque coup, jamais un seul des deux registres isolément.",
+        moveSan: ["e4", "c5", "c3", "d5", "exd5", "Qxd5", "d4", "Nf6", "Nf3", "Bg4", "Be2", "e6", "h3", "Bh5", "O-O", "Nc6"],
+      },
+      {
+        title: "Deep Blue – Kasparov : coup 18, Bxf6! — un choix statique assumé",
+        fen: "2r2rk1/pp2qppp/1bn1pn2/1N2N1B1/3P4/P6P/1P2QPP1/2R2RK1 w - - 5 18",
+        text: "Bxf6! cède la paire de Fous mais laisse les pions noirs doublés et affaiblis en permanence (gxf6). PRO TIP : c'est un choix purement STATIQUE — Deep Blue renonce à une pièce active contre un gain durable, immuable, qui ne dépendra d'aucune initiative future pour rester réel.",
+        moveSan: ["Bxf6", "gxf6"],
+      },
+      {
+        title: "Deep Blue – Kasparov : coup 23, d5!? — LE sacrifice dynamique",
+        fen: "2rr2k1/1p3p1p/1pn1pq2/1N3p2/3P4/P3Q2P/1P3PP1/2RR2K1 w - - 2 23",
+        text: "d5!? Rxd5 Rxd5 exd5 : Deep Blue sacrifie un pion pour ouvrir le centre et exposer le roi noir. PRO TIP essentiel : Kasparov lui-même reconnaîtra après la partie « j'aurais peut-être joué 23.d5 moi-même » — c'est l'exemple parfait d'une décision purement DYNAMIQUE, où l'activité et la sécurité du roi adverse comptent plus que le compte exact du matériel.",
+        moveSan: ["d5", "Rxd5", "Rxd5", "exd5"],
+        arrows: [{ from: "d4", to: "d5", color: "green" }],
+        highlights: [{ square: "d5", color: "green" }],
+      },
+      {
+        title: "Deep Blue – Kasparov : coup 25, b3 — consolider avant d'encaisser",
+        fen: "2r3k1/1p3p1p/1pn2q2/1N1p1p2/8/P3Q2P/1P3PP1/2R3K1 w - - 0 25",
+        text: "b3, coup tranquille de prophylaxie : Deep Blue sécurise sa propre position avant de continuer à convertir son avantage dynamique. PRO TIP : une fois l'initiative acquise, ne vous précipitez pas — consolidez d'abord tout ce qui pourrait basculer contre vous, PUIS continuez à pousser l'avantage.",
+        moveSan: ["b3", "Kh8", "Qxb6", "Rg8"],
+      },
+      {
+        title: "Deep Blue – Kasparov : coups 27-28, Dc5 et Cd6 — chasser les dernières cibles statiques",
+        fen: "6rk/1p3p1p/1Qn2q2/1N1p1p2/8/PP5P/5PP1/2R3K1 w - - 1 27",
+        text: "Qc5! puis Nd6! : la Dame et le Cavalier harcèlent maintenant les faiblesses statiques restantes (d4, b7) pendant que Noir tente sa propre dynamique avec f4-f3. Le sacrifice de pion du coup 23 a payé : l'initiative se transforme peu à peu en gains matériels concrets.",
+        moveSan: ["Qc5", "d4", "Nd6", "f4"],
+      },
+      {
+        title: "Deep Blue – Kasparov : coups 30-32, Dd5 et Tc7 — la 7e rangée referme le filet",
+        fen: "6rk/1N3p1p/5q2/2Q1n3/3p1p2/PP5P/5PP1/2R3K1 w - - 1 30",
+        text: "Qd5! centralise pendant que Rc7! s'installe sur la 7e rangée — un gain définitivement STATIQUE (une case forte, permanente) qui vient couronner toute l'activité dynamique accumulée depuis le coup 23. PRO TIP : le but ultime d'un avantage dynamique est presque toujours de se transformer en gain statique avant de s'éroder.",
+        moveSan: ["Qd5", "f3", "g3", "Nd3", "Rc7", "Re8"],
+      },
+      {
+        title: "Deep Blue – Kasparov : coups 34-37, la combinaison finale — dynamique devenue décisive",
+        fen: "7k/2R2p1p/3N1q2/3Q4/3p4/PP1n1pPP/5P2/4r1K1 w - - 5 34",
+        text: "Kh2! Nxf2 Nxf7+! Kg7 Ng5+ Kh6 Rxh7+ : la combinaison finale enchaîne les coups forcés jusqu'au gain décisif. PRO TIP de conclusion : cette partie entière est un dialogue permanent entre le statique (coup 18) et le dynamique (coup 23) — comprendre LEQUEL des deux registres domine à chaque instant est exactement ce qui permet de choisir le bon coup, humain ou machine.",
+        moveSan: ["Kh2", "Nxf2", "Nxf7+", "Kg7", "Ng5+", "Kh6", "Rxh7+"],
+      },
+    ],
+  },
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-19` : Anatoly Karpov
+  // (Blancs) – Garry Kasparov (Noirs), Championnat du Monde, Moscou 1985,
+  // Partie 16 (B44, Sicilienne Taimanov), 40 coups, 0-1 — élue par les
+  // lecteurs de Chess Informant meilleure partie des 64 premiers numéros de
+  // la revue. Partie assignée par le cahier des charges, vérifiée exacte
+  // (chessgames gid=1067175, couleurs et résultat confirmés). Illustre la
+  // domination d'un complexe de cases (le Cavalier noir plante son drapeau
+  // sur d3 au coup 16 et y reste 18 coups, jusqu'à forcer Karpov à donner sa
+  // Dame pour l'en déloger au coup 34). 80 demi-coups intégralement rejoués
+  // et vérifiés avec chess.js.
+  "jh-module-19-les-cases-de-couleur-au-milieu-de-partie": {
+    steps: [
+      {
+        title: "Anatoly Karpov – Garry Kasparov, Championnat du Monde Moscou 1985, Partie 16",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Sicilienne Taimanov : les dix premiers coups reprennent exactement la Partie 12 du même match, mais Kasparov avait préparé une nouveauté en profondeur pour cette position précise. PRO TIP de Jesper Hall pour tout ce module : voyez le milieu de partie en DEUX couches de cases, claires et sombres — chaque échange de pièces mineures modifie l'équilibre entre les deux, souvent bien avant que la conséquence ne devienne visible.",
+        moveSan: ["e4", "c5", "Nf3", "e6", "d4", "cxd4", "Nxd4", "Nc6", "Nb5", "d6", "c4", "Nf6", "N1c3", "a6", "Na3", "d5"],
+      },
+      {
+        title: "Karpov – Kasparov : coups 9-10, la série d'échanges qui fixe déjà les cases faibles",
+        fen: "r1bqkb1r/1p3ppp/p1n1pn2/3p4/2P1P3/N1N5/PP3PPP/R1BQKB1R w KQkq - 0 9",
+        text: "cxd5 exd5 exd5 Nb4 : cette séquence d'échanges centraux, en apparence anodine, détermine déjà quelles cases resteront faibles pour chaque camp. PRO TIP : AVANT de jouer une série d'échanges, demandez-vous toujours quel complexe de cases restera affaibli pour chacun des deux camps une fois la poussière retombée — c'est précisément ce diagnostic que Kasparov a fait avant même de s'asseoir à la table.",
+        moveSan: ["cxd5", "exd5", "exd5", "Nb4"],
+      },
+      {
+        title: "Karpov – Kasparov : coup 16, Cd3! — le Cavalier plante son drapeau",
+        fen: "r2qr1k1/5ppp/p4n2/1pbP1bB1/1n6/N1N2B2/PP1Q1PPP/R4RK1 w - - 0 16",
+        text: "Nd3!! Le Cavalier s'installe sur une case qu'aucune pièce blanche ne peut jamais attaquer ni déloger — ni pion, ni Fou de la bonne couleur, ni Cavalier sans se faire échanger contre lui. PRO TIP essentiel : un complexe de cases se domine en y plantant une pièce IMMUNISÉE contre toute expulsion — ce Cavalier va rester sur d3 pendant DIX-HUIT coups, une éternité à l'échelle d'une partie d'échecs.",
+        moveSan: ["Rad1", "Nd3"],
+        highlights: [{ square: "d3", color: "green" }],
+      },
+      {
+        title: "Karpov – Kasparov : coup 22, l'échange des Fous de cases sombres aggrave le déséquilibre",
+        fen: "2rqr1k1/5p2/p2b1n1p/3P1bp1/Np6/1P1n1BB1/P2Q1PPP/1N1R1RK1 w - - 0 22",
+        text: "Bxd6 Qxd6 g3 Nd7 : l'échange des derniers Fous de cases sombres retire à Karpov son seul défenseur naturel de ce complexe — désormais, plus AUCUNE pièce blanche ne peut jamais contester les cases sombres autour de son propre roi.",
+        moveSan: ["Bxd6", "Qxd6", "g3", "Nd7"],
+      },
+      {
+        title: "Karpov – Kasparov : coups 28-29, d6 et g4 — l'attaque se déploie sur les deux couleurs",
+        fen: "2r1r1k1/3n1p2/5qbp/3P2p1/Np6/1P1n2P1/Q4PBP/1N1R1RK1 w - - 2 28",
+        text: "d6 g4 Qd2 Kg7 : Kasparov pousse maintenant sur les DEUX couleurs à la fois — le pion g4 attaque les cases sombres du roque blanc pendant que le Cavalier d3 tient toujours les cases claires. Karpov n'a plus de refuge sûr, quelle que soit la couleur qu'il choisit de défendre.",
+        moveSan: ["d6", "g4", "Qd2", "Kg7"],
+      },
+      {
+        title: "Karpov – Kasparov : coups 32-33, Cf6-e4 — le Cavalier occupe une nouvelle case du complexe",
+        fen: "2r1r3/3n1pk1/6bp/8/Np1q2P1/1P1n2P1/3Q2BP/1N1R1RK1 w - - 1 32",
+        text: "Kh1 Nf6 Rf4 Ne4! : le Cavalier noir, chassé de d3, migre aussitôt vers e4 — une AUTRE case du même complexe de cases claires, tout aussi inaccessible aux pièces blanches. PRO TIP : dominer un complexe de cases n'exige pas de garder toujours la MÊME case, mais de toujours en occuper AU MOINS une.",
+        moveSan: ["Kh1", "Nf6", "Rf4", "Ne4"],
+      },
+      {
+        title: "Karpov – Kasparov : coup 34, Dxd3! — le prix à payer pour chasser l'intrus",
+        fen: "2r1r3/5pk1/6bp/8/Np1qnRP1/1P1n2P1/3Q2BP/1N1R3K w - - 5 34",
+        text: "Qxd3! Nf2+ : Karpov est enfin contraint de donner sa PROPRE DAME pour éliminer l'intrus — c'est le prix matériel exact d'un complexe de cases dominé pendant dix-huit coups sans interruption. PRO TIP de conclusion : ce sacrifice forcé n'est pas un accident, c'est la conséquence mathématique du coup 16 — une pièce inamovible sur une case-clé finit toujours par coûter au moins son propre poids en matériel à l'adversaire.",
+        moveSan: ["Qxd3", "Nf2+"],
+        highlights: [{ square: "d3", color: "red" }],
+      },
+      {
+        title: "Karpov – Kasparov : coups 37-40, l'infiltration finale sur la 1e rangée",
+        fen: "2r1r3/5pk1/7p/8/Np4P1/1P1bq1P1/3R2BP/1N1R3K w - - 2 37",
+        text: "Rxd3 Rc1! Nb2 Qf2 Nd2 Rxd1+! Nxd1 Re1+ : les Tours et la Dame noires s'infiltrent sur la première rangée blanche, désormais totalement dégarnie — Karpov abandonne sans parade au double échec qui suit. La domination d'un seul complexe de cases, commencée vingt-quatre coups plus tôt, a fini par décider toute la partie.",
+        moveSan: ["Rxd3", "Rc1", "Nb2", "Qf2", "Nd2", "Rxd1+", "Nxd1", "Re1+"],
+      },
+    ],
+  },
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-20` : Alexander
+  // Alekhine (Blancs) – Frederick Yates (Noirs), Londres 1922, ronde 10 (D63,
+  // Dame Refusée Orthodoxe), 38 coups, 1-0 — qu'Alekhine lui-même qualifiait
+  // de « chef-d'œuvre positionnel ». La partie assignée à l'origine par le
+  // cahier des charges (« Short–Timman, Tilburg 1991 ») EXISTE bien
+  // (chessgames gid=1124533, B04, 1-0) et EST la fameuse marche de roi
+  // Rh2-g3-f4-g5, mais elle a lieu en plein MILIEU DE PARTIE — Dames et
+  // Tours toutes deux encore sur l'échiquier à la position finale — pas en
+  // finale comme le nom du thème l'exige. Remplacée, avec validation
+  // utilisateur, par le propre contre-exemple « en finale » cité par
+  // l'article Wikipédia « King walk » : Dames échangées dès le coup 18, bon
+  // Cavalier contre mauvais Fou, 7e rangée, et une vraie marche de roi de
+  // finale Rf2-g3-f4-e5 qui tranche la partie. 75 demi-coups intégralement
+  // rejoués et vérifiés avec chess.js.
+  "jh-module-20-le-roi-actif-en-finale": {
+    steps: [
+      {
+        title: "Alexander Alekhine – Frederick Yates, Londres 1922 (« chef-d'œuvre positionnel »)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Dame Refusée, ligne Orthodoxe classique. PRO TIP de Jesper Hall pour tout ce module : dès que les Dames quittent l'échiquier et qu'aucune attaque de mat n'est plus possible, réévaluez IMMÉDIATEMENT la sécurité de votre roi — il cesse d'être une faiblesse à protéger pour devenir une pièce à faire progresser.",
+        moveSan: ["d4", "Nf6", "c4", "e6", "Nf3", "d5", "Nc3", "Be7", "Bg5", "O-O", "e3", "Nbd7", "Rc1", "c6", "Qc2", "Re8", "Bd3"],
+      },
+      {
+        title: "Alekhine – Yates : coups 18-19, l'échange des Dames ouvre VRAIMENT la finale",
+        fen: "r1b1r1k1/4q1pp/4p3/1pnp1p2/p2P4/4PN2/PPQ2PPP/2R2RK1 w - - 0 18",
+        text: "Qxc5! Qxc5 Rxc5 b4 : les Dames disparaissent définitivement de l'échiquier. PRO TIP : c'est le VRAI début de la finale — à partir d'ici, chaque évaluation doit se faire à travers l'activité des rois, pas leur sécurité.",
+        moveSan: ["Qxc5", "Qxc5", "Rxc5", "b4"],
+      },
+      {
+        title: "Alekhine – Yates : coup 21, Ce5! — le bon Cavalier contre le mauvais Fou",
+        fen: "r3r1k1/6pp/b3p3/2Rp1p2/pp1P4/4PN2/PP3PPP/2R3K1 w - - 2 21",
+        text: "Ne5! installe le Cavalier sur un poste que rien ne peut déloger, pendant que le Fou noir a6 reste emprisonné derrière ses propres pions b5/d5 — un bon Cavalier contre un mauvais Fou, la structure sous-jacente qui va permettre au roi blanc d'avancer sans crainte.",
+        moveSan: ["Ne5", "Reb8"],
+        arrows: [{ from: "f3", to: "e5", color: "green" }],
+        highlights: [{ square: "a6", color: "red" }],
+      },
+      {
+        title: "Alekhine – Yates : coup 24, Rf2! — la marche du roi commence",
+        fen: "rr4k1/6p1/b3p2p/2RpNp2/p2P4/Pp2PP2/1P4PP/2R3K1 w - - 0 24",
+        text: "Kf2! Kh7 h4 Rf8 : plus aucun échec noir n'est possible, plus aucune attaque de mat ne menace — Alekhine commence donc IMMÉDIATEMENT à marcher son roi vers le centre. PRO TIP majeur : dès que le danger direct s'éloigne, le roi devient une pièce de combat à part entière — ne le laissez jamais passif au bord de l'échiquier une fois ce moment venu.",
+        moveSan: ["Kf2", "Kh7", "h4", "Rf8"],
+        arrows: [{ from: "g1", to: "f2", color: "green" }],
+      },
+      {
+        title: "Alekhine – Yates : coups 26-30, Rg3-f4 — le roi et les Tours avancent ensemble",
+        fen: "r4r2/6pk/b3p2p/2RpNp2/p2P3P/Pp2PP2/1P3KP1/2R5 w - - 1 26",
+        text: "Kg3! Rfb8 Rc7 Bb5 R1c5 Ba6 R5c6 Re8 Kf4! Kg8 : le roi poursuit sa marche (f2-g3-f4) pendant que les deux Tours blanches triplent leur domination de la 6e/7e rangée — le Fou noir, condamné à l'immobilité, ne peut qu'observer. Chaque pièce blanche progresse EN MÊME TEMPS vers l'action.",
+        moveSan: ["Kg3", "Rfb8", "Rc7", "Bb5", "R1c5", "Ba6", "R5c6", "Re8", "Kf4", "Kg8"],
+        arrows: [{ from: "f2", to: "g3", color: "green" }, { from: "g3", to: "f4", color: "green" }],
+      },
+      {
+        title: "Alekhine – Yates : coups 35-36, Cd7 et Cf6! — le filet se referme",
+        fen: "r5r1/2R2Rpk/b3p2p/3pNp1P/p2P1K2/Pp2PPP1/1P6/8 w - - 5 35",
+        text: "Nd7! Kh8 Nf6! Rgf8 : le Cavalier complète l'étau pendant que le roi noir n'a plus une seule case sûre. Le roi blanc en f4, lui, reste totalement protégé — il n'a plus rien à craindre depuis l'échange des Dames au coup 18.",
+        moveSan: ["Nd7", "Kh8", "Nf6", "Rgf8"],
+      },
+      {
+        title: "Alekhine – Yates : coup 38, Re5! — le roi complète lui-même la domination",
+        fen: "r6k/2R3R1/b3pr1p/3p1p1P/p2P1K2/Pp2PPP1/1P6/8 w - - 0 38",
+        text: "Après 37.Rxg7 Rxf6, le roi blanc, parti de g1 vingt coups plus tôt, atteint maintenant e5 pour porter le coup de grâce lui-même : la Tour noire f6 est perdue, prise entre le roi et l'attaque combinée des pièces blanches. PRO TIP de conclusion : voilà le fil rouge de toute la partie — depuis l'échange des Dames, chaque étape de la marche du roi (f2, g3, f4, e5) a rapproché Alekhine un peu plus de cette case exacte, choisie bien avant d'y arriver.",
+        moveSan: ["Ke5"],
       },
     ],
   },

@@ -174,8 +174,42 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // inexistante dans ce sens (seule variante réelle, Nimzowitsch-Capablanca,
     // déjà utilisée dans jh-module-7, ne comporte aucun échange de Dames) ;
     // premier tutoriel réel de ce thème, 8 CourseSteps) remplacent chacune
-    // leur unique ligne théorique par une vague réelle.
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(650);
+    // leur unique ligne théorique par une vague réelle. Puis Lot 6
+    // (2026-09-12, clôture du Palier Argent du cursus Jesper Hall) :
+    // `jh-module-14-l-art-de-la-conversion` (14, Fischer-Taimanov, Vancouver
+    // 1971 Candidats partie 4, 71 coups — la plus longue partie du cursus,
+    // premier tutoriel réel de ce thème, 7 CourseSteps) et
+    // `jh-module-15-fou-contre-cavalier-mode-d-emploi` (13, Capablanca-Steiner,
+    // exhibition d'échecs vivants de Los Angeles 1933, mat en 25 coups —
+    // premier tutoriel réel de ce thème, 6 CourseSteps ; cette partie alimente
+    // déjà 5 puzzles de `pm-la-securite-du-roi-en-milieu-de-partie` sous un
+    // angle différent, chaque position choisie ici vérifiée sans collision de
+    // FEN avec ce thème) remplacent chacune leur unique ligne théorique par
+    // une vague réelle. `jh-module-11`, `jh-module-12` et `jh-module-13`
+    // (Lot 5, voir plus haut) manquaient de leur taille attendue dans ce
+    // dictionnaire depuis leur ajout — corrigé ici au passage, aucun contenu
+    // changé. Puis Lot 7 (2026-09-12, ouverture du Palier Or « Avancé » du
+    // cursus Jesper Hall) : `jh-module-16-construire-un-plan-a-long-terme`
+    // (13, Nimzowitsch-Rubinstein, Dresde 1926 — « Rubinstein-Nimzowitsch San
+    // Sebastian 1912 » du cahier des charges existe bien mais est une mêlée
+    // tactique tranchée par un double aveuglement mutuel, aucun plan à long
+    // terme, remplacée après validation utilisateur par le propre « meilleur
+    // jeu de sa carrière » de Nimzowitsch), `jh-module-17-calcul-et-intuition-positionnelle`
+    // (13, Fischer-Myagmarsuren, Interzonal de Sousse 1967 — partie assignée
+    // déjà exacte), `jh-module-18-evaluation-dynamique-contre-statique` (14,
+    // Deep Blue-Kasparov, Philadelphie 1996 Partie 1 — couleurs corrigées par
+    // rapport au cahier des charges, c'est Deep Blue qui a les Blancs),
+    // `jh-module-19-les-cases-de-couleur-au-milieu-de-partie` (14,
+    // Karpov-Kasparov, Championnat du Monde Moscou 1985 Partie 16 — partie
+    // assignée déjà exacte) et `jh-module-20-le-roi-actif-en-finale` (13,
+    // Alekhine-Yates, Londres 1922 — « Short-Timman Tilburg 1991 » du cahier
+    // des charges est bien LA fameuse marche de roi mais en plein milieu de
+    // partie, pas en finale ; remplacée après validation utilisateur par le
+    // contre-exemple « en finale » cité par l'article Wikipédia « King
+    // walk » lui-même) remplacent chacune leur unique ligne théorique par une
+    // vague réelle — premier tutoriel réel pour ces 5 thèmes (5 à 8
+    // CourseSteps chacun), zéro collision de FEN avec le reste du dataset.
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(737);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -213,6 +247,16 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "jh-module-8-le-roque-oppose-et-l-attaque-de-pions": 14,
       "jh-module-9-la-minorite-d-attaque": 14,
       "jh-module-10-le-sacrifice-positionnel-de-qualite": 14,
+      "jh-module-11-les-finales-de-tours-pratiques": 12,
+      "jh-module-12-les-finales-de-fous-de-couleurs-opposees": 14,
+      "jh-module-13-transition-milieu-de-partie-vers-finale": 14,
+      "jh-module-14-l-art-de-la-conversion": 14,
+      "jh-module-15-fou-contre-cavalier-mode-d-emploi": 13,
+      "jh-module-16-construire-un-plan-a-long-terme": 13,
+      "jh-module-17-calcul-et-intuition-positionnelle": 13,
+      "jh-module-18-evaluation-dynamique-contre-statique": 14,
+      "jh-module-19-les-cases-de-couleur-au-milieu-de-partie": 14,
+      "jh-module-20-le-roi-actif-en-finale": 13,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

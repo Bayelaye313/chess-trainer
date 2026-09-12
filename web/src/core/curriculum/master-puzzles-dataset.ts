@@ -3459,62 +3459,149 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     { fen: "1R6/5pk1/7p/4PP2/r3K1P1/8/8/8 w - - 5 69", solution: ["e4d5","a4a5","d5d6","a5a6"], solutionSan: ["Kd5","Ra5+","Kd6","Ra6+"], rating: 1800, sourceRef: "Capablanca – Yates, Hastings 1930/31 (69.Kd5! Ra5+ 70.Kd6 Ra6+) : après 60 coups de manœuvres, c'est le Roi blanc, inlassablement actif, qui fait toute la différence." },
     { fen: "7k/r4pR1/3K1P1p/4P3/6P1/8/8/8 w - - 15 83", solution: ["e5e6","a7a6","d6e7","a6e6","e7f7","e6e4","g4g5","h6g5"], solutionSan: ["e6","Ra6+","Ke7","Rxe6+","Kxf7","Re4","g5","hxg5"], rating: 1830, sourceRef: "Capablanca – Yates, Hastings 1930/31 (83.e6! Ra6+ 84.Ke7 Rxe6+ 85.Kxf7! Re4 86.g5 hxg5) : la combinaison finale gagne un pion décisif dans une finale de pions désormais totalement gagnante." },
   ].map((p) => ({ themeId: "jh-module-13-transition-milieu-de-partie-vers-finale", ...p })),
-  {
-    themeId: "jh-module-14-l-art-de-la-conversion",
-    fen: "r1bqk2r/1p2bppp/p1nppn2/8/2P1P3/N1N5/PP3PPP/R1BQKB1R w KQkq - 2 9",
-    solution: ["f1e2","e8g8","e1g1"],
-    solutionSan: ["Be2","O-O","O-O"],
-    rating: 1661,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-15-fou-contre-cavalier-mode-d-emploi",
-    fen: "r1bqk2r/ppn1bppp/2n5/2p1p3/8/2NP1NP1/PP2PPBP/R1BQ1RK1 w kq - 1 9",
-    solution: ["a2a3","e8g8","a1b1"],
-    solutionSan: ["a3","O-O","Rb1"],
-    rating: 1767,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-16-construire-un-plan-a-long-terme",
-    fen: "r1bq1rk1/ppp1bppp/1nn5/4p3/8/2NP1NP1/PP2PPBP/R1BQ1RK1 w - - 1 9",
-    solution: ["a2a3","c8e6","b2b4"],
-    solutionSan: ["a3","Be6","b4"],
-    rating: 1709,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-17-calcul-et-intuition-positionnelle",
-    fen: "rnbq1rk1/ppp2pbp/1n1pp1p1/4P1N1/3P4/1B3Q2/PPP2PPP/RNB1K2R w KQ - 2 9",
-    solution: ["g5e4","d6e5","d4e5"],
-    solutionSan: ["Ne4","dxe5","dxe5"],
-    rating: 1685,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-18-evaluation-dynamique-contre-statique",
-    fen: "rnbq1rk1/pp4bp/2pp1np1/3Ppp2/2P5/2N3PN/PP2PPBP/R1BQ1RK1 w - e6 0 9",
-    solution: ["d5e6","c8e6","b2b3"],
-    solutionSan: ["dxe6","Bxe6","b3"],
-    rating: 1767,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-19-les-cases-de-couleur-au-milieu-de-partie",
-    fen: "rnb1k1r1/ppq1npQp/4p3/2ppP3/3P4/P1P5/2P2PPP/R1B1KBNR w KQq - 1 9",
-    solution: ["g7h7","c5d4","g1e2"],
-    solutionSan: ["Qxh7","cxd4","Ne2"],
-    rating: 1742,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-20-le-roi-actif-en-finale",
-    fen: "r1bqk2r/ppp1bppp/8/3p4/1nPPn3/3B1N2/PP3PPP/RNBQ1RK1 w kq - 1 9",
-    solution: ["d3e2","e8g8","b1c3"],
-    solutionSan: ["Be2","O-O","Nc3"],
-    rating: 1605,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
+  // (2026-09-12, Lot 6) `jh-module-14` : Fischer (Blancs) – Taimanov (Noirs),
+  // Vancouver 1971, Candidats quart de finale, partie 4 (B47, Sicilienne
+  // Taimanov/Bastrikov), 71 coups, 1-0. LA partie assignée par le cahier des
+  // charges, vérifiée exacte. 14 puzzles couvrant l'intégralité de la partie
+  // (coups 14 à 71), même source que les 7 CourseSteps du tutoriel ajouté à
+  // `course-lesson.ts` — le premier contenu réel de ce thème.
+  ...[
+    { fen: "r3k2r/1pq2pp1/p2p1n1p/2b1p3/4P1b1/2N1B1P1/PPPQ1PBP/3R1RK1 w kq - 2 14", solution: ["e3c5","d6c5","f2f3","g4e6","f3f4","a8d8"], solutionSan: ["Bxc5","dxc5","f3","Be6","f4","Rd8"], rating: 1520, sourceRef: "Fischer – Taimanov, Vancouver 1971 (14.Bxc5! dxc5) : créer à peu de frais un pion c5 isolé, la cible de toute la conversion à venir." },
+    { fen: "3rk2r/1pq2pp1/p3bn1p/2p1p3/4PP2/2N3P1/PPPQ2BP/3R1RK1 w k - 1 17", solution: ["c3d5","e6d5","e4d5","e5e4","f1e1","d8d5","e1e4","e8d8"], solutionSan: ["Nd5","Bxd5","exd5","e4","Rfe1","Rxd5","Rxe4+","Kd8"], rating: 1550, sourceRef: "Fischer – Taimanov, Vancouver 1971 (17.Nd5!) : forcer une cascade d'échanges vers une finale déjà jugée gagnante — jamais l'inverse." },
+    { fen: "3k3r/1pq2pp1/p4n1p/2pr4/4RP2/6P1/PPPQ2BP/3R2K1 w - - 1 21", solution: ["d2e2","d5d1","e2d1","c7d7","d1d7","d8d7"], solutionSan: ["Qe2","Rxd1+","Qxd1+","Qd7","Qxd7+","Kxd7"], rating: 1570, sourceRef: "Fischer – Taimanov, Vancouver 1971 (23.Qxd7+ Kxd7) : le jugement d'échange des Dames se confirme, la finale Fou contre Cavalier commence." },
+    { fen: "7r/1p1k1pp1/p4n1p/2p5/4RP2/6P1/PPP3BP/6K1 w - - 0 24", solution: ["e4e5","b7b6","g2f1","a6a5","f1c4"], solutionSan: ["Re5","b6","Bf1","a5","Bc4"], rating: 1590, sourceRef: "Fischer – Taimanov, Vancouver 1971 (24.Re5 ... 26.Bc4) : fixer les pions noirs a6/c5/b6 sur les cases où le Fou pourra toujours les attaquer." },
+    { fen: "7r/3k1pp1/1p3n1p/p1p1R3/2B2P2/6P1/PPP4P/6K1 b - - 1 26", solution: ["h8f8","g1g2","d7d6","g2f3","f6d7"], solutionSan: ["Rf8","Kg2","Kd6","Kf3","Nd7"], rating: 1610, sourceRef: "Fischer – Taimanov, Vancouver 1971 (27.Kg2 Kd6 28.Kf3 Nd7) : le Roi blanc commence sa longue marche vers le centre puis l'aile dame." },
+    { fen: "5r2/3n1pp1/1p1k3p/p1p1R3/2B2P2/5KP1/PPP4P/8 w - - 6 29", solution: ["e5e3","d7b8","e3d3","d6c7","c2c3","b8c6"], solutionSan: ["Re3","Nb8","Rd3+","Kc7","c3","Nc6"], rating: 1630, sourceRef: "Fischer – Taimanov, Vancouver 1971 (29.Re3 Nb8 30.Rd3+ Kc7 31.c3 Nc6) : le Cavalier noir, sans case sûre, est déjà réduit à l'attente pure." },
+    { fen: "5r2/5pp1/1pnk3p/p1p5/2B2P2/2P1RKP1/PP5P/8 w - - 3 33", solution: ["a2a4","c6e7","h2h3","e7c6","h3h4","h6h5"], solutionSan: ["a4","Ne7","h3","Nc6","h4","h5"], rating: 1650, sourceRef: "Fischer – Taimanov, Vancouver 1971 (33.a4 ... 35.h5) : gain d'espace des deux côtés pendant que le Cavalier noir shuttle sans but." },
+    { fen: "8/3k2p1/1pn2r2/p1p2p1p/P1B2P1P/2P2KP1/1P2R3/8 w - - 4 40", solution: ["e2e3","g7g6","c4b5","f6d6","f3e2","d7d8","e3d3","d8c7","d3d6","c7d6"], solutionSan: ["Re3","g6","Bb5","Rd6","Ke2","Kd8","Rd3","Kc7","Rxd6","Kxd6"], rating: 1670, sourceRef: "Fischer – Taimanov, Vancouver 1971 (40.Re3 ... 44.Rxd6 Kxd6) : réduire vers la pure finale de pièces mineures où le Fou domine." },
+    { fen: "8/8/1pnk2p1/pBp2p1p/P4P1P/2P3P1/1P2K3/8 w - - 0 45", solution: ["e2d3","c6e7","b5e8","d6d5","e8f7","d5d6","d3c4","d6c6","f7e8","c6b7","c4b5"], solutionSan: ["Kd3","Ne7","Be8","Kd5","Bf7+","Kd6","Kc4","Kc6","Be8+","Kb7","Kb5"], rating: 1690, sourceRef: "Fischer – Taimanov, Vancouver 1971 (45.Kd3 ... 50.Kb5) : le Roi et le Fou tissent ensemble un réseau de cases qui emprisonne le Cavalier." },
+    { fen: "8/2k1n3/1p4p1/pKpB1p1p/P4P1P/2P3P1/1P6/8 w - - 16 53", solution: ["d5f7","c7b7","f7b3","b7a7","b3d1","a7b7","d1f3","b7c7"], solutionSan: ["Bf7","Kb7","Bb3","Ka7","Bd1","Kb7","Bf3+","Kc7"], rating: 1700, sourceRef: "Fischer – Taimanov, Vancouver 1971 (53.Bf7 ... 56.Bf3+) : le Fou navigue seul d'un réseau de cases à l'autre, le Cavalier ne peut qu'observer." },
+    { fen: "8/2k1n3/1p4p1/pKp2p1p/P4P1P/2P2BP1/1P6/8 w - - 24 57", solution: ["b5a6","e7g8","f3d5","g8e7","d5c4","e7c6"], solutionSan: ["Ka6","Ng8","Bd5","Ne7","Bc4","Nc6"], rating: 1710, sourceRef: "Fischer – Taimanov, Vancouver 1971 (57.Ka6 ... 59.Bc4) : le Roi blanc s'infiltre profondément, le Cavalier noir shuffle sans la moindre case sûre." },
+    { fen: "3kB3/4n3/Kp4p1/p1p2p1p/P4P1P/2P3P1/1P6/8 w - - 34 62", solution: ["e8g6","e7g6","a6b6","d8d7","b6c5"], solutionSan: ["Bxg6","Nxg6","Kxb6","Kd7","Kxc5"], rating: 1730, sourceRef: "Fischer – Taimanov, Vancouver 1971 (62.Bxg6! Nxg6 63.Kxb6 ... 64.Kxc5) : la restriction devient enfin un gain matériel concret." },
+    { fen: "8/3k4/6n1/p1K2p1p/P4P1P/2P3P1/1P6/8 b - - 0 64", solution: ["g6e7","b2b4","a5b4","c3b4","e7c8","a4a5","c8d6","b4b5","d6e4"], solutionSan: ["Ne7","b4","axb4","cxb4","Nc8","a5","Nd6","b5","Ne4+"], rating: 1760, sourceRef: "Fischer – Taimanov, Vancouver 1971 (65.b4 ... 68.b5) : la majorité de pions à l'aile dame, jusque-là latente, devient soudain décisive." },
+    { fen: "8/3k4/8/PPK2p1p/4nP1P/6P1/8/8 w - - 1 69", solution: ["c5b6","d7c8","b6c6","c8b8","b5b6"], solutionSan: ["Kb6","Kc8","Kc6","Kb8","b6"], rating: 1790, sourceRef: "Fischer – Taimanov, Vancouver 1971 (69.Kb6 ... 71.b6) : le pion b devient imparable, Noir abandonne — quarante coups de patience enfin récompensés." },
+  ].map((p) => ({ themeId: "jh-module-14-l-art-de-la-conversion", ...p })),
+  // (2026-09-12, Lot 6) `jh-module-15` : Capablanca (Blancs) – Steiner (Noirs),
+  // exhibition d'échecs vivants, Los Angeles 1933 (C49, Quatre Cavaliers
+  // Espagnole Symétrique), 25 coups, 1-0 (mat, 25.Qb4#). LA partie assignée
+  // par le cahier des charges, vérifiée exacte. 13 puzzles, même source que
+  // les 6 CourseSteps du tutoriel ajouté à `course-lesson.ts` — le premier
+  // contenu réel de ce thème. Cette même partie alimente déjà 5 puzzles de
+  // `pm-la-securite-du-roi-en-milieu-de-partie` (coups 13, 14, 17, 19, 23, 24
+  // — étude Lichess « King safety » de FM Heineccius) : chaque position
+  // ci-dessous a été délibérément choisie à un point de la partie NON DÉJÀ
+  // utilisé par ce thème (coups 4 à 12, puis les demi-coups noirs intercalés
+  // des coups 13 à 25), pour zéro collision de FEN — vérifié programmatiquement
+  // (chess.js, voir le script de génération) avant écriture.
+  ...[
+    { fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 4 4", solution: ["f1b5","f8b4"], solutionSan: ["Bb5","Bb4"], rating: 1480, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (4.Bb5 Bb4) : le clouage symétrique caractéristique des Quatre Cavaliers, chaque camp visant sa propre configuration idéale de pièces mineures." },
+    { fen: "r1bqk2r/pppp1ppp/2n2n2/1B2p3/1b2P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 6 5", solution: ["e1g1","e8g8","d2d3","d7d6"], solutionSan: ["O-O","O-O","d3","d6"], rating: 1500, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (5.O-O O-O 6.d3 d6) : mise en place tranquille, la tension du clouage reste entière." },
+    { fen: "r1bq1rk1/ppp2ppp/2np1n2/1B2p3/1b2P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 0 7", solution: ["c1g5","b4c3","b2c3","c6e7"], solutionSan: ["Bg5","Bxc3","bxc3","Ne7"], rating: 1520, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (7.Bg5 Bxc3 8.bxc3 Ne7) : la paire de Fous blancs naît de l'échange consenti par Noir." },
+    { fen: "r1bq1rk1/ppp1nppp/3p1n2/1B2p1B1/4P3/2PP1N2/P1P2PPP/R2Q1RK1 w - - 1 9", solution: ["f3h4","c7c6","b5c4","c8e6"], solutionSan: ["Nh4","c6","Bc4","Be6"], rating: 1550, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (9.Nh4 c6 10.Bc4 Be6) : le Cavalier blanc vise f5 pendant que les Fous restent actifs des deux côtés." },
+    { fen: "r2q1rk1/pp2nppp/2ppbn2/4p1B1/2B1P2N/2PP4/P1P2PPP/R2Q1RK1 w - - 2 11", solution: ["g5f6","g7f6","c4e6","f7e6"], solutionSan: ["Bxf6","gxf6","Bxe6","fxe6"], rating: 1580, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (11.Bxf6! gxf6 12.Bxe6! fxe6) : LE critère du module — sacrifier les deux Fous pour ouvrir les deux ailes noires à la fois." },
+    { fen: "r2q1rk1/pp2n2p/2pppp2/4p3/4P1QN/2PP4/P1P2PPP/R4RK1 b - - 1 13", solution: ["g8f7","f2f4","f8g8","g4h5"], solutionSan: ["Kf7","f4","Rg8","Qh5+"], rating: 1605, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (13...Kf7 14.f4 Rg8 15.Qh5+) : sans Fou pour couvrir les cases noires, le Roi ne trouve nul refuge." },
+    { fen: "r2q2r1/pp2nk1p/2pppp2/4p3/4PPQN/2PP4/P1P3PP/R4RK1 w - - 1 15", solution: ["g4h5","f7g7","f4e5","d6e5"], solutionSan: ["Qh5+","Kg7","fxe5","dxe5"], rating: 1625, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (15.Qh5+ Kg7 16.fxe5 dxe5) : l'ouverture du centre poursuit le travail commencé par le sacrifice des Fous." },
+    { fen: "r2q2r1/pp2n1kp/2p1pR2/4p2Q/4P2N/2PP4/P1P3PP/R5K1 b - - 0 17", solution: ["g7f6","a1f1","e7f5","h4f5"], solutionSan: ["Kxf6","Rf1+","Nf5","Nxf5"], rating: 1645, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (17...Kxf6 18.Rf1+ Nf5 19.Nxf5) : le Roi noir, mis à nu, doit marcher à pied jusqu'au centre de l'échiquier." },
+    { fen: "r2q2r1/pp5p/2p1pk2/4pN1Q/4P3/2PP4/P1P3PP/5RK1 b - - 0 19", solution: ["e6f5","f1f5","f6e7"], solutionSan: ["exf5","Rxf5+","Ke7"], rating: 1665, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (19...exf5 20.Rxf5+ Ke7) : le Roi noir continue sa fuite forcée, toujours sans appui de pièce mineure." },
+    { fen: "r2q2r1/pp2k2p/2p5/4pR1Q/4P3/2PP4/P1P3PP/6K1 w - - 1 21", solution: ["h5f7","e7d6"], solutionSan: ["Qf7+","Kd6"], rating: 1685, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (21.Qf7+ Kd6) : la Dame et la Tour blanches chassent maintenant le Roi vers l'aile dame." },
+    { fen: "r2q2r1/pp3Q1p/2pk4/4pR2/4P3/2PP4/P1P3PP/6K1 w - - 3 22", solution: ["f5f6","d6c5"], solutionSan: ["Rf6+","Kc5"], rating: 1695, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (22.Rf6+ Kc5) : la seconde aile, ouverte dès le coup 9 (...c6), s'avère tout aussi vulnérable." },
+    { fen: "r2q2r1/pQ5p/2p2R2/2k1p3/4P3/2PP4/P1P3PP/6K1 b - - 0 23", solution: ["d8b6","f6c6","b6c6"], solutionSan: ["Qb6","Rxc6+","Qxc6"], rating: 1720, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (23...Qb6 24.Rxc6+! Qxc6) : les derniers points d'appui noirs à l'aile dame tombent un à un." },
+    { fen: "r5r1/pQ5p/2q5/2k1p3/4P3/2PP4/P1P3PP/6K1 w - - 0 25", solution: ["b7b4"], solutionSan: ["Qb4#"], rating: 1750, sourceRef: "Capablanca – Steiner, Los Angeles 1933 (25.Qb4#) : mat — conséquence directe du sacrifice des deux Fous aux coups 11 et 12." },
+  ].map((p) => ({ themeId: "jh-module-15-fou-contre-cavalier-mode-d-emploi", ...p })),
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-16` : Nimzowitsch –
+  // Rubinstein, Dresde 1926 (46 coups, 1-0) remplace sa ligne théorique par
+  // une vague réelle de 13 puzzles — voir `course-lesson.ts` pour la
+  // justification du remplacement de la partie assignée à l'origine.
+  ...[
+    { fen: "r1b2r1k/1pq3pp/p1nb4/5p2/2Bp1P2/3P1QN1/PP1BR1PP/5RK1 w - - 0 18", solution: ["g3h1","c8d7"], solutionSan: ["Nh1","Bd7"], rating: 1600, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (18.Nh1! Bd7) : le Cavalier plonge sur la pire case du plateau pour un plan à long terme." },
+    { fen: "r4r1k/1pqb2pp/p1nb4/5p2/2Bp1P2/3P1Q2/PP1BR1PP/5RKN w - - 2 19", solution: ["h1f2","a8e8"], solutionSan: ["Nf2","Rae8"], rating: 1610, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (19.Nf2 Rae8) : le regroupement continue, invisible pour l'adversaire." },
+    { fen: "3n1r1k/1pqb2pp/p2b4/5p2/2Bp1P2/3P1Q2/PP1BRNPP/6K1 w - - 1 22", solution: ["f2h3","d7c6"], solutionSan: ["Nh3","Bc6"], rating: 1620, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (22.Nh3 Bc6) : le Cavalier ressort enfin, prêt pour g5." },
+    { fen: "3n1r1k/1pq3pp/p1bb4/5p2/2Bp1P2/3P1Q1N/PP1BR1PP/6K1 w - - 3 23", solution: ["f3h5","g7g6"], solutionSan: ["Qh5","g6"], rating: 1630, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (23.Qh5 g6) : la pression sur l'aile roi force une nouvelle faiblesse." },
+    { fen: "3n1r2/1pq3kp/p1bb2p1/5p2/2Bp1P1Q/3P3N/PP1BR1PP/6K1 w - - 2 25", solution: ["h4f2","d6c5"], solutionSan: ["Qf2","Bc5"], rating: 1640, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (25.Qf2 Bc5) : Nimzowitsch réoriente sa Dame sans hâte, le plan est encore loin d'être fini." },
+    { fen: "3n1r2/1pq3kp/p1b3p1/2b2p2/2Bp1P2/3P3N/PP1BRQPP/6K1 w - - 4 26", solution: ["b2b4","c5b6"], solutionSan: ["b4","Bb6"], rating: 1650, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (26.b4! Bb6) : un second front s'ouvre à l'aile dame sans relâcher la pression à l'aile roi." },
+    { fen: "3nr3/1pq3kp/pbb3p1/5p2/1PBp1P1Q/3P3N/P2BR1PP/6K1 w - - 3 28", solution: ["e2e5","d8f7"], solutionSan: ["Re5","Nf7"], rating: 1660, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (28.Re5! Nf7) : la Tour occupe la case préparée par les échanges précédents." },
+    { fen: "4r3/1pq2nkp/pbb3p1/4Rp2/1PBp1P1Q/3P3N/P2B2PP/6K1 w - - 5 29", solution: ["c4f7","c7f7"], solutionSan: ["Bxf7","Qxf7"], rating: 1670, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (29.Bxf7 Qxf7) : élimination du dernier défenseur du roi noir." },
+    { fen: "4r3/1p3qkp/pbb3p1/4Rp2/1P1p1P1Q/3P3N/P2B2PP/6K1 w - - 0 30", solution: ["h3g5","f7g8"], solutionSan: ["Ng5","Qg8"], rating: 1680, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (30.Ng5 Qg8) : le Cavalier atteint enfin g5, terme du voyage commencé au coup 18." },
+    { fen: "4r1q1/1p4kp/pbb3p1/4RpN1/1P1p1P1Q/3P4/P2B2PP/6K1 w - - 2 31", solution: ["e5e8","c6e8"], solutionSan: ["Rxe8","Bxe8"], rating: 1690, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (31.Rxe8 Bxe8) : simplification qui profite au camp le mieux organisé." },
+    { fen: "6q1/1p4kp/pbb3p1/5pN1/1P1p1P2/3P4/P2B2PP/4Q1K1 w - - 2 33", solution: ["e1e7","g7h8","b4b5","g8g7"], solutionSan: ["Qe7+","Kh8","b5","Qg7"], rating: 1700, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (33.Qe7+ Kh8 34.b5 Qg7) : les deux ailes convergent enfin l'une vers l'autre." },
+    { fen: "7k/1p2Q1qp/pbb3p1/1P3pN1/3p1P2/3P4/P2B2PP/6K1 w - - 1 35", solution: ["e7g7","h8g7","b5c6","b7c6"], solutionSan: ["Qxg7+","Kxg7","bxc6","bxc6"], rating: 1710, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (35.Qxg7+ Kxg7 36.bxc6 bxc6) : le plan encaisse son premier gain matériel concret, la paire de Fous." },
+    { fen: "8/2B1b2p/p3k1p1/2p2p2/2Np1P2/3P2P1/P6P/6K1 w - - 5 43", solution: ["c4b6","h7h6","h2h4","g6g5"], solutionSan: ["Nb6","h6","h4","g5"], rating: 1720, sourceRef: "Nimzowitsch – Rubinstein, Dresde 1926 (43.Nb6 h6 44.h4 g5) : conversion technique de la finale de pièces mineures, vingt coups après le début du plan." },
+  ].map((p) => ({ themeId: "jh-module-16-construire-un-plan-a-long-terme", ...p })),
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-17` : Fischer –
+  // Myagmarsuren, Interzonal de Sousse 1967 (31 coups, 1-0) remplace sa
+  // ligne théorique par une vague réelle de 13 puzzles.
+  ...[
+    { fen: "r1bq1rk1/pp2bppp/2n1pn2/2pp4/4P3/3P1NP1/PPPN1PBP/R1BQ1RK1 w - - 6 8", solution: ["e4e5","f6d7"], solutionSan: ["e5","Nd7"], rating: 1550, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (8.e5! Nd7) : un coup d'intuition positionnelle qui fixe la structure pour tout le reste de la partie." },
+    { fen: "r1bq1rk1/p2nbppp/2n1p3/1pppP3/8/3P1NP1/PPPN1PBP/R1BQR1K1 w - - 0 10", solution: ["d2f1","b5b4"], solutionSan: ["Nf1","b4"], rating: 1565, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (10.Nf1 b4) : manœuvre tranquille, encore le registre de l'évaluation générale." },
+    { fen: "r1bq1rk1/3nbppp/2n1p3/p1ppP3/1p5P/3P1NP1/PPP2PB1/R1BQRNK1 w - - 0 12", solution: ["c1f4","a5a4"], solutionSan: ["Bf4","a4"], rating: 1580, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (12.Bf4 a4) : les deux camps continuent d'avancer leurs pions par principe général, sans calcul forcé." },
+    { fen: "r1bq1rk1/3nbppp/4p3/n1ppP3/p4B1P/P2P1NP1/2P2PB1/R2QRNK1 w - - 1 15", solution: ["f1e3","c8a6"], solutionSan: ["Ne3","Ba6"], rating: 1595, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (15.Ne3 Ba6) : dernier coup purement intuitif avant que la position ne se tende." },
+    { fen: "r2q1rk1/3nbppp/b3p3/n1ppP3/p4B1P/P2PNNP1/2P2PB1/R2QR1K1 w - - 3 16", solution: ["g2h3","d5d4"], solutionSan: ["Bh3","d4"], rating: 1610, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (16.Bh3! d4) : la prophylaxie tranquille précède la bascule tactique." },
+    { fen: "r2q1rk1/4bppp/bn2p3/n1p1P3/p2p1B1P/P2P1NPB/2P2P2/R2QRNK1 w - - 2 18", solution: ["f3g5","b6d5"], solutionSan: ["Ng5","Nd5"], rating: 1625, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (18.Ng5! Nd5) : le signal — dès qu'un saut de Cavalier menace des prises concrètes, il faut calculer." },
+    { fen: "r2q1rk1/4bppp/b3p3/n1pnP1N1/p2p1B1P/P2P2PB/2P2P2/R2QRNK1 w - - 4 19", solution: ["f4d2","e7g5","d2g5","d8d7"], solutionSan: ["Bd2","Bxg5","Bxg5","Qd7"], rating: 1645, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (19.Bd2 Bxg5 20.Bxg5 Qd7) : séquence forcée, chaque coup doit être vérifié jusqu'au bout." },
+    { fen: "r4rk1/3q1ppp/b3p3/n1pnP1B1/p2p3P/P2P2PB/2P2P2/R2QRNK1 w - - 1 21", solution: ["d1h5","f8c8"], solutionSan: ["Qh5","Rfc8"], rating: 1660, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (21.Qh5 Rfc8) : la Dame blanche s'installe pour l'assaut final, calculé à l'avance." },
+    { fen: "r1r3k1/3q1ppp/b3p3/n1pnP1BQ/p2p3P/P2P2PB/2P2P2/R3RNK1 w - - 3 22", solution: ["f1d2","d5c3"], solutionSan: ["Nd2","Nc3"], rating: 1675, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (22.Nd2 Nc3) : Noir cherche sa propre contre-chance calculée, une fourchette potentielle." },
+    { fen: "r1r3k1/3q1ppp/b3p3/n1p1P1BQ/p2p3P/P1nP2PB/2PN1P2/R3R1K1 w - - 5 23", solution: ["g5f6","d7e8"], solutionSan: ["Bf6","Qe8"], rating: 1690, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (23.Bf6 Qe8) : Fischer ferme toutes les issues avant de continuer le calcul de l'attaque." },
+    { fen: "r1r1q1k1/5ppp/b3pB2/n1p1P2Q/p2p3P/P1nP2PB/2PN1P2/R3R1K1 w - - 7 24", solution: ["d2e4","g7g6","h5g5","c3e4"], solutionSan: ["Ne4","g6","Qg5","Nxe4"], rating: 1705, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (24.Ne4 g6 25.Qg5 Nxe4) : la course commence — chaque tempo compte des deux côtés." },
+    { fen: "r1r1q1k1/5p1p/b3pBp1/n1p1P1Q1/p2pn2P/P2P2PB/2P2P2/R3R1K1 w - - 0 26", solution: ["e1e4","c5c4","h4h5","c4d3"], solutionSan: ["Rxe4","c4","h5","cxd3"], rating: 1720, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (26.Rxe4 c4 27.h5 cxd3) : calcul pur de la course des pions passés contre l'attaque de mat." },
+    { fen: "2r1q1k1/r4p1p/b3pBp1/n3P1QP/p2p3R/P5P1/2p2PB1/R5K1 w - - 0 30", solution: ["g5h6","e8f8","h6h7"], solutionSan: ["Qh6","Qf8","Qxh7+"], rating: 1740, sourceRef: "Fischer – Myagmarsuren, Interzonal de Sousse 1967 (30.Qh6 Qf8 31.Qxh7+) : le calcul gagne la course d'exactement un tempo." },
+  ].map((p) => ({ themeId: "jh-module-17-calcul-et-intuition-positionnelle", ...p })),
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-18` : Deep Blue –
+  // Kasparov, Philadelphie 1996, Partie 1 (37 coups, 1-0) remplace sa ligne
+  // théorique par une vague réelle de 14 puzzles.
+  ...[
+    { fen: "2r2rk1/pp2qppp/1bn1pn2/1N2N1B1/3P4/P6P/1P2QPP1/2R2RK1 w - - 5 18", solution: ["g5f6","g7f6"], solutionSan: ["Bxf6","gxf6"], rating: 1600, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (18.Bxf6! gxf6) : choix statique, endommager durablement la structure noire." },
+    { fen: "2r2rk1/pp2qp1p/1bn1pp2/1N2N3/3P4/P6P/1P2QPP1/2R2RK1 w - - 0 19", solution: ["e5c4","f8d8"], solutionSan: ["Nc4","Rfd8"], rating: 1615, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (19.Nc4 Rfd8) : le Cavalier vise b6, une faiblesse statique fraîchement créée." },
+    { fen: "2rr2k1/pp2qp1p/1bn1pp2/1N6/2NP4/P6P/1P2QPP1/2R2RK1 w - - 2 20", solution: ["c4b6","a7b6"], solutionSan: ["Nxb6","axb6"], rating: 1630, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (20.Nxb6 axb6) : récolte immédiate, les pions noirs restent durablement affaiblis." },
+    { fen: "2rr2k1/1p2qp1p/1pn1p3/1N3p2/3P4/P6P/1P2QPP1/2RR2K1 w - - 0 22", solution: ["e2e3","e7f6"], solutionSan: ["Qe3","Qf6"], rating: 1645, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (22.Qe3 Qf6) : Deep Blue prépare tranquillement le coup dynamique qui va suivre." },
+    { fen: "2rr2k1/1p3p1p/1pn1pq2/1N3p2/3P4/P3Q2P/1P3PP1/2RR2K1 w - - 2 23", solution: ["d4d5","d8d5","d1d5","e6d5"], solutionSan: ["d5","Rxd5","Rxd5","exd5"], rating: 1665, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (23.d5!? Rxd5 24.Rxd5 exd5) : LE sacrifice dynamique — activité et roi adverse exposé contre un pion." },
+    { fen: "2r3k1/1p3p1p/1pn2q2/1N1p1p2/8/P3Q2P/1P3PP1/2R3K1 w - - 0 25", solution: ["b2b3","g8h8"], solutionSan: ["b3","Kh8"], rating: 1680, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (25.b3 Kh8) : consolidation prophylactique avant d'encaisser le gain dynamique." },
+    { fen: "2r4k/1p3p1p/1pn2q2/1N1p1p2/8/PP2Q2P/5PP1/2R3K1 w - - 1 26", solution: ["e3b6","c8g8"], solutionSan: ["Qxb6","Rg8"], rating: 1695, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (26.Qxb6 Rg8) : la faiblesse statique du coup 18 tombe enfin, vingt coups plus tard." },
+    { fen: "6rk/1p3p1p/1Qn2q2/1N1p1p2/8/PP5P/5PP1/2R3K1 w - - 1 27", solution: ["b6c5","d5d4"], solutionSan: ["Qc5","d4"], rating: 1705, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (27.Qc5 d4) : chasse des dernières cibles statiques noires." },
+    { fen: "6rk/1p3p1p/2n2q2/1NQ2p2/3p4/PP5P/5PP1/2R3K1 w - - 0 28", solution: ["b5d6","f5f4"], solutionSan: ["Nd6","f4"], rating: 1715, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (28.Nd6 f4) : le Cavalier blanc s'infiltre pendant que Noir tente sa propre dynamique." },
+    { fen: "6rk/1p3p1p/2nN1q2/2Q5/3p1p2/PP5P/5PP1/2R3K1 w - - 0 29", solution: ["d6b7","c6e5"], solutionSan: ["Nxb7","Ne5"], rating: 1725, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (29.Nxb7 Ne5) : nouvelle prise statique, Noir n'a plus que des espoirs dynamiques." },
+    { fen: "6rk/1N3p1p/5q2/2Q1n3/3p1p2/PP5P/5PP1/2R3K1 w - - 1 30", solution: ["c5d5","f4f3"], solutionSan: ["Qd5","f3"], rating: 1735, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (30.Qd5 f3) : Noir pousse sa dernière carte dynamique, le pion f." },
+    { fen: "6rk/1N3p1p/5q2/3Q4/3p4/PP1n1pPP/5P2/2R3K1 w - - 1 32", solution: ["c1c7","g8e8"], solutionSan: ["Rc7","Re8"], rating: 1745, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (32.Rc7 Re8) : la 7e rangée, un gain positionnel définitivement statique, referme le filet." },
+    { fen: "4r2k/1NR2p1p/5q2/3Q4/3p4/PP1n1pPP/5P2/6K1 w - - 3 33", solution: ["b7d6","e8e1"], solutionSan: ["Nd6","Re1+"], rating: 1755, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (33.Nd6 Re1+) : dernier sursaut dynamique noir, insuffisant." },
+    { fen: "7k/2R2p1p/3N1q2/3Q4/3p4/PP1n1pPP/5P2/4r1K1 w - - 5 34", solution: ["g1h2","d3f2","d6f7","h8g7","f7g5","g7h6","c7h7"], solutionSan: ["Kh2","Nxf2","Nxf7+","Kg7","Ng5+","Kh6","Rxh7+"], rating: 1780, sourceRef: "Deep Blue – Kasparov, Philadelphie 1996, Partie 1 (34.Kh2 Nxf2 35.Nxf7+ Kg7 36.Ng5+ Kh6 37.Rxh7+) : la combinaison finale, dynamique devenue décisive." },
+  ].map((p) => ({ themeId: "jh-module-18-evaluation-dynamique-contre-statique", ...p })),
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-19` : Karpov –
+  // Kasparov, Championnat du Monde Moscou 1985, Partie 16 (40 coups, 0-1)
+  // remplace sa ligne théorique par une vague réelle de 14 puzzles.
+  ...[
+    { fen: "r1bqkb1r/1p3ppp/p1n1pn2/3p4/2P1P3/N1N5/PP3PPP/R1BQKB1R w KQkq - 0 9", solution: ["c4d5","e6d5","e4d5","c6b4"], solutionSan: ["cxd5","exd5","exd5","Nb4"], rating: 1600, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (9.cxd5 exd5 10.exd5 Nb4) : la série d'échanges qui fixe déjà les cases faibles blanches." },
+    { fen: "r1bq1rk1/1p3ppp/p4n2/2bP4/1n6/N1N5/PP2BPPP/R1BQ1RK1 w - - 5 13", solution: ["e2f3","c8f5"], solutionSan: ["Bf3","Bf5"], rating: 1615, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (13.Bf3 Bf5) : Kasparov développe en gardant le complexe de cases en tête." },
+    { fen: "r2qr1k1/1p3ppp/p4n2/2bP1bB1/1n6/N1N2B2/PP3PPP/R2Q1RK1 w - - 9 15", solution: ["d1d2","b7b5"], solutionSan: ["Qd2","b5"], rating: 1630, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (15.Qd2 b5) : préparation tranquille avant le grand saut du Cavalier." },
+    { fen: "r2qr1k1/5ppp/p4n2/1pbP1bB1/1n6/N1N2B2/PP1Q1PPP/R4RK1 w - - 0 16", solution: ["a1d1","b4d3"], solutionSan: ["Rad1","Nd3"], rating: 1645, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (16.Rad1 Nd3!) : le Cavalier plante son drapeau sur une case que rien ne peut jamais déloger." },
+    { fen: "r2qr1k1/5pp1/p4n1p/2bP1b2/1p5B/2Nn1B2/PP1Q1PPP/1N1R1RK1 w - - 0 19", solution: ["c3a4","c5d6"], solutionSan: ["Na4","Bd6"], rating: 1660, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (19.Na4 Bd6) : Karpov tente une parade, Kasparov garde toujours son intrus." },
+    { fen: "2rqr1k1/5pp1/p2b1n1p/3P1b2/Np6/3n1BB1/PP1Q1PPP/1N1R1RK1 w - - 4 21", solution: ["b2b3","g7g5"], solutionSan: ["b3","g5"], rating: 1675, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (21.b3 g5) : Kasparov attaque maintenant sur les DEUX couleurs à la fois." },
+    { fen: "2rqr1k1/5p2/p2b1n1p/3P1bp1/Np6/1P1n1BB1/P2Q1PPP/1N1R1RK1 w - - 0 22", solution: ["g3d6","d8d6","g2g3","f6d7"], solutionSan: ["Bxd6","Qxd6","g3","Nd7"], rating: 1690, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (22.Bxd6 Qxd6 23.g3 Nd7) : l'échange des derniers Fous de cases sombres aggrave le déséquilibre." },
+    { fen: "2r1r1k1/3n1p2/p4q1p/3P1bp1/Np6/1P1n2P1/P2Q1PBP/1N1R1RK1 w - - 3 25", solution: ["a2a3","a6a5","a3b4","a5b4"], solutionSan: ["a3","a5","axb4","axb4"], rating: 1705, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (25.a3 a5 26.axb4 axb4) : ouverture de la colonne a pendant que le Cavalier tient toujours d3." },
+    { fen: "2r1r1k1/3n1p2/5qbp/3P2p1/Np6/1P1n2P1/Q4PBP/1N1R1RK1 w - - 2 28", solution: ["d5d6","g5g4","a2d2","g8g7"], solutionSan: ["d6","g4","Qd2","Kg7"], rating: 1715, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (28.d6 g4 29.Qd2 Kg7) : double poussée sur les deux couleurs, le roi blanc n'a plus de refuge sûr." },
+    { fen: "2r1r3/3n1pk1/3q2bp/8/Np4p1/1P1n1PP1/3Q2BP/1N1R1RK1 w - - 0 31", solution: ["f3g4","d6d4"], solutionSan: ["fxg4","Qd4+"], rating: 1725, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (31.fxg4 Qd4+) : Karpov encaisse un échec avant même de pouvoir souffler." },
+    { fen: "2r1r3/5pk1/5nbp/8/Np1q2P1/1P1n2P1/3Q2BP/1N1R1R1K w - - 3 33", solution: ["f1f4","f6e4"], solutionSan: ["Rf4","Ne4"], rating: 1735, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (33.Rf4 Ne4) : le Cavalier migre vers une nouvelle case du même complexe." },
+    { fen: "2r1r3/5pk1/6bp/8/Np1qnRP1/1P1n2P1/3Q2BP/1N1R3K w - - 5 34", solution: ["d2d3","e4f2"], solutionSan: ["Qxd3","Nf2+"], rating: 1745, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (34.Qxd3! Nf2+) : le prix à payer pour chasser enfin l'intrus — la Dame elle-même." },
+    { fen: "2r1r3/5pk1/7p/8/Np4P1/1P1bq1P1/3R2BP/1N1R3K w - - 2 37", solution: ["d2d3","c8c1","a4b2","e3f2"], solutionSan: ["Rxd3","Rc1","Nb2","Qf2"], rating: 1760, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (37.Rxd3 Rc1 38.Nb2 Qf2) : l'infiltration décisive sur la 1e rangée blanche." },
+    { fen: "4r3/5pk1/7p/8/1p4P1/1P1R2P1/1N3qBP/1NrR3K w - - 3 39", solution: ["b1d2","c1d1","b2d1","e8e1"], solutionSan: ["Nd2","Rxd1+","Nxd1","Re1+"], rating: 1780, sourceRef: "Karpov – Kasparov, Championnat du Monde Moscou 1985, Partie 16 (39.Nd2 Rxd1+ 40.Nxd1 Re1+) : Karpov abandonne, sans parade au double échec qui suit." },
+  ].map((p) => ({ themeId: "jh-module-19-les-cases-de-couleur-au-milieu-de-partie", ...p })),
+  // (2026-09-12, Palier Or « Avancé », Lot 7) `jh-module-20` : Alekhine –
+  // Yates, Londres 1922 (38 coups, 1-0) remplace sa ligne théorique par une
+  // vague réelle de 13 puzzles — voir `course-lesson.ts` pour la
+  // justification du remplacement de la partie assignée à l'origine.
+  ...[
+    { fen: "r1b1r1k1/4q1pp/4p3/1pnp1p2/p2P4/4PN2/PPQ2PPP/2R2RK1 w - - 0 18", solution: ["c2c5","e7c5","c1c5","b5b4"], solutionSan: ["Qxc5","Qxc5","Rxc5","b4"], rating: 1550, sourceRef: "Alekhine – Yates, Londres 1922 (18.Qxc5! Qxc5 19.Rxc5 b4) : l'échange des Dames ouvre VRAIMENT la finale." },
+    { fen: "r3r1k1/6pp/b3p3/2Rp1p2/pp1P4/4PN2/PP3PPP/2R3K1 w - - 2 21", solution: ["f3e5","e8b8"], solutionSan: ["Ne5","Reb8"], rating: 1570, sourceRef: "Alekhine – Yates, Londres 1922 (21.Ne5! Reb8) : le bon Cavalier s'installe pendant que le mauvais Fou noir reste emprisonné." },
+    { fen: "rr4k1/6pp/b3p3/2RpNp2/pp1P4/4P3/PP3PPP/2R3K1 w - - 4 22", solution: ["f2f3","b4b3"], solutionSan: ["f3","b3"], rating: 1590, sourceRef: "Alekhine – Yates, Londres 1922 (22.f3 b3) : consolidation avant la marche du roi." },
+    { fen: "rr4k1/6p1/b3p2p/2RpNp2/p2P4/Pp2PP2/1P4PP/2R3K1 w - - 0 24", solution: ["g1f2","g8h7"], solutionSan: ["Kf2","Kh7"], rating: 1610, sourceRef: "Alekhine – Yates, Londres 1922 (24.Kf2! Kh7) : la marche du roi commence — plus aucun échec adverse à craindre." },
+    { fen: "rr6/6pk/b3p2p/2RpNp2/p2P4/Pp2PP2/1P3KPP/2R5 w - - 2 25", solution: ["h2h4","b8f8"], solutionSan: ["h4","Rf8"], rating: 1625, sourceRef: "Alekhine – Yates, Londres 1922 (25.h4 Rf8) : le roi blanc continue sa promenade, soutenu par ses pions." },
+    { fen: "r4r2/6pk/b3p2p/2RpNp2/p2P3P/Pp2PP2/1P3KP1/2R5 w - - 1 26", solution: ["f2g3","f8b8"], solutionSan: ["Kg3","Rfb8"], rating: 1640, sourceRef: "Alekhine – Yates, Londres 1922 (26.Kg3 Rfb8) : troisième étape de la marche royale, vers le centre de l'échiquier." },
+    { fen: "rr6/6pk/b3p2p/2RpNp2/p2P3P/Pp2PPK1/1P4P1/2R5 w - - 3 27", solution: ["c5c7","a6b5"], solutionSan: ["Rc7","Bb5"], rating: 1655, sourceRef: "Alekhine – Yates, Londres 1922 (27.Rc7 Bb5) : les Tours blanches s'infiltrent pendant que le roi continue d'avancer." },
+    { fen: "rr6/2R3pk/4p2p/1b1pNp2/p2P3P/Pp2PPK1/1P4P1/2R5 w - - 5 28", solution: ["c1c5","b5a6","c5c6","b8e8"], solutionSan: ["R1c5","Ba6","R5c6","Re8"], rating: 1670, sourceRef: "Alekhine – Yates, Londres 1922 (28.R1c5 Ba6 29.R5c6 Re8) : triplement des pièces lourdes sur la 6e/7e rangée, le Fou noir reste spectateur." },
+    { fen: "r3r3/2R3pk/b1R1p2p/3pNp2/p2P3P/Pp2PPK1/1P4P1/8 w - - 9 30", solution: ["g3f4","h7g8"], solutionSan: ["Kf4","Kg8"], rating: 1685, sourceRef: "Alekhine – Yates, Londres 1922 (30.Kf4! Kg8) : le roi atteint f4, une case active en plein centre." },
+    { fen: "r3r1k1/2R3p1/b1R1p2p/3pNp2/p2P1K1P/Pp2PP2/1P4P1/8 w - - 11 31", solution: ["h4h5","a6f1"], solutionSan: ["h5","Bf1"], rating: 1700, sourceRef: "Alekhine – Yates, Londres 1922 (31.h5 Bf1) : le dernier pion faible noir tombe bientôt, le Fou erre sans plan." },
+    { fen: "r3r1k1/2R3p1/b1R1p2p/3pNp1P/p2P1K2/Pp2PPP1/1P6/8 w - - 1 33", solution: ["c7f7","g8h7","c6c7","e8g8"], solutionSan: ["Rf7","Kh7","Rcc7","Rg8"], rating: 1715, sourceRef: "Alekhine – Yates, Londres 1922 (33.Rf7 Kh7 34.Rcc7 Rg8) : les deux Tours blanches dominent totalement la 7e rangée." },
+    { fen: "r5r1/2R2Rpk/b3p2p/3pNp1P/p2P1K2/Pp2PPP1/1P6/8 w - - 5 35", solution: ["e5d7","h7h8","d7f6","g8f8"], solutionSan: ["Nd7","Kh8","Nf6","Rgf8"], rating: 1730, sourceRef: "Alekhine – Yates, Londres 1922 (35.Nd7 Kh8 36.Nf6! Rgf8) : le Cavalier complète l'étau pendant que le roi noir n'a plus une case sûre." },
+    { fen: "r4r1k/2R2Rp1/b3pN1p/3p1p1P/p2P1K2/Pp2PPP1/1P6/8 w - - 9 37", solution: ["f7g7","f8f6","f4e5"], solutionSan: ["Rxg7","Rxf6","Ke5"], rating: 1750, sourceRef: "Alekhine – Yates, Londres 1922 (37.Rxg7 Rxf6 38.Ke5!) : le roi blanc conclut lui-même la domination, sur la case même que la finale préparait depuis quinze coups." },
+  ].map((p) => ({ themeId: "jh-module-20-le-roi-actif-en-finale", ...p })),
   {
     themeId: "jh-module-21-jouer-les-structures-fermees",
     fen: "r1bq1rk1/1pp1npbp/3p1np1/p2Pp3/2P1P3/2N5/PP1NBPPP/R1BQ1RK1 w - - 0 10",
