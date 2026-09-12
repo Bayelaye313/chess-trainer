@@ -20,7 +20,16 @@
  * puzzle permet d'en dériver un (`buildMotifIntro`) — sinon repli sur le
  * diagramme statique historique (position seule, jamais de flèche inventée).
  *
- * Priorité absolue à `COURSE_LESSONS` (`core/curriculum/course-lesson.ts`,
+ * Priorité ABSOLUE à `COURSE_TREES` (`core/curriculum/course-tree.ts`, cahier
+ * des charges du 2026-09-12) quand le thème en a un : un ARBRE COMPLET façon
+ * Lichess Study (`CourseTreeViewer`) — navigation libre dans les variantes
+ * réelles de la partie, suggestions moteur permanentes. Réservé aux 5 thèmes
+ * dont la source a été retrouvée avec de vraies variantes RAV annotées
+ * (clôture du Palier Or, modules 21-25) — voir le docstring de
+ * `course-tree.ts` pour pourquoi ce n'est PAS un retrofit des ~40 autres
+ * cours existants.
+ *
+ * À défaut, priorité à `COURSE_LESSONS` (`core/curriculum/course-lesson.ts`,
  * cahier des charges du 2026-09-07) quand le thème en a un : un vrai COURS À
  * PLUSIEURS CHAPITRES (`CourseLessonViewer`) — chaque chapitre sa position
  * réelle et son commentaire traduit, on tourne les pages avec Précédent/
@@ -50,6 +59,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { COURSE_LESSONS } from "@/core/curriculum/course-lesson";
+import { COURSE_TREES } from "@/core/curriculum/course-tree";
 import { resolveLessonContent } from "@/core/curriculum/lesson-content";
 import { buildMotifIntro } from "@/core/curriculum/motif-intro";
 import { THEME_DEMOS } from "@/core/curriculum/theme-demo";
@@ -57,6 +67,7 @@ import { getThemePuzzleSession } from "@/server/actions/curriculum";
 import type { CurriculumCategoryMeta } from "@/core/curriculum/catalog";
 import type { CurriculumThemeOverview, ThemePuzzle } from "@/server/queries/curriculum";
 import { CourseLessonViewer } from "./course-lesson-viewer";
+import { CourseTreeViewer } from "./course-tree-viewer";
 import { MotifIntroBoard } from "./motif-intro-board";
 import { moduleIcon } from "./module-icon";
 import { ThemeDemoBoard } from "./theme-demo-board";
@@ -80,15 +91,17 @@ export function ThemeLesson({
   onExit: () => void;
 }) {
   const lesson = resolveLessonContent(theme, category);
-  const courseLesson = COURSE_LESSONS[theme.id];
-  // `CourseLesson` (cours à plusieurs chapitres) prend le pas sur `ThemeDemo`
-  // (démonstration fixe à 2-3 étapes) quand un thème porte les deux — aucun
-  // cas actuel, voir le docstring de `course-lesson.ts`.
-  const demo = courseLesson ? undefined : THEME_DEMOS[theme.id];
+  const courseTree = COURSE_TREES[theme.id];
+  const courseLesson = courseTree ? undefined : COURSE_LESSONS[theme.id];
+  // `CourseTree`/`CourseLesson` (cours à chapitres, arbre ou plat) prennent le
+  // pas sur `ThemeDemo` (démonstration fixe à 2-3 étapes) quand un thème porte
+  // plusieurs de ces formats — aucun cas actuel, voir le docstring de
+  // `course-tree.ts`/`course-lesson.ts`.
+  const demo = courseTree || courseLesson ? undefined : THEME_DEMOS[theme.id];
   // Sans démonstration curatée ni cours à chapitres, rien à valider — le
   // bouton reste actif dès le départ (même comportement qu'avant ce cahier
   // des charges).
-  const [demoCompleted, setDemoCompleted] = useState<boolean>(!demo && !courseLesson);
+  const [demoCompleted, setDemoCompleted] = useState<boolean>(!demo && !courseLesson && !courseTree);
   // Cahier des charges du 2026-09-06 : « si ton filtre local ne trouve pas de
   // puzzle 100% fidèle au thème, laisse-le à 0 puzzle, bloque l'accès, et
   // affiche une alerte claire — ne triche plus pour remplir les jauges. »
@@ -158,8 +171,10 @@ export function ThemeLesson({
         </div>
       </div>
 
-      <div className={`mx-auto w-full ${courseLesson ? "max-w-[760px]" : "max-w-[420px]"}`}>
-        {courseLesson ? (
+      <div className={`mx-auto w-full ${courseTree || courseLesson ? "max-w-[760px]" : "max-w-[420px]"}`}>
+        {courseTree ? (
+          <CourseTreeViewer tree={courseTree} onComplete={() => setDemoCompleted(true)} />
+        ) : courseLesson ? (
           <CourseLessonViewer lesson={courseLesson} onComplete={() => setDemoCompleted(true)} />
         ) : demo ? (
           <ThemeDemoBoard demo={demo} onComplete={() => setDemoCompleted(true)} />
