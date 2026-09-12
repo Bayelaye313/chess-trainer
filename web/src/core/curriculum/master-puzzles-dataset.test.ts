@@ -209,7 +209,30 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // walk » lui-même) remplacent chacune leur unique ligne théorique par une
     // vague réelle — premier tutoriel réel pour ces 5 thèmes (5 à 8
     // CourseSteps chacun), zéro collision de FEN avec le reste du dataset.
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(737);
+    // Enfin Lot 8 (2026-09-12, clôture intégrale du cursus Jesper Hall) :
+    // `jh-module-21-jouer-les-structures-fermees` (13, Rubinstein-Nimzowitsch,
+    // Berlin 1928 — « Nimzowitsch-Rubinstein Berlin 1928 » du cahier des
+    // charges existe bien mais est une partie OUVERTE et tactique, sans
+    // rapport avec des structures fermées ; remplacée après validation
+    // utilisateur par l'AUTRE partie du même mini-match, couleurs inversées,
+    // seule des deux à verrouiller réellement le centre dès 8.d5),
+    // `jh-module-22-affronter-le-fianchetto` (14, Botvinnik-Smyslov, Moscou
+    // 1954 ronde 16 — partie précise choisie dans le match assigné pour son
+    // 9.Ba3! caractéristique), `jh-module-23-le-controle-du-centre` (13,
+    // Alekhine-Euwe, Amsterdam 1935 partie 1 — partie précise choisie dans le
+    // match assigné, remportée « avec brio » par Alekhine dès la première
+    // partie), `jh-module-24-le-zugzwang-positionnel` (14, Sämisch-Nimzowitsch,
+    // Copenhague 1923, « The Immortal Zugzwang Game » — partie assignée déjà
+    // exacte ; partage sa partie source avec `pm-le-blocus-du-pion-passe`
+    // mais aucune des 14 positions ci-dessous ne recoupe les 13 déjà utilisées
+    // par ce thème-là) et `jh-module-25-synthese-parties-commentees` (14,
+    // Kasparov-Topalov, Wijk aan Zee 1999, « Kasparov's Immortal » — partie
+    // assignée déjà exacte) remplacent chacune leur unique ligne théorique par
+    // une vague réelle — premier tutoriel réel pour ces 5 derniers thèmes du
+    // cursus (5 à 8 CourseSteps chacun), zéro collision de FEN avec le reste
+    // du dataset. Le cursus Jesper Hall (25 modules) est désormais intégralement
+    // hydraté.
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(800);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -257,6 +280,11 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "jh-module-18-evaluation-dynamique-contre-statique": 14,
       "jh-module-19-les-cases-de-couleur-au-milieu-de-partie": 14,
       "jh-module-20-le-roi-actif-en-finale": 13,
+      "jh-module-21-jouer-les-structures-fermees": 13,
+      "jh-module-22-affronter-le-fianchetto": 14,
+      "jh-module-23-le-controle-du-centre": 13,
+      "jh-module-24-le-zugzwang-positionnel": 14,
+      "jh-module-25-synthese-parties-commentees": 14,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);
