@@ -77,7 +77,7 @@ describe("MASTER_PUZZLES_DATASET", () => {
     for (const id of datasetIds) expect(CURATED_THEME_IDS.has(id)).toBe(true);
   });
 
-  it("535 entrées au total — 135 thèmes à 1 exercice + 26 vagues", () => {
+  it("650 entrées au total — 129 thèmes à 1 exercice + 32 vagues", () => {
     // Vagues 2026-09-10 : `pm-le-mauvais-fou`/`pm-l-avant-poste-du-cavalier`
     // (8 chacun) puis un 2e lot de 5 thèmes convertis « au format Lichess »
     // (tutoriel + vague de puzzles) — `pm-la-tour-a-la-7e-rangee`,
@@ -142,8 +142,40 @@ describe("MASTER_PUZZLES_DATASET", () => {
     // Saint-Pétersbourg 1914 — « Botvinnik-Vidmar Nottingham 1936 » du
     // cahier des charges est exactement la partie déjà écartée pour Carlsbad
     // au Lot 2, un isolani et non des pions doublés) remplacent chacune leur
-    // unique ligne théorique par une vague réelle de 14 puzzles.
-    expect(MASTER_PUZZLES_DATASET).toHaveLength(574);
+    // unique ligne théorique par une vague réelle de 14 puzzles. Puis Lot 4
+    // (2026-09-11, même jour, dynamique pure/roques opposés/déséquilibres) :
+    // `jh-module-8-le-roque-oppose-et-l-attaque-de-pions` (14, Karpov-Korchnoi,
+    // Finale des Candidats Moscou 1974 partie 2, B77 Dragon Attaque
+    // Yougoslave — partie assignée déjà exacte, vérifiée avant rédaction),
+    // `jh-module-9-la-minorite-d-attaque` (14 de plus, Karpov-Lautier,
+    // Dortmund 1995, une des 3 parties canoniques citées par l'article
+    // Wikipédia « Minority attack » — « Pillsbury-Lasker Nuremberg 1896 » du
+    // cahier des charges est une partie inexistante dans ce sens, remplacée
+    // après validation utilisateur ; puzzles en plus des 23 steps de
+    // tutoriel déjà présents pour ce thème) et
+    // `jh-module-10-le-sacrifice-positionnel-de-qualite` (14, Reshevsky-Petrosian,
+    // Zurich Candidates 1953, LA référence historique du sacrifice
+    // positionnel de qualité 25...Re6!! — « Petrosian-Reshevsky » du cahier
+    // des charges avait les couleurs inversées, citation corrigée, même
+    // partie conservée) remplacent chacune leur unique ligne théorique par
+    // une vague réelle de 14 puzzles. Puis Lot 5 (2026-09-12, technique de
+    // finales pures) : `jh-module-11-les-finales-de-tours-pratiques` (12,
+    // aucun nouveau tutoriel — « Rubinstein-Vidmar San Sebastian 1911 » du
+    // cahier des charges est une nulle rapide en 22 coups sans contenu de
+    // finale de tours ; puzzles tirés des 3 parties déjà réelles du tutoriel
+    // existant : Alekhine-Capablanca 1927, Capablanca-Tartakower 1924,
+    // Rubinstein-Lasker 1909), `jh-module-12-les-finales-de-fous-de-couleurs-opposees`
+    // (14 de plus, Topalov-Shirov, Linares 1998 — « Shirov-Topalov » du
+    // cahier des charges avait les couleurs inversées ; LA partie du
+    // sacrifice 47...Bh3!!, la plus célèbre finale de Fous opposés de
+    // l'histoire) et `jh-module-13-transition-milieu-de-partie-vers-finale`
+    // (14, Capablanca-Yates, Hastings 1930/31 — « Capablanca-Nimzowitsch
+    // Saint-Pétersbourg 1914 » du cahier des charges est une partie
+    // inexistante dans ce sens (seule variante réelle, Nimzowitsch-Capablanca,
+    // déjà utilisée dans jh-module-7, ne comporte aucun échange de Dames) ;
+    // premier tutoriel réel de ce thème, 8 CourseSteps) remplacent chacune
+    // leur unique ligne théorique par une vague réelle.
+    expect(MASTER_PUZZLES_DATASET).toHaveLength(650);
     const expectedWaveSize: Record<string, number> = {
       "pm-le-mauvais-fou": 8,
       "pm-l-avant-poste-du-cavalier": 8,
@@ -178,6 +210,9 @@ describe("MASTER_PUZZLES_DATASET", () => {
       "jh-module-5-le-herisson-hedgehog": 14,
       "jh-module-6-la-chaine-de-pions-en-francais": 14,
       "jh-module-7-structures-a-pions-doubles": 14,
+      "jh-module-8-le-roque-oppose-et-l-attaque-de-pions": 14,
+      "jh-module-9-la-minorite-d-attaque": 14,
+      "jh-module-10-le-sacrifice-positionnel-de-qualite": 14,
     };
     for (const [themeId, size] of Object.entries(expectedWaveSize)) {
       const wave = MASTER_PUZZLES_DATASET.filter((p) => p.themeId === themeId);

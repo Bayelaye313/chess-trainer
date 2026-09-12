@@ -2613,6 +2613,129 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // `jh-module-8-le-roque-oppose-et-l-attaque-de-pions` (2026-09-11, Lot 4) :
+  // Anatoly Karpov – Viktor Korchnoi, Finale des Candidats, Moscou 1974,
+  // partie 2 (chessgames.com/perl/chessgame?gid=1067858, confirmé via curl —
+  // B77, Dragon, Attaque Yougoslave, roques opposés, 1-0). Le cahier des
+  // charges désignait déjà la bonne partie — vérifiée avant rédaction,
+  // aucune substitution nécessaire pour ce module.
+  "jh-module-8-le-roque-oppose-et-l-attaque-de-pions": {
+    steps: [
+      {
+        title: "Anatoly Karpov – Viktor Korchnoi, Moscou 1974 (Finale des Candidats, partie 2)",
+        fen: "r1bqk2r/pp2ppbp/2np1np1/8/3NP3/2N1BP2/PPP3PP/R2QKB1R w KQkq - 1 8",
+        text: "Dragon, Attaque Yougoslave : les Blancs préparent le roque long pendant que les Noirs viennent de roquer court. Dès que les rois se mettent sur des ailes opposées, chaque camp sait déjà quel plan jouer — Karpov lance IMMÉDIATEMENT h4, sans même avoir encore roqué : dans une course de vitesse, le tempo compte plus que la sécurité formelle du roi.",
+        moveSan: ["Qd2", "O-O", "Bc4", "Bd7"],
+        arrows: [{ from: "h2", to: "h4", color: "green" }],
+        highlights: [{ square: "g8", color: "red" }],
+      },
+      {
+        title: "Karpov – Korchnoi : coup 12, le roque long enfin joué",
+        fen: "2rq1rk1/pp1bppbp/2np1np1/8/3NP2P/1BN1BP2/PPPQ2P1/R3K2R b KQ - 2 11",
+        text: "PRO TIP de Jesper Hall : une fois le plan de pions lancé, le roi peut se mettre à l'abri à tout moment — ici Karpov roque long seulement au coup 12, après avoir déjà avancé son pion h. Korchnoi riposte aussitôt en envoyant son Cavalier vers c4, cherchant à ouvrir des lignes contre le roi blanc tout juste installé : le miroir exact du danger que les Blancs préparent de l'autre côté.",
+        moveSan: ["Ne5", "O-O-O", "Nc4", "Bxc4"],
+        arrows: [{ from: "e1", to: "c1", color: "green" }, { from: "e5", to: "c4", color: "red" }],
+      },
+      {
+        title: "Karpov – Korchnoi : coups 14-15, l'assaut continue",
+        fen: "3q1rk1/pp1bppbp/3p1np1/8/2rNP2P/2N1BP2/PPPQ2P1/2KR3R w - - 0 14",
+        text: "Les Blancs sacrifient volontiers l'intégrité de leur propre structure de pions pour gagner des tempos : h5 chasse le Cavalier qui doit le prendre (Nxh5), puis g4 le chasse à nouveau (Nf6). PRO TIP : dans une course de roques opposés, chaque tempo gagné dans l'ouverture des lignes vaut plus qu'un pion isolé ou doublé — la seule question qui compte est « qui arrive en premier ? ».",
+        moveSan: ["h5", "Nxh5", "g4", "Nf6"],
+        arrows: [{ from: "h4", to: "h5", color: "green" }, { from: "g2", to: "g4", color: "green" }],
+      },
+      {
+        title: "Karpov – Korchnoi : coups 17-18, éliminer le défenseur",
+        fen: "5rk1/pp1bppbp/3p1np1/q7/2r1P1P1/2N1BP2/PPPQN3/2KR3R w - - 3 17",
+        text: "Bh6 ! échange le Fou de fianchetto noir, LE défenseur naturel du roque court — un motif classique de l'attaque de pions : retirer la pièce qui protège les cases claires/foncées autour du roi adverse avant même d'y envoyer les pions ou les pièces lourdes.",
+        moveSan: ["Bh6", "Bxh6", "Qxh6", "Rfc8"],
+        arrows: [{ from: "e3", to: "h6", color: "green" }],
+        highlights: [{ square: "g7", color: "red" }],
+      },
+      {
+        title: "Karpov – Korchnoi : coups 19-20, la Tour bascule",
+        fen: "2r3k1/pp1bpp1p/3p1npQ/q7/2r1P1P1/2N2P2/PPP1N3/2KR3R w - - 1 19",
+        text: "Karpov regroupe calmement sa Tour vers l'aile roi (Rd3) puis relance un second pion (g5) : Korchnoi, de son côté, tente une contre-attaque sur la colonne c avec R4c5, mais elle n'a toujours produit aucune menace concrète — elle arrive un temps trop tard.",
+        moveSan: ["Rd3", "R4c5", "g5", "Rxg5"],
+        arrows: [{ from: "d1", to: "d3", color: "green" }],
+      },
+      {
+        title: "Karpov – Korchnoi : coups 21-22, une petite opération tactique",
+        fen: "2r3k1/pp1bpp1p/3p1npQ/q5r1/4P3/2NR1P2/PPP1N3/2K4R w - - 0 21",
+        text: "Un échange de Tours suivi d'une reprise par le Cavalier (Rd5, Rxd5, Nxd5) maintient l'initiative sans perdre le moindre tempo : le Cavalier s'installe sur l'avant-poste central d5, verrou qui prépare directement la percée e5 à venir.",
+        moveSan: ["Rd5", "Rxd5", "Nxd5", "Re8"],
+      },
+      {
+        title: "Karpov – Korchnoi : coups 24-27, la percée décisive",
+        fen: "4r1k1/pp2pp1p/2bp1npQ/q2N4/4PN2/5P2/PPP5/2K4R w - - 3 24",
+        text: "e5 ouvre la grande diagonale, exf6 arrache complètement la couverture de pions du roque noir, et Qxh7+ suivi de Qh8+ conclut la course : l'attaque blanche arrive la première. Korchnoi abandonne face au mat forcé — la démonstration parfaite qu'en cas de roques opposés, la vitesse d'exécution prime sur tout le reste.",
+        moveSan: ["e5", "Bxd5", "exf6", "exf6", "Qxh7+", "Kf8", "Qh8+"],
+        arrows: [{ from: "e4", to: "e5", color: "green" }, { from: "h6", to: "h7", color: "green" }],
+        highlights: [{ square: "f8", color: "red" }],
+      },
+    ],
+  },
+  // `jh-module-10-le-sacrifice-positionnel-de-qualite` (2026-09-11, Lot 4) :
+  // Samuel Reshevsky – Tigran Petrosian, Zurich Candidates 1953, ronde 2
+  // (chessgames.com/perl/chessgame?gid=1106248, confirmé via curl — E58,
+  // Nimzo-Indienne, nulle). Le cahier des charges citait « Petrosian–Reshevsky »
+  // mais les couleurs sont en réalité inversées : c'est Reshevsky qui avait
+  // les Blancs, et c'est Petrosian, avec les Noirs, qui a joué le sacrifice
+  // positionnel de qualité 25...Re6!! — LA référence historique du thème
+  // (Mikhaïl Tal, cité par de nombreuses sources dont New In Chess). Citation
+  // simplement corrigée dans le bon sens, même partie conservée.
+  "jh-module-10-le-sacrifice-positionnel-de-qualite": {
+    steps: [
+      {
+        title: "Samuel Reshevsky – Tigran Petrosian, Zurich Candidates 1953 (ronde 2)",
+        fen: "r1bq1rk1/pp3ppp/2n1pn2/2pp4/2PP4/P1bBPN2/1P3PPP/R1BQ1RK1 w - - 0 9",
+        text: "Nimzo-Indienne : bxc3 double les pions blancs, mais cxd5 exd5 donne aussitôt aux Noirs un pion d5 isolé en miroir. Une position équilibrée, riche en défauts structurels des deux côtés — le terrain de jeu idéal pour la manœuvre prophylactique que Petrosian va bâtir tout au long de la partie.",
+        moveSan: ["bxc3", "b6", "cxd5", "exd5"],
+        highlights: [{ square: "c3", color: "red" }, { square: "d5", color: "red" }],
+      },
+      {
+        title: "Reshevsky – Petrosian : coups 11-12, Petrosian verrouille la position",
+        fen: "r1bq1rk1/p4ppp/1pn2n2/2pp4/3P4/P1PBPN2/5PPP/R1BQ1RK1 w - - 0 11",
+        text: "PRO TIP de Jesper Hall : la signature de Petrosian — c4 ! fixe volontairement la chaîne de pions, retire tout levier central aux Blancs et refuse toute complication prématurée, avant même de songer à une quelconque tactique. La prophylaxie précède toujours l'action chez Petrosian.",
+        moveSan: ["Bb2", "c4", "Bc2", "Bg4"],
+        arrows: [{ from: "c5", to: "c4", color: "green" }],
+      },
+      {
+        title: "Reshevsky – Petrosian : coups 17-18, l'infiltration légère blanche",
+        fen: "r2q1rk1/p4ppp/1pn3b1/3p4/2pP4/P1P1PP2/1BBQ2PP/R4RK1 w - - 1 17",
+        text: "Reshevsky finit par rompre avec e4, gagnant de l'espace central et ouvrant des lignes vers le roque noir — la première étape d'un plan qui va bientôt amener le Fou blanc au contact du pion e6.",
+        moveSan: ["e4", "Qd7", "Rae1", "dxe4"],
+        arrows: [{ from: "e3", to: "e4", color: "green" }],
+      },
+      {
+        title: "Reshevsky – Petrosian : coups 22-23, la pression sur e6",
+        fen: "r5k1/p2qrppp/2n3b1/1p6/2pPPQ2/P1P5/1B4PP/3BRRK1 w - - 2 22",
+        text: "Le Fou blanc vise ouvertement la case e6 tandis que les Blancs gagnent encore de l'espace avec e5 : la compensation qui va suivre pour les Noirs n'est encore visible nulle part — c'est justement tout l'art du sacrifice positionnel.",
+        moveSan: ["Bg4", "Qe8", "e5", "a5"],
+        arrows: [{ from: "d1", to: "g4", color: "green" }],
+      },
+      {
+        title: "Reshevsky – Petrosian : coup 25, 25...Re6!! — la compensation invisible",
+        fen: "3rq1k1/4rppp/2n3b1/pp2P3/2pP1QB1/P1P1R3/1B4PP/5RK1 w - - 2 25",
+        text: "LE coup le plus célèbre de la partie : sans échec, sans menace directe, sans la moindre urgence apparente, Petrosian offre la qualité. Mikhaïl Tal disait de ce coup tranquille qu'il lui avait fait une impression indélébile — c'est le modèle absolu du sacrifice positionnel : un investissement à très long terme, encaissé bien plus tard sous forme de cases fortes, de mauvais Fou adverse et d'une masse de pions dominante, jamais sous forme d'une combinaison immédiate.",
+        moveSan: ["Rfe1", "Re6"],
+        highlights: [{ square: "e6", color: "green" }],
+      },
+      {
+        title: "Reshevsky – Petrosian : coup 27, l'échange accepté",
+        fen: "3rq1k1/4nppp/4r1b1/pp2P3/P1pP1QB1/2P1R3/1B4PP/4R1K1 w - - 1 27",
+        text: "Bxe6 fxe6 : les Blancs empochent la qualité, mais les pions noirs e6/e7 fusionnent en un duo central massif, verrouillant les cases claires et donnant au Cavalier et au Fou restants des Noirs un contrôle total du centre — la compensation promise commence déjà à apparaître.",
+        moveSan: ["Bxe6", "fxe6"],
+        arrows: [{ from: "g4", to: "e6", color: "red" }],
+      },
+      {
+        title: "Reshevsky – Petrosian : coups 37-39, la compensation se matérialise enfin",
+        fen: "r5k1/6pp/Pq2p3/3nP3/1p1P4/3Q4/3B2PP/R5K1 b - - 2 37",
+        text: "Douze coups après le sacrifice, la poussée de pions à l'aile dame des Noirs (b3, puis b2) crée un pion passé monstrueux qui paralyse durablement une Tour blanche entière sur b1. La partie se conclut par la nulle — mais les Noirs, malgré leur déficit matériel officiel, n'ont pas été un seul instant en danger : la preuve vivante qu'un sacrifice positionnel bien conçu peut valoir largement son prix, même sans jamais reprendre la qualité.",
+        moveSan: ["b3", "Qc4", "h6", "h3", "b2"],
+        highlights: [{ square: "b2", color: "green" }],
+      },
+    ],
+  },
   "jh-module-11-les-finales-de-tours-pratiques": {
     steps: [
       {
@@ -2895,8 +3018,78 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // (2026-09-11, Lot 4) 8 nouveaux steps PRÉPENDÉS avant les 23 existants :
+  // Anatoly Karpov – Joël Lautier, Dortmund Sparkassen 1995, ronde 9
+  // (chessgames.com/perl/chessgame?gid=1069252, confirmé via curl — D45,
+  // Semi-Slave, 1-0). Le cahier des charges désignait « Pillsbury–Lasker,
+  // Nuremberg 1896 » — partie INEXISTANTE dans ce sens : la seule partie
+  // Pillsbury-Lasker de ce tournoi (ronde 9, « Full Nelson ») est une
+  // Défense Française avec sacrifice de tour, aucun rapport avec l'attaque
+  // de minorité ; Pillsbury–Tarrasch, Hastings 1895 (D63) vérifiée par
+  // acquit de conscience, également hors-sujet (structure verrouillée par
+  // 11...c4). Remplacée, après validation utilisateur, par Karpov–Lautier —
+  // une des 3 parties canoniques citées par l'article Wikipédia
+  // « Minority attack » (avec Petrosian–Krogius déjà utilisée au Lot 2 pour
+  // `jh-module-3` et Seirawan–Tal, Niksic 1983, non retenue ici).
   "jh-module-9-la-minorite-d-attaque": {
     steps: [
+      {
+        title: "Anatoly Karpov – Joël Lautier, Dortmund 1995 (partie canonique de l'attaque de minorité selon Wikipédia)",
+        fen: "3rrnk1/pp3pp1/1bp1bn1p/4q3/8/P2BP1NP/1PQBNPP1/R2R2K1 w - - 10 20",
+        text: "Structure Carlsbad classique : les Blancs n'ont que 2 pions à l'aile dame (a,b) contre 3 aux Noirs (a,b,c) — MOINS de pions, pas plus. C'est précisément pour cette raison que 20.b4! lance l'attaque de minorité : l'objectif n'est jamais de gagner du terrain, mais de forcer bxc6 pour transformer le pion c noir en faiblesse permanente et irréparable.",
+        moveSan: ["b4", "Ng6", "a4", "a6"],
+        arrows: [{ from: "b2", to: "b4", color: "green" }],
+        highlights: [{ square: "c6", color: "red" }],
+      },
+      {
+        title: "Karpov – Lautier : coups 22-23, régrouper avant de frapper",
+        fen: "3rr1k1/1p3pp1/pbp1bnnp/4q3/PP6/3BP1NP/2QBNPP1/R2R2K1 w - - 0 22",
+        text: "Les Blancs ne se précipitent pas : Bc3 puis l'échange des Fous sur d4 préparent méthodiquement la percée b5, en s'assurant qu'aucune pièce noire ne pourra harceler le pion b une fois lancé.",
+        moveSan: ["Bc3", "Qg5", "Bd4", "Bxd4"],
+        arrows: [{ from: "d2", to: "c3", color: "green" }],
+      },
+      {
+        title: "Karpov – Lautier : coup 25, garder le centre flexible",
+        fen: "3rr1k1/1p3pp1/p1p2nnp/3b2q1/PP1N4/3BP1NP/2Q2PP1/R2R2K1 w - - 1 25",
+        text: "e4 fixe le centre sans se hâter : PRO TIP de Jesper Hall — l'attaque de minorité est un plan LENT, presque un cheminement en plusieurs étapes ; rien n'oblige à jouer b5 dans l'instant tant que la position centrale reste sous contrôle.",
+        moveSan: ["e4", "Be6", "Nf3", "Qf4"],
+        arrows: [{ from: "e3", to: "e4", color: "green" }],
+      },
+      {
+        title: "Karpov – Lautier : coup 27, la percée b5",
+        fen: "3rr1k1/1p3pp1/p1p1bnnp/8/PP2Pq2/3B1NNP/2Q2PP1/R2R2K1 w - - 3 27",
+        text: "b5 ! ouvre enfin les hostilités. Après axb5 axb5, la colonne a s'ouvre et le coup bxc6 devient jouable à tout moment — le pion noir c6 va devenir la cible isolée de toute la partie, exactement le scénario que « minorité contre majorité » promet depuis le coup 20.",
+        moveSan: ["b5", "axb5", "axb5", "Ne5"],
+        arrows: [{ from: "b4", to: "b5", color: "green" }],
+      },
+      {
+        title: "Karpov – Lautier : coups 30-31, la faiblesse naît (bxc6)",
+        fen: "3rr1k1/1p3pp1/2p1bn1p/1P2q3/4P3/3B2NP/2Q2PP1/R2R2K1 w - - 0 30",
+        text: "bxc6 bxc6 : le pion c noir est désormais définitivement isolé et arriéré, sans aucun pion voisin pour le soutenir. Toute la stratégie des 10 coups précédents n'avait qu'un seul but — créer exactement cette faiblesse.",
+        moveSan: ["bxc6", "bxc6", "Rac1", "Rd6"],
+        highlights: [{ square: "c6", color: "red" }],
+      },
+      {
+        title: "Karpov – Lautier : coups 32-33, la pression s'accumule puis se simplifie",
+        fen: "4r1k1/5pp1/2prbn1p/4q3/4P3/3B2NP/2Q2PP1/2RR2K1 w - - 2 32",
+        text: "Les Blancs empilent leurs pièces sur la colonne c (Qc3, Rac1) et acceptent volontiers les échanges qui s'ensuivent — chaque simplification profite à celui qui possède la faiblesse durable, jamais à celui qui la défend.",
+        moveSan: ["Qc3", "Nd7", "Be2", "Rxd1+"],
+        arrows: [{ from: "c2", to: "c3", color: "green" }],
+      },
+      {
+        title: "Karpov – Lautier : coups 40-41, le paiement différé",
+        fen: "4r1k1/3n1bp1/5p1p/2p5/3NPPB1/2R4P/6P1/6K1 w - - 4 40",
+        text: "Vingt coups après bxc6, le Cavalier blanc s'infiltre enfin via b5-d6 : la faiblesse créée au milieu de partie ne rapporte ses fruits que dans le finale. PRO TIP : c'est le trait le plus caractéristique de l'attaque de minorité — la compensation matérielle ou positionnelle peut se faire attendre très longtemps avant de se concrétiser.",
+        moveSan: ["Nb5", "Nb6", "Nd6", "Na4"],
+        arrows: [{ from: "d4", to: "b5", color: "green" }, { from: "b5", to: "d6", color: "green" }],
+      },
+      {
+        title: "Karpov – Lautier : coups 43-44, le pion passé décide",
+        fen: "r5k1/5bp1/3N1p1p/2p5/n3PPB1/R6P/6P1/6K1 w - - 10 43",
+        text: "e5 puis e6 : le pion e blanc, libre de toute entrave depuis l'ouverture du centre, se transforme en pion passé décisif. Lautier abandonne — la faiblesse du pion c6, créée trente coups plus tôt par la seule attaque de minorité, a fini par déterminer toute l'issue de la partie.",
+        moveSan: ["e5", "Bd5", "e6"],
+        arrows: [{ from: "e5", to: "e6", color: "green" }],
+      },
       {
         title: "Lajos Portisch – Garry Kasparov, Skelleftea World Cup 1989",
         fen: "rnbqkb1r/pp3ppp/2p2n2/3p4/3P4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 6",
@@ -3028,8 +3221,69 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
       },
     ],
   },
+  // (2026-09-12, Lot 5) 8 nouveaux steps PRÉPENDÉS avant les 14 existants :
+  // Veselin Topalov (Blancs) – Alexei Shirov (Noirs), Linares 1998, ronde 10
+  // (D85, Gambit Dame Refusé Grünfeld Échange, 0-1). Le cahier des charges
+  // désignait « Shirov–Topalov » mais les couleurs sont en réalité inversées
+  // (confirmé, AskUserQuestion) — LA partie la plus célèbre de l'histoire des
+  // finales de Fous de couleurs opposées, avec le sacrifice 47...Bh3!!.
   "jh-module-12-les-finales-de-fous-de-couleurs-opposees": {
     steps: [
+      {
+        title: "Veselin Topalov – Alexei Shirov, Linares 1998 (ronde 10)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Grünfeld Échange : Noir cède le centre (d4/c4/e4) contre l'activité de pièces, notamment le Fou de g7 sur la grande diagonale. PRO TIP de Jesper Hall pour ce module : rien dans cette structure de départ ne laisse deviner qu'elle va déboucher, trente coups plus tard, sur la finale de Fous de couleurs opposées la plus célèbre de toute l'histoire des échecs — et sur l'un des sacrifices les plus audacieux jamais joués.",
+        moveSan: ["d4", "Nf6", "c4", "g6", "Nc3", "d5", "cxd5", "Nxd5", "e4", "Nxc3", "bxc3"],
+        highlights: [{ square: "g7", color: "green" }],
+      },
+      {
+        title: "Topalov – Shirov : coups 6 à 10, fianchetto et rupture centrale",
+        fen: "rnbqkb1r/ppp1pp1p/6p1/8/3PP3/2P5/P4PPP/R1BQKBNR b KQkq - 0 6",
+        text: "Noir termine son développement (Bg7, roque) puis frappe aussitôt le centre blanc avec ...e5, le levier thématique de toute variante Grünfeld. PRO TIP : dans ce type de structure, le Fou fianchetté n'est jamais une pièce passive — il justifie à lui seul l'abandon du centre.",
+        moveSan: ["Bg7", "Bb5+", "c6", "Ba4", "O-O", "Ne2", "Nd7", "O-O", "e5"],
+        arrows: [{ from: "e7", to: "e5", color: "green" }],
+      },
+      {
+        title: "Topalov – Shirov : coups 11 à 19, la tension se résout",
+        fen: "r1bq1rk1/pp1n1pbp/2p3p1/4p3/B2PP3/2P5/P3NPPP/R1BQ1RK1 w - - 0 11",
+        text: "Après f3 et un long remaniement de pièces des deux côtés, Topalov tranche la tension centrale par f4 puis exd4/Nxd4 : chaque camp installe ses pièces sur des cases actives, sans qu'aucun déséquilibre décisif ne soit encore visible.",
+        moveSan: ["f3", "Qe7", "Be3", "Rd8", "Qc2", "Nb6", "Bb3", "Be6", "Rad1", "Nc4", "Bc1", "b5", "f4", "exd4", "Nxd4", "Bg4", "Rde1", "Qc5"],
+      },
+      {
+        title: "Topalov – Shirov : coups 20 à 29, manœuvres et grappillages de pions",
+        fen: "r2r2k1/p4pbp/2p3p1/1pq5/2nNPPb1/1BP5/P1Q3PP/2B1RRK1 w - - 3 20",
+        text: "Une longue phase tactique s'ensuit : Topalov ouvre l'aile dame (a4), pousse ses pions centraux (e5, f5) pour chasser le Cavalier noir, puis chaque camp reprend une pièce mineure (Qxa4 Nxa2 Qxa2 Bxe5) avant que fxg6/hxg6 n'ouvre la colonne h. Rien n'indique encore la tournure que va prendre la partie.",
+        moveSan: ["Kh1", "a5", "h3", "Bd7", "a4", "bxa4", "Ba2", "Be8", "e5", "Nb6", "f5", "Nd5", "Bd2", "Nb4", "Qxa4", "Nxa2", "Qxa2", "Bxe5", "fxg6", "hxg6"],
+      },
+      {
+        title: "Topalov – Shirov : coups 33 à 37 — la structure de Fous opposés se fixe",
+        fen: "r5k1/3b1p2/2pq2p1/p2rb1B1/3N4/2P1R2P/4Q1P1/5R1K w - - 6 33",
+        text: "LA séquence qui donne son sujet au module : après c4! Bxd4 cxd5 Bxe3, chaque camp ne conserve plus qu'un seul Fou — et ce sont des Fous de couleurs opposées. PRO TIP de Jesper Hall : à cet instant précis, la partie bascule dans une zone de dynamisme géométrique extrême — tant que Dames et Tours restent sur l'échiquier, ce déséquilibre favorise presque toujours l'attaquant, jamais le défenseur passif.",
+        moveSan: ["c4", "Bxd4", "cxd5", "Bxe3", "Qxe3", "Re8", "Qc3", "Qxd5", "Bh6"],
+        highlights: [{ square: "e3", color: "red" }, { square: "d5", color: "green" }],
+        arrows: [{ from: "c1", to: "h6", color: "green" }],
+      },
+      {
+        title: "Topalov – Shirov : coups 41 à 43 — l'échange des Dames, LE moment de bascule",
+        fen: "6k1/8/2p2ppB/p1q1rb2/8/4R2P/6P1/Q6K w - - 0 41",
+        text: "Rxe5 Qxe5 simplifie une paire de Tours, puis Qa2+ Qd5 Qxd5+ cxd5 échange les Dames. PRO TIP : c'est exactement ce moment qu'il faut savoir reconnaître — sans Dames ni Tours, la même finale de Fous de couleurs opposées devient en théorie l'une des plus nulles de tous les échecs. Shirov vient d'entrer dans la phase que la théorie juge imperdable... pour Topalov.",
+        moveSan: ["Rxe5", "Qxe5", "Qa2+", "Qd5", "Qxd5+", "cxd5"],
+        highlights: [{ square: "d5", color: "red" }],
+      },
+      {
+        title: "Topalov – Shirov : coup 47 — Bh3!!, le sacrifice le plus célèbre de l'histoire des Fous opposés",
+        fen: "8/8/4kpp1/3p1b2/p6P/2B5/6P1/7K w - - 1 47",
+        text: "Après Kg1, Shirov joue le coup qui allait rester dans toutes les mémoires : Bh3!!, offrant son propre Fou — le seul défenseur théorique d'une finale de Fous opposés — contre un simple pion. gxh3 est presque forcé. PRO TIP de Jesper Hall : ce sacrifice illustre à la perfection le double visage du thème — sans pièces pour s'opposer à lui, un Roi actif et un pion passé valent largement plus qu'un Fou « de la bonne couleur » resté seul sur l'échiquier.",
+        moveSan: ["Kg1", "Bh3", "gxh3", "Kf5", "Kf2", "Ke4", "Bxf6", "d4"],
+        highlights: [{ square: "h3", color: "green" }],
+        arrows: [{ from: "f5", to: "h3", color: "green" }],
+      },
+      {
+        title: "Topalov – Shirov : coups 51 à 53 — la conclusion",
+        fen: "8/8/5Bp1/8/p2pk2P/7P/5K2/8 w - - 0 51",
+        text: "Le Fou blanc, seul, ne peut à la fois arrêter le pion d noir ET empêcher l'invasion du Roi noir vers b3 : c'est le bilan complet du module — un Fou isolé, même du côté théoriquement « fort », ne peut jamais contrôler les deux couleurs de cases à la fois. Topalov abandonne.",
+        moveSan: ["Be7", "Kd3", "Bc5", "Kc4", "Be7", "Kb3"],
+      },
       {
         title: "Alexander Alekhine – Edward Lasker, New York 1924",
         fen: "4rrk1/2p3b1/n1b3p1/pP2pp1p/4n3/P1N2N2/2B3PP/R1B2R1K w - - 0 23",
@@ -3134,6 +3388,72 @@ export const COURSE_LESSONS: Record<string, CourseLesson> = {
         title: "Bojan Kurajica – Anatoly Karpov : coup 57",
         fen: "8/8/2p5/2Pp4/p2P3p/7k/7P/2Bb2K1 w - - 8 58",
         text: "Zugzwang final : le Fou blanc ne peut plus bouger sans perdre davantage de terrain, et le Roi blanc est totalement paralyse dans le coin. Blanc abandonne : une démonstration devenue célèbre (analysee ensuite comme « enigme de finale » par Karsten Muller) de la facon dont un avantage positionnel suffisant, avec des pions passes sur des ailes opposées, permet de vaincre la tendance au nul des Fous de couleurs opposées.",
+      },
+    ],
+  },
+  // (2026-09-12, Lot 5) Premier tutoriel réel de ce thème (aucun contenu
+  // préexistant) : Jose Raul Capablanca (Blancs) – Frederick Yates (Noirs),
+  // Hastings 1930/31, ronde 2 (D63, Dame Refusé Orthodoxe, 87 coups, 1-0). Le
+  // cahier des charges citait « Capablanca–Nimzowitsch, Saint-Pétersbourg
+  // 1914 » — partie inexistante dans ce sens (la seule partie de ce tournoi
+  // est Nimzowitsch(Blancs)–Capablanca(Noirs), déjà utilisée dans
+  // jh-module-7, et sans le moindre échange de Dames sur ses 42 coups —
+  // inutilisable pour un module centré sur CET échange précis). Remplacée
+  // après validation utilisateur par cette partie, réputée « la meilleure
+  // partie jamais jouée par Capablanca », qui contient un vrai échange de
+  // Dames (23...Qxb1! 24.Nxb1) suivi d'une conversion technique complète.
+  "jh-module-13-transition-milieu-de-partie-vers-finale": {
+    steps: [
+      {
+        title: "Jose Raul Capablanca – Frederick Yates, Hastings 1930/31 (ronde 2)",
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        text: "Dame Refusé Orthodoxe : une mise en place tranquille, aucune Dame n'est encore en jeu pour un quelconque échange. PRO TIP de Jesper Hall pour ce module : la transition milieu de partie → finale ne se décide jamais au moment où les Dames disparaissent — elle se prépare bien avant, par le choix de la structure et des pièces que l'on garde. Cette partie entière est une leçon sur CE jugement précis.",
+        moveSan: ["d4", "d5", "c4", "e6", "Nf3", "Nf6", "Bg5", "Nbd7", "e3", "Be7", "Nc3", "O-O", "Rc1"],
+      },
+      {
+        title: "Capablanca – Yates : coups 7 à 11, la pression classique sur l'aile dame",
+        fen: "r1bq1rk1/pppnbppp/4pn2/3p2B1/2PP4/2N1PN2/PP3PPP/2RQKB1R b K - 4 7",
+        text: "Bd3, l'échange sur c4 puis a6/O-O/b5 : une mise en place à la fois classique et prudente des deux côtés, sans aucune tension immédiate. Rien ne distingue encore cette position d'un milieu de partie ordinaire.",
+        moveSan: ["c6", "Bd3", "dxc4", "Bxc4", "a6", "O-O", "b5", "Be2"],
+      },
+      {
+        title: "Capablanca – Yates : coups 11 à 16, la rupture centrale et une Dame en b1",
+        fen: "r1bq1rk1/3nbppp/p1p1pn2/1p4B1/3P4/2N1PN2/PP2BPPP/2RQ1RK1 b - - 1 11",
+        text: "Après ...c5 et dxc5, les Tours s'échangent sur la colonne c ouverte ; Capablanca place ensuite sa Dame en b1 (Qb1). PRO TIP : ce coup semble parfaitement anodin — il va pourtant devenir, quelques coups plus tard, la cible d'un échange que Noir choisira lui-même. Toujours se demander : « cette case est-elle sûre à moyen terme, ou seulement pour l'instant ? »",
+        moveSan: ["Bb7", "Qc2", "Rc8", "Rfd1", "c5", "dxc5", "Rxc5", "b4", "Rc8", "Qb1"],
+        highlights: [{ square: "b1", color: "red" }],
+      },
+      {
+        title: "Capablanca – Yates : coups 16 à 22, la cascade d'échanges",
+        fen: "2rq1rk1/1b1nbppp/p3pn2/1p4B1/1P6/2N1PN2/P3BPPP/1QRR2K1 b - - 2 16",
+        text: "Une longue série d'échanges de pièces mineures (Nxd5/Bxg5, Rxc8/Bxc8, Nxg5/Qxg5) puis un dernier regroupement (Nc3-Ne4, Bf3) simplifie nettement la position : il ne reste plus qu'une Dame, une paire de Tours et quelques pièces mineures de chaque côté. Le terrain est prêt pour LA décision du module.",
+        moveSan: ["Nd5", "Nxd5", "Bxg5", "Rxc8", "Bxc8", "Nxg5", "Qxg5", "Nc3", "Bb7", "Ne4", "Qg6", "Bf3", "Bd5"],
+      },
+      {
+        title: "Capablanca – Yates : coup 23 — Qxb1!, LE moment de transition",
+        fen: "5rk1/3n1ppp/p3p1q1/1p1b4/1P2N3/4PB2/P4PPP/1Q1R2K1 w - - 6 23",
+        text: "Après Nc3, c'est Yates lui-même qui choisit d'échanger les Dames (23...Qxb1! 24.Nxb1), pensant sans doute la finale résultante au moins équilibrée. PRO TIP de Jesper Hall — le cœur de ce module : AVANT d'échanger les Dames, comptez toujours pions ET cases faibles pour juger QUI la finale favorise réellement. Ici, la structure (pion d5 bientôt isolé) et l'activité future du Roi blanc rendent cette finale de Tours nettement meilleure pour Blanc — un jugement que Yates n'a pas fait à temps.",
+        moveSan: ["Nc3", "Qxb1", "Nxb1"],
+        highlights: [{ square: "b1", color: "red" }, { square: "d5", color: "green" }],
+      },
+      {
+        title: "Capablanca – Yates : coups 24 à 27, la simplification continue",
+        fen: "5rk1/3n1ppp/p3p3/1p1b4/1P6/4PB2/P4PPP/1N1R2K1 b - - 0 24",
+        text: "Les échanges se poursuivent sans relâche (Nc3, Rc8, Nxd5/Nxd5, Bxd5/exd5) : Noir hérite d'un pion d5 isolé dans une pure finale de Tours. Les priorités ont déjà radicalement changé depuis l'échange des Dames — la sécurité du roi n'a plus d'importance, seule compte désormais l'activité des pièces restantes et la solidité de la structure de pions.",
+        moveSan: ["Nf6", "Nc3", "Rc8", "Nxd5", "Nxd5", "Bxd5", "exd5"],
+      },
+      {
+        title: "Capablanca – Yates : coups 28 à 29, la petite supériorité devient concrète",
+        fen: "2r3k1/5ppp/p7/1p1p4/1P6/4P3/P4PPP/3R2K1 w - - 0 28",
+        text: "g3, g6 puis Rxd5! : Capablanca récupère méthodiquement le pion isolé noir. Ce qui n'était qu'un jugement abstrait au coup 23 (« cette finale me favorise ») devient maintenant un avantage matériel et structurel bien réel — la conversion technique de plus de cinquante coups peut commencer.",
+        moveSan: ["g3", "g6", "Rxd5", "Rc2"],
+        highlights: [{ square: "d5", color: "red" }],
+      },
+      {
+        title: "Capablanca – Yates : coups 80 à 87, le Roi termine seul le travail",
+        fen: "7k/r4pR1/2K2P1p/4P3/6P1/8/8/8 w - - 9 80",
+        text: "Après près de cinquante coups de manœuvres patientes (non détaillées ici), le Roi blanc traverse méthodiquement tout l'échiquier — b6, c5, d6, e7 — pendant que ses pions avancent en soutien, jusqu'à la combinaison finale (e6! Ra6+ Ke7 Rxe6+ Kxf7!) qui gagne un pion décisif. PRO TIP de conclusion : en finale, gardez les pièces qui aident VOTRE plan (ici la Tour, pour convertir) et laissez le Roi faire lui-même, sur la durée, le travail qu'aucune autre pièce ne peut faire aussi discrètement.",
+        moveSan: ["Kb6", "Rd7", "Kc5", "Rc7+", "Kd6", "Ra7", "e6", "Ra6+", "Ke7", "Rxe6+", "Kxf7", "Re4", "g5", "hxg5", "Kg6"],
       },
     ],
   },

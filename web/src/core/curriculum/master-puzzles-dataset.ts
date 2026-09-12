@@ -3319,54 +3319,146 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
     { fen: "r5k1/P1p2p1p/2pp2p1/2q5/4P3/2N2P2/1rPQ2P1/R6K w - - 1 37", solution: ["e4e5","c5e5"], solutionSan: ["e5","Qxe5"], rating: 1740, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (37.e5 Qxe5) : un second pion blanc tombe, la compensation dépasse maintenant la faiblesse initiale." },
     { fen: "6k1/r1p2p1p/2p3p1/2qp4/7R/2N2P2/1rPQ2PK/8 w - - 0 42", solution: ["c3d1"], solutionSan: ["Nd1"], rating: 1760, sourceRef: "Nimzowitsch – Capablanca, Saint-Pétersbourg 1914 (42.Nd1) : dernier coup avant l'abandon de Nimzowitsch." },
   ].map((p) => ({ themeId: "jh-module-7-structures-a-pions-doubles", ...p })),
-  {
-    themeId: "jh-module-8-le-roque-oppose-et-l-attaque-de-pions",
-    fen: "r1bq1rk1/pp2ppbp/2n3p1/2p5/2BPP3/2P1B3/P3NPPP/R2QK2R w KQ - 4 10",
-    solution: ["d1d2","d8a5","a1c1"],
-    solutionSan: ["Qd2","Qa5","Rc1"],
-    rating: 1637,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-9-la-minorite-d-attaque",
-    fen: "r1bqkb1r/3n1ppp/p3pn2/1pp5/3PP3/2NB1N2/PP3PPP/R1BQK2R w KQkq - 0 10",
-    solution: ["e4e5","c5d4","e5f6"],
-    solutionSan: ["e5","cxd4","exf6"],
-    rating: 1634,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-10-le-sacrifice-positionnel-de-qualite",
-    fen: "rn1q1rk1/1p2bppp/p2pbn2/4p3/2P1P3/1NN1BP2/PP4PP/R2QKB1R w KQ - 6 10",
-    solution: ["d1d2","b8d7","a1d1"],
-    solutionSan: ["Qd2","Nbd7","Rd1"],
-    rating: 1732,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-11-les-finales-de-tours-pratiques",
-    fen: "rnbqkb1r/5ppp/p3pn2/1p6/3p4/1B2PN2/PP2QPPP/RNB2RK1 w kq - 0 9",
-    solution: ["f1d1","c8b7","e3d4"],
-    solutionSan: ["Rd1","Bb7","exd4"],
-    rating: 1711,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-12-les-finales-de-fous-de-couleurs-opposees",
-    fen: "r1bqk2r/ppp2ppp/2n5/3n4/2BP4/5N2/PP1N1PPP/R2QK2R w KQkq - 0 10",
-    solution: ["e1g1","e8g8","f1e1"],
-    solutionSan: ["O-O","O-O","Re1"],
-    rating: 1797,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
-  {
-    themeId: "jh-module-13-transition-milieu-de-partie-vers-finale",
-    fen: "r1bqkb1r/pp2pp1p/2n3p1/8/1nBpP3/2N2N2/PP3PPP/R1BQ1RK1 w kq - 0 9",
-    solution: ["a2a3","b4d3","d1b3"],
-    solutionSan: ["a3","Nd3","Qb3"],
-    rating: 1781,
-    sourceRef: "Ligne théorique réelle, rejouée depuis la position de départ — la suite proposée illustre le thème annoncé.",
-  },
+  // `jh-module-8-le-roque-oppose-et-l-attaque-de-pions` : 14 exercices
+  // (2026-09-11, Lot 4), tirés de la partie RÉELLE Anatoly Karpov – Viktor
+  // Korchnoi, Finale des Candidats, Moscou 1974, partie 2
+  // (chessgames.com/perl/chessgame?gid=1067858, B77 Dragon, Attaque
+  // Yougoslave, roques opposés) — voir le docstring de `course-lesson.ts`.
+  ...[
+    { fen: "r2q1rk1/pp1bppbp/2np1np1/8/2BNP3/2N1BP2/PPPQ2PP/R3K2R w KQ - 5 10", solution: ["h2h4"], solutionSan: ["h4"], rating: 1500, sourceRef: "Karpov – Korchnoi, Moscou 1974 (10.h4) : l'assaut de pions démarre avant même le roque du roi blanc." },
+    { fen: "2rq1rk1/pp1bppbp/3p1np1/4n3/3NP2P/1BN1BP2/PPPQ2P1/R3K2R w KQ - 3 12", solution: ["e1c1"], solutionSan: ["O-O-O"], rating: 1520, sourceRef: "Karpov – Korchnoi, Moscou 1974 (12.O-O-O) : le roi blanc se met enfin à l'abri, juste avant que la course ne s'accélère." },
+    { fen: "3q1rk1/pp1bppbp/3p1np1/8/2rNP2P/2N1BP2/PPPQ2P1/2KR3R w - - 0 14", solution: ["h4h5"], solutionSan: ["h5"], rating: 1540, sourceRef: "Karpov – Korchnoi, Moscou 1974 (14.h5) : le pion fonce droit sur le Cavalier pour ouvrir la colonne h." },
+    { fen: "3q1rk1/pp1bppbp/3p2p1/7n/2rNP3/2N1BP2/PPPQ2P1/2KR3R w - - 0 15", solution: ["g2g4"], solutionSan: ["g4"], rating: 1560, sourceRef: "Karpov – Korchnoi, Moscou 1974 (15.g4) : second pion lancé, l'étau se resserre sur le roque noir." },
+    { fen: "5rk1/pp1bppbp/3p1np1/q7/2r1P1P1/2N1BP2/PPPQN3/2KR3R w - - 3 17", solution: ["e3h6"], solutionSan: ["Bh6"], rating: 1580, sourceRef: "Karpov – Korchnoi, Moscou 1974 (17.Bh6) : élimination du Fou défenseur du roque noir." },
+    { fen: "5rk1/pp1bpp1p/3p1npb/q7/2r1P1P1/2N2P2/PPPQN3/2KR3R w - - 0 18", solution: ["d2h6"], solutionSan: ["Qxh6"], rating: 1600, sourceRef: "Karpov – Korchnoi, Moscou 1974 (18.Qxh6) : la Dame blanche s'installe au contact direct du roi noir." },
+    { fen: "2r3k1/pp1bpp1p/3p1npQ/q7/2r1P1P1/2N2P2/PPP1N3/2KR3R w - - 1 19", solution: ["d1d3"], solutionSan: ["Rd3"], rating: 1615, sourceRef: "Karpov – Korchnoi, Moscou 1974 (19.Rd3) : la Tour bascule vers l'aile roi pour amplifier l'attaque." },
+    { fen: "2r3k1/pp1bpp1p/3p1npQ/q1r5/4P1P1/2NR1P2/PPP1N3/2K4R w - - 3 20", solution: ["g4g5"], solutionSan: ["g5"], rating: 1630, sourceRef: "Karpov – Korchnoi, Moscou 1974 (20.g5) : le second pion continue sa poussée, chassant le Cavalier f6." },
+    { fen: "2r3k1/pp1bpp1p/3p1npQ/q5r1/4P3/2NR1P2/PPP1N3/2K4R w - - 0 21", solution: ["d3d5","g5d5"], solutionSan: ["Rd5","Rxd5"], rating: 1650, sourceRef: "Karpov – Korchnoi, Moscou 1974 (21.Rd5 Rxd5) : échange de Tours qui ouvre une case d'invasion." },
+    { fen: "2r3k1/pp1bpp1p/3p1npQ/q2r4/4P3/2N2P2/PPP1N3/2K4R w - - 0 22", solution: ["c3d5"], solutionSan: ["Nxd5"], rating: 1665, sourceRef: "Karpov – Korchnoi, Moscou 1974 (22.Nxd5) : le Cavalier reprend et s'installe sur un avant-poste central dominant." },
+    { fen: "4r1k1/pp1bpp1p/3p1npQ/q2N4/4P3/5P2/PPP1N3/2K4R w - - 1 23", solution: ["e2f4"], solutionSan: ["Nef4"], rating: 1680, sourceRef: "Karpov – Korchnoi, Moscou 1974 (23.Nef4) : régroupement final avant la percée décisive." },
+    { fen: "4r1k1/pp2pp1p/2bp1npQ/q2N4/4PN2/5P2/PPP5/2K4R w - - 3 24", solution: ["e4e5"], solutionSan: ["e5"], rating: 1695, sourceRef: "Karpov – Korchnoi, Moscou 1974 (24.e5) : la diagonale a2-g8 s'ouvre en direction du roi noir." },
+    { fen: "4r1k1/pp2pp1p/3p1npQ/q2bP3/5N2/5P2/PPP5/2K4R w - - 0 25", solution: ["e5f6","e7f6"], solutionSan: ["exf6","exf6"], rating: 1720, sourceRef: "Karpov – Korchnoi, Moscou 1974 (25.exf6 exf6) : le rempart de pions du roque noir est arraché." },
+    { fen: "4r1k1/pp3p1p/3p1ppQ/q2b4/5N2/5P2/PPP5/2K4R w - - 0 26", solution: ["h6h7","g8f8","h7h8"], solutionSan: ["Qxh7+","Kf8","Qh8+"], rating: 1750, sourceRef: "Karpov – Korchnoi, Moscou 1974 (26.Qxh7+ Kf8 27.Qh8+) : la combinaison finale, Korchnoi abandonne face au mat forcé." },
+  ].map((p) => ({ themeId: "jh-module-8-le-roque-oppose-et-l-attaque-de-pions", ...p })),
+  // `jh-module-9-la-minorite-d-attaque` : 14 exercices (2026-09-11, Lot 4),
+  // tirés de la partie RÉELLE Anatoly Karpov – Joël Lautier, Dortmund 1995,
+  // ronde 9 (chessgames.com/perl/chessgame?gid=1069252, D45) — l'une des 3
+  // parties canoniques citées par l'article Wikipédia « Minority attack ».
+  // Le cahier des charges désignait « Pillsbury–Lasker, Nuremberg 1896 »,
+  // partie inexistante dans ce sens — voir le docstring de
+  // `course-lesson.ts`. Puzzles distincts des 23 steps de tutoriel déjà
+  // présents pour ce thème (aucune collision de FEN).
+  ...[
+    { fen: "3rrnk1/pp3pp1/1bp1bn1p/4q3/8/P2BP1NP/1PQBNPP1/R2R2K1 w - - 10 20", solution: ["b2b4"], solutionSan: ["b4"], rating: 1500, sourceRef: "Karpov – Lautier, Dortmund 1995 (20.b4) : le coup qui déclenche l'attaque de minorité, partie citée par Wikipédia comme modèle du thème." },
+    { fen: "3rr1k1/pp3pp1/1bp1bnnp/4q3/1P6/P2BP1NP/2QBNPP1/R2R2K1 w - - 1 21", solution: ["a3a4"], solutionSan: ["a4"], rating: 1520, sourceRef: "Karpov – Lautier, Dortmund 1995 (21.a4) : le second pion de la minorité avance à son tour." },
+    { fen: "3rr1k1/1p3pp1/pbp1bnnp/4q3/PP6/3BP1NP/2QBNPP1/R2R2K1 w - - 0 22", solution: ["d2c3"], solutionSan: ["Bc3"], rating: 1540, sourceRef: "Karpov – Lautier, Dortmund 1995 (22.Bc3) : régroupement avant la percée, aucune précipitation." },
+    { fen: "3rr1k1/1p3pp1/pbp1bnnp/6q1/PP6/2BBP1NP/2Q1NPP1/R2R2K1 w - - 2 23", solution: ["c3d4","b6d4"], solutionSan: ["Bd4","Bxd4"], rating: 1560, sourceRef: "Karpov – Lautier, Dortmund 1995 (23.Bd4 Bxd4) : simplification qui retire une pièce défensive noire." },
+    { fen: "3rr1k1/1p3pp1/p1p1bnnp/6q1/PP1b4/3BP1NP/2Q1NPP1/R2R2K1 w - - 0 24", solution: ["e2d4"], solutionSan: ["Nxd4"], rating: 1580, sourceRef: "Karpov – Lautier, Dortmund 1995 (24.Nxd4) : reprise centrale, le Cavalier prend une position idéale." },
+    { fen: "3rr1k1/1p3pp1/p1p2nnp/3b2q1/PP1N4/3BP1NP/2Q2PP1/R2R2K1 w - - 1 25", solution: ["e3e4"], solutionSan: ["e4"], rating: 1595, sourceRef: "Karpov – Lautier, Dortmund 1995 (25.e4) : le centre est fixé avant de relancer l'opération à l'aile dame." },
+    { fen: "3rr1k1/1p3pp1/p1p1bnnp/8/PP2Pq2/3B1NNP/2Q2PP1/R2R2K1 w - - 3 27", solution: ["b4b5"], solutionSan: ["b5"], rating: 1615, sourceRef: "Karpov – Lautier, Dortmund 1995 (27.b5) : la percée décisive de l'attaque de minorité." },
+    { fen: "3rr1k1/1p3pp1/p1p1bnnp/1P6/P3Pq2/3B1NNP/2Q2PP1/R2R2K1 b - - 0 27", solution: ["a6b5","a4b5"], solutionSan: ["axb5","axb5"], rating: 1635, sourceRef: "Karpov – Lautier, Dortmund 1995 (27...axb5 28.axb5) : la colonne a s'ouvre entièrement." },
+    { fen: "3rr1k1/1p3pp1/2p1bn1p/1P2n3/4Pq2/3B1NNP/2Q2PP1/R2R2K1 w - - 1 29", solution: ["f3e5","f4e5"], solutionSan: ["Nxe5","Qxe5"], rating: 1655, sourceRef: "Karpov – Lautier, Dortmund 1995 (29.Nxe5 Qxe5) : échange central qui clarifie la position avant le coup clé." },
+    { fen: "3rr1k1/1p3pp1/2p1bn1p/1P2q3/4P3/3B2NP/2Q2PP1/R2R2K1 w - - 0 30", solution: ["b5c6","b7c6"], solutionSan: ["bxc6","bxc6"], rating: 1675, sourceRef: "Karpov – Lautier, Dortmund 1995 (30.bxc6 bxc6) : la faiblesse définitive naît — le pion c noir est désormais isolé et arriéré." },
+    { fen: "4r1k1/3n1pp1/2prb2p/4q3/4P3/2Q3NP/4BPP1/2RR2K1 b - - 5 33", solution: ["d6d1","e2d1"], solutionSan: ["Rxd1+","Bxd1"], rating: 1695, sourceRef: "Karpov – Lautier, Dortmund 1995 (33...Rxd1+ 34.Bxd1) : simplification supplémentaire, la faiblesse c6 reste intacte." },
+    { fen: "4r1k1/3n1pp1/2p1b2p/4q3/4P3/2Q3NP/5PP1/2RB2K1 b - - 0 34", solution: ["e5c3","c1c3"], solutionSan: ["Qxc3","Rxc3"], rating: 1710, sourceRef: "Karpov – Lautier, Dortmund 1995 (34...Qxc3 35.Rxc3) : les Dames quittent l'échiquier, l'avantage structurel blanc persiste en finale." },
+    { fen: "4r1k1/3n1bp1/5p1p/2p5/3NPPB1/2R4P/6P1/6K1 w - - 4 40", solution: ["d4b5","d7b6","b5d6"], solutionSan: ["Nb5","Nb6","Nd6"], rating: 1730, sourceRef: "Karpov – Lautier, Dortmund 1995 (40.Nb5 Nb6 41.Nd6) : vingt coups plus tard, le Cavalier blanc exploite enfin la faiblesse c6 créée au coup 20." },
+    { fen: "r5k1/5bp1/3N1p1p/2p5/n3PPB1/R6P/6P1/6K1 w - - 10 43", solution: ["e4e5","f7d5","e5e6"], solutionSan: ["e5","Bd5","e6"], rating: 1755, sourceRef: "Karpov – Lautier, Dortmund 1995 (43.e5 Bd5 44.e6) : le pion passé central décide de la partie, Lautier abandonne." },
+  ].map((p) => ({ themeId: "jh-module-9-la-minorite-d-attaque", ...p })),
+  // `jh-module-10-le-sacrifice-positionnel-de-qualite` : 14 exercices
+  // (2026-09-11, Lot 4), tirés de la partie RÉELLE Samuel Reshevsky – Tigran
+  // Petrosian, Zurich Candidates 1953, ronde 2
+  // (chessgames.com/perl/chessgame?gid=1106248, E58) — LA référence
+  // historique du sacrifice positionnel de qualité (25...Re6!!, saluée par
+  // Mikhaïl Tal). Le cahier des charges citait « Petrosian–Reshevsky »,
+  // couleurs inversées — voir le docstring de `course-lesson.ts`.
+  ...[
+    { fen: "r1bq1rk1/pp3ppp/2n1pn2/2pp4/1bPP4/P1NBPN2/1P3PPP/R1BQ1RK1 b - - 0 8", solution: ["b4c3","b2c3"], solutionSan: ["Bxc3","bxc3"], rating: 1500, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (8...Bxc3 9.bxc3) : les pions blancs doublent, premier déséquilibre structurel de la partie." },
+    { fen: "r1bq1rk1/p4ppp/1pn1pn2/2pp4/2PP4/P1PBPN2/5PPP/R1BQ1RK1 w - - 0 10", solution: ["c4d5","e6d5"], solutionSan: ["cxd5","exd5"], rating: 1520, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (10.cxd5 exd5) : échange central qui donne aux Noirs un pion d5 isolé en miroir." },
+    { fen: "r1bq1rk1/p4ppp/1pn2n2/2pp4/3P4/P1PBPN2/1B3PPP/R2Q1RK1 b - - 1 11", solution: ["c5c4"], solutionSan: ["c4"], rating: 1540, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (11...c4) : Petrosian verrouille la chaîne de pions, prophylaxie avant toute tactique." },
+    { fen: "r2q1rk1/p4ppp/1pn3b1/3p4/2pP4/P1P1PP2/1BBQ2PP/R4RK1 w - - 1 17", solution: ["e3e4"], solutionSan: ["e4"], rating: 1560, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (17.e4) : les Blancs rompent enfin au centre, gagnant de l'espace." },
+    { fen: "r4rk1/p2q1ppp/1pn3b1/3p4/2pPP3/P1P2P2/1BBQ2PP/4RRK1 b - - 2 18", solution: ["d5e4","f3e4"], solutionSan: ["dxe4","fxe4"], rating: 1580, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (18...dxe4 19.fxe4) : reprise qui ouvre la colonne f blanche." },
+    { fen: "r5k1/p2qrppp/2n3b1/1p6/2pPPQ2/P1P5/1B4PP/3BRRK1 w - - 2 22", solution: ["d1g4"], solutionSan: ["Bg4"], rating: 1600, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (22.Bg4) : le Fou blanc vise directement le pion e6." },
+    { fen: "r3q1k1/p3rppp/2n3b1/1p6/2pPPQB1/P1P5/1B4PP/4RRK1 w - - 4 23", solution: ["e4e5"], solutionSan: ["e5"], rating: 1615, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (23.e5) : nouvel gain d'espace central, la tension monte." },
+    { fen: "3rq1k1/4rppp/2n3b1/pp2P3/2pP1QB1/P1P1R3/1B4PP/4R1K1 b - - 3 25", solution: ["e7e6"], solutionSan: ["Re6"], rating: 1635, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (25...Re6!!) : LE coup de la partie — un sacrifice positionnel de qualité offert sans échec ni menace directe, salué par Mikhaïl Tal." },
+    { fen: "3rq1k1/4nppp/4r1b1/pp2P3/P1pP1QB1/2P1R3/1B4PP/4R1K1 w - - 1 27", solution: ["g4e6","f7e6"], solutionSan: ["Bxe6","fxe6"], rating: 1660, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (27.Bxe6 fxe6) : l'échange est accepté, les pions noirs fusionnent en un duo central massif." },
+    { fen: "3rq1k1/6pp/4p3/pp1nP3/P1pP4/2Pb1R2/1B4PP/4RQK1 w - - 4 30", solution: ["f3d3","c4d3"], solutionSan: ["Rxd3","cxd3"], rating: 1685, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (30.Rxd3 cxd3) : nouvel échange, la compensation positionnelle noire persiste malgré les simplifications." },
+    { fen: "3rq1k1/6pp/4p3/pp1nP3/P2P4/2Pp4/1B4PP/4RQK1 w - - 0 31", solution: ["f1d3"], solutionSan: ["Qxd3"], rating: 1700, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (31.Qxd3) : reprise de Dame, matériellement les Blancs restent en tête de qualité contre pion." },
+    { fen: "3rq1k1/6pp/4p3/p2nP3/Pp1P4/2PQ4/1B4PP/4R1K1 w - - 0 32", solution: ["c3b4","a5b4"], solutionSan: ["cxb4","axb4"], rating: 1720, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (32.cxb4 axb4) : les pions se dégagent encore à l'aile dame, la marche du pion noir se poursuit." },
+    { fen: "r5k1/6pp/Pq2p3/3nP3/1p1P4/3Q4/3B2PP/R5K1 b - - 2 37", solution: ["b4b3"], solutionSan: ["b3"], rating: 1740, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (37...b3) : le pion passé noir continue inexorablement sa course." },
+    { fen: "r5k1/6p1/Pq2p2p/3nP3/2QP4/1p5P/3B2P1/R5K1 b - - 0 39", solution: ["b3b2"], solutionSan: ["b2"], rating: 1760, sourceRef: "Reshevsky – Petrosian, Zurich 1953 (39...b2) : la compensation se matérialise enfin — un pion passé qui va paralyser une Tour blanche entière ; la partie se conclura nulle." },
+  ].map((p) => ({ themeId: "jh-module-10-le-sacrifice-positionnel-de-qualite", ...p })),
+  // (2026-09-12, Lot 5) Vague de 12 puzzles pour `jh-module-11` — aucun nouveau
+  // tutoriel : la partie assignée (« Rubinstein–Vidmar, San Sebastian 1911 »)
+  // s'est révélée être une nulle rapide en 22 coups sans le moindre contenu de
+  // finale de tours (confirmé avant rédaction, AskUserQuestion) ; le thème
+  // possédait déjà 14 CourseSteps réels et corrects sur exactement ce sujet
+  // (Alekhine–Capablanca 1927, Capablanca–Tartakower New York 1924,
+  // Rubinstein–Lasker Saint-Pétersbourg 1909) — seule la vague de puzzles
+  // (un placeholder générique) manquait. Puzzles extraits de ces 3 mêmes
+  // parties déjà présentes dans course-lesson.ts, chess.js-validés.
+  ...[
+    { fen: "8/5pk1/5rpp/8/P2R3P/6P1/5PK1/8 w - - 1 51", solution: ["a4a5"], solutionSan: ["a5"], rating: 1550, sourceRef: "Alekhine – Capablanca, Championnat du monde 1927 (51.a5) : créer le pion passé protégé qui sera la cible de toute la finale." },
+    { fen: "8/5p2/k3r1p1/P6p/5K1P/6P1/R4P2/8 w - - 16 65", solution: ["f4g5","e6e5","g5h6","e5f5"], solutionSan: ["Kg5","Re5+","Kh6","Rf5"], rating: 1600, sourceRef: "Alekhine – Capablanca, Championnat du monde 1927 (65.Kg5!) : le Roi blanc s'avance activement au contact de l'adversaire, malgré les échecs." },
+    { fen: "8/3r1pK1/k5p1/P4P1p/7P/R5P1/8/8 b - - 0 70", solution: ["g6f5","g7h6","f5f4","g3f4"], solutionSan: ["gxf5","Kh6","f4","gxf4"], rating: 1650, sourceRef: "Alekhine – Capablanca, Championnat du monde 1927 (71.gxf5 puis f4) : ouverture d'un second front de pions, le principe des deux faiblesses." },
+    { fen: "8/5R2/2k5/7K/5P1P/8/8/7r w - - 1 82", solution: ["f7e7"], solutionSan: ["Re7"], rating: 1690, sourceRef: "Alekhine – Capablanca, Championnat du monde 1927 (82.Re7) : couper complètement la Tour noire achève la conversion." },
+    { fen: "4k3/p1p5/1p3rp1/n2p4/P2P1P2/2PB2P1/6K1/7R b - - 1 29", solution: ["e8f8","h1h7"], solutionSan: ["Kf8","Rh7"], rating: 1560, sourceRef: "Capablanca – Tartakower, New York 1924 (29...Kf8 30.Rh7) : la Tour prend possession de la 7e rangée." },
+    { fen: "5k2/p1p4R/1p3rp1/n2p4/P2P1P2/2PB2P1/6K1/8 b - - 3 30", solution: ["f6c6","g3g4","a5c4","g4g5"], solutionSan: ["Rc6","g4","Nc4","g5"], rating: 1610, sourceRef: "Capablanca – Tartakower, New York 1924 (31.g4! Nc4 32.g5) : gain d'espace et fixation du camp noir avant la percée décisive." },
+    { fen: "5k2/p1p4R/1pr3p1/3p1BP1/P2P1P2/2P2K2/8/8 b - - 0 34", solution: ["g6f5","f3g3"], solutionSan: ["gxf5","Kg3"], rating: 1640, sourceRef: "Capablanca – Tartakower, New York 1924 (34...gxf5 35.Kg3) : le pion g devient passé, libre de toute entrave adverse." },
+    { fen: "5k2/p1p4R/1p6/3p1pP1/P2P1P2/2r3K1/8/8 w - - 0 36", solution: ["g3h4","c3f3","g5g6"], solutionSan: ["Kh4","Rf3","g6"], rating: 1670, sourceRef: "Capablanca – Tartakower, New York 1924 (après 35...Rxc3+, 36.Kh4! Rf3 37.g6) : Capablanca sacrifie deux pions pour lancer son Roi vers f6, où « les pions noirs tombent comme des pommes mûres »." },
+    { fen: "4r2k/p1R5/1p4P1/3p1K2/P2P4/8/8/8 b - - 0 42", solution: ["e8e4","f5f6","e4f4"], solutionSan: ["Re4","Kf6","Rf4+"], rating: 1700, sourceRef: "Capablanca – Tartakower, New York 1924 (42...Re4 43.Kf6 Rf4+) : Roi + pion passé + Tour à la 7e, la coordination parfaite l'emporte sur le matériel." },
+    { fen: "8/p2rk1pp/8/5p2/5R2/4P3/PP4PP/6K1 w - - 0 24", solution: ["f4f5","d7d1","g1f2","d1d2"], solutionSan: ["Rxf5","Rd1+","Kf2","Rd2+"], rating: 1540, sourceRef: "Rubinstein – Lasker, Saint-Pétersbourg 1909 (24.Rxf5! Rd1+ 25.Kf2 Rd2+) : encaisser le pion puis centraliser le Roi malgré les échecs." },
+    { fen: "8/p3k1pp/8/R7/8/4PK2/Pr4PP/8 b - - 1 27", solution: ["b2b7","a5a6","e7f8","e3e4"], solutionSan: ["Rb7","Ra6","Kf8","e4"], rating: 1600, sourceRef: "Rubinstein – Lasker, Saint-Pétersbourg 1909 (28.Rb7 Ra6 Kf8 29.e4) : Rubinstein prend son temps, plaçant sa Tour de façon active avant de progresser." },
+    { fen: "8/p1r2kp1/R6p/4PK1P/6P1/8/P7/8 b - - 0 35", solution: ["c7b7","a6d6","f7e7","d6a6"], solutionSan: ["Rb7","Rd6","Ke7","Ra6"], rating: 1650, sourceRef: "Rubinstein – Lasker, Saint-Pétersbourg 1909 (36.Rb7 Rd6 Ke7 37.Ra6) : la Tour blanche harcèle sans relâche pendant que le Roi blanc avance." },
+  ].map((p) => ({ themeId: "jh-module-11-les-finales-de-tours-pratiques", ...p })),
+  // (2026-09-12, Lot 5) `jh-module-12` : Topalov (Blancs) – Shirov (Noirs),
+  // Linares 1998 ronde 10 (D85, Gambit Dame Refusé Grünfeld Échange). Le
+  // cahier des charges citait « Shirov–Topalov » mais les couleurs sont en
+  // réalité inversées (confirmé, AskUserQuestion) — la partie EST la plus
+  // célèbre finale de Fous de couleurs opposées de l'histoire, avec le
+  // sacrifice 47...Bh3!!. 14 nouveaux CourseSteps prépendés dans
+  // course-lesson.ts + vague de 14 puzzles ci-dessous, même partie.
+  ...[
+    { fen: "rnbqkb1r/ppp1pp1p/6p1/3n4/3P4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 5", solution: ["e2e4","d5c3"], solutionSan: ["e4","Nxc3"], rating: 1500, sourceRef: "Topalov – Shirov, Linares 1998 (5.e4! Nxc3) : dès l'ouverture, Blanc accepte une structure qui, plus tard, débouchera sur des Fous de couleurs opposées." },
+    { fen: "r2r2k1/p3qpbp/2p1b1p1/1p2p3/2nPP3/1BP2P2/P1Q1N1PP/2BR1RK1 w - - 0 17", solution: ["f3f4","e5d4","e2d4","e6g4"], solutionSan: ["f4","exd4","Nxd4","Bg4"], rating: 1530, sourceRef: "Topalov – Shirov, Linares 1998 (17.f4 exd4 18.Nxd4 Bg4) : la tension centrale se résout, chaque camp active ses pièces." },
+    { fen: "r2r2k1/3b1pbp/2p3p1/ppq5/2nNPP2/1BP4P/P1Q3P1/2B1RR1K w - - 1 22", solution: ["a2a4","b5a4","b3a2","d7e8"], solutionSan: ["a4","bxa4","Ba2","Be8"], rating: 1550, sourceRef: "Topalov – Shirov, Linares 1998 (22.a4 bxa4 23.Ba2 Be8) : Topalov ouvre l'aile dame pour ses pièces avant l'assaut central." },
+    { fen: "r2rb1k1/5pbp/2p3p1/p1q5/p1nNPP2/2P4P/B1Q3P1/2B1RR1K w - - 2 24", solution: ["e4e5","c4b6","f4f5","b6d5"], solutionSan: ["e5","Nb6","f5","Nd5"], rating: 1580, sourceRef: "Topalov – Shirov, Linares 1998 (24.e5 Nb6 25.f5 Nd5) : les pions f et e blancs gagnent de l'espace, chassant le Cavalier noir." },
+    { fen: "r2rb1k1/5pbp/2p3p1/p1q1PP2/pn1N4/2P4P/B1QB2P1/4RR1K w - - 3 27", solution: ["c2a4","b4a2","a4a2","g7e5"], solutionSan: ["Qxa4","Nxa2","Qxa2","Bxe5"], rating: 1600, sourceRef: "Topalov – Shirov, Linares 1998 (27.Qxa4 Nxa2 28.Qxa2 Bxe5) : échange de pièces mineures, chaque camp reprend son dû." },
+    { fen: "r2rb1k1/5p2/2p3p1/p1q1b3/3N4/2P4P/Q2B2P1/4RR1K w - - 0 30", solution: ["d2g5","d8d5","e1e3","c5d6"], solutionSan: ["Bg5","Rd5","Re3","Qd6"], rating: 1630, sourceRef: "Topalov – Shirov, Linares 1998 (30.Bg5 Rd5 31.Re3 Qd6) : Topalov regroupe ses pièces lourdes vers le centre." },
+    { fen: "r5k1/3b1p2/2pq2p1/p2rb1B1/3N4/2P1R2P/4Q1P1/5R1K w - - 6 33", solution: ["c3c4","e5d4","c4d5","d4e3"], solutionSan: ["c4","Bxd4","cxd5","Bxe3"], rating: 1660, sourceRef: "Topalov – Shirov, Linares 1998 (33.c4! Bxd4 34.cxd5 Bxe3) : LA séquence clé — après ces échanges, chaque camp ne conserve plus qu'un seul Fou, et ils sont de couleurs opposées." },
+    { fen: "r5k1/3b1p2/2pq2p1/p2P2B1/8/4b2P/4Q1P1/5R1K w - - 0 35", solution: ["e2e3","a8e8","e3c3","d6d5"], solutionSan: ["Qxe3","Re8","Qc3","Qxd5"], rating: 1690, sourceRef: "Topalov – Shirov, Linares 1998 (35.Qxe3 Re8 36.Qc3 Qxd5) : la position se stabilise, Dames et Tours encore présentes autour des Fous opposés." },
+    { fen: "4r1k1/3b1p2/2p3p1/p2q2B1/8/2Q4P/6P1/5R1K w - - 0 37", solution: ["g5h6","e8e5","f1f3","d5c5"], solutionSan: ["Bh6","Re5","Rf3","Qc5"], rating: 1710, sourceRef: "Topalov – Shirov, Linares 1998 (37.Bh6! Re5 38.Rf3 Qc5) : le Fou blanc, de la bonne couleur pour attaquer, vise directement le roi noir." },
+    { fen: "6k1/8/2p2ppB/p1q1rb2/8/4R2P/6P1/Q6K w - - 0 41", solution: ["e3e5","c5e5","a1a2","e5d5"], solutionSan: ["Rxe5","Qxe5","Qa2+","Qd5"], rating: 1740, sourceRef: "Topalov – Shirov, Linares 1998 (41.Rxe5 Qxe5 42.Qa2+ Qd5) : simplification vers l'échange de Dames à venir." },
+    { fen: "6k1/8/2p2ppB/p2q1b2/8/7P/Q5P1/7K w - - 2 43", solution: ["a2d5","c6d5"], solutionSan: ["Qxd5+","cxd5"], rating: 1760, sourceRef: "Topalov – Shirov, Linares 1998 (43.Qxd5+! cxd5) : LE moment de transition — l'échange des Dames fait basculer la partie dans une pure finale de Fous de couleurs opposées, réputée nulle." },
+    { fen: "8/8/4kpp1/3p1b2/p6P/2B5/6P1/7K w - - 1 47", solution: ["h1g1","f5h3","g2h3"], solutionSan: ["Kg1","Bh3","gxh3"], rating: 1800, sourceRef: "Topalov – Shirov, Linares 1998 (47.Kg1 Bh3!! 48.gxh3) : LE sacrifice le plus célèbre de l'histoire des finales de Fous opposés — trouvez le coup qui transforme une position jugée nulle en victoire forcée." },
+    { fen: "8/8/5pp1/3p1k2/p6P/2B4P/8/6K1 w - - 1 49", solution: ["g1f2","f5e4","c3f6","d5d4"], solutionSan: ["Kf2","Ke4","Bxf6","d4"], rating: 1820, sourceRef: "Topalov – Shirov, Linares 1998 (49.Kf2 Ke4 50.Bxf6 d4!) : le pion passé noir se met en marche pendant que le Fou blanc, seul, ne peut être partout." },
+    { fen: "8/8/5Bp1/8/p2pk2P/7P/5K2/8 w - - 0 51", solution: ["f6e7","e4d3","e7c5","d3c4","c5e7","c4b3"], solutionSan: ["Be7","Kd3","Bc5","Kc4","Be7","Kb3"], rating: 1840, sourceRef: "Topalov – Shirov, Linares 1998 (51.Be7 Kd3 52.Bc5 Kc4 53.Be7 Kb3) : le Roi noir s'infiltre définitivement, Blanc abandonne." },
+  ].map((p) => ({ themeId: "jh-module-12-les-finales-de-fous-de-couleurs-opposees", ...p })),
+  // (2026-09-12, Lot 5) `jh-module-13` : Capablanca (Blancs) – Yates (Noirs),
+  // Hastings 1930/31 ronde 2 (D63, Dame Refusé Orthodoxe), 87 coups, 1-0. Le
+  // cahier des charges citait « Capablanca–Nimzowitsch, Saint-Pétersbourg
+  // 1914 » — partie inexistante dans ce sens (seule partie de ce tournoi est
+  // Nimzowitsch(Blancs)–Capablanca(Noirs), DÉJÀ utilisée dans jh-module-7, et
+  // sans le moindre échange de Dames sur ses 42 coups) ; remplacée après
+  // validation utilisateur par cette partie, réputée « la meilleure partie de
+  // Capablanca », qui contient un vrai échange de Dames (23...Qxb1! 24.Nxb1)
+  // suivi d'une conversion technique complète vers une finale de pions gagnée.
+  // Premier tutoriel réel de ce thème (8 CourseSteps, aucun contenu préexistant).
+  ...[
+    { fen: "r1bq1rk1/pppnbppp/4pn2/3p2B1/2PP4/2N1PN2/PP3PPP/2RQKB1R b K - 4 7", solution: ["c7c6","f1d3","d5c4","d3c4"], solutionSan: ["c6","Bd3","dxc4","Bxc4"], rating: 1500, sourceRef: "Capablanca – Yates, Hastings 1930/31 (8.Bd3 dxc4 9.Bxc4 a6) : structure Dame classique, Capablanca prépare la pression sur l'aile dame." },
+    { fen: "r1bq1rk1/pp1nbppp/2p1pn2/6B1/2BP4/2N1PN2/PP3PPP/2RQK2R b K - 0 9", solution: ["a7a6","e1g1","b7b5","c4e2"], solutionSan: ["a6","O-O","b5","Be2"], rating: 1520, sourceRef: "Capablanca – Yates, Hastings 1930/31 (10.O-O b5 11.Be2 Bb7) : Noir gagne de l'espace à l'aile dame, sans encore réaliser le danger à venir." },
+    { fen: "2rq1rk1/1b1nbppp/p1p1pn2/1p4B1/3P4/2N1PN2/PPQ1BPPP/2RR2K1 b - - 5 13", solution: ["c6c5","d4c5","c8c5","b2b4"], solutionSan: ["c5","dxc5","Rxc5","b4"], rating: 1550, sourceRef: "Capablanca – Yates, Hastings 1930/31 (14.dxc5! Rxc5 15.b4 Rc8) : la rupture centrale ouvre des lignes, la Tour noire est chassée." },
+    { fen: "3q1rk1/1b1nbppp/p3pn2/1pr3B1/8/2N1PN2/PPQ1BPPP/2RR2K1 w - - 0 15", solution: ["b2b4","c5c8","c2b1","f6d5"], solutionSan: ["b4","Rc8","Qb1","Nd5"], rating: 1570, sourceRef: "Capablanca – Yates, Hastings 1930/31 (16.Qb1 Nd5 17.Nxd5 Bxg5) : Capablanca place sa Dame sur une case qui semble anodine — elle va pourtant devenir la cible d'un échange quelques coups plus tard." },
+    { fen: "2rq1rk1/1b1nbppp/p3p3/1p1n2B1/1P6/2N1PN2/P3BPPP/1QRR2K1 w - - 3 17", solution: ["c3d5","e7g5","c1c8","b7c8"], solutionSan: ["Nxd5","Bxg5","Rxc8","Bxc8"], rating: 1600, sourceRef: "Capablanca – Yates, Hastings 1930/31 (18.Rxc8 Bxc8 19.Nxg5 Qxg5) : cascade d'échanges, la position se simplifie rapidement." },
+    { fen: "2bq1rk1/3n1ppp/p3p3/1p1N2b1/1P6/4PN2/P3BPPP/1Q1R2K1 w - - 0 19", solution: ["f3g5","d8g5","d5c3","c8b7"], solutionSan: ["Nxg5","Qxg5","Nc3","Bb7"], rating: 1620, sourceRef: "Capablanca – Yates, Hastings 1930/31 (20.Nc3 Bb7 21.Ne4 Qg6) : Blanc regroupe son Cavalier vers le centre pendant que Noir cherche l'activité." },
+    { fen: "5rk1/1b1n1ppp/p3p3/1p4q1/1P6/2N1P3/P3BPPP/1Q1R2K1 w - - 2 21", solution: ["c3e4","g5g6","e2f3","b7d5"], solutionSan: ["Ne4","Qg6","Bf3","Bd5"], rating: 1650, sourceRef: "Capablanca – Yates, Hastings 1930/31 (22.Bf3 Bd5 23.Nc3) : dernier coup avant la décision — Noir s'apprête à choisir d'échanger les Dames." },
+    { fen: "5rk1/3n1ppp/p3p1q1/1p1b4/1P2N3/4PB2/P4PPP/1Q1R2K1 w - - 6 23", solution: ["e4c3","g6b1","c3b1"], solutionSan: ["Nc3","Qxb1","Nxb1"], rating: 1670, sourceRef: "Capablanca – Yates, Hastings 1930/31 (23...Qxb1! 24.Nxb1) : LE moment de transition du module — Yates échange les Dames, pensant la finale au moins équilibrée ; posez-vous toujours la question AVANT de jouer ce coup." },
+    { fen: "5rk1/3n1ppp/p3p3/1p1b4/1P6/4PB2/P4PPP/1N1R2K1 b - - 0 24", solution: ["d7f6","b1c3","f8c8","c3d5","f6d5","f3d5","e6d5"], solutionSan: ["Nf6","Nc3","Rc8","Nxd5","Nxd5","Bxd5","exd5"], rating: 1700, sourceRef: "Capablanca – Yates, Hastings 1930/31 (24...Nf6 25.Nc3 Rc8 26.Nxd5 Nxd5 27.Bxd5 exd5) : les échanges continuent, Noir hérite d'un pion d5 isolé dans une pure finale de Tours." },
+    { fen: "2r3k1/5ppp/p7/1p1p4/1P6/4P3/P4PPP/3R2K1 w - - 0 28", solution: ["g2g3","g7g6","d1d5","c8c2"], solutionSan: ["g3","g6","Rxd5","Rc2"], rating: 1720, sourceRef: "Capablanca – Yates, Hastings 1930/31 (28.g3 g6 29.Rxd5! Rc2) : Capablanca récupère le pion isolé, la petite supériorité structurelle devient concrète." },
+    { fen: "6k1/5p1p/p5p1/1p1R4/1P6/4P1P1/P1r2P1P/6K1 w - - 1 30", solution: ["a2a4","b5a4","d5a5","c2a2"], solutionSan: ["a4","bxa4","Ra5","Ra2"], rating: 1740, sourceRef: "Capablanca – Yates, Hastings 1930/31 (30.a4 bxa4 31.Ra5 Ra2) : Blanc ouvre un second front à l'aile dame pour ses pions." },
+    { fen: "6k1/5p1p/p5p1/R7/pP6/4P1P1/r4P1P/6K1 w - - 2 32", solution: ["a5a6","g8g7","g1g2","a4a3"], solutionSan: ["Rxa6","Kg7","Kg2","a3"], rating: 1760, sourceRef: "Capablanca – Yates, Hastings 1930/31 (32.Rxa6 Kg7 33.Kg2 a3) : le pion supplémentaire est engrangé, la conversion méthodique commence." },
+    { fen: "1R6/5pk1/7p/4PP2/r3K1P1/8/8/8 w - - 5 69", solution: ["e4d5","a4a5","d5d6","a5a6"], solutionSan: ["Kd5","Ra5+","Kd6","Ra6+"], rating: 1800, sourceRef: "Capablanca – Yates, Hastings 1930/31 (69.Kd5! Ra5+ 70.Kd6 Ra6+) : après 60 coups de manœuvres, c'est le Roi blanc, inlassablement actif, qui fait toute la différence." },
+    { fen: "7k/r4pR1/3K1P1p/4P3/6P1/8/8/8 w - - 15 83", solution: ["e5e6","a7a6","d6e7","a6e6","e7f7","e6e4","g4g5","h6g5"], solutionSan: ["e6","Ra6+","Ke7","Rxe6+","Kxf7","Re4","g5","hxg5"], rating: 1830, sourceRef: "Capablanca – Yates, Hastings 1930/31 (83.e6! Ra6+ 84.Ke7 Rxe6+ 85.Kxf7! Re4 86.g5 hxg5) : la combinaison finale gagne un pion décisif dans une finale de pions désormais totalement gagnante." },
+  ].map((p) => ({ themeId: "jh-module-13-transition-milieu-de-partie-vers-finale", ...p })),
   {
     themeId: "jh-module-14-l-art-de-la-conversion",
     fen: "r1bqk2r/1p2bppp/p1nppn2/8/2P1P3/N1N5/PP3PPP/R1BQKB1R w KQkq - 2 9",
