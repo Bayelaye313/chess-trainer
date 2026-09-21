@@ -442,19 +442,55 @@ function linesWithPrefix(prefix: readonly string[]): RawLine[] {
 const enrichedCuratedTreeCache = new Map<string, VariationNode>();
 
 /**
+ * Chapitres curatés dont l'arbre `pgn` authored à la main est déjà VERBATIM
+ * ET plus profond que ce qu'un merge automatique avec la base Lichess pourrait
+ * apporter — le fusionner quand même ne fait qu'ajouter des DOUBLONS (même
+ * théorie, nommage anglais différent du nôtre, donc jamais dédupliquée par
+ * `deriveVariationsFromNode`, voir `server/queries/openings.ts`) ou des
+ * branches plus COURTES qui s'arrêtent avant la fin du contenu déjà écrit.
+ *
+ * BUG CORRIGÉ (audit DOM du 2026-09-13, « affiche 15/49 chapitres au lieu du
+ * catalogue propre des variantes ») : `scotch-game` fusionnait jusqu'ici avec
+ * TOUTE la famille lichess-org "Scotch Game" (voir `CURATED_FAMILY_HUB`) —
+ * ~230 lignes dont la plupart des noms ("Mieses Variation", "Malaniuk
+ * Variation"...) ne correspondent PAS caractère pour caractère aux noms
+ * français de nos propres branches authored (`SCOTCH_GAME_ANNOTATIONS`,
+ * `core/curriculum/openings.ts`) : chaque paire finissait comptée comme DEUX
+ * variantes distinctes par `deriveVariationsFromNode` (clé `eco|comment`),
+ * gonflant le sélecteur à 49 entrées orphelines dont beaucoup s'arrêtaient à
+ * 7 coups (une ligne lichess-org sans aucune suite cataloguée sous ce nom
+ * précis, jamais étendue par notre propre arbre plus profond). Notre arbre
+ * `pgn` authored couvre déjà les 4 blocs (Göring, Gambit Écossais, Classique,
+ * Mieses & Schmidt) verbatim jusqu'au coup 12-15 — plus profond que la
+ * quasi-totalité de cette famille — donc aucun merge n'est nécessaire ici.
+ * `scotch-game` RESTE dans `CURATED_FAMILY_HUB` malgré tout : sans le hub, la
+ * famille "Scotch Game" réapparaîtrait comme sa PROPRE carte dynamique
+ * (`listOpeningFamilies`), dupliquant ce chapitre une seconde fois au niveau
+ * du catalogue cette fois — le hub sert ICI uniquement d'exclusion, jamais de
+ * source de fusion.
+ */
+const SKIP_DB_ENRICHMENT = new Set<string>(["scotch-game"]);
+
+/**
  * L'arbre d'un chapitre curaté (`core/curriculum/openings.ts`), fusionné avec
  * TOUTE la profondeur que la base Lichess lui connaît — voir le point 2 du
  * docstring de fichier. Ne mute JAMAIS l'arbre partagé de `getOpeningTree`
  * (`server/curriculum/opening-tree-index.ts`, dont dépend par ailleurs la
  * détection d'écarts de répertoire, `server/queries/opening-mistakes.ts`) :
  * `structuredClone` avant de fusionner, pour que cet enrichissement reste
- * strictement local à l'onglet Ouvertures.
+ * strictement local à l'onglet Ouvertures. `SKIP_DB_ENRICHMENT` court-circuite
+ * entièrement le merge pour un chapitre déjà verbatim-profond — voir son
+ * docstring.
  */
 export function getEnrichedTreeForCuratedOpening(opening: OpeningLine): VariationNode {
   const cached = enrichedCuratedTreeCache.get(opening.id);
   if (cached) return cached;
 
   const base = structuredClone(getOpeningTree(opening));
+  if (SKIP_DB_ENRICHMENT.has(opening.id)) {
+    enrichedCuratedTreeCache.set(opening.id, base);
+    return base;
+  }
   const hubFamily = CURATED_FAMILY_HUB[opening.id];
   // Hub désigné : réutilise l'arbre PARTAGÉ de toute la famille (voir
   // `getFamilyTree`) — plusieurs chapitres curatés peuvent viser le même hub

@@ -97,29 +97,29 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Avance ton pion central de deux cases.",
     },
     {
-      comment: "Les Noirs répondent symétriquement au centre.",
+      comment: "Les Noirs répondent symétriquement au centre, refusant de céder l'espace sans contester.",
       hint: "Réponds au centre par le pion symétrique.",
     },
     {
-      comment: "Développe un cavalier en attaquant le pion e5.",
+      comment: "Développe un cavalier en attaquant le pion e5 — un tempo gratuit avant même de fixer sa structure.",
       hint: "Développe une pièce mineure en attaquant un pion adverse.",
     },
     {
-      comment: "Défend le pion e5 en développant une pièce.",
+      comment: "Défend e5 en développant une pièce plutôt qu'en le poussant ou le protégeant par un pion — Nc6 garde toutes les options ouvertes (Écossaise, Italienne, Espagnole...).",
       hint: "Défends le pion attaqué en développant une pièce mineure.",
     },
     {
       comment:
-        "Ouvre le centre tout de suite plutôt que de développer le fou — vise des positions plus concrètes et tactiques que la Ruy Lopez.",
+        "L'idée qui distingue l'Écossaise : au lieu de développer le fou-roi (Italienne) ou de clouer le cavalier (Espagnole), les Blancs défient tout de suite le centre noir — position plus ouverte et plus concrète, où le meilleur développement compte davantage que le plan à long terme.",
       hint: "Pousse ton second pion central pour défier directement le pion e5 adverse.",
     },
     {
-      comment: "Les Noirs acceptent l'échange, ouvrant la position au profit du camp le mieux développé.",
+      comment: "Les Noirs acceptent l'échange plutôt que de le laisser filer : refuser (par ...exd4 différé) céderait le centre sans rien obtenir en retour.",
       hint: "Le pion attaqué doit décider s'il capture la pièce qui le défie.",
     },
     {
       comment:
-        "Recapture avec le cavalier, qui prend une position centrale dominante tout en gagnant un temps de développement.",
+        "Nxd4 recentralise le cavalier sur la case la plus dominante de l'échiquier tout en gagnant le temps de développement que le pion e5 venait de payer — d'ici, trois plans distincts attendent les Noirs : Bc5 (Classique), Nf6 (Schmidt/Mieses) ou une déviation blanche par 4.Bc4 (Gambit Écossais).",
       hint: "Reprends le pion avec la pièce déjà développée, en te centralisant.",
     },
   ],

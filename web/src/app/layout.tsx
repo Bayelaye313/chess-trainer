@@ -59,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         */}
         <EngineProvider>
           <Nav />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+<main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-8">{children}</main>
           {/* Sondage de fond des comptes liés (Chess.com/Lichess) + toast de notification. */}
           <SyncToast />
         </EngineProvider>

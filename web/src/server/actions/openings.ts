@@ -11,10 +11,21 @@
  */
 import type { PopularMove } from "@/server/import/lichess-explorer";
 import { findBookMove, type OpeningMatch } from "@/server/import/openings";
-import { listBookContinuations, listPopularContinuations, type BookContinuation } from "@/server/queries/openings";
+import {
+  getOpeningNodeBriefing,
+  listBookContinuations,
+  listPopularContinuations,
+  type BookContinuation,
+  type OpeningNodeBriefing,
+} from "@/server/queries/openings";
 
 export async function getBookContinuations(fen: string): Promise<BookContinuation[]> {
   return listBookContinuations(fen);
+}
+
+/** Briefing théorique temps réel (philosophie/objectif/suggestion moteur) du nœud atteint par `fen` — voir `use-opening-coaching-briefing.ts`. */
+export async function getOpeningCoachingBriefing(openingId: string, fen: string): Promise<OpeningNodeBriefing | null> {
+  return getOpeningNodeBriefing(openingId, fen);
 }
 
 /** Fréquence humaine des coups depuis `fen` (Lichess Opening Explorer) — voir `use-move-popularity.ts`. */

@@ -1,4 +1,11 @@
+import { DAILY_LIMIT_MAX, DAILY_LIMIT_MIN } from "./preferences";
+
 export type TrainingRecommendationType = "puzzle" | "opening" | "trap" | "review";
+
+export type { TrainingGoal, TrainingPreferences } from "./preferences";
+export { allowedEntityTypes, normalizeTrainingPreferences } from "./preferences";
+export { encodeTrainingReason, parseTrainingReason } from "./reasons";
+export type { TrainingEvidence, TrainingReasonCode } from "./reasons";
 
 export interface RecommendationCandidate {
   entityType: TrainingRecommendationType;
@@ -25,22 +32,33 @@ export function recommendationId(candidate: RecommendationCandidate): string {
   return `${candidate.entityType}:${candidate.entityId}:${candidate.reasonCode}`;
 }
 
-/** Reserve une place aux domaines disponibles avant de remplir les places restantes par priorité. */
+/**
+ * Réserve une place aux domaines autorisés (objectifs utilisateur) avant de
+ * remplir par impact. Filtrer ici, pas en SQL : le même pool reste testable
+ * sans Drizzle, et un objectif vide ne peut pas vider la séance (voir
+ * `allowedEntityTypes`).
+ */
 export function selectSessionCandidates(
   candidates: readonly RecommendationCandidate[],
   limit: number,
+  allowedTypes?: readonly TrainingRecommendationType[],
 ): RecommendationCandidate[] {
-  const ordered = deduplicateCandidates(candidates);
+  const scoped =
+    allowedTypes && allowedTypes.length > 0
+      ? candidates.filter((candidate) => allowedTypes.includes(candidate.entityType))
+      : candidates;
+  const capped = Math.max(DAILY_LIMIT_MIN, Math.min(DAILY_LIMIT_MAX, Math.round(limit)));
+  const ordered = deduplicateCandidates(scoped);
   const selected: RecommendationCandidate[] = [];
   const selectedKeys = new Set<string>();
   for (const candidate of ordered) {
-    if (selected.length >= limit) break;
+    if (selected.length >= capped) break;
     if (selected.some((item) => item.entityType === candidate.entityType)) continue;
     selected.push(candidate);
     selectedKeys.add(recommendationId(candidate));
   }
   for (const candidate of ordered) {
-    if (selected.length >= limit) break;
+    if (selected.length >= capped) break;
     if (selectedKeys.has(recommendationId(candidate))) continue;
     selected.push(candidate);
   }

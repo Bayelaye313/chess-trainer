@@ -1,11 +1,11 @@
 import "server-only";
 import { Chess } from "chess.js";
 import { moveInputFromUci, uciOf } from "@/core/analysis/evaluate-move";
-import { mainLine, type VariationNode } from "@/core/chess/pgn-tree";
+import { mainLine, type OpeningEngineSuggestion, type VariationNode } from "@/core/chess/pgn-tree";
 import { findOpening, OPENINGS, type OpeningLine } from "@/core/curriculum/openings";
 import { fetchLichessPopularity, type PopularMove } from "@/server/import/lichess-explorer";
 import { findBookMove, type OpeningMatch } from "@/server/import/openings";
-import { getCuratedChildren } from "@/server/curriculum/opening-tree-index";
+import { getCuratedChildren, getGlobalCurriculumIndex } from "@/server/curriculum/opening-tree-index";
 import {
   getEnrichedTreeForCuratedOpening,
   getImportedChildren,
@@ -236,6 +236,56 @@ export function listBookContinuations(fen: string): BookContinuation[] {
     if (book) continuations.push({ san: played.san, uci: uciOf(played), eco: book.eco, name: book.name, weight: 1 });
   }
   return continuations.sort((a, b) => a.san.localeCompare(b.san));
+}
+
+/** Un coup théorique connu depuis un nœud — sert le "mini-tree previewer" d'`OpeningCoachingPanel` (bifurcations connues depuis la position affichée). */
+export interface OpeningNodeAlternative {
+  san: string;
+  uci: string;
+  /** Nom de la sous-variante que ce coup ouvre, s'il en ouvre une — voir `core/chess/pgn-tree.ts#VariationNode.comment`. `null` : simple prolongement de la ligne courante, sans embranchement nommé. */
+  variationName: string | null;
+}
+
+/**
+ * Enrichissement pédagogique posé sur UN nœud de l'arbre curaté (`philosophy`/
+ * `strategicObjective`/`engineSuggestion`, voir `core/chess/pgn-tree.ts#annotateTree`)
+ * — sert le HUD de coaching temps réel du Mode Entraînement
+ * (`client/features/openings/opening-coaching-panel.tsx`). `null` : aucun
+ * chapitre curaté n'atteint cette position (partie hors théorie authored, ou
+ * catalogue pas encore enrichi pour cette ligne) — l'appelant retombe sur un
+ * affichage neutre plutôt que d'inventer un contenu.
+ */
+export interface OpeningNodeBriefing {
+  /** Nom de la sous-variante qui COMMENCE à ce nœud précis — `null` si ce nœud prolonge simplement la ligne (voir `VariationNode.comment`). */
+  variationName: string | null;
+  philosophy: string | null;
+  strategicObjective: string | null;
+  engineSuggestion: OpeningEngineSuggestion | null;
+  /** Coups théoriques connus depuis cette position (voir `getCuratedChildren`) — jamais le coup qui a MENÉ à ce nœud, seulement sa suite. */
+  alternatives: readonly OpeningNodeAlternative[];
+}
+
+/**
+ * Cherche le nœud curaté (`getGlobalCurriculumIndex`) qui atteint `fen`,
+ * PRIORITAIREMENT dans le chapitre `openingId` lui-même — une position peut
+ * transposer vers un autre chapitre (voir le docstring de
+ * `getGlobalCurriculumIndex`), auquel cas son enrichissement reste tout aussi
+ * légitime à afficher (même position, même théorie, peu importe par quel
+ * chapitre elle a été atteinte). `null` si aucun chapitre curaté ne connaît
+ * `fen` — jamais un contenu de repli inventé.
+ */
+export function getOpeningNodeBriefing(openingId: string, fen: string): OpeningNodeBriefing | null {
+  const matches = getGlobalCurriculumIndex().get(fen);
+  if (!matches || matches.length === 0) return null;
+  const match = matches.find((candidate) => candidate.opening.id === openingId) ?? matches[0];
+  const { node } = match;
+  return {
+    variationName: node.comment,
+    philosophy: node.philosophy,
+    strategicObjective: node.strategicObjective,
+    engineSuggestion: node.engineSuggestion,
+    alternatives: getCuratedChildren(fen).map(({ san, uci, variationName }) => ({ san, uci, variationName })),
+  };
 }
 
 /**

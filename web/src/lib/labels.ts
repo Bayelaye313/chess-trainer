@@ -9,6 +9,8 @@ import type { EngineLine } from "@/core/analysis/types";
 import type { KeyMomentKind, TimelinePly } from "@/core/analysis/timeline";
 import type { Termination } from "@/core/chess/termination";
 import type { GamePhase, GameResult, Motif, MoveQuality, WrongMoveHint } from "@/core/chess/types";
+import type { TrainingGoal } from "@/core/training/preferences";
+import { parseTrainingReason } from "@/core/training/reasons";
 import type { CurriculumLevel } from "@/server/db/schema/curriculum";
 import type { GameSource } from "@/server/db/schema";
 
@@ -358,3 +360,52 @@ export const KEY_MOMENT_SYMBOL: Record<KeyMomentKind, string> = {
   missed_mate: "#",
   missed_tactic: "?!",
 };
+
+export const TRAINING_GOAL_LABEL: Record<TrainingGoal, string> = {
+  tactics: "Tactique",
+  openings: "Ouvertures",
+  traps: "Pièges",
+  review: "Revue",
+};
+
+/** Phrase vérifiable affichée sur une carte de séance — jamais un rang SQL nu. */
+export function formatTrainingHeadline(reasonCode: string): string {
+  const { code, evidence } = parseTrainingReason(reasonCode);
+  const motif = evidence.motif && evidence.motif in MOTIF_LABEL ? MOTIF_LABEL[evidence.motif] : null;
+  const opening = evidence.openingName;
+  switch (code) {
+    case "puzzle-due":
+      return evidence.daysOverdue && evidence.daysOverdue > 0
+        ? `Puzzle en retard de ${evidence.daysOverdue} j`
+        : "Puzzle à réviser aujourd'hui";
+    case "motif-missed":
+      return motif
+        ? `Motif ${motif} manqué ${evidence.missCount ?? 0} fois`
+        : "Motif tactique manqué";
+    case "opening-due":
+      return "Variante d'ouverture à revoir";
+    case "theory-exit":
+      return evidence.theoryExitPly
+        ? `Sortie de théorie au coup ${Math.ceil(evidence.theoryExitPly / 2)}${opening ? ` (${opening})` : ""}`
+        : opening
+          ? `Sortie de théorie (${opening})`
+          : "Sortie de théorie à analyser";
+    case "game-error":
+      if ((evidence.avgCpLoss ?? 0) >= 1500) return "Erreur décisive (mat ou perte lourde)";
+      return evidence.avgCpLoss
+        ? `Erreur de partie (−${Math.round(evidence.avgCpLoss)} cp)`
+        : "Erreur de partie à analyser";
+    case "trap-due":
+      return evidence.trapName ? `Piège à entretenir : ${evidence.trapName}` : "Piège à entretenir";
+    case "trap-refutation-forgotten":
+      return evidence.trapName
+        ? `Réfutation oubliée : ${evidence.trapName}`
+        : "Piège vu, réfutation oubliée";
+    case "trap-family-played":
+      return evidence.trapFamily
+        ? `Piège de ton répertoire (${evidence.trapFamily}${evidence.gameCount ? `, ${evidence.gameCount} parties` : ""})`
+        : "Piège de ton répertoire";
+    default:
+      return "Entraînement recommandé";
+  }
+}

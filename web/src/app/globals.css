@@ -160,6 +160,32 @@ body {
 }
 
 /**
+ * HUD d'alerte piège d'`OpeningCoachingPanel` (cahier des charges du
+ * 2026-09-12, coaching temps réel du Mode Entraînement) — un flash de bordure
+ * écarlate discret sur l'encart d'alerte, EN PLUS du tremblement générique du
+ * plateau (`.animate-shake-error`, toujours déclenché en parallèle) : jamais
+ * un remplacement, juste un signal supplémentaire pour un coup refusé qui
+ * correspond en plus à un piège DOCUMENTÉ (`core/curriculum/opening-trap-alert.ts`).
+ * Utilise `--quality-blunder` (déjà la teinte "erreur" de tout le thème,
+ * voir CLAUDE.md) plutôt qu'une nouvelle couleur dédiée.
+ */
+@keyframes trap-alert-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--quality-blunder) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--quality-blunder) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--quality-blunder) 0%, transparent);
+  }
+}
+
+.animate-trap-alert {
+  animation: trap-alert-flash 1.4s ease-out both;
+}
+
+/**
  * Extension "Accords d'Élite" / "Mission Briefing" (cahier des charges du
  * 2026-09-09) — jetons PUREMENT ADDITIFS pour `CourseCurriculum` et
  * `MissionBriefing` (voir `client/features/learn/theme-config.ts`). Aucun

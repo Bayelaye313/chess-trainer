@@ -4,7 +4,7 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
  * Préférences, en clé/valeur JSON.
  *
  * Une table typée par réglage vieillirait mal : les préférences bougent à
- * chaque étape. Les clés connues sont déclarées dans src/db/settings-keys.ts.
+ * chaque étape. Les clés connues sont déclarées dans `server/db/settings-keys.ts`.
  */
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),

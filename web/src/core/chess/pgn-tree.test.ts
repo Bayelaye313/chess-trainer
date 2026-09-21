@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTreeFromLines, collectNodes, mainLine, mergeTrees, parsePgnTree } from "./pgn-tree";
+import { annotateTree, buildTreeFromLines, collectNodes, mainLine, mergeTrees, nodeAtSanPath, parsePgnTree } from "./pgn-tree";
 
 describe("parsePgnTree", () => {
   it("parse une ligne plate sans variante", () => {
@@ -124,6 +124,52 @@ describe("buildTreeFromLines", () => {
   it("porte le code ECO de la ligne sur son nœud terminal", () => {
     const root = buildTreeFromLines([{ label: "Sicilienne", eco: "B20", sanMoves: ["e4", "c5"] }]);
     expect(mainLine(root).at(-1)?.eco).toBe("B20");
+  });
+});
+
+describe("nodeAtSanPath / annotateTree", () => {
+  it("retrouve un nœud par son chemin SAN, y compris dans une sous-variante", () => {
+    const root = parsePgnTree("1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 (3...Nf6 4.O-O)");
+    expect(nodeAtSanPath(root, ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6"]).san).toBe("a6");
+    expect(nodeAtSanPath(root, ["e4", "e5", "Nf3", "Nc6", "Bb5", "Nf6", "O-O"]).san).toBe("O-O");
+    expect(nodeAtSanPath(root, []).san).toBeNull(); // chemin vide = la racine elle-même
+  });
+
+  it("lève une erreur explicite sur un chemin SAN introuvable", () => {
+    const root = parsePgnTree("1.e4 e5 2.Nf3");
+    expect(() => nodeAtSanPath(root, ["e4", "c5"])).toThrow(/chemin SAN introuvable/);
+  });
+
+  it("pose philosophy/strategicObjective/engineSuggestion sur le nœud exact repéré, laisse les autres inchangés", () => {
+    const root = parsePgnTree("1.e4 e5 2.Nf3 Nc6");
+    annotateTree(root, [
+      [
+        ["e4"],
+        {
+          philosophy: "Contrôler le centre tout de suite.",
+          strategicObjective: "Ouvrir des lignes pour le Fou et la Dame.",
+          engineSuggestion: { san: "e5", uci: "e7e5", cp: 20, mate: null },
+        },
+      ],
+    ]);
+    const e4 = mainLine(root)[0];
+    expect(e4.philosophy).toBe("Contrôler le centre tout de suite.");
+    expect(e4.strategicObjective).toBe("Ouvrir des lignes pour le Fou et la Dame.");
+    expect(e4.engineSuggestion).toEqual({ san: "e5", uci: "e7e5", cp: 20, mate: null });
+    // Les autres nœuds, non repérés par une entrée, gardent leurs valeurs par défaut.
+    const e5 = mainLine(root)[1];
+    expect(e5.philosophy).toBeNull();
+    expect(e5.strategicObjective).toBeNull();
+    expect(e5.engineSuggestion).toBeNull();
+  });
+
+  it("un champ omis dans l'annotation laisse le nœud inchangé (undefined ≠ null)", () => {
+    const root = parsePgnTree("1.e4");
+    annotateTree(root, [[["e4"], { philosophy: "A" }]]);
+    annotateTree(root, [[["e4"], { strategicObjective: "B" }]]);
+    const e4 = mainLine(root)[0];
+    expect(e4.philosophy).toBe("A"); // pas écrasé par le second appel, qui omet `philosophy`
+    expect(e4.strategicObjective).toBe("B");
   });
 });
 

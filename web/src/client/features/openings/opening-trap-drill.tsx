@@ -43,6 +43,7 @@ import { familyIcon } from "./trap-family-icon";
 import { markTrapSolved } from "./trap-progress";
 import { buildPoisonPawnRound, buildTrapRound } from "./trap-round";
 import { useOpeningDrill } from "./use-opening-drill";
+import { logTrainingEvent } from "@/server/actions/training";
 
 /** Repli minimal pour `useOpeningDrill` (n'exploite `opening` que pour `side`/`name`/`id`, jamais `moves` — voir `syntheticOpening` dans `opening-mistake-exercise.tsx`, même schéma). */
 function syntheticOpening(trap: OpeningTrap) {
@@ -118,15 +119,29 @@ export function OpeningTrapDrill({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTrap.id, poisonMode]);
 
+  const loggedFinishRef = useRef<string | null>(null);
+
   // Coche la pastille NIVEAU 3 (« maîtrisé ») dès que la Manche 2, à l'aveugle, est parcourue sans faute — voir
   // `use-opening-drill.ts` (`nextLearningRoundOutcome`) : `status === "finished"` sur `kind: "trap"` ne peut, par
   // construction du protocole, signifier autre chose (toute manche imparfaite repasse par `"round-gate"`, jamais
   // `"finished"`). JAMAIS pour `kind: "trap-poison"` — manche unique, non suivie (voir le docstring du fichier).
   useEffect(() => {
-    if (drill.status === "finished" && drill.selection?.kind === "trap") markTrapSolved(activeTrap.id);
-  }, [drill.status, drill.selection, activeTrap.id]);
+    if (drill.status !== "finished" || drill.selection?.kind !== "trap") return;
+    markTrapSolved(activeTrap.id);
+    if (loggedFinishRef.current === activeTrap.id) return;
+    loggedFinishRef.current = activeTrap.id;
+    void logTrainingEvent({
+      kind: "trap",
+      entityId: activeTrap.id,
+      score: 1,
+      hintsUsed: hintRevealed ? 1 : 0,
+    }).catch(() => {
+      loggedFinishRef.current = null;
+    });
+  }, [drill.status, drill.selection, activeTrap.id, hintRevealed]);
 
   function retry() {
+    loggedFinishRef.current = null;
     setHintRevealed(false);
     startDrill(activeTrap, poisonMode);
   }
@@ -135,6 +150,7 @@ export function OpeningTrapDrill({
     if (!nextInSeries) return;
     setHintRevealed(false);
     setPoisonMode(false);
+    loggedFinishRef.current = null;
     setActiveTrap(nextInSeries);
   }
 

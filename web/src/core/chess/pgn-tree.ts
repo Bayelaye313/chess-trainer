@@ -18,9 +18,42 @@ import { Chess, type Move } from "chess.js";
  *
  * Module pur (chess.js seulement, aucune donnée) : ne valide QUE la légalité
  * des coups, ne connaît rien du catalogue d'ouvertures lui-même.
+ *
+ * `philosophy`/`strategicObjective`/`engineSuggestion` (cahier des charges du
+ * 2026-09-12, « hydratation de l'arbre d'ouverture ») portent l'enrichissement
+ * pédagogique d'UN nœud — jamais posés par `parsePgnTree`/`buildTreeFromLines`
+ * eux-mêmes (toujours `null` à la sortie du parseur, comme `comment`), mais
+ * par `annotateTree` en aval (voir plus bas), appelée par l'appelant qui
+ * possède la source (ex. `core/curriculum/openings.ts`). Délibérément
+ * PAS injectés via la syntaxe `{...}` du PGN lui-même : `comment` porte déjà
+ * un contrat figé et consommé (le NOM de la sous-variante, voir
+ * `server/curriculum/opening-tree-index.ts`) — un seul `{...}` par nœud
+ * d'ailleurs (voir `parseSequence`), qui ne pourrait pas porter trois champs
+ * distincts sans un mini-langage ad-hoc fragile. `annotateTree` (repérage par
+ * chemin SAN depuis la racine, jamais par index fragile) est le même principe
+ * que `core/curriculum/course-tree.ts#withEngineSuggestions`/`nodeAtSanPath`
+ * pour `ChessMoveNode` — dupliqué ici en toute connaissance de cause plutôt
+ * qu'importé (voir la note sur `EngineSuggestion` ci-dessous), ce fichier
+ * restant un module `core/chess` autonome.
  */
 
 export const PGN_TREE_START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+/**
+ * Copie locale volontaire de `move-tree.ts#EngineSuggestion` (MÊME forme) —
+ * dupliquée plutôt qu'importée pour ne pas créer de dépendance croisée entre
+ * les deux parseurs d'arbre de `core/chess` (voir le docstring du fichier),
+ * exactement comme `tokenize`/`uciOfMove` le sont déjà dans l'autre sens.
+ */
+export interface OpeningEngineSuggestion {
+  /** SAN du coup suggéré par le moteur DEPUIS la position de ce nœud — jamais un coup halluciné : toujours une ligne réellement publiée par la source (annotation `[%cal]`/analyse écrite d'une étude Lichess, jamais inventée). */
+  san: string;
+  uci: string;
+  /** Évaluation en centipawns après le coup suggéré, point de vue Blancs — `null` si la source ne chiffre pas l'analyse (le cas le plus fréquent pour des études annotées à la main, sans moteur en nuage). */
+  cp: number | null;
+  /** Mat en N après le coup suggéré (positif = Blancs matent) — `null` sinon. */
+  mate: number | null;
+}
 
 /**
  * Un nœud de l'arbre — la position APRÈS `san`/`uci` (position de départ pour
@@ -44,6 +77,12 @@ export interface VariationNode {
    * l'ouverture englobante — voir `server/curriculum/imported-openings-index.ts`.
    */
   eco: string | null;
+  /** Vision stratégique long terme du camp qui choisit CETTE ligne (français) — voir `annotateTree`. `null` par défaut (aucun `pgn` authored n'en pose à l'analyse). */
+  philosophy: string | null;
+  /** Objectif immédiat du coup qui MÈNE à ce nœud (français) — voir `annotateTree`. `null` par défaut. */
+  strategicObjective: string | null;
+  /** Suggestion moteur affichée en permanence sur ce nœud — voir `OpeningEngineSuggestion`. `null` par défaut. */
+  engineSuggestion: OpeningEngineSuggestion | null;
   children: VariationNode[];
 }
 
@@ -80,7 +119,18 @@ function tokenize(pgn: string): string[] {
 }
 
 function makeRoot(startFen: string): VariationNode {
-  return { ply: 0, san: null, uci: null, fen: startFen, comment: null, eco: null, children: [] };
+  return {
+    ply: 0,
+    san: null,
+    uci: null,
+    fen: startFen,
+    comment: null,
+    eco: null,
+    philosophy: null,
+    strategicObjective: null,
+    engineSuggestion: null,
+    children: [],
+  };
 }
 
 interface Cursor {
@@ -154,6 +204,9 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       fen: chess.fen(),
       comment: null,
       eco: null,
+      philosophy: null,
+      strategicObjective: null,
+      engineSuggestion: null,
       children: [],
     };
     parentBeforeThisMove.children.push(child);
@@ -251,7 +304,18 @@ export function buildTreeFromLines(lines: readonly NamedLine[], startFen: string
       }
       let child = node.children.find((c) => c.san === move.san);
       if (!child) {
-        child = { ply: node.ply + 1, san: move.san, uci: uciOfMove(move), fen: chess.fen(), comment: null, eco: null, children: [] };
+        child = {
+          ply: node.ply + 1,
+          san: move.san,
+          uci: uciOfMove(move),
+          fen: chess.fen(),
+          comment: null,
+          eco: null,
+          philosophy: null,
+          strategicObjective: null,
+          engineSuggestion: null,
+          children: [],
+        };
         node.children.push(child);
       }
       node = child;
@@ -286,4 +350,50 @@ export function mergeTrees(base: VariationNode, addition: VariationNode): Variat
     else base.children.push(child);
   }
   return base;
+}
+
+/**
+ * Descend `root` en suivant `sanPath` (un enfant par SAN, à chaque
+ * profondeur) — repère de navigation stable pour poser une annotation SANS
+ * dépendre d'un index fragile qui casserait au moindre réagencement du texte
+ * PGN (même principe que `course-tree.ts#nodeAtSanPath` pour `ChessMoveNode`).
+ * Lève une erreur explicite (chemin fautif + SAN disponibles à ce niveau) si
+ * `sanPath` ne correspond à aucun nœud réel — jamais un échec silencieux qui
+ * ferait disparaître une annotation sans que personne ne le remarque.
+ */
+export function nodeAtSanPath(root: VariationNode, sanPath: readonly string[]): VariationNode {
+  let node = root;
+  for (const san of sanPath) {
+    const next = node.children.find((c) => c.san === san);
+    if (!next) {
+      throw new Error(`pgn-tree: chemin SAN introuvable, "${san}" absent des enfants (${node.children.map((c) => c.san).join(", ")})`);
+    }
+    node = next;
+  }
+  return node;
+}
+
+/** Enrichissement à poser sur UN nœud via `annotateTree` — voir `VariationNode.philosophy`/`strategicObjective`/`engineSuggestion`. Chaque champ omis laisse le nœud inchangé (`undefined` ≠ `null` : `null` efface explicitement un enrichissement déjà posé par un appel précédent). */
+export interface OpeningAnnotation {
+  philosophy?: string | null;
+  strategicObjective?: string | null;
+  engineSuggestion?: OpeningEngineSuggestion | null;
+}
+
+/**
+ * Pose plusieurs `OpeningAnnotation` sur `root` (mutation en place, renvoyée
+ * pour chaînage) — chaque entrée `[sanPath, annotation]` repère son nœud via
+ * `nodeAtSanPath`. Voir `core/curriculum/openings.ts` pour l'usage : chaque
+ * table d'annotations y est sourcée à la main depuis une étude Lichess
+ * publique précise (jamais une position/un commentaire inventés), citée dans
+ * le commentaire au-dessus de la table elle-même.
+ */
+export function annotateTree(root: VariationNode, entries: readonly (readonly [readonly string[], OpeningAnnotation])[]): VariationNode {
+  for (const [sanPath, annotation] of entries) {
+    const node = nodeAtSanPath(root, sanPath);
+    if (annotation.philosophy !== undefined) node.philosophy = annotation.philosophy;
+    if (annotation.strategicObjective !== undefined) node.strategicObjective = annotation.strategicObjective;
+    if (annotation.engineSuggestion !== undefined) node.engineSuggestion = annotation.engineSuggestion;
+  }
+  return root;
 }

@@ -42,7 +42,7 @@ import { useRouter } from "next/navigation";
 import { Chessboard } from "react-chessboard";
 import { buildFinalTestRounds, MIN_ROUND_PLIES, resolvePracticedEntries } from "./build-final-test";
 import { findNextUnmasteredVariation, type MasteryCandidate } from "@/core/curriculum/opening-mastery";
-import { getMoveCommentary } from "@/core/curriculum/opening-commentary";
+import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
 import { computeHeuristicCommentary } from "@/core/curriculum/heuristic-commentary";
 import {
   findVariationByKey,
@@ -50,18 +50,28 @@ import {
   variationKeyFor,
 } from "@/core/curriculum/opening-variation-key";
 import type { OpeningLine } from "@/core/curriculum/openings";
+import { REVEAL_ARROW_COLOR } from "@/lib/labels";
 import type { VariationAccuracy } from "@/server/queries/opening-progress";
 import type { AnnotatedPly, OpeningVariation } from "@/server/queries/openings";
 import { ChapterSelector } from "./chapter-selector";
 import { useErrorShake } from "./error-feedback";
-import { MoveCommentary } from "./move-commentary";
+import { OpeningCoachingPanel } from "./opening-coaching-panel";
 import { peekReviewQueueLength, popNextReview } from "./review-queue";
+import { useOpeningCoachingBriefing } from "./use-opening-coaching-briefing";
 import { type DrillSelection, type HintArrowBehavior, useOpeningDrill } from "./use-opening-drill";
 
 /** Flèche d'indice automatique : coup théorique attendu, pleine et bien visible — voir `drill.hintArrow`. */
 const HINT_ARROW_COLOR = "var(--quality-best)";
 /** Flèche de commentaire tactique : idée annexe, jamais le coup à jouer — semi-transparente, façon Listudy (voir `CommentaryArrow`). Même teinte que `--quality-okay` (#97af8b), diluée : les tokens CSS du thème n'exposent pas de variante transparente toute faite. */
 const COMMENTARY_ARROW_COLOR = "rgba(151, 175, 139, 0.55)";
+/**
+ * Flèche de suggestion moteur permanente (`OpeningCoachingPanel`, "Vision
+ * Moteur") — même couleur EXACTE que la flèche "coup révélé" de la Revue de
+ * partie (`REVEAL_ARROW_COLOR`, `lib/labels.ts`), déjà la teinte du moteur
+ * dans tout le reste de l'app (`--engine-arrow-best`) : jamais une nouvelle
+ * couleur ad hoc pour la même sémantique.
+ */
+const ENGINE_SUGGESTION_ARROW_COLOR = REVEAL_ARROW_COLOR;
 
 function SidebarButton({
   title,
@@ -131,6 +141,22 @@ export function OpeningDrill({
   // texte, méthode Listudy stricte (voir le docstring du fichier et
   // `error-feedback.ts`).
   const shaking = useErrorShake(drill.errorPulse);
+
+  // "Vision Moteur" (`OpeningCoachingPanel`) — affichée par défaut (la
+  // flèche de suggestion moteur, cahier des charges du 2026-09-12, doit être
+  // visible "dès que" le nœud en porte une), simple bouton à bascule : jamais
+  // dérivée d'un effet, un clic explicite suffit à la faire varier.
+  const [engineArrowEnabled, setEngineArrowEnabled] = useState(true);
+
+  // Briefing théorique temps réel (`philosophy`/`strategicObjective`/
+  // `engineSuggestion` du nœud AFFICHÉ, voir `core/chess/pgn-tree.ts`) — un
+  // seul appel ici, jamais dans `OpeningCoachingPanel` lui-même (voir son
+  // docstring) : `OpeningDrill` en a de toute façon déjà besoin pour fusionner
+  // la flèche moteur dans `boardArrows` ci-dessous, un second appel dans le
+  // panneau dupliquerait la même requête à chaque coup.
+  const coachingBriefing = useOpeningCoachingBriefing(opening.id, drill.fen);
+  const engineSuggestion =
+    coachingBriefing.status === "ready" ? (coachingBriefing.briefing?.engineSuggestion ?? null) : null;
 
   const practicedEntries = useMemo(
     () => resolvePracticedEntries(opening, plies, variations, practicedVariationKeys),
@@ -306,8 +332,21 @@ export function OpeningDrill({
   // visuelle, qu'un coup ait déjà été maîtrisé ou non (voir
   // `use-opening-drill.ts`).
   const boardArrows = useMemo(() => {
-    if (!drill.hintsAllowed) return [];
     const arrows: { startSquare: string; endSquare: string; color: string }[] = [];
+    // Flèche de suggestion moteur (`OpeningCoachingPanel`, "Vision Moteur") —
+    // délibérément INDÉPENDANTE de `drill.hintsAllowed` (Manche 2 comprise) :
+    // ce n'est pas un indice sur le coup À TROUVER (la flèche d'indice
+    // ci-dessous reste bien coupée en Manche 2, méthode Listudy stricte), mais
+    // l'annotation permanente du nœud lui-même, au même titre que le texte du
+    // Briefing Théorique — jamais masquée par le protocole 2-manches.
+    if (engineArrowEnabled && engineSuggestion) {
+      arrows.push({
+        startSquare: engineSuggestion.uci.slice(0, 2),
+        endSquare: engineSuggestion.uci.slice(2, 4),
+        color: ENGINE_SUGGESTION_ARROW_COLOR,
+      });
+    }
+    if (!drill.hintsAllowed) return arrows;
     if (drill.hintArrow) {
       arrows.push({ startSquare: drill.hintArrow.from, endSquare: drill.hintArrow.to, color: HINT_ARROW_COLOR });
     }
@@ -315,7 +354,7 @@ export function OpeningDrill({
       arrows.push({ startSquare: arrow.from, endSquare: arrow.to, color: COMMENTARY_ARROW_COLOR });
     }
     return arrows;
-  }, [drill.hintsAllowed, drill.hintArrow, hintCommentary]);
+  }, [drill.hintsAllowed, drill.hintArrow, hintCommentary, engineArrowEnabled, engineSuggestion]);
 
   // Alerte "Dans ta partie, tu as joué X" — uniquement pour une correction
   // ciblée, et seulement tant que le joueur n'a pas encore trouvé le bon coup
@@ -324,6 +363,28 @@ export function OpeningDrill({
   // toutes avant la première tentative.
   const mistakeAlert =
     selection?.kind === "mistake" && drill.status === "playing" && drill.plyIndex === 0 ? selection.actualSan : null;
+
+  // Commentaire plat du DERNIER coup joué (`core/curriculum/opening-commentary.ts`
+  // ou son repli heuristique) — UNIQUE flux, transmis à `OpeningCoachingPanel`
+  // comme repli du Briefing Théorique quand le nœud n'a pas de `philosophy`/
+  // `strategicObjective` rédigés dédiés (voir son docstring, « Scotch Traps
+  // Pipeline » du 2026-09-13) : remplace l'ancien second bloc `MoveCommentary`
+  // affiché séparément sous l'échiquier, désormais retiré d'ici. `null` tant
+  // que `mistakeAlert` occupe déjà ce rôle (correction ciblée) ou qu'aucun
+  // coup n'a encore été joué.
+  const postMoveCommentaryPly = mistakeAlert
+    ? 0
+    : drill.status === "playing" && drill.lastPly > 0
+      ? drill.lastPly
+      : drill.status === "autoplaying" && drill.history.length > 0
+        ? drill.history.length
+        : 0;
+  const lastMoveEntry = drill.history.at(-1) ?? null;
+  const postMoveCommentary =
+    postMoveCommentaryPly > 0
+      ? (getMoveCommentary(opening.id, postMoveCommentaryPly) ??
+        (lastMoveEntry ? computeHeuristicCommentary(lastMoveEntry.fenBefore, lastMoveEntry.uci) : GENERIC_BOOK_COMMENT))
+      : null;
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
@@ -351,7 +412,7 @@ export function OpeningDrill({
         </button>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_220px]">
+      <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px_220px]">
         {/* Colonne centrale, épurée : échiquier, bouton d'indice, commentaire — rien d'autre (méthode Listudy, voir le docstring du fichier). */}
         <div className="flex flex-col items-center">
           {selection === null ? (
@@ -411,17 +472,6 @@ export function OpeningDrill({
                 <div className="mt-3 w-full max-w-[420px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
                   Dans ta partie, tu as joué <span className="font-mono font-semibold">{mistakeAlert}</span>. Trouve le
                   bon coup théorique.
-                </div>
-              )}
-
-              {!mistakeAlert && drill.status === "playing" && drill.lastPly > 0 && (
-                <div className="w-full max-w-[420px]">
-                  <MoveCommentary openingId={opening.id} ply={drill.lastPly} lastMove={drill.history.at(-1)} />
-                </div>
-              )}
-              {drill.status === "autoplaying" && drill.history.length > 0 && (
-                <div className="w-full max-w-[420px]">
-                  <MoveCommentary openingId={opening.id} ply={drill.history.length} lastMove={drill.history.at(-1)} />
                 </div>
               )}
 
@@ -511,6 +561,24 @@ export function OpeningDrill({
             </>
           )}
         </div>
+
+        {/* HUD de coaching temps réel (cahier des charges du 2026-09-12) —
+            uniquement une fois une manche démarrée, comme l'échiquier
+            lui-même : rien à coacher tant qu'aucun chapitre n'est choisi. */}
+        {selection !== null && (
+          <OpeningCoachingPanel
+            openingName={opening.name}
+            side={opening.side}
+            fen={drill.fen}
+            briefingState={coachingBriefing}
+            sanHistory={drill.history.map((entry) => entry.san)}
+            fallbackVariationLabel={selectionTitle}
+            moveComment={postMoveCommentary?.comment ?? null}
+            trapPunishment={drill.trapPunishment}
+            engineArrowEnabled={engineArrowEnabled}
+            onToggleEngineArrow={() => setEngineArrowEnabled((v) => !v)}
+          />
+        )}
 
         {/* Colonne de droite, discrète : chapitres, Aléatoire, Test Final — façon Listudy. */}
         <aside className="space-y-4 lg:border-l lg:border-border lg:pl-4">

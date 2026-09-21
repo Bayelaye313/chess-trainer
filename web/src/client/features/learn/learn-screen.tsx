@@ -38,11 +38,11 @@ import { useState } from "react";
 import { getCurriculumOverview } from "@/server/actions/curriculum";
 import type { CurriculumCategoryOverview, CurriculumThemeOverview } from "@/server/queries/curriculum";
 import { CourseCurriculum } from "./course-curriculum";
-import { ModuleCard } from "./module-card";
 import { moduleIcon } from "./module-icon";
 import { ThemeLesson } from "./theme-lesson";
 import { ThemeReviewSession } from "./theme-review-session";
 import { ThemeSession } from "./theme-session";
+import { PlaybookLearnScreen } from "./playbook-learn-screen";
 
 export type LearnView =
   | { kind: "modules" }
@@ -173,28 +173,5 @@ export function LearnScreen({
     );
   }
 
-  const totalThemes = categories.reduce((sum, category) => sum + category.themes.length, 0);
-  const masteredThemes = categories.reduce(
-    (sum, category) => sum + category.themes.filter((t) => t.completedCount >= t.totalPuzzles).length,
-    0,
-  );
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Apprendre</h1>
-        <p className="mt-2 max-w-prose text-sm text-foreground-muted">
-          L&apos;académie d&apos;échecs : {masteredThemes} / {totalThemes} thèmes maîtrisés, répartis en {categories.length}{" "}
-          modules — du motif de base à la position de tournoi. Une progression linéaire, sans répétition espacée :
-          enchaîne les exercices d&apos;un thème dans l&apos;ordre, à ton rythme.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((category) => (
-          <ModuleCard key={category.id} category={category} onSelect={() => setView({ kind: "themes", categoryId: category.id })} />
-        ))}
-      </div>
-    </div>
-  );
+  return <PlaybookLearnScreen categories={categories} onOpenCategory={(categoryId) => setView({ kind: "themes", categoryId })} />;
 }

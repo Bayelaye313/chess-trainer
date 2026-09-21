@@ -15,7 +15,7 @@ import "server-only";
  * linéaire synthétisé depuis `moves` — mêmes types, mêmes fonctions en aval,
  * pas de branchement conditionnel chez les appelants.
  */
-import { collectNodes, parsePgnTree, type VariationNode } from "@/core/chess/pgn-tree";
+import { annotateTree, collectNodes, parsePgnTree, type VariationNode } from "@/core/chess/pgn-tree";
 import { OPENINGS, type OpeningLine } from "@/core/curriculum/openings";
 
 /**
@@ -39,6 +39,9 @@ export function getOpeningTree(opening: OpeningLine): VariationNode {
   const cached = treeCache.get(opening.id);
   if (cached) return cached;
   const tree = opening.pgn ? parsePgnTree(opening.pgn) : synthesizeLinearTree(opening.moves);
+  // `annotations` (voir son docstring) est posé APRÈS le parsing, jamais pendant
+  // — mêmes nœuds, `philosophy`/`strategicObjective`/`engineSuggestion` en plus.
+  if (opening.annotations) annotateTree(tree, opening.annotations);
   treeCache.set(opening.id, tree);
   return tree;
 }

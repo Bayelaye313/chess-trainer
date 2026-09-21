@@ -53,6 +53,13 @@
  * qui leur est associé reste 100% légal et thématiquement fidèle, mais le
  * libellé exact doit être pris comme une étiquette de catalogue plutôt qu'une
  * citation historique garantie mot pour mot.
+ *
+ * Sprint « Scotch Traps Pipeline » (2026-09-13) : ajout de 2 pièges pour la
+ * Partie Écossaise (`scotch-steinitz-qh4`, `scotch-gambit-dxc3-fxf7`), tous
+ * deux de la théorie réelle et documentée (Variante Steinitz 4...Qh4?! ;
+ * Gambit Écossais accepté 5...dxc3?!). Ils prolongent le chapitre `openings.ts`
+ * (`scotch-game`, `SCOTCH_GAME_ANNOTATIONS`) sans le modifier — voir le
+ * commentaire au-dessus de chaque piège pour le nœud exact d'où ils partent.
  */
 
 export type TrapSide = "white" | "black";
@@ -514,6 +521,54 @@ export const OPENING_TRAPS: readonly OpeningTrap[] = [
     outcome: "O-O termine le développement sans se précipiter sur un pion piégé. Nxe5?? au contraire tombe dans le Piège de Tarrasch : Qd4! centralise en fourchant le cavalier e5 et le pion e4 — les Blancs perdent le fruit de leur prise, et plus encore.",
     comments: "La Variante d'Échange (4.Bxc6) simplifie la position mais déséquilibre aussi la structure de pions noirs (doublés en c) — beaucoup de joueurs blancs, pressés d'exploiter cet avantage, oublient que la colonne d, elle, s'est ouverte pour les DEUX camps une fois les dames encore sur l'échiquier. Un déséquilibre structurel favorable ne dispense jamais de vérifier les lignes ouvertes qui l'accompagnent.",
     punishmentLine: ["Qd4"],
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // PARTIE ÉCOSSAISE — sprint « Scotch Traps Pipeline » du 2026-09-13.
+  // Les deux lignes ci-dessous prolongent le chapitre `scotch-game` de
+  // `openings.ts` (sourcé le 2026-09-12, voir `SCOTCH_GAME_ANNOTATIONS`) sans
+  // le modifier : `scotch-steinitz-qh4` part du même nœud terminal que sa
+  // ligne principale (4.Cxd4) mais explore une déviation noire réelle non
+  // couverte par cet arbre ; `scotch-gambit-dxc3-fxf7` part du Bloc B (Gambit
+  // Écossais, 4.Bc4) sourcé sur l'étude UMNISCeS/AujagS6s, à l'embranchement
+  // où le second pion (5...dxc3?!, hors ligne principale de l'étude) tente
+  // les Noirs.
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    id: "scotch-steinitz-qh4",
+    name: "Variante Steinitz : la Dame précoce",
+    family: "Partie Écossaise",
+    gambit: "Variante Steinitz (4...Qh4?!)",
+    eco: "C45",
+    victimSide: "black",
+    difficulty: "expert",
+    summary: "Après 4.Cxd4, jeter la Dame en h4 semble punir un pion e4 mal défendu — c'est en réalité l'une des attaques les plus douteuses jamais essayées contre l'Écossaise.",
+    setupMoves: ["e4", "e5", "Nf3", "Nc6", "d4", "exd4", "Nxd4"],
+    trapMove: "Qh4",
+    trapExplanation: "Qh4 attaque bien le pion e4 sur la 4e rangée — mais expose la Dame à une suite de tempos blancs (Nc3!, Be2!, puis surtout Ndb5!) qui coûte au Roi noir son roque avant même la fin du développement.",
+    hint: "Un coup de développement tranquille défend e4 et prépare le roque sans jamais exposer la Dame — lequel des deux fous noirs peut sortir directement sur sa meilleure diagonale ?",
+    refutationMoves: ["Bc5"],
+    outcome: "Bc5! développe simplement sur la diagonale a7-g1 (la Variante Classique), sans jamais offrir la Dame en cible. Qh4?! au contraire plonge dans la Variante Steinitz : 5.Nc3! Bb4 6.Be2! Qxe4 7.Ndb5! Bxc3+ 8.bxc3 Kd8 9.O-O — le Roi noir perd définitivement son roque et se retrouve asphyxié au centre, pendant que les Blancs terminent tranquillement leur développement.",
+    comments: "Le motif de fond n'est pas un coup unique mais un ENCHAÎNEMENT de tempos : 5.Nc3! développe en menaçant implicitement la Dame si elle s'attarde, 6.Be2! prépare le roque tout en gardant la case d1 libre pour la Tour, et 7.Ndb5! porte le coup de grâce en visant c7 et en forçant 8...Kd8. Chaque coup blanc gagne du temps sur une Dame noire qui, elle, n'a strictement rien produit depuis son unique déplacement en h4 — le même compte de tempos que dans le Gambit Évans (voir plus haut), mais ici sans le moindre sacrifice de pion blanc pour le justifier.",
+    punishmentLine: ["Nc3", "Bb4", "Be2", "Qxe4", "Ndb5", "Bxc3+", "bxc3", "Kd8", "O-O"],
+  },
+  {
+    id: "scotch-gambit-dxc3-fxf7",
+    name: "Gambit Écossais : le second pion empoisonné",
+    family: "Partie Écossaise",
+    gambit: "Gambit Écossais — Ligne Acceptée (4.Bc4)",
+    eco: "C44",
+    victimSide: "black",
+    difficulty: "intermediate",
+    summary: "Après 5.c3, un second pion blanc semble tomber gratuitement sur c3 — mais la diagonale a2-g8 vient de s'ouvrir tout droit vers f7.",
+    setupMoves: ["e4", "e5", "Nf3", "Nc6", "d4", "exd4", "Bc4", "Bc5", "c3"],
+    trapMove: "dxc3",
+    trapExplanation: "Croquer un second pion semble prolonger l'avantage matériel noir — mais le Fou c4 s'engouffre aussitôt en f7 avec échec, et la Dame blanche regagne la pièce sacrifiée avec les intérêts sur d5.",
+    hint: "Avant de reprendre ce pion, comptez les défenseurs de f7 — puis, une fois le Roi noir forcé de recapturer, quelle case centrale la Dame blanche peut-elle atteindre pour attaquer à la fois ce Roi ET votre Fou c5 ?",
+    refutationMoves: ["d3"],
+    outcome: "d3 décline sagement le second pion, gardant le Fou c5 actif sans jamais exposer f7 — la suite normale continue par 6.Qb3 Qe7 7.O-O d6 8.Re1 avec une position saine pour les deux camps. dxc3?? au contraire tombe dans le panneau : 6.Bxf7+! Kxf7 7.Qd5+! fourche le Roi f7 et le Fou c5 — les Blancs regagnent la pièce sacrificée avec un pion de plus et une attaque en prime.",
+    comments: "Même leçon que le Gambit Évans (dxc3 ci-dessus, une autre ouverture italienne) : un pion supplémentaire grappillé au prix du développement finit toujours par se payer, ici sur la case la plus fragile du camp noir. La différence tactique précise à retenir est la fourche à distance de la Dame en d5 : elle n'attaque JAMAIS directement en prenant le Fou c4, elle attend patiemment que le sacrifice Bxf7+ ouvre la diagonale et que le Roi soit contraint de s'y placer lui-même.",
+    punishmentLine: ["Bxf7+", "Kxf7", "Qd5+"],
   },
 
   // ────────────────────────────────────────────────────────────────────────

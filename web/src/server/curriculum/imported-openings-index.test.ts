@@ -1,6 +1,6 @@
 import { Chess } from "chess.js";
 import { describe, expect, it } from "vitest";
-import { mainLine } from "@/core/chess/pgn-tree";
+import { collectNodes, mainLine } from "@/core/chess/pgn-tree";
 import { findOpening, OPENINGS } from "@/core/curriculum/openings";
 import {
   getEnrichedTreeForCuratedOpening,
@@ -32,6 +32,10 @@ describe("listOpeningFamilies", () => {
     // "Ruy Lopez" (famille) ne doit jamais apparaître comme carte séparée : le
     // chapitre curaté "ruy-lopez" en est le hub désigné.
     expect(families.some((f) => f.name === "Ruy Lopez")).toBe(false);
+    // "Scotch Game" reste un hub d'EXCLUSION même une fois le merge désactivé
+    // pour `scotch-game` (voir `SKIP_DB_ENRICHMENT`) — sans quoi la famille
+    // réapparaîtrait comme sa propre carte dynamique, dupliquant ce chapitre.
+    expect(families.some((f) => f.name === "Scotch Game")).toBe(false);
   });
 
   it("chaque famille a une ligne de référence non vide et un id stable préfixé `lichess-`", () => {
@@ -189,6 +193,37 @@ describe("hubs curatés : aucune famille sœur orpheline (deep test du catalogue
     },
     20_000,
   );
+});
+
+/**
+ * BUG CORRIGÉ (audit DOM du 2026-09-13, « affiche 15/49 chapitres au lieu du
+ * catalogue propre des variantes ») — voir le docstring de
+ * `SKIP_DB_ENRICHMENT` dans `imported-openings-index.ts` : `scotch-game` ne
+ * doit plus jamais absorber la famille lichess-org "Scotch Game" en plus de
+ * son propre arbre `pgn` authored, déjà verbatim et plus profond.
+ */
+describe("scotch-game : plus aucun merge automatique avec la base Lichess (doublons/orphelins éliminés)", () => {
+  it("l'arbre enrichi est structurellement identique à l'arbre authored — aucun nœud de la base Lichess ajouté", () => {
+    const scotchGame = findOpening("scotch-game")!;
+    const authoredNodeCount = collectNodes(getOpeningTree(scotchGame)).length;
+    const enrichedNodeCount = collectNodes(getEnrichedTreeForCuratedOpening(scotchGame)).length;
+    expect(enrichedNodeCount).toBe(authoredNodeCount);
+  });
+
+  it("reste malgré tout profond et richement nommé (les 4 blocs authored, jamais perdus)", () => {
+    const scotchGame = findOpening("scotch-game")!;
+    const tree = getEnrichedTreeForCuratedOpening(scotchGame);
+    expect(mainLine(tree).length).toBeGreaterThanOrEqual(20);
+    const namedComments = new Set<string>();
+    const collect = (node: { comment: string | null; children: readonly (typeof tree)[] }): void => {
+      if (node.comment) namedComments.add(node.comment);
+      for (const child of node.children) collect(child);
+    };
+    collect(tree);
+    for (const expected of ["Gambit Göring", "Gambit Écossais", "Variante Classique", "Variante Schmidt"]) {
+      expect(namedComments.has(expected), `variante attendue introuvable : "${expected}"`).toBe(true);
+    }
+  });
 });
 
 describe("getImportedChildren", () => {

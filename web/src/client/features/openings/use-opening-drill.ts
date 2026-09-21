@@ -60,6 +60,18 @@
  * l'arbre des variantes) — CLAUDE.md, « Book Moves » : la théorie se juge par
  * la position atteinte, jamais par un score moteur.
  *
+ * TRAP EXPLORATION RÉACTIVE (sprint « Scotch Traps Pipeline » du 2026-09-13) :
+ * un coup qui correspond, à cette position EXACTE, à un piège DOCUMENTÉ
+ * (`core/curriculum/traps.ts`, voir `findMatchingTrap`) n'est PLUS un coup
+ * "refusé" comme les autres — voir `triggerTrapPunishment` : le plateau
+ * l'accepte, l'IA enchaîne aussitôt la ligne punitive forcée du piège
+ * (`trap.punishmentLine`) en autoplay, puis la position revient EXACTEMENT à
+ * l'état d'avant l'erreur une fois la démonstration lue. `trapPunishment`
+ * (état exposé) porte tout ce qu'il faut à l'UI (`OpeningCoachingPanel`) pour
+ * afficher l'alerte + l'explication pendant ce court intermède ; le plateau
+ * reste verrouillé (`canDragPiece`) et l'IA de la manche normale est mise en
+ * pause (`trapPunishment !== null`) tout le temps que la punition se joue.
+ *
  * Un chapitre (ligne principale ou variante nommée) se joue en 2 MANCHES
  * obligatoires — décision pure dans `learning-round.ts` (`nextLearningRoundOutcome`,
  * testable indépendamment) : la Manche 1 (indice autorisé) débouche TOUJOURS,
@@ -84,7 +96,9 @@ import {
 import { nextLearningRoundOutcome, type LearningRound } from "./learning-round";
 import { moveInputFromUci, uciOf } from "@/core/analysis/evaluate-move";
 import type { OpeningLine } from "@/core/curriculum/openings";
+import { findMatchingTrap } from "@/core/curriculum/opening-trap-alert";
 import { type TrackedDrillSelection, variationLabelFor } from "@/core/curriculum/opening-variation-key";
+import type { OpeningTrap } from "@/core/curriculum/traps";
 import { type OpeningDrillProgressSummary, recordOpeningDrillResult } from "@/server/actions/opening-progress";
 import type { AnnotatedPly, OpeningVariation } from "@/server/queries/openings";
 import { getMoveSuccessCount, moveSuccessKey, recordMoveSuccess } from "./move-success-counter";
@@ -109,6 +123,11 @@ const SAVE_PROGRESS_RETRY_DELAY_MS = 400;
 
 /** Durée d'affichage de `roundTransitionNotice` avant disparition automatique — assez long pour être lu, jamais bloquant. */
 const ROUND_TRANSITION_NOTICE_MS = 2600;
+
+/** Pause entre deux coups de la ligne punitive d'un piège (`triggerTrapPunishment`) — même rythme que l'autoplay `leadInUci`, jamais un flash. */
+const TRAP_PUNISHMENT_STEP_MS = LEAD_IN_STEP_MS;
+/** Une fois la ligne punitive entièrement jouée, temps laissé au joueur pour lire l'alerte avant le reset automatique (voir `triggerTrapPunishment`) — plus long que `ROUND_TRANSITION_NOTICE_MS` : l'alerte porte un texte pédagogique plus dense (`trapExplanation`) qu'une simple notice de transition. */
+const TRAP_PUNISHMENT_RESET_DELAY_MS = 3200;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -182,12 +201,29 @@ export interface DrillHistoryEntry {
   ply: number;
   san: string;
   byPlayer: boolean;
-  /** `"correct"` pour un coup du joueur (un coup faux ne rejoint JAMAIS l'historique — la pièce revient, voir le docstring du fichier). `null` pour un coup de l'IA ou de l'autoplay. */
-  result: "correct" | null;
+  /** `"correct"` pour un coup du joueur (un coup faux ne rejoint JAMAIS l'historique — la pièce revient, voir le docstring du fichier). `"trap"` pour le coup fautif ET la ligne punitive d'une démonstration de piège documenté (voir `TrapPunishmentState`) — accepté temporairement, retiré de `history` par le reset automatique. `null` pour un coup de l'IA ou de l'autoplay normal. */
+  result: "correct" | "trap" | null;
   /** Le coup, en UCI — sert le repli heuristique du commentaire post-coup (`heuristic-commentary.ts`), qui a besoin du coup exact plutôt que du seul SAN. */
   uci: string;
   /** Position juste AVANT ce coup (FEN) — même usage : `computeHeuristicCommentary` analyse un coup par rapport à la position qui le précède, pas la position déjà mutée. */
   fenBefore: string;
+}
+
+/**
+ * État d'une démonstration de piège documenté en cours (voir le docstring du
+ * fichier, « TRAP EXPLORATION RÉACTIVE ») — `trap.punishmentLine` (SAN) se
+ * rejoue un coup à la fois sur `boardRef.current` (voir l'effet dédié) ;
+ * `playedCount` compte ceux déjà joués sur le plateau. `restoreFen`/
+ * `restoreHistoryLength` sont la position et la longueur d'historique
+ * D'AVANT le coup fautif — le point EXACT où le reset automatique ramène le
+ * joueur une fois la démonstration lue en entier.
+ */
+interface TrapPunishmentState {
+  trap: OpeningTrap;
+  restoreFen: string;
+  restoreHistoryLength: number;
+  playedCount: number;
+  nonce: number;
 }
 
 /**
@@ -231,6 +267,17 @@ export function useOpeningDrill({
   // attendu ici" : plus aucun message n'accompagne un coup refusé (méthode
   // Listudy stricte, voir le docstring du fichier).
   const [errorPulse, setErrorPulse] = useState(0);
+  // Démonstration de piège documenté EN COURS (voir le docstring du fichier,
+  // « TRAP EXPLORATION RÉACTIVE ») — `null` la plupart du temps. Portée par un
+  // seul objet (jamais plusieurs `useState` épars pour un même intermède) :
+  // `triggerTrapPunishment` l'initialise EN UNE FOIS, deux `useEffect` dédiés
+  // (autoplay de la punition, puis reset automatique) le faisant progresser
+  // jusqu'à sa disparition — jamais de `setState` isolé ailleurs dans le
+  // fichier. `nonce` change à CHAQUE déclenchement (y compris le même piège
+  // rejoué deux fois de suite) : sert de `key` React à `OpeningCoachingPanel`
+  // pour rejouer `.animate-trap-alert` à coup sûr.
+  const [trapPunishment, setTrapPunishment] = useState<TrapPunishmentState | null>(null);
+  const trapNonceRef = useRef(0);
   // A-t-on, à un moment de la manche en cours, joué une branche théorique
   // RÉELLE mais différente du script (`freshContinuations`, désormais
   // curated-aware — voir `listBookContinuations`) plutôt que le coup EXACT
@@ -428,7 +475,10 @@ export function useOpeningDrill({
     status,
     hintsAllowed,
     hintBehavior,
-    isPlayerTurn,
+    // `&& trapPunishment === null` : jamais de flèche d'indice pendant une
+    // démonstration de piège (voir son docstring) — la position affichée n'a
+    // provisoirement plus rien à voir avec le script normal.
+    isPlayerTurn: isPlayerTurn && trapPunishment === null,
     useScript,
     diverged,
     expectedUci,
@@ -646,13 +696,67 @@ export function useOpeningDrill({
     return () => clearTimeout(timer);
   }, [status, selection, history.length, userColor, finish]);
 
+  // Autoplay de la ligne punitive d'un piège documenté (`trapPunishment`, voir
+  // son docstring et `triggerTrapPunishment`) — un coup SAN à la fois, même
+  // rythme que le lead-in ci-dessus. `trap.punishmentLine` est déjà validé
+  // légal par `traps.test.ts` : un échec ici signalerait des données
+  // corrompues, jamais un cas normal — repli défensif (`setTrapPunishment(null)`,
+  // sans passer par le reset normal) plutôt qu'une exception non gérée.
+  useEffect(() => {
+    if (!trapPunishment) return;
+    const line = trapPunishment.trap.punishmentLine ?? [];
+    if (trapPunishment.playedCount >= line.length) return; // Ligne épuisée : l'effet de reset ci-dessous prend le relais.
+    const san = line[trapPunishment.playedCount];
+    const timer = setTimeout(() => {
+      const board = boardRef.current;
+      const fenBefore = board.fen();
+      let move: Move;
+      try {
+        move = board.move(san);
+      } catch {
+        setTrapPunishment(null);
+        return;
+      }
+      setFen(board.fen());
+      setHistory((prev) => [
+        ...prev,
+        { ply: prev.length + 1, san: move.san, byPlayer: false, result: "trap", uci: uciOf(move), fenBefore },
+      ]);
+      setTrapPunishment((prev) => (prev ? { ...prev, playedCount: prev.playedCount + 1 } : prev));
+    }, TRAP_PUNISHMENT_STEP_MS);
+    return () => clearTimeout(timer);
+  }, [trapPunishment]);
+
+  // Reset automatique une fois la ligne punitive lue en entier (voir
+  // `TRAP_PUNISHMENT_RESET_DELAY_MS`) — ramène la position EXACTEMENT à
+  // l'état d'avant le coup fautif (`restoreFen`/`restoreHistoryLength`), pour
+  // que le joueur reprenne la bonne ligne théorique. Un seul reset, propre :
+  // `boardRef.current` est réassigné une fois, `history` retaillée à sa
+  // longueur d'avant l'erreur, `fen` resynchronisé — jamais de mutation
+  // partielle laissant `history`/`fen`/`boardRef` en désaccord entre eux.
+  useEffect(() => {
+    if (!trapPunishment) return;
+    const line = trapPunishment.trap.punishmentLine ?? [];
+    if (trapPunishment.playedCount < line.length) return; // Encore en cours d'autoplay, voir l'effet ci-dessus.
+    const { restoreFen, restoreHistoryLength } = trapPunishment;
+    const timer = setTimeout(() => {
+      boardRef.current = new Chess(restoreFen);
+      setHistory((prev) => prev.slice(0, restoreHistoryLength));
+      setFen(restoreFen);
+      setTrapPunishment(null);
+    }, TRAP_PUNISHMENT_RESET_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [trapPunishment]);
+
   // Fait jouer l'IA dès que c'est son tour — au lancement du drill (ou juste
   // après l'autoplay pour "mistake"), et après chaque coup accepté du joueur
   // (`fen` change alors, ce qui redéclenche cet effet). En mode aléatoire,
   // attend que `freshContinuations` soit au rendez-vous pour la position
-  // courante avant de piocher.
+  // courante avant de piocher. En pause tant qu'une démonstration de piège
+  // joue (`trapPunishment`, voir ses deux effets dédiés ci-dessus) : les deux
+  // ne doivent JAMAIS muter `boardRef.current`/`fen` en même temps.
   useEffect(() => {
-    if (status !== "playing" || !selection) return;
+    if (status !== "playing" || !selection || trapPunishment !== null) return;
     const board = boardRef.current;
 
     // Décision déférée à `decideOpponentStep` (pure, testable hors React —
@@ -697,6 +801,7 @@ export function useOpeningDrill({
     continuationsFailed,
     playOpponentUci,
     completeRound,
+    trapPunishment,
   ]);
 
   // Sauvegarde le résultat en répétition espacée dès que le drill se termine
@@ -769,6 +874,7 @@ export function useOpeningDrill({
     setFinishReason(null);
     setProgressResult(null);
     setErrorPulse(0);
+    setTrapPunishment(null);
     setRoundTransitionNotice(null);
     // Chaque nouveau départ (y compris "Recommencer") repart de la Manche 1 —
     // indices ré-autorisés, voir `LearningRound`/`completeRound`.
@@ -802,15 +908,42 @@ export function useOpeningDrill({
     setScore((s) => ({ correct: s.correct + 1, attempted: s.attempted + 1 }));
   }, []);
 
-  /** Coup refusé — jamais rejoint l'historique (react-chessboard fait revenir la pièce), jamais de message : voir le docstring du fichier. */
+  /** Coup refusé — jamais rejoint l'historique (react-chessboard fait revenir la pièce), jamais de message : voir le docstring du fichier. Un coup qui correspond à un piège DOCUMENTÉ ne passe jamais par ici, voir `triggerTrapPunishment`. */
   const rejectMove = useCallback(() => {
     setScore((s) => ({ ...s, attempted: s.attempted + 1 }));
     setErrorPulse((n) => n + 1);
   }, []);
 
+  /**
+   * Un coup légal qui correspond, à cette position EXACTE, à un piège
+   * DOCUMENTÉ (`core/curriculum/traps.ts`) — voir le docstring du fichier et
+   * de `TrapPunishmentState`. Joue le coup fautif lui-même sur le plateau
+   * (accepté, jamais renvoyé à sa case de départ), l'ajoute à `history`
+   * (`result: "trap"`, voir son docstring), puis initialise la démonstration :
+   * les deux `useEffect` dédiés ci-dessous prennent le relais (autoplay de
+   * `trap.punishmentLine`, puis reset automatique) — aucun autre `setState`
+   * n'intervient plus une fois cette fonction retournée. `historyLengthBefore`
+   * est fourni par l'appelant (`onPieceDrop`, qui lit `history.length` au
+   * même rendu) plutôt que relu ici : jamais de `setState` niché dans le
+   * callback de mise à jour d'un AUTRE `setState` (anti-pattern, voir React).
+   */
+  const triggerTrapPunishment = useCallback((trap: OpeningTrap, trapMoveUci: string, historyLengthBefore: number) => {
+    const board = boardRef.current;
+    const restoreFen = board.fen();
+    const trapPly = board.move(moveInputFromUci(trapMoveUci));
+    setFen(board.fen());
+    setHistory((prev) => [
+      ...prev,
+      { ply: prev.length + 1, san: trapPly.san, byPlayer: true, result: "trap", uci: trapMoveUci, fenBefore: restoreFen },
+    ]);
+    setScore((s) => ({ ...s, attempted: s.attempted + 1 }));
+    trapNonceRef.current += 1;
+    setTrapPunishment({ trap, restoreFen, restoreHistoryLength: historyLengthBefore, playedCount: 0, nonce: trapNonceRef.current });
+  }, []);
+
   const onPieceDrop = useCallback(
     ({ sourceSquare, targetSquare }: PieceDropHandlerArgs): boolean => {
-      if (!targetSquare || status !== "playing" || !selection) return false;
+      if (!targetSquare || status !== "playing" || !selection || trapPunishment !== null) return false;
       const board = boardRef.current;
       if (board.turn() !== userColor) return false;
 
@@ -832,6 +965,19 @@ export function useOpeningDrill({
         return false;
       }
       const uci = uciOf(move);
+
+      // Piège documenté à CETTE position exacte (`core/curriculum/traps.ts`,
+      // voir le docstring du fichier) — prioritaire sur tout le reste, y
+      // compris `isKnownBranch` ci-dessous : une gaffe répertoriée déclenche
+      // TOUJOURS la démonstration réactive, même si elle se trouve aussi être
+      // une branche théorique par ailleurs connue de la base ECO générique.
+      // `board.history()` (pas `history`, le state React) : la vraie notation
+      // SAN depuis le tout premier coup, fiable quel que soit `leadInLength`.
+      const matchedTrap = findMatchingTrap(board.history(), move.san);
+      if (matchedTrap) {
+        triggerTrapPunishment(matchedTrap, uci, history.length);
+        return true;
+      }
 
       if (useScript && !diverged) {
         // Sélection scriptée (ligne principale / variante / manche / correction
@@ -906,6 +1052,8 @@ export function useOpeningDrill({
       status,
       selection,
       userColor,
+      trapPunishment,
+      history.length,
       useScript,
       diverged,
       expectedUci,
@@ -917,15 +1065,19 @@ export function useOpeningDrill({
       commitPlayerMove,
       completeRound,
       rejectMove,
+      triggerTrapPunishment,
     ],
   );
 
   const canDragPiece = useCallback(
     ({ piece }: PieceHandlerArgs): boolean => {
-      if (status !== "playing") return false;
+      // Plateau verrouillé pendant qu'une démonstration de piège se joue
+      // (`trapPunishment`, voir son docstring) — l'IA "réplique" seule, aucune
+      // pièce du joueur ne doit bouger tant que la punition n'est pas lue.
+      if (status !== "playing" || trapPunishment !== null) return false;
       return piece.pieceType.startsWith(userColor);
     },
-    [status, userColor],
+    [status, userColor, trapPunishment],
   );
 
   return {
@@ -963,6 +1115,8 @@ export function useOpeningDrill({
     progressResult,
     userColor,
     errorPulse,
+    /** Démonstration de piège documenté en cours (voir le docstring du fichier, « TRAP EXPLORATION RÉACTIVE ») — sert `OpeningCoachingPanel` (alerte + explication) et verrouille le plateau (`canDragPiece`). `null` la plupart du temps. */
+    trapPunishment,
     start,
     stop,
     /** À appeler depuis un clic explicite (« 🔒 Retenter sans guide ») pendant `status === "round-gate"` — démarre la manche mise en attente. Sans effet en dehors de cet état. Voir le docstring de `DrillStatus`/`manualRoundGate`. */
