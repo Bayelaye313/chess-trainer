@@ -127,6 +127,7 @@ describe("computeOpeningPerformance", () => {
       winRate: 50,
       accuracy: 53,
       avgMistakePly: null, // les deux coups sont en phase "middlegame" (défaut de la fixture), pas "opening"
+      playerSide: "w",
     });
     expect(result[1]).toEqual({
       eco: "C50",
@@ -136,6 +137,7 @@ describe("computeOpeningPerformance", () => {
       winRate: 0,
       accuracy: 85,
       avgMistakePly: null,
+      playerSide: "b",
     });
   });
 
@@ -332,6 +334,7 @@ describe("aggregatePlayerProgress", () => {
         winRate: 100,
         accuracy: expect.any(Number),
         avgMistakePly: null, // le seul coup en phase "opening" est un "best", pas une gaffe
+        playerSide: "w",
       },
     ]);
     expect(result.hangingPieces).toEqual({ blunderCount: 1, totalBlunders: 1 });

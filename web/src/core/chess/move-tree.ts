@@ -47,6 +47,14 @@ export interface ChessMoveNode {
   uci: string | null;
   fen: string;
   comment: string | null;
+  /**
+   * « PRO TIP » de Grand Maître extrait du commentaire source (voir
+   * `splitCoachTip`) — `null` quand le nœud n'en porte pas. Le lecteur
+   * (`course-tree-viewer.tsx`) l'affiche comme un bloc distinct, jamais noyé
+   * dans la prose du commentaire : c'est le seul endroit où le conseil d'auteur
+   * doit apparaître, séparé de l'annotation factuelle du coup.
+   */
+  tip: string | null;
   arrows: readonly CourseArrow[];
   highlights: readonly CourseHighlight[];
   /** Suggestion moteur affichée en permanence SUR ce nœud (le coup qu'on s'apprête à jouer depuis ici) — voir le docstring de `EngineSuggestion`. */
@@ -71,9 +79,36 @@ function uciOfMove(move: Move): string {
   return move.from + move.to + (move.promotion ?? "");
 }
 
+/**
+ * Marqueur conventionnel du catalogue : un commentaire de nœud qui porte un
+ * conseil de Grand Maître le préfixe par « PRO TIP ». Les notes sources
+ * reprises dans `core/curriculum/course-tree.ts` l'utilisent systématiquement
+ * pour le premier coup commenté d'un chapitre ; on sépare ce conseil du reste
+ * de la prose pour pouvoir l'afficher comme un bloc à part, exactement comme
+ * Lichess Study distingue une note d'auteur d'une glose. Insensible à la casse
+ * et à l'espacement (`PRO TIP :`, `Pro Tip`, `protip`).
+ */
+const COACH_TIP_RE = /PRO\s*TIP\b\s*:?\s*/i;
+
+/**
+ * Sépare un commentaire nettoyé en `{ comment, tip }` : le texte qui SUIT le
+ * marqueur devient le conseil, ce qui le PRÉCÈDE reste le commentaire normal
+ * (souvent vide — le marqueur ouvre le commentaire dans tout le catalogue).
+ * Aucun marqueur : le commentaire ressort inchangé, `tip` reste `null` — jamais
+ * un conseil fabriqué à partir d'une prose qui n'en portait pas.
+ */
+function splitCoachTip(text: string): { comment: string | null; tip: string | null } {
+  const match = text.match(COACH_TIP_RE);
+  if (!match || match.index === undefined) return { comment: text.length > 0 ? text : null, tip: null };
+  const before = text.slice(0, match.index).trim();
+  const tip = text.slice(match.index + match[0].length).trim();
+  return { comment: before.length > 0 ? before : null, tip: tip.length > 0 ? tip : null };
+}
+
 /** Extrait `[%csl]`/`[%cal]`/`[%eval]` d'un texte de commentaire brut et renvoie le texte NETTOYÉ de ces balises (jamais affiché tel quel à l'utilisateur — voir `course-tree.ts`, qui n'affiche que le reste en prose). */
 function parseAnnotatedComment(raw: string): {
   text: string | null;
+  tip: string | null;
   arrows: CourseArrow[];
   highlights: CourseHighlight[];
   evalCp: number | null;
@@ -106,8 +141,9 @@ function parseAnnotatedComment(raw: string): {
     else evalCp = Math.round(Number.parseFloat(evalMatch[1]) * 100);
   }
 
-  const text = raw.replace(CSL_RE, "").replace(CAL_RE, "").replace(EVAL_RE, "").trim();
-  return { text: text.length > 0 ? text : null, arrows, highlights, evalCp, evalMate };
+  const cleaned = raw.replace(CSL_RE, "").replace(CAL_RE, "").replace(EVAL_RE, "").trim();
+  const { comment, tip } = splitCoachTip(cleaned);
+  return { text: comment, tip, arrows, highlights, evalCp, evalMate };
 }
 
 /**
@@ -135,7 +171,7 @@ function tokenize(pgn: string): string[] {
 }
 
 function makeRoot(startFen: string): ChessMoveNode {
-  return { id: "0", ply: 0, san: null, uci: null, fen: startFen, comment: null, arrows: [], highlights: [], engineSuggestion: null, children: [] };
+  return { id: "0", ply: 0, san: null, uci: null, fen: startFen, comment: null, tip: null, arrows: [], highlights: [], engineSuggestion: null, children: [] };
 }
 
 interface Cursor {
@@ -175,6 +211,7 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
     if (token.startsWith("{")) {
       const parsed = parseAnnotatedComment(token.slice(1, -1).trim());
       if (currentNode.comment === null && parsed.text) currentNode.comment = parsed.text;
+      if (currentNode.tip === null && parsed.tip) currentNode.tip = parsed.tip;
       if (parsed.arrows.length > 0) currentNode.arrows = [...currentNode.arrows, ...parsed.arrows];
       if (parsed.highlights.length > 0) currentNode.highlights = [...currentNode.highlights, ...parsed.highlights];
       if ((parsed.evalCp !== null || parsed.evalMate !== null) && currentNode.engineSuggestion === null && currentNode.san !== null) {
@@ -212,6 +249,7 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       uci: uciOfMove(move),
       fen: chess.fen(),
       comment: null,
+      tip: null,
       arrows: [],
       highlights: [],
       engineSuggestion: null,

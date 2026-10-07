@@ -92,7 +92,15 @@ describe("listBookContinuations", () => {
       expect(continuation.eco).toMatch(/^[A-E]\d\d$/);
       expect(continuation.name.length).toBeGreaterThan(0);
     }
-  });
+    // 30 s plutôt que les 5 s par défaut de vitest : ce test est le PREMIER du
+    // fichier à interroger la base importée (~3810 lignes), il paie donc à lui
+    // seul la construction UNE FOIS pour toutes de l'index de positions
+    // (`server/curriculum/imported-openings-index.ts`) — mesuré ~8 s sur ce
+    // poste, très au-dessus du plafond par défaut, sans qu'aucune assertion ne
+    // soit en cause. Même convention que les autres tests « catalogue entier »
+    // de ce fichier (20_000 / 30_000 / 60_000), qui paient la même
+    // construction une seule fois puis tournent en millisecondes.
+  }, 30_000);
 
   it("inclut 1.e4 et 1.d4 parmi les continuations depuis la position de départ", () => {
     const sans = listBookContinuations(START_FEN).map((c) => c.san);
