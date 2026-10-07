@@ -50,6 +50,7 @@ import { GradePanel } from "./grade-panel";
 import { QualityBadge } from "./quality-badge";
 import { usePostSolveAnalysis } from "./use-post-solve-analysis";
 import { usePuzzleSolver } from "./use-puzzle-solver";
+import { OPPONENT_MOVE_ANIMATION_MS } from "./move-animation";
 
 const STATUS_TEXT: Record<SolvePhase, string> = {
   solving: "Trouve le coup à jouer.",
@@ -66,8 +67,15 @@ export function PuzzleBoard({
   puzzle: SolvablePuzzle;
   /** Mode Entraîner : note FSRS une fois le puzzle terminé (résolu ou raté). */
   onGraded?: (grade: ReviewGrade, playedUci: string | null, solvedMs: number) => void;
-  /** Mode Apprendre : pas de FSRS, un seul bouton pour enchaîner — voir `theme-session.tsx`. */
-  onComplete?: () => void;
+  /**
+   * Mode Apprendre : pas de FSRS, un seul bouton pour enchaîner — voir
+   * `theme-session.tsx`. `solved` dit si la résolution est RÉELLEMENT venue à
+   * bout de `puzzle.solution` (chaque coup du joueur validé par l'instance
+   * `chess.js` du solveur) : un puzzle raté PUIS révélé appelle aussi ce
+   * callback (le parent enchaîne), mais SANS signal audio de réussite —
+   * feuille de route Zone 2, validation de la Practice Arena.
+   */
+  onComplete?: (solved: boolean) => void;
 }) {
   const { engine } = useEngine();
   const solver = usePuzzleSolver({ engine, puzzle });
@@ -104,18 +112,20 @@ export function PuzzleBoard({
   // `MAX_PUZZLE_ATTEMPTS`), prioritaire sur le texte de phase habituel
   // puisqu'on est encore en phase "solving". Une fois "failed", le message
   // suit l'avancement de la révélation.
+  // La ligne de statut ne porte PLUS le conseil d'erreur : il vit dans le
+  // panneau de feedback unique ci-dessous (`practicalHint`) — jamais deux
+  // couches de commentaire concurrentes au-dessus du plateau (feuille de
+  // route Zone 2, « Unifier le Volet de Feedback »).
   const statusMessage =
-    solver.phase === "solving" && solver.lastWrongUci
-      ? `${WRONG_MOVE_HINT_LABEL[solver.lastWrongHint ?? "generic"]} Il vous reste ${solver.attemptsLeft} tentative${solver.attemptsLeft > 1 ? "s" : ""}.`
-      : solver.phase === "failed"
-        ? solver.revealed
-          ? "Solution révélée."
-          : solver.revealing
-            ? "Regarde la séquence gagnante…"
-            : STATUS_TEXT.failed
-        : solver.phase === "solving"
-          ? solvingStatusText
-          : STATUS_TEXT[solver.phase];
+    solver.phase === "failed"
+      ? solver.revealed
+        ? "Solution révélée."
+        : solver.revealing
+          ? "Regarde la séquence gagnante…"
+          : STATUS_TEXT.failed
+      : solver.phase === "solving"
+        ? solvingStatusText
+        : STATUS_TEXT[solver.phase];
 
   // Le Coach avant résolution : seulement tant qu'aucun coup n'a encore été
   // joué sur ce puzzle (`!solver.lastMove`) — une fois la solution entamée,
@@ -152,14 +162,33 @@ export function PuzzleBoard({
         })
       : null;
   const coachMessage = preSolveMessage ?? progressMessage;
-  const hintClassName =
+
+  /**
+   * Conseil PRATIQUE du panneau de feedback unique (feuille de route Zone 2) :
+   * la qualification de l'erreur commise (« Tu laisses une pièce en prise… » +
+   * essais restants) PRIORITAIRE, sinon les aides de reconnaissance (cases
+   * ambrées). Cette ligne vit dans le MÊME cadre que l'évaluation du Coach
+   * (🎓) rendu plus bas — plus de deux sections parallèles qui se parasitent.
+   */
+  const practicalHint =
     solver.phase === "solving" && solver.lastWrongUci
+      ? {
+          kind: "error" as const,
+          text: `${WRONG_MOVE_HINT_LABEL[solver.lastWrongHint ?? "generic"]} Il vous reste ${solver.attemptsLeft} tentative${solver.attemptsLeft > 1 ? "s" : ""}.`,
+        }
+      : showPreSolveCoach && recognitionAids
+        ? {
+            kind: "info" as const,
+            text: `${recognitionAids.text} Les cases ambrées indiquent des cibles à examiner, pas la solution.`,
+          }
+        : null;
+
+  const hintClassName =
+    solver.phase === "failed"
       ? "font-medium text-inaccuracy"
-      : solver.phase === "failed"
-        ? "font-medium text-inaccuracy"
-        : solver.phase === "solved"
-          ? "font-medium text-best"
-          : "text-foreground-muted";
+      : solver.phase === "solved"
+        ? "font-medium text-best"
+        : "text-foreground-muted";
 
   // Position/contrôles affichés : le solveur tant que le puzzle est actif,
   // le Mode Analyse Pro (navigation + exploration libre) une fois terminé —
@@ -268,7 +297,11 @@ export function PuzzleBoard({
   function handleComplete() {
     if (graded || !onComplete) return;
     setGraded(true);
-    onComplete();
+    // La résolution n'est « réussie » que si la machine d'état a consommé
+    // TOUTE la solution — chaque coup du joueur étant passé par `chess.move()`
+    // du solveur (voir `onPieceDrop`) : c'est ce drapeau qui empêche le signal
+    // audio de réussite de partir sur un puzzle raté puis révélé (Zone 2).
+    onComplete(solver.phase === "solved");
   }
 
   return (
@@ -284,20 +317,33 @@ export function PuzzleBoard({
         </div>
       )}
 
-      {coachMessage && (
+      {/* UN SEUL panneau de feedback contextuel (feuille de route Zone 2) :
+          l'évaluation textuelle du Grand Maître (🎓) ET le conseil pratique
+          (erreur commise ⚠️ / aides de reconnaissance 👁) au même endroit —
+          les deux sections concurrentes qui se parasitaient au-dessus du
+          plateau n'existent plus séparément. `key` rejoue l'animation
+          d'entrée à chaque changement de contenu. */}
+      {(coachMessage || practicalHint) && (
         <div
-          key={coachMessage}
+          key={`${coachMessage ?? ""}|${practicalHint?.text ?? ""}`}
           className="mx-auto mb-4 max-w-[480px] rounded-lg border border-border bg-surface-muted/40 px-4 py-3 text-sm animate-fade-up-in"
         >
-          <span aria-hidden="true">🎓 </span>
-          {coachMessage}
-        </div>
-      )}
-
-      {recognitionAids && (
-        <div className="mx-auto mb-4 flex max-w-[480px] items-start gap-2 rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-foreground-muted">
-          <span aria-hidden="true">👁 </span>
-          <span>{recognitionAids.text} Les cases ambrées indiquent des cibles à examiner, pas la solution.</span>
+          {coachMessage && (
+            <p className="text-foreground">
+              <span aria-hidden="true">🎓 </span>
+              {coachMessage}
+            </p>
+          )}
+          {practicalHint && (
+            <p
+              className={`mt-1.5 flex items-start gap-2 ${
+                practicalHint.kind === "error" ? "font-medium text-inaccuracy" : "text-foreground-muted"
+              }`}
+            >
+              <span aria-hidden="true">{practicalHint.kind === "error" ? "⚠️" : "👁"}</span>
+              <span>{practicalHint.text}</span>
+            </p>
+          )}
         </div>
       )}
 
@@ -315,6 +361,11 @@ export function PuzzleBoard({
               onMouseOutSquare: solver.onMouseOutSquare,
               squareRenderer,
               arrows: boardArrows,
+              // Micro-animation du coup adverse en 180 ms ease-in-out
+              // (feuille de route Zone 2) — la surbrillance des cases, elle,
+              // attend la fin de l'animation (dispatch différé dans
+              // `use-puzzle-solver.ts`, voir `move-animation.ts`).
+              animationDurationInMs: OPPONENT_MOVE_ANIMATION_MS,
             }}
           />
         </div>

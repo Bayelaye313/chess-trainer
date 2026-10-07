@@ -196,7 +196,7 @@ describe("computeOpeningPerformance", () => {
 
 describe("filterOpeningPerformanceForDisplay", () => {
   function performance(partial: Partial<OpeningPerformance>): OpeningPerformance {
-    return { eco: "A00", name: "Test", gamesPlayed: 5, wins: 2, winRate: 40, accuracy: 70, avgMistakePly: null, ...partial };
+    return { eco: "A00", name: "Test", gamesPlayed: 5, wins: 2, winRate: 40, accuracy: 70, avgMistakePly: null, playerSide: "w", ...partial };
   }
 
   it("ne garde que les ouvertures jouées au moins 5 fois par défaut", () => {
@@ -224,7 +224,7 @@ describe("filterOpeningPerformanceForDisplay", () => {
 
 describe("findStrugglingOpening", () => {
   function performance(partial: Partial<OpeningPerformance>): OpeningPerformance {
-    return { eco: "A00", name: "Test", gamesPlayed: 5, wins: 2, winRate: 40, accuracy: 70, avgMistakePly: null, ...partial };
+    return { eco: "A00", name: "Test", gamesPlayed: 5, wins: 2, winRate: 40, accuracy: 70, avgMistakePly: null, playerSide: "w", ...partial };
   }
 
   it("retient la pire ouverture parmi celles avec un échantillon suffisant", () => {
@@ -244,6 +244,24 @@ describe("findStrugglingOpening", () => {
   it("renvoie null quand aucune ouverture ne dépasse le seuil de difficulté", () => {
     const result = findStrugglingOpening([performance({ eco: "B01", gamesPlayed: 10, winRate: 55 })]);
     expect(result).toBeNull();
+  });
+});
+
+describe("computeOpeningPerformance — playerSide (Zone 4, rotation du plateau)", () => {
+  it("retient le camp majoritaire du joueur dans le groupe ECO", () => {
+    const result = computeOpeningPerformance([
+      game({ eco: "E60", openingName: "Queen's Indian", playerColor: "b" }),
+      game({ eco: "E60", openingName: "Queen's Indian", playerColor: "b" }),
+      game({ eco: "E60", openingName: "Queen's Indian", playerColor: "w" }),
+    ]);
+    expect(result[0].playerSide).toBe("b");
+  });
+
+  it("à égalité stricte, retient le premier camp rencontré (déterminisme)", () => {
+    const result = computeOpeningPerformance([game({ eco: "C60", playerColor: "w" }), game({ eco: "C60", playerColor: "b" })]);
+    expect(result[0].playerSide).toBe("w");
+    const flipped = computeOpeningPerformance([game({ eco: "C60", playerColor: "b" }), game({ eco: "C60", playerColor: "w" })]);
+    expect(flipped[0].playerSide).toBe("b");
   });
 });
 

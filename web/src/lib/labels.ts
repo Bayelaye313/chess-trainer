@@ -7,6 +7,7 @@
  */
 import type { EngineLine } from "@/core/analysis/types";
 import type { KeyMomentKind, TimelinePly } from "@/core/analysis/timeline";
+import { DECKS } from "@/core/chess/decks";
 import type { Termination } from "@/core/chess/termination";
 import type { GamePhase, GameResult, Motif, MoveQuality, WrongMoveHint } from "@/core/chess/types";
 import type { TrainingGoal } from "@/core/training/preferences";
@@ -402,10 +403,85 @@ export function formatTrainingHeadline(reasonCode: string): string {
         ? `Réfutation oubliée : ${evidence.trapName}`
         : "Piège vu, réfutation oubliée";
     case "trap-family-played":
-      return evidence.trapFamily
-        ? `Piège de ton répertoire (${evidence.trapFamily}${evidence.gameCount ? `, ${evidence.gameCount} parties` : ""})`
-        : "Piège de ton répertoire";
+      return evidence.trapFamily ? `Piège de ton répertoire (${evidence.trapFamily})` : "Piège de ton répertoire";
     default:
       return "Entraînement recommandé";
+  }
+}
+
+/** Titre FR de chaque deck (`core/chess/decks.ts`) — preuve de provenance d'un `puzzle-due`. */
+const DECK_TITLE: Record<string, string> = Object.fromEntries(DECKS.map((deck) => [deck.id, deck.title]));
+
+/** Numéro de coup (1 = premier coup) depuis une `entityId` `gameId:ply` — `null` si absente ou illisible. */
+function moveNumberFromEntityId(entityId: string): number | null {
+  const separator = entityId.lastIndexOf(":");
+  if (separator === -1) return null;
+  const ply = Number(entityId.slice(separator + 1));
+  return Number.isFinite(ply) && ply > 0 ? Math.ceil(ply / 2) : null;
+}
+
+/** Filtre les parties vides puis joint par « · » — `null` si rien ne reste. */
+function joinProof(parts: readonly (string | null)[]): string | null {
+  const kept = parts.filter((part): part is string => part != null && part !== "");
+  return kept.length > 0 ? kept.join(" · ") : null;
+}
+
+/**
+ * Ligne de preuve locale sous le titre d'une carte de « Séance du jour » — la
+ * contrepartie directe de la promesse affichée par `TrainingRecommendationsCard`
+ * (« chaque carte cite une preuve locale… pas un score moteur opaque »). Tout
+ * ce qui est rendu ici est vérifiable en SQLite : le motif et le deck du puzzle
+ * dû, la famille/variante du répertoire et son dernier score, le coup sorti de
+ * théorie, l'ECO du piège — la preuve voyage déjà dans `reason_code`
+ * (`core/training/reasons.ts`), on la rend simplement.
+ *
+ * `null` : aucune preuve encodée (raison inconnue ou champ absent), la carte
+ * n'affiche que son titre — jamais de texte inventé.
+ */
+export function formatTrainingProof(recommendation: { entityId: string; reasonCode: string }): string | null {
+  const { code, evidence } = parseTrainingReason(recommendation.reasonCode);
+  const motif = evidence.motif && evidence.motif in MOTIF_LABEL ? MOTIF_LABEL[evidence.motif] : null;
+  const deck = evidence.deck ? DECK_TITLE[evidence.deck] ?? null : null;
+  const family = evidence.trapFamily ?? null;
+  const eco = evidence.eco ? `ECO ${evidence.eco}` : null;
+  const cp = evidence.avgCpLoss != null && evidence.avgCpLoss > 0 ? `−${Math.round(evidence.avgCpLoss)} cp` : null;
+  const overdue = evidence.daysOverdue != null && evidence.daysOverdue > 0 ? `${evidence.daysOverdue} j` : null;
+
+  switch (code) {
+    case "puzzle-due":
+      // Motif absent pour un puzzle importé : le deck seul reste une preuve de
+      // provenance (« ça vient de mes erreurs rangées »).
+      return joinProof([motif, deck ? `deck ${deck}` : null]);
+    case "motif-missed":
+      return cp ? `${cp} de perte moyenne` : null;
+    case "opening-due":
+      return joinProof([
+        evidence.openingName ?? null,
+        evidence.variation ?? null,
+        overdue ? `${overdue} de retard` : null,
+        evidence.accuracy != null && evidence.accuracy > 0 ? `${evidence.accuracy} % au dernier passage` : null,
+      ]);
+    case "theory-exit":
+      return cp ? `${cp} sur le coup` : null;
+    case "game-error": {
+      // Le cp est déjà dans le titre (ou signalé « mat ou perte lourde ») :
+      // la preuve localise le coup fautif dans la partie, pas de doublon.
+      const moveNumber = moveNumberFromEntityId(recommendation.entityId);
+      return joinProof([moveNumber !== null ? `Coup ${moveNumber}` : null, evidence.openingName ?? null]);
+    }
+    case "trap-due":
+      return joinProof([family, eco, overdue ? `${overdue} sans révision` : null]);
+    case "trap-refutation-forgotten":
+      return joinProof([
+        family,
+        eco,
+        evidence.hintsUsed != null && evidence.hintsUsed > 0
+          ? `${evidence.hintsUsed} indice${evidence.hintsUsed > 1 ? "s" : ""} utilisé${evidence.hintsUsed > 1 ? "s" : ""}`
+          : "réponse ratée à la dernière séance",
+      ]);
+    case "trap-family-played":
+      return joinProof([eco, evidence.gameCount ? `${evidence.gameCount} parties jouées` : null]);
+    default:
+      return null;
   }
 }

@@ -205,15 +205,23 @@ export function CourseCurriculum({
   /** Palier initialement déplié — par défaut le premier palier (Bronze → Argent → Or) qui contient encore un thème non terminé. */
   defaultExpandedLevel?: CurriculumLevel;
 }) {
+  // Purge dynamique des thèmes « 0 exercice » (feuille de route Zone 1) : les
+  // réservoirs `lichess_*` encore vides ne encombrent plus l'accordéon — jamais
+  // de fiche « En attente » pour un contenu qui n'existe pas encore. Les
+  // compteurs du module (X/Y maîtrisés) sont recalculés côté appelant sur la
+  // même liste visible (`learn-screen.tsx`), pour que le header et le corps
+  // racontent exactement la même histoire.
+  const visibleThemes = useMemo(() => themes.filter((theme) => theme.totalPuzzles > 0), [themes]);
+
   const byLevel = useMemo(() => {
     const groups = new Map<CurriculumLevel, CurriculumThemeOverview[]>();
-    for (const theme of themes) {
+    for (const theme of visibleThemes) {
       const list = groups.get(theme.level) ?? [];
       list.push(theme);
       groups.set(theme.level, list);
     }
     return groups;
-  }, [themes]);
+  }, [visibleThemes]);
 
   const initialLevel = useMemo(() => {
     if (defaultExpandedLevel) return defaultExpandedLevel;
@@ -230,7 +238,7 @@ export function CourseCurriculum({
   const [expandedLevels, setExpandedLevels] = useState<string[]>(() => [initialLevel]);
   const handleValueChange = useCallback((value: string[]) => setExpandedLevels(value), []);
 
-  if (themes.length === 0) {
+  if (visibleThemes.length === 0) {
     return <p className="text-sm text-foreground-muted">Aucun thème disponible pour l&apos;instant.</p>;
   }
 

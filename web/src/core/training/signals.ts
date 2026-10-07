@@ -188,6 +188,7 @@ export function trapRecommendationCandidates(
         reasonCode: encodeTrainingReason("trap-refutation-forgotten", {
           trapName: trap.name,
           trapFamily: trap.family,
+          eco: trap.eco,
           hintsUsed: event.hintsUsed,
         }),
         priority: scoreTrapForgotten(event.lastScore, event.hintsUsed, ago),
@@ -202,6 +203,7 @@ export function trapRecommendationCandidates(
         reasonCode: encodeTrainingReason("trap-due", {
           trapName: trap.name,
           trapFamily: trap.family,
+          eco: trap.eco,
           daysOverdue: ago,
         }),
         priority: scoreTrapDue(ago),

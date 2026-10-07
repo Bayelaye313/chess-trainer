@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { TrainingPreferences } from "@/core/training/preferences";
 import type { TrainingRecommendationDto } from "@/server/queries/training";
-import { formatTrainingHeadline } from "@/lib/labels";
+import { formatTrainingHeadline, formatTrainingProof } from "@/lib/labels";
 import { RecommendedPuzzleSession } from "./recommended-puzzle-session";
 import { TrainingPlanSettings } from "./training-plan-settings";
 
@@ -37,6 +37,32 @@ function recommendationHref(recommendation: TrainingRecommendationDto): string {
     return `/pieges/${recommendation.entityId}`;
   }
   return "/entrainer";
+}
+
+/**
+ * Corps de carte partagé par le `<button>` (puzzle) et le `<Link>` (autres) :
+ * titre, puis la preuve locale (`formatTrainingProof` — motif, variante,
+ * ECO… voyageant dans `reason_code`), puis l'impact. L'impact reste un chiffre
+ * local de priorité (fréquence × ampleur, `core/training/priority.ts`), jamais
+ * un score moteur — l'info-bulle le dit explicitement (règle CLAUDE.md :
+ * jamais un statut sans libellé expliqué).
+ */
+function RecommendationCardBody({ recommendation }: { recommendation: TrainingRecommendationDto }) {
+  const proof = formatTrainingProof(recommendation);
+  return (
+    <>
+      <span className="block text-sm font-medium text-foreground">
+        {formatTrainingHeadline(recommendation.reasonCode)}
+      </span>
+      {proof !== null && <span className="mt-1 block text-xs text-foreground-muted">{proof}</span>}
+      <span
+        className="mt-1 block text-xs text-foreground-muted"
+        title="Priorité locale : échéance, fréquence et ampleur de tes propres erreurs — pas un score moteur."
+      >
+        Impact {Math.round(recommendation.priority)}
+      </span>
+    </>
+  );
 }
 
 export function TrainingRecommendationsCard({
@@ -80,12 +106,7 @@ export function TrainingRecommendationsCard({
                 onClick={() => setPuzzleSessionActive(true)}
                 className="rounded-md border border-border px-3 py-3 text-left transition-colors hover:bg-surface-muted"
               >
-                <span className="block text-sm font-medium text-foreground">
-                  {formatTrainingHeadline(recommendation.reasonCode)}
-                </span>
-                <span className="mt-1 block text-xs text-foreground-muted">
-                  Impact {Math.round(recommendation.priority)}
-                </span>
+                <RecommendationCardBody recommendation={recommendation} />
               </button>
             ) : (
               <Link
@@ -93,12 +114,7 @@ export function TrainingRecommendationsCard({
                 href={recommendationHref(recommendation)}
                 className="rounded-md border border-border px-3 py-3 transition-colors hover:bg-surface-muted"
               >
-                <span className="block text-sm font-medium text-foreground">
-                  {formatTrainingHeadline(recommendation.reasonCode)}
-                </span>
-                <span className="mt-1 block text-xs text-foreground-muted">
-                  Impact {Math.round(recommendation.priority)}
-                </span>
+                <RecommendationCardBody recommendation={recommendation} />
               </Link>
             ),
           )}

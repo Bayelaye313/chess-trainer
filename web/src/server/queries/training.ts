@@ -24,6 +24,8 @@ import {
   trapRecommendationCandidates,
 } from "@/core/training/signals";
 import type { Motif } from "@/core/chess/types";
+import { findOpening } from "@/core/curriculum/openings";
+import { listOpeningFamilies } from "@/server/curriculum/imported-openings-index";
 import { db } from "@/server/db";
 import {
   games,
@@ -63,6 +65,19 @@ const EVENT_ENTITY_TYPE = {
   trap: "trap",
   review: "review",
 } as const;
+
+/**
+ * Nom de famille affichable pour un `opening_progress.opening_id` — la preuve
+ * citée par la carte « Séance du jour » (`formatTrainingProof`). Catalogue
+ * curaté d'abord (`core/curriculum/openings.ts`), puis familles dynamiques
+ * lichess (mémoïsées, même ordre que `resolveOpeningSlug`). `null` : id
+ * inconnu, la carte retombe sur la seule variante.
+ */
+function openingDisplayName(openingId: string): string | null {
+  const curated = findOpening(openingId);
+  if (curated) return curated.name;
+  return listOpeningFamilies().find((family) => family.id === openingId)?.name ?? null;
+}
 
 export async function recordTrainingEvent(
   input: RecordTrainingEventInput,
@@ -129,7 +144,7 @@ export async function listTrainingRecommendations(
     traps,
   ] = await Promise.all([
     db
-      .select({ id: puzzles.id, due: reviews.due, motifs: puzzles.motifs })
+      .select({ id: puzzles.id, due: reviews.due, motifs: puzzles.motifs, deck: puzzles.deck })
       .from(reviews)
       .innerJoin(puzzles, eq(reviews.puzzleId, puzzles.id))
       .where(lte(reviews.due, now))
@@ -139,6 +154,7 @@ export async function listTrainingRecommendations(
       .select({
         openingId: openingProgress.openingId,
         variationKey: openingProgress.variationKey,
+        variationLabel: openingProgress.variationLabel,
         due: openingProgress.nextReviewDate,
         lastAccuracy: openingProgress.lastAccuracy,
       })
@@ -230,14 +246,27 @@ export async function listTrainingRecommendations(
     ...duePuzzles.map((puzzle) => ({
       entityType: "puzzle" as const,
       entityId: puzzle.id,
-      reasonCode: encodeTrainingReason("puzzle-due", { daysOverdue: daysOverdue(puzzle.due, now) }),
+      // Preuve locale citée sur la carte : le motif raté (s'il est connu) et le
+      // deck rangé — deux puzzles « en retard de X j » deviennent distincts.
+      reasonCode: encodeTrainingReason("puzzle-due", {
+        daysOverdue: daysOverdue(puzzle.due, now),
+        motif: puzzle.motifs[0],
+        deck: puzzle.deck,
+      }),
       priority: scorePuzzleDue(daysOverdue(puzzle.due, now)),
       dueAt: puzzle.due,
     })),
     ...dueOpenings.map((opening) => ({
       entityType: "opening" as const,
       entityId: `${opening.openingId}:${opening.variationKey}`,
-      reasonCode: encodeTrainingReason("opening-due", { daysOverdue: daysOverdue(opening.due, now) }),
+      // Preuve locale : famille + variante dénormalisées + dernier score du
+      // drill — jamais un score moteur.
+      reasonCode: encodeTrainingReason("opening-due", {
+        daysOverdue: daysOverdue(opening.due, now),
+        openingName: openingDisplayName(opening.openingId) ?? undefined,
+        variation: opening.variationLabel,
+        accuracy: Math.round(opening.lastAccuracy),
+      }),
       priority: scoreOpeningDue(daysOverdue(opening.due, now), opening.lastAccuracy),
       dueAt: opening.due,
     })),

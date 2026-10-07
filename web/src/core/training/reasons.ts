@@ -30,6 +30,12 @@ export interface TrainingEvidence {
   eco?: string;
   gameCount?: number;
   hintsUsed?: number;
+  /** `DeckId` du puzzle dû (`puzzle-due`) — la preuve « ça vient de mes erreurs rangées ». */
+  deck?: string;
+  /** Libellé dénormalisé de la variante suivie (`opening_progress.variationLabel`). */
+  variation?: string;
+  /** Dernier score du drill en pourcentage (`opening_progress.lastAccuracy`), arrondi. */
+  accuracy?: number;
 }
 
 export interface ParsedTrainingReason {
@@ -56,6 +62,11 @@ export function encodeTrainingReason(code: TrainingReasonCode, evidence: Trainin
   pushPart(parts, "eco", evidence.eco);
   pushPart(parts, "games", evidence.gameCount);
   pushPart(parts, "hints", evidence.hintsUsed);
+  pushPart(parts, "deck", evidence.deck);
+  pushPart(parts, "variation", evidence.variation);
+  // Arrondi à l'encodage, comme `cp` — la preuve reste un entier lisible en
+  // SQLite et le roundtrip est stable quel que soit le float entrant.
+  pushPart(parts, "acc", evidence.accuracy == null ? undefined : Math.round(evidence.accuracy));
   return parts.join("|");
 }
 
@@ -112,6 +123,15 @@ function assignEvidence(evidence: TrainingEvidence, key: string, value: string):
       break;
     case "hints":
       evidence.hintsUsed = toInt(value);
+      break;
+    case "deck":
+      evidence.deck = value;
+      break;
+    case "variation":
+      evidence.variation = value;
+      break;
+    case "acc":
+      evidence.accuracy = toInt(value);
       break;
     default:
       break;

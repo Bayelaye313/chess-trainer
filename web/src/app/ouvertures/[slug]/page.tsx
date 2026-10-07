@@ -9,11 +9,20 @@ export default async function OpeningDetailPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  /** `?drill=<clé>` : relance directe d'une variante précise — voir `OpeningsScreen`/`review-queue.ts`. */
-  searchParams: Promise<{ drill?: string }>;
+  /**
+   * `?drill=<clé>` : relance directe d'une variante précise — voir
+   * `OpeningsScreen`/`review-queue.ts`.
+   * `?side=white|black` (feuille de route Zone 4) : camp AVEC LEQUEL le
+   * joueur a joué cette ouverture (bandeau « Ouverture en difficulté » du
+   * Rapport) — force l'orientation du plateau du drill pour s'entraîner du
+   * bon côté. Toute autre valeur est ignorée : on retombe sur la perspective
+   * camp du catalogue (`opening.side`), comportement historique inchangé.
+   */
+  searchParams: Promise<{ drill?: string; side?: string }>;
 }) {
   const { slug } = await params;
-  const { drill } = await searchParams;
+  const { drill, side } = await searchParams;
+  const playerSideOverride = side === "black" || side === "white" ? side : undefined;
   const detail = getOpeningDetail(slug);
   if (!detail) notFound();
 
@@ -31,6 +40,7 @@ export default async function OpeningDetailPage({
       plies={detail.plies}
       variations={detail.variations}
       drillVariationKey={drill}
+      sideOverride={playerSideOverride}
       practicedVariationKeys={practicedVariationKeys}
       deviations={deviations}
       variationAccuracies={variationAccuracies}

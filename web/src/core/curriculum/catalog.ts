@@ -1,7 +1,7 @@
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
 
 /**
- * Catalogue statique des 217 thèmes de l'académie « Apprendre ».
+ * Catalogue statique des 205 thèmes de l'académie « Apprendre ».
  *
  * Pure donnée, comme `core/chess/decks.ts` pour les decks FSRS — mais ici elle
  * n'est pas consommée directement par l'UI : `server/queries/curriculum.ts` la
@@ -15,7 +15,7 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * en-tête) : `totalPuzzles` est la cible annoncée au catalogue, pas un
  * décompte de contenu déjà importé.
  *
- * ## Saturation Lichess — les 161 thèmes curatés + les 56 thèmes officiels
+ * ## Saturation Lichess — les 161 thèmes curatés + les 44 thèmes officiels
  *
  * Les 161 thèmes ci-dessus (9 catégories : Positional Mastery, cursus Jesper
  * Hall, Structures de pions (Li-Pokamp), Faiblesses de pions (Yushan),
@@ -30,21 +30,25 @@ import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/cur
  * Lichess (Motifs / Avancé / Mats par coups / Thèmes de mat / Coups spéciaux
  * / Objectifs & Origines — https://database.lichess.org/#puzzles) — un thème
  * du catalogue PAR TAG EXACT, en bijection stricte (`lichessThemes` porte
- * toujours un unique tag), à DEUX exceptions volontaires près (nettoyage de
+ * toujours un unique tag), à TROIS exceptions volontaires près (nettoyage de
  * doublons, voir plus bas où chaque table est définie) : "Mat de la queue
  * d'aronde" fusionne `dovetailMate`/`swallowsTailMate` (même figure de mat,
- * deux noms français concurrents) et "Capture du défenseur" a été retirée de
+ * deux noms français concurrents), "Capture du défenseur" a été retirée de
  * `LICHESS_MOTIF_TAGS` au profit de "L'élimination du défenseur" (motif
  * tactique curaté qui portait déjà `capturedDefender`, voir
  * `TACTICAL_MOTIF_LICHESS_TAGS`) — sans ce retrait les deux thèmes se
- * partageaient le même tag en round-robin et restaient chacun à moitié vides.
+ * partageaient le même tag en round-robin et restaient chacun à moitié vides —
+ * et, depuis la purge « thèmes vides ou redondants » (feuille de route Zone 1),
+ * les 12 figures de mat `lmt-*` homonymes d'un thème `cm-*` curaté ont été
+ * retirées de `LICHESS_MATE_THEME_TAGS` (voir son docstring) : deux fiches
+ * identiques pour une seule position, dont une à jamais « En attente ».
  * Objectif sinon inchangé : que `scripts/convert-lichess-puzzles-csv.ts`
  * (colonne `Themes` du CSV officiel) ET `scripts/refine-tactics-pgn.ts`
  * (motifs de mat et longueurs recalculés depuis `tactics.pgn`, qui ne porte
  * aucun tag) aient TOUJOURS une case d'accueil exacte pour n'importe quel tag
  * rencontré, sans jamais avoir à improviser un rapprochement approximatif.
  *
- * Différence assumée avec les 161 thèmes curatés : ces 56 thèmes n'ont PAS
+ * Différence assumée avec les 161 thèmes curatés : ces 44 thèmes n'ont PAS
  * d'entrée dans `MASTER_PUZZLES_DATASET` (voir son docstring) — ce sont des
  * réservoirs purs, alimentés exclusivement par le pipeline d'import
  * (`data/import/academy/*.json` généré par les deux scripts ci-dessus), pas
@@ -722,31 +726,29 @@ const LICHESS_MATE_IN_TAGS: readonly LichessTagDef[] = [
  * CSV (`Themes`) ET via `scripts/refine-tactics-pgn.ts` qui RECALCULE ce même
  * motif sur `tactics.pgn` avec `core/chess/mate-patterns.ts` (voir son
  * docstring) quand le fichier source ne porte aucun tag.
+ *
+ * PURGE « thèmes vides ou redondants » (feuille de route Zone 1, curation du
+ * catalogue) : les 12 figures EXACTEMENT homonymes d'un thème `cm-*` curaté
+ * (Mat arabe, Mat d'Anastasia, Mat de Boden, Mat de Morphy, Mat de Pillsbury,
+ * Mat de l'Opéra, Mat de l'épaulette, Mat des deux fous, Mat du couloir, Mat du
+ * crochet, Mat du triangle, Mat étouffé) ont été retirées — même titre, même
+ * figure, mais zéro exercice dans le dataset statique : le catalogue affichait
+ * deux fiches identiques pour une seule et même position, dont une restée « En
+ * attente » à jamais. Les 6 figures SANS doublon curaté restent en place,
+ * réservoir d'import Lichess compris.
  */
 const LICHESS_MATE_THEME_TAGS: readonly LichessTagDef[] = [
-  ["Mat d'Anastasia", "anastasiaMate"],
-  ["Mat arabe", "arabianMate"],
-  ["Mat du couloir", "backRankMate"],
   ["Mat de la Balestra", "balestraMate"],
   ["Mat des cochons aveugles", "blindSwineMate"],
-  ["Mat de Boden", "bodenMate"],
-  ["Mat du coin", "cornerMate"],
-  ["Mat des deux fous", "doubleBishopMate"],
   // "Mat de la queue d'aronde" et "Mat de la queue d'hirondelle" sont la MÊME
   // figure de mat (deux noms français concurrents pour "dovetail" / "swallow's
   // tail") — fusionnés en une seule entrée plutôt que deux doublons qui se
   // partageaient artificiellement `dovetailMate`/`swallowsTailMate` en
   // round-robin (voir le docstring de fichier, « Saturation Lichess »).
   ["Mat de la queue d'aronde (Dovetail / Swallow's tail)", ["dovetailMate", "swallowsTailMate"]],
-  ["Mat de l'épaulette", "epauletteMate"],
-  ["Mat du crochet", "hookMate"],
+  ["Mat du coin", "cornerMate"],
   ["Mat de la boîte (Kill box)", "killBoxMate"],
-  ["Mat de Pillsbury", "pillsburysMate"],
-  ["Mat de Morphy", "morphysMate"],
-  ["Mat de l'Opéra", "operaMate"],
-  ["Mat du triangle", "triangleMate"],
   ["Mat de Vuković", "vukovicMate"],
-  ["Mat étouffé", "smotheredMate"],
 ];
 
 const LICHESS_SPECIAL_MOVE_TAGS: readonly LichessTagDef[] = [
@@ -941,18 +943,18 @@ export const CURRICULUM_THEMES: readonly CurriculumThemeSeed[] = [
   ),
 ];
 
-if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 217) {
+if (process.env.NODE_ENV !== "production" && CURRICULUM_THEMES.length !== 205) {
   // Filet de sécurité pour toute future édition de ce fichier : le compte de
-  // 217 thèmes (144 curatés (dont les 3 `endgame_mastery`, cahier des charges
+  // 205 thèmes (144 curatés (dont les 3 `endgame_mastery`, cahier des charges
   // du 2026-09-08 — remplacent les 14 thèmes à tags Lichess génériques
   // d'origine) + 9 `pawn_structures` (Li-Pokamp) + 1 `pawn_weaknesses`
   // (Yushan) + 7 `middlegame` (NoseKnowsAll, cahier des charges du
-  // 2026-09-07) + 56 en bijection stricte avec les 6 catégories officielles
-  // Lichess, voir « Saturation Lichess » dans le docstring de fichier — 58
-  // tags officiels mais 56 thèmes, 2 doublons volontairement fusionnés) est
-  // une exigence du produit, pas un hasard — une régression silencieuse ici
-  // serait invisible en revue de code.
-  throw new Error(`CURRICULUM_THEMES doit contenir 217 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
+  // 2026-09-07) + 44 en bijection stricte avec les 6 catégories officielles
+  // Lichess après purge des 12 doublons `lmt-*` homonymes d'un thème `cm-*`,
+  // voir « Saturation Lichess » et `LICHESS_MATE_THEME_TAGS`) est une exigence
+  // du produit, pas un hasard — une régression silencieuse ici serait invisible
+  // en revue de code.
+  throw new Error(`CURRICULUM_THEMES doit contenir 205 thèmes, en contient ${CURRICULUM_THEMES.length}.`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────

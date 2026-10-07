@@ -5,30 +5,29 @@
  * états, même patron à niveaux que `openings/pieges-screen.tsx` (module →
  * thèmes → résolution) :
  *
- *  - `modules`  (NIVEAU 1) : grille de `ModuleCard`, une par catégorie du
- *    catalogue, anneau de progression "X/Y thèmes maîtrisés".
- *  - `themes`   (NIVEAU 2) : au clic sur un module, `CourseCurriculum` —
- *    l'accordéon des 3 paliers de compétence (Bronze/Argent/Or = `theme.level`)
- *    de cette catégorie, cahier des charges du 2026-09-09 : « toujours plier
- *    les 3 niveaux en 3 bulles », y compris pour les petits modules à un seul
- *    palier peuplé (ex. `endgame_mastery`) — un seul composant pour toutes
- *    les catégories plutôt qu'un choix au cas par cas. Remplace l'ancienne
- *    frise plate `ThemePath` (toujours disponible dans ce dossier si besoin
- *    futur, mais plus référencée ici).
- *  - `lesson`   : Page de Cours (`ThemeLesson`, audit UX du 2026-09-02) —
- *    AU CLIC SUR UN THÈME, on n'accède plus jamais directement à l'échiquier :
- *    un cours (Objectif + Idées clés + diagramme, `resolveLessonContent`)
- *    s'affiche d'abord, son bouton « Passer aux exercices ➔ » débloquant
- *    ensuite `session`. Retour arrière ramène à `themes`, jamais directement
- *    à `session` (revoir le cours reste possible en resélectionnant le thème).
- *  - `session`  : résolution effective (`ThemeSession`, le `PuzzleBoard`
- *    partagé) — accès à l'échiquier face au premier exercice actif, sans
- *    grille de pastilles intermédiaire (voir l'ex-`ThemePuzzleGrid`,
- *    supprimée : une « liste de carrés » entre le cours et le plateau
- *    n'apportait rien que `ThemeSession` n'affiche déjà via sa `ProgressBar`).
- *    Sortie de session ramène à `themes` du MÊME module (pas à l'accueil),
- *    pour que la frise ET le compteur "X/Y thèmes maîtrisés" de son en-tête
- *    reflètent aussitôt la réussite qui vient d'avoir lieu.
+ *  - `modules`  (NIVEAU 1) : `PlaybookLearnScreen` — couloirs Bronze/Argent/
+ *    Or et fiches de leçon. Feuille de route Zone 1 (Direct-to-Lesson) : UN
+ *    clic sur une fiche ouvre directement l'arène du thème (résolution par
+ *    `directViewForTheme`), la sous-liste intermédiaire du module n'est plus
+ *    jamais affichée depuis l'accueil.
+ *  - `themes`   (NIVEAU 2) : `CourseCurriculum` — l'accordéon des 3 paliers de
+ *    compétence (Bronze/Argent/Or = `theme.level`) de cette catégorie, cahier
+ *    des charges du 2026-09-09 : « toujours plier les 3 niveaux en 3 bulles ».
+ *    Reste accessible par deep-link `?categoryId=` (parcours d'un module entier)
+ *    — plus jamais ouvert comme étape obligatoire entre une fiche et son
+ *    arène. Le clic sur un thème partage le MÊME routage direct.
+ *  - `lesson`   : Page de Cours (`ThemeLesson`) — réservée aux thèmes portant
+ *    un VRAI cours interactif (`COURSE_TREES`/`COURSE_LESSONS` : arbre annoté
+ *    ou lecteur à chapitres à mini-défis) : « l'écran du lecteur de leçons »
+ *    de la feuille de route, l'arène du cours. Son bouton « Passer aux
+ *    exercices ➔ » mène ensuite à `session`.
+ *  - `session`  : résolution effective (`ThemeSession` + `AcademyPuzzleArena`)
+ *    — thème sans cours : on tombe directement sur l'échiquier, sans page
+ *    générique (Objectif + Idées clés) intermédiaire — « court-circuiter
+ *    toute sous-liste inutile » (feuille de route Zone 1). Sortie de session
+ *    ramène à `themes` du MÊME module (pas à l'accueil), pour que le compteur
+ *    « X/Y thèmes maîtrisés » reflète aussitôt la réussite.
+ *  - `review`   : rejeu libre d'une vague maîtrisée (`ThemeReviewSession`).
  *
  * Navigation entièrement côté client, comme `PiegesScreen` : aucune route
  * dédiée par niveau, un aller-retour vers `/apprendre` repart toujours du
@@ -37,6 +36,8 @@
 import { useState } from "react";
 import { getCurriculumOverview } from "@/server/actions/curriculum";
 import type { CurriculumCategoryOverview, CurriculumThemeOverview } from "@/server/queries/curriculum";
+import { COURSE_LESSONS } from "@/core/curriculum/course-lesson";
+import { COURSE_TREES } from "@/core/curriculum/course-tree";
 import { CourseCurriculum } from "./course-curriculum";
 import { moduleIcon } from "./module-icon";
 import { ThemeLesson } from "./theme-lesson";
@@ -50,6 +51,21 @@ export type LearnView =
   | { kind: "lesson"; categoryId: string; themeId: string }
   | { kind: "session"; categoryId: string; themeId: string }
   | { kind: "review"; categoryId: string; themeId: string };
+
+/**
+ * Routage Direct-to-Lesson (feuille de route Zone 1) : un thème portant un
+ * cours interactif ouvre SON lecteur (`lesson` — `CourseTreeViewer`/
+ * `CourseLessonViewer`, les véritables arènes à chapitres), tous les autres
+ * vont droit à `session` (`ThemeSession`, l'arène de puzzles). Jamais de
+ * sous-liste descriptive entre le clic et le vif du sujet — un seul point de
+ * vérité partagé par la fiche Playbook et par l'accordéon `CourseCurriculum`.
+ */
+function directViewForTheme(categoryId: string, themeId: string): LearnView {
+  const hasInteractiveCourse = COURSE_TREES[themeId] !== undefined || COURSE_LESSONS[themeId] !== undefined;
+  return hasInteractiveCourse
+    ? { kind: "lesson", categoryId, themeId }
+    : { kind: "session", categoryId, themeId };
+}
 
 function BackButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
@@ -149,7 +165,11 @@ export function LearnScreen({
         </div>
       );
     }
-    const masteredCount = category.themes.filter((t) => t.completedCount >= t.totalPuzzles && t.totalPuzzles > 0).length;
+    // Même purge « 0 exercice » que `CourseCurriculum` (feuille de route
+    // Zone 1) : le compteur du header et l'accordéon défilent sur la MÊME
+    // liste visible — jamais un décompte qui inclut des thèmes masqués.
+    const visibleThemes = category.themes.filter((theme) => theme.totalPuzzles > 0);
+    const masteredCount = visibleThemes.filter((t) => t.completedCount >= t.totalPuzzles).length;
     return (
       <div className="space-y-6">
         <div>
@@ -160,18 +180,23 @@ export function LearnScreen({
           </h1>
           <p className="mt-1 max-w-prose text-sm text-foreground-muted">{category.description}</p>
           <p className="mt-2 text-sm font-medium text-foreground">
-            {masteredCount} / {category.themes.length} thème{category.themes.length > 1 ? "s" : ""} maîtrisé
+            {masteredCount} / {visibleThemes.length} thème{visibleThemes.length > 1 ? "s" : ""} maîtrisé
             {masteredCount > 1 ? "s" : ""}
           </p>
         </div>
         <CourseCurriculum
-          themes={category.themes}
-          onSelectTheme={(themeId) => setView({ kind: "lesson", categoryId: category.id, themeId })}
+          themes={visibleThemes}
+          onSelectTheme={(themeId) => setView(directViewForTheme(category.id, themeId))}
           onReviewTheme={(themeId) => setView({ kind: "review", categoryId: category.id, themeId })}
         />
       </div>
     );
   }
 
-  return <PlaybookLearnScreen categories={categories} onOpenCategory={(categoryId) => setView({ kind: "themes", categoryId })} />;
+  return (
+    <PlaybookLearnScreen
+      categories={categories}
+      onOpenTheme={(categoryId, themeId) => setView(directViewForTheme(categoryId, themeId))}
+    />
+  );
 }

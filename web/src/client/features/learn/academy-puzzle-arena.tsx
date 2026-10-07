@@ -101,12 +101,18 @@ export function AcademyPuzzleArena({
 }) {
   const { playFx } = useMoveFx();
 
-  function handleSolved() {
+  function handleSolved(solved: boolean) {
     // Son de validation « adouci » (triangle, F4-A4-C5) — voir le correctif
     // du 2026-09-10 dans `esport-audio-synth.ts`. Best-effort comme partout
     // ailleurs où `playFx` est utilisé : un navigateur qui refuse l'audio ne
     // doit jamais bloquer la suite de la vague.
-    playFx("excellent");
+    //
+    // MAIS surtout (feuille de route Zone 2, validation de la Practice
+    // Arena) : le signal de réussite ne part QUE si le puzzle a été
+    // réellement résolu — chaque coup du joueur validé par l'instance
+    // `chess.js` du solveur. Un puzzle raté puis révélé appelle aussi ce
+    // callback (le parent enchaîne la vague), sans fanfare ni faux succès.
+    if (solved) playFx("excellent");
     onSolved();
   }
 

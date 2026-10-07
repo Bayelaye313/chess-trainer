@@ -134,6 +134,22 @@ function earliestOpeningMistakePly(moves: readonly PlayerMoveRecord[]): number |
 }
 
 /**
+ * Camp majoritaire du joueur dans un groupe ECO — majorité stricte des
+ * `playerColor`, à égalité le PREMIER rencontré (déterminisme, même contrat
+ * que `representativeOpeningName`). Alimente `OpeningPerformance.playerSide`
+ * (feuille de route Zone 4 : rotation du plateau depuis le Rapport).
+ */
+function majorityPlayerSide(gamesForEco: readonly PlayerGameRecord[]): "w" | "b" {
+  let whites = 0;
+  for (const game of gamesForEco) {
+    if (game.playerColor === "w") whites += 1;
+  }
+  if (whites > gamesForEco.length / 2) return "w";
+  if (whites < gamesForEco.length / 2) return "b";
+  return gamesForEco[0].playerColor;
+}
+
+/**
  * Axe 3 — Performance par ouverture (code ECO).
  *
  * Parties sans ECO (pas encore catégorisées, voir `games.eco`) exclues plutôt
@@ -167,6 +183,7 @@ export function computeOpeningPerformance(games: readonly PlayerGameRecord[]): O
         mistakePlies.length > 0
           ? Math.round(mistakePlies.reduce((sum, mistakePly) => sum + mistakePly, 0) / mistakePlies.length)
           : null,
+      playerSide: majorityPlayerSide(gamesForEco),
     });
   }
 

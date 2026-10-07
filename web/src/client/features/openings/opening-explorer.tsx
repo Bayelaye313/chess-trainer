@@ -32,6 +32,7 @@ export function OpeningExplorer({
   plies,
   variations,
   drillVariationKey,
+  sideOverride,
   practicedVariationKeys,
   deviations,
   variationAccuracies,
@@ -41,6 +42,14 @@ export function OpeningExplorer({
   variations: readonly OpeningVariation[];
   /** `?drill=<clé>` — relance directe une variante depuis "Lancer les révisions du jour", voir `review-queue.ts`. */
   drillVariationKey?: string;
+  /**
+   * `?side=white|black` (feuille de route Zone 4) : camp majoritaire DU
+   * JOUEUR dans cette ouverture, transmis par le bandeau « Ouverture en
+   * difficulté » du Rapport — oriente le drill ET le sparring pour
+   * s'entraîner du bon côté. `undefined` : perspective camp du catalogue
+   * (`opening.side`), comportement historique inchangé.
+   */
+  sideOverride?: "white" | "black";
   /** Clés des variantes déjà pratiquées au moins une fois — sert le Test Final (Étape 3 du Mode Entraînement). */
   practicedVariationKeys: readonly string[];
   /** Écarts de répertoire récurrents détectés dans les parties importées — voir `server/queries/opening-mistakes.ts`. */
@@ -149,6 +158,7 @@ export function OpeningExplorer({
         variationAccuracies={variationAccuracies}
         autoStart={autoStartSelection}
         inReviewQueue={drillVariationKey != null}
+        playerSide={sideOverride}
         onExit={() => router.push("/ouvertures")}
       />
       <OpeningSparring
@@ -156,7 +166,7 @@ export function OpeningExplorer({
         openingName={opening.name}
         variationKey={drillVariationKey ?? MAIN_LINE_VARIATION_KEY}
         script={autoStartSelection.kind === "variation" ? autoStartSelection.variation.uciMoves : plies.map((ply) => ply.uci)}
-        playerSide={opening.side}
+        playerSide={sideOverride ?? opening.side}
       />
     </div>
   );

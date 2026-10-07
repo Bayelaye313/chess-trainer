@@ -186,6 +186,22 @@ body {
 }
 
 /**
+ * Micro-animation du coup adverse — feuille de route Zone 2 : la bibliothèque
+ * `react-chessboard` pose `transition: transform <durée>ms` en style INLINE
+ * sur la pièce en mouvement, sans timing-function (donc `ease` par défaut du
+ * shorthand). La règle ci-dessous écrase le longhand en `!important` — seul
+ * levier propre pour forcer l'interpolation `ease-in-out` demandée (150-200 ms,
+ * piloté côté React par `animationDurationInMs : OPPONENT_MOVE_ANIMATION_MS`,
+ * `client/features/board/move-animation.ts`) sans forker le composant.
+ * Le sélecteur ne cible QUE les pièces réellement en transition (la propriété
+ * inline n'existe que pendant l'animation) — jamais une pièce immobile ni le
+ * clone en cours de glisser-déposer.
+ */
+[id*="-piece-"][style*="transition"] {
+  transition-timing-function: ease-in-out !important;
+}
+
+/**
  * Extension "Accords d'Élite" / "Mission Briefing" (cahier des charges du
  * 2026-09-09) — jetons PUREMENT ADDITIFS pour `CourseCurriculum` et
  * `MissionBriefing` (voir `client/features/learn/theme-config.ts`). Aucun

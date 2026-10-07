@@ -239,12 +239,23 @@ export function useOpeningDrill({
   opening,
   plies,
   hintBehavior = "until_played_twice",
+  playerSide,
 }: {
   opening: OpeningLine;
   /** Ligne de référence annotée — sert de script au mode « Ligne principale ». */
   plies: readonly AnnotatedPly[];
   /** Pilotage de la flèche d'indice automatique — voir `HintArrowBehavior`. Défaut : méthode Listudy exacte. */
   hintBehavior?: HintArrowBehavior;
+  /**
+   * Camp forcé par `?side=white|black` (feuille de route Zone 4) — transmis
+   * depuis le bandeau « Ouverture en difficulté » du Rapport : le plateau
+   * s'ORIENTE et le joueur joue CE camp, même s'il diffère de la perspective
+   * camp du catalogue (`opening.side`). `undefined` : comportement historique
+   * inchangé. Les sélections ciblées (`mistake`/`trap`/`trap-poison`) gardent
+   * la priorité : leur camp se déduit du trait à `startFen`, plus fiable qu'un
+   * camp déclaré (voir plus bas).
+   */
+  playerSide?: "white" | "black";
 }) {
   const [status, setStatus] = useState<DrillStatus>("select");
   const [selection, setSelection] = useState<DrillSelection | null>(null);
@@ -326,9 +337,17 @@ export function useOpeningDrill({
       ? new Chess(selection.round.startFen).turn()
       : selection?.kind === "trap-poison"
         ? new Chess(selection.startFen).turn()
-        : opening.side === "white"
-          ? "w"
-          : "b";
+        : // `playerSide` (`?side=` du Rapport, Zone 4) prime sur la perspective
+          // camp du catalogue : c'est le camp que LE JOUEUR a réellement joué —
+          // le plateau s'oriente en conséquence (`boardOrientation` suit
+          // `userColor` dans `opening-drill.tsx`).
+          playerSide
+          ? playerSide === "white"
+            ? "w"
+            : "b"
+          : opening.side === "white"
+            ? "w"
+            : "b";
 
   /** Coups d'autoplay (`leadInUci`) pour la sélection courante — `0` hors `kind: "mistake"/"trap"/"trap-poison"`. */
   const leadInLength =

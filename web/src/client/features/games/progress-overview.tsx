@@ -190,7 +190,13 @@ function StrugglingOpeningBanner({ opening }: { opening: PlayerProgressOverview[
       </p>
       {opening.openingSlug && (
         <Link
-          href={`/ouvertures/${opening.openingSlug}?drill=${MAIN_LINE_VARIATION_KEY}`}
+          // `side` = camp majoritaire DU JOUEUR dans ce groupe ECO
+          // (`OpeningPerformance.playerSide`, Zone 4) — le drill et l'orientation
+          // du plateau doivent suivre la couleur avec laquelle IL a joué cette
+          // ouverture, jamais la perspective camp du catalogue (`opening.side`).
+          href={`/ouvertures/${opening.openingSlug}?drill=${MAIN_LINE_VARIATION_KEY}&side=${
+            opening.playerSide === "b" ? "black" : "white"
+          }`}
           className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
         >
           🎯 Lancer le Drill Listudy

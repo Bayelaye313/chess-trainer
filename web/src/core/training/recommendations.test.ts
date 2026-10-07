@@ -78,6 +78,27 @@ describe("training reasons", () => {
     });
     expect(parseTrainingReason("puzzle-due").code).toBe("puzzle-due");
   });
+
+  it("transporte deck, variante et précision de la carte sans perte", () => {
+    const puzzle = encodeTrainingReason("puzzle-due", { daysOverdue: 53, motif: "fork", deck: "missed_tactics" });
+    expect(parseTrainingReason(puzzle).evidence).toEqual({
+      daysOverdue: 53,
+      motif: "fork",
+      deck: "missed_tactics",
+    });
+    const opening = encodeTrainingReason("opening-due", {
+      daysOverdue: 5,
+      openingName: "Ruy Lopez (Espagnole)",
+      variation: "Ligne principale",
+      accuracy: 72.4,
+    });
+    expect(parseTrainingReason(opening).evidence).toEqual({
+      daysOverdue: 5,
+      openingName: "Ruy Lopez (Espagnole)",
+      variation: "Ligne principale",
+      accuracy: 72,
+    });
+  });
 });
 
 describe("training signals", () => {

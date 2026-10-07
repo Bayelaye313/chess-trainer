@@ -292,13 +292,15 @@ describe("MASTER_PUZZLES_DATASET", () => {
     }
   });
 
-  it("n'a AUCUNE entrée pour les 56 thèmes `lichess_*` — réservoirs purs, alimentés seulement par le pipeline d'import", () => {
+  it("n'a AUCUNE entrée pour les 44 thèmes `lichess_*` — réservoirs purs, alimentés seulement par le pipeline d'import", () => {
     const datasetIds = new Set(MASTER_PUZZLES_DATASET.map((p) => p.themeId));
     const lichessTagThemeIds = CURRICULUM_THEMES.filter((t) => LICHESS_TAG_CATEGORIES.has(t.category)).map((t) => t.id);
-    // 58 tags Lichess officiels, mais 56 thèmes : 2 doublons volontairement
+    // 58 tags Lichess officiels → 44 thèmes : 2 doublons volontairement
     // fusionnés (queue d'aronde/d'hirondelle, capture/élimination du
-    // défenseur — voir catalog.ts, « Saturation Lichess »).
-    expect(lichessTagThemeIds.length).toBe(56);
+    // défenseur — voir catalog.ts, « Saturation Lichess ») + 12 tags de mat
+    // désormais couverts par les thèmes `cm-*` homonymes (purge « thèmes vides
+    // ou redondants », feuille de route Zone 1 — voir LICHESS_MATE_THEME_TAGS).
+    expect(lichessTagThemeIds.length).toBe(44);
     for (const id of lichessTagThemeIds) expect(datasetIds.has(id)).toBe(false);
   });
 

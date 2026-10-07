@@ -14,7 +14,7 @@
  * `engine.play()` déjà lancé au moment du clic sur Abandonner appliquerait
  * quand même son coup sur une partie que l'utilisateur vient de quitter.
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Chess, DEFAULT_POSITION, type Move } from "chess.js";
 import type { PieceDropHandlerArgs, PieceHandlerArgs } from "react-chessboard";
 import { evaluateMove, uciOf, type EvaluatedMove } from "@/core/analysis/evaluate-move";
@@ -26,6 +26,7 @@ import { getBotProfile, pickMoveLimit, type BotProfile, type BotProfileId } from
 import type { Motif, MoveQuality } from "@/core/chess/types";
 import { useEngine } from "@/client/engine/engine-context";
 import { OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
+import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
 import {
   createGame,
   deletePlayerMove,
@@ -116,6 +117,8 @@ export function usePlayGame() {
   const playerQualitiesRef = useRef<MoveQuality[]>([]);
   /** Incrémenté à chaque nouvelle partie/abandon — voir le docstring du module. */
   const gameEpochRef = useRef(0);
+  /** Minutageur de la surbrillance adverse différée (Zone 2, micro-animations) — nettoyé au démontage et à chaque nouvelle partie. */
+  const highlightTimerRef = useRef<number | null>(null);
 
   // Constante, pas une lecture de ref : chessRef démarre déjà sur cette position.
   const [fen, setFen] = useState(DEFAULT_POSITION);
@@ -184,6 +187,34 @@ export function usePlayGame() {
     [],
   );
 
+  /**
+   * Surbrillance du dernier coup du bot DIFFÉRÉE jusqu'à la fin de
+   * l'animation de la pièce (feuille de route Zone 2, micro-animations) :
+   * `fen` (donc le transform de la pièce vers sa case) part immédiatement, le
+   * STATUT visuel des cases n'attend que l'animation de 180 ms
+   * (`move-animation.ts`). `epoch` empêche un minuteur d'une partie
+   * antérieure de s'appliquer après un abandon ou une nouvelle partie.
+   * Minutageur tracké par ref et nettoyé au démontage — jamais de `setState`
+   * synchrone en tête d'effet (`react-hooks/set-state-in-effect`).
+   */
+  const scheduleOpponentHighlight = useCallback((next: MoveHighlight, epoch: number) => {
+    if (highlightTimerRef.current !== null) window.clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = window.setTimeout(() => {
+      highlightTimerRef.current = null;
+      if (gameEpochRef.current !== epoch) return;
+      setHighlight(next);
+    }, OPPONENT_MOVE_ANIMATION_MS);
+  }, []);
+
+  // Cleanup exclusif (aucun setState en tête d'effet) : le minuteur de
+  // surbrillance différée ne doit jamais survivre au démontage du hook.
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current !== null) window.clearTimeout(highlightTimerRef.current);
+    },
+    [],
+  );
+
   const startNewGame = useCallback(
     async (color: "w" | "b", profileId: BotProfileId) => {
       if (!engine) return;
@@ -196,6 +227,10 @@ export function usePlayGame() {
       setError(null);
       setOutcome(null);
       setFeed([]);
+      if (highlightTimerRef.current !== null) {
+        window.clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = null;
+      }
       setHighlight(null);
       setCoachMessage(null);
       setAccuracy(null);
@@ -229,7 +264,9 @@ export function usePlayGame() {
             const move = playMoveUci(chess, aiUci);
             setFen(chess.fen());
             appendFeed({ by: "ai", san: move.san });
-            setHighlight({ from: move.from, to: move.to, color: OPPONENT_MOVE_SQUARE_COLOR });
+            // Surbrillance différée : la pièce anime d'abord (Zone 2), le
+            // statut des cases la suit à la fin de la transition.
+            scheduleOpponentHighlight({ from: move.from, to: move.to, color: OPPONENT_MOVE_SQUARE_COLOR }, epoch);
           }
         }
 
@@ -242,7 +279,7 @@ export function usePlayGame() {
         setStatus("setup");
       }
     },
-    [engine, appendFeed, ensureEngineMode],
+    [engine, appendFeed, ensureEngineMode, scheduleOpponentHighlight],
   );
 
   /**
@@ -319,7 +356,9 @@ export function usePlayGame() {
         const aiMove = playMoveUci(chess, aiUci);
         setFen(chess.fen());
         appendFeed({ by: "ai", san: aiMove.san });
-        setHighlight({ from: aiMove.from, to: aiMove.to, color: OPPONENT_MOVE_SQUARE_COLOR });
+        // Même différé que le coup d'ouverture du bot : animation de la pièce
+        // d'abord, surbrillance des cases ensuite (Zone 2).
+        scheduleOpponentHighlight({ from: aiMove.from, to: aiMove.to, color: OPPONENT_MOVE_SQUARE_COLOR }, epoch);
 
         const afterAi = gameOutcome(chess);
         if (afterAi) {
@@ -334,7 +373,7 @@ export function usePlayGame() {
         setStatus("playing");
       }
     },
-    [engine, playerColor, appendFeed, ensureEngineMode, finalize],
+    [engine, playerColor, appendFeed, ensureEngineMode, finalize, scheduleOpponentHighlight],
   );
 
   const onPieceDrop = useCallback(

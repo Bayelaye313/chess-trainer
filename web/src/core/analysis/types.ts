@@ -191,6 +191,16 @@ export interface OpeningPerformance {
    * bandeau « Ouverture en difficulté » (voir `findStrugglingOpening`).
    */
   avgMistakePly: number | null;
+  /**
+   * Camp AVEC LEQUEL ce joueur a joué cette ouverture — majorité des couleurs
+   * dans le groupe ECO (`playerColor` de chaque partie, à égalité le premier
+   * rencontré pour rester déterministe). Feuille de route Zone 4 : c'est ce
+   * camp qui doit piloter l'orientation du plateau lors de la redirection
+   * depuis le Rapport (`?side=black|white`), PAS la couleur camp du catalogue
+   * (`opening.side`, la perspective théorique de la ligne) — s'entraîner du
+   * mauvais côté était exactement le bug d'inversion signalé.
+   */
+  playerSide: "w" | "b";
 }
 
 /** Gaffes ('blunder') où le coup joué a laissé au moins une pièce attaquée sans reprise légale. */

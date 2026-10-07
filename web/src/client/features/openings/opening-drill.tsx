@@ -106,6 +106,7 @@ export function OpeningDrill({
   autoStart,
   inReviewQueue = false,
   hintBehavior,
+  playerSide,
   onExit,
 }: {
   opening: OpeningLine;
@@ -121,9 +122,11 @@ export function OpeningDrill({
   inReviewQueue?: boolean;
   /** Pilotage de la flèche d'indice automatique — voir `use-opening-drill.ts`. Omis : méthode Listudy par défaut (`"until_played_twice"`). */
   hintBehavior?: HintArrowBehavior;
+  /** Camp forcé par `?side=` (Rapport → drill, Zone 4) — voir `useOpeningDrill`. Omis : `opening.side`. */
+  playerSide?: "white" | "black";
   onExit: () => void;
 }) {
-  const drill = useOpeningDrill({ opening, plies, hintBehavior });
+  const drill = useOpeningDrill({ opening, plies, hintBehavior, playerSide });
   const router = useRouter();
 
   // Bouton « Show hints for this move! » — révèle le texte d'aide de

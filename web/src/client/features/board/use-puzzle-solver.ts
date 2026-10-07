@@ -32,6 +32,7 @@ import {
 } from "@/core/puzzle/solve-state";
 import { arrowsFromEngineLines, ENGINE_ARROW_LINE_COUNT, REVEAL_ARROW_COLOR } from "@/lib/labels";
 import type { EvalScore } from "./evaluation-bar";
+import { OPPONENT_MOVE_ANIMATION_MS } from "./move-animation";
 
 const OPPONENT_REPLY_DELAY_MS = 500;
 /** Même ordre de grandeur que le reste de l'appli (jauge). */
@@ -77,19 +78,37 @@ export function usePuzzleSolver({
   // stratégie que `use-explore-mode.ts` (`requestIdRef`).
   const evalRequestIdRef = useRef(0);
   const hoverRequestIdRef = useRef(0);
+  /** Seconde phase de la réplique adverse (feuille de route Zone 2) : dispatch `OPPONENT_REPLY_PLAYED` différé jusqu'à la fin de l'animation de la pièce — tracké par ref pour être nettoyé à chaque cleanup. */
+  const opponentStatusTimerRef = useRef<number | null>(null);
 
   const playerColor: "w" | "b" = turnOf(puzzle.fenBefore);
 
-  // 1. Rejoue automatiquement le prochain coup adverse enregistré.
+  // 1. Rejoue automatiquement le prochain coup adverse enregistré — en DEUX
+  //    phases (feuille de route Zone 2, micro-animations) : le coup part à
+  //    `OPPONENT_REPLY_DELAY_MS` (la pièce anime pendant
+  //    `OPPONENT_MOVE_ANIMATION_MS`, ease-in-out via `globals.css`), puis le
+  //    dispatch `OPPONENT_REPLY_PLAYED` — qui déplace la surbrillance des
+  //    cases — n'a lieu qu'une fois l'animation terminée. Le second
+  //    minutageur est tracké par ref et nettoyé à chaque cleanup : jamais de
+  //    `setState` synchrone en tête d'effet (`react-hooks/set-state-in-effect`).
   useEffect(() => {
     if (state.phase !== "opponent-reply") return;
     const uci = puzzle.solution[state.moveIndex];
     const timer = setTimeout(() => {
       const move = chess.move(moveInputFromUci(uci));
-      setFen(chess.fen());
-      dispatch({ type: "OPPONENT_REPLY_PLAYED", move: markOf(move, uci) });
+      setFen(chess.fen()); // phase 1 — la pièce adverse démarre sa trajectoire
+      opponentStatusTimerRef.current = window.setTimeout(() => {
+        opponentStatusTimerRef.current = null;
+        dispatch({ type: "OPPONENT_REPLY_PLAYED", move: markOf(move, uci) }); // phase 2 — statut des cases APRÈS l'animation
+      }, OPPONENT_MOVE_ANIMATION_MS);
     }, OPPONENT_REPLY_DELAY_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (opponentStatusTimerRef.current !== null) {
+        window.clearTimeout(opponentStatusTimerRef.current);
+        opponentStatusTimerRef.current = null;
+      }
+    };
   }, [state.phase, state.moveIndex, chess, puzzle.solution]);
 
   // 2. Rejoue la révélation, un pli à la fois — demandée par `requestReveal`,

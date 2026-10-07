@@ -1,6 +1,7 @@
 "use client";
 
 import { Chessboard, type ChessboardOptions } from "react-chessboard";
+import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
 import { describeGameResult, TERMINATION_LABEL } from "@/lib/labels";
 import type { PlayStatus } from "./use-play-game";
 
@@ -57,6 +58,11 @@ export function BoardPanel({
             onPieceDrop,
             canDragPiece,
             allowDragging: status === "playing",
+            // Micro-animation du coup du bot en 180 ms ease-in-out (feuille de
+            // route Zone 2) — la surbrillance des cases attend la fin de
+            // l'animation (`use-play-game.ts#scheduleOpponentHighlight`,
+            // `move-animation.ts`).
+            animationDurationInMs: OPPONENT_MOVE_ANIMATION_MS,
           }}
         />
       </div>
