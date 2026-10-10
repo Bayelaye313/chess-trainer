@@ -40,6 +40,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chessboard } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { buildFinalTestRounds, MIN_ROUND_PLIES, resolvePracticedEntries } from "./build-final-test";
 import { findNextUnmasteredVariation, type MasteryCandidate } from "@/core/curriculum/opening-mastery";
 import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
@@ -444,7 +445,7 @@ export function OpeningDrill({
 
               <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
                 <Chessboard
-                  options={{
+                  options={{ ...ESPORT_BOARD_OPTIONS,
                     id: "opening-drill-board",
                     position: drill.fen,
                     boardOrientation: drill.userColor === "w" ? "white" : "black",

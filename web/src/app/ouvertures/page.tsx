@@ -1,3 +1,4 @@
+import { EsportCanvas } from "@/components/ui/esport-page";
 import { OpeningsScreen } from "@/client/features/openings/openings-screen";
 import { listDueReviews, listOpeningMasterySummaries, listOpeningReviewSummaries } from "@/server/queries/opening-progress";
 import { listOpenings } from "@/server/queries/openings";
@@ -9,6 +10,7 @@ export default async function OuverturesPage() {
     listOpeningMasterySummaries(),
   ]);
   return (
+    <EsportCanvas>
     <OpeningsScreen
       openings={listOpenings()}
       // Un composant client ne reçoit que des props sérialisables au sens RSC
@@ -24,5 +26,6 @@ export default async function OuverturesPage() {
       }))}
       masterySummaries={masterySummaries}
     />
+    </EsportCanvas>
   );
 }

@@ -31,6 +31,7 @@
  * NIVEAU 1.
  */
 import { useState } from "react";
+import { EsportCanvas } from "@/components/ui/esport-page";
 import { getCurriculumOverview } from "@/server/actions/curriculum";
 import type { CurriculumCategoryOverview, CurriculumThemeOverview } from "@/server/queries/curriculum";
 import { CourseCurriculum } from "./course-curriculum";
@@ -94,18 +95,21 @@ export function LearnScreen({
   if (view.kind === "session") {
     const found = findTheme(categories, view.categoryId, view.themeId);
     return (
+      <EsportCanvas detail>
       <ThemeSession
         themeId={view.themeId}
         description={found?.theme.description ?? null}
         onExit={() => refreshAndGoTo({ kind: "themes", categoryId: view.categoryId })}
         onReview={() => setView({ kind: "review", categoryId: view.categoryId, themeId: view.themeId })}
       />
+      </EsportCanvas>
     );
   }
 
   if (view.kind === "review") {
     const found = findTheme(categories, view.categoryId, view.themeId);
     return (
+      <EsportCanvas detail>
       <ThemeReviewSession
         // `key` force un remontage complet à chaque entrée en révision — même
         // schéma que `ThemeLesson` : repartir d'un état local propre
@@ -116,6 +120,7 @@ export function LearnScreen({
         description={found?.theme.description ?? null}
         onExit={() => setView({ kind: "themes", categoryId: view.categoryId })}
       />
+      </EsportCanvas>
     );
   }
 
@@ -123,13 +128,16 @@ export function LearnScreen({
     const found = findTheme(categories, view.categoryId, view.themeId);
     if (!found) {
       return (
+        <EsportCanvas detail>
         <div className="space-y-4">
           <BackButton onClick={() => setView({ kind: "modules" })}>← Retour à l&apos;académie</BackButton>
           <p className="text-sm text-foreground-muted">Thème introuvable.</p>
         </div>
+        </EsportCanvas>
       );
     }
     return (
+      <EsportCanvas detail>
       <ThemeLesson
         // `key` force un remontage complet à chaque changement de thème (le
         // nœud `view.kind === "lesson"` lui-même ne change pas d'un thème à
@@ -142,6 +150,7 @@ export function LearnScreen({
         onStart={() => setView({ kind: "session", categoryId: view.categoryId, themeId: view.themeId })}
         onExit={() => setView({ kind: "themes", categoryId: view.categoryId })}
       />
+      </EsportCanvas>
     );
   }
 
@@ -149,10 +158,12 @@ export function LearnScreen({
     const category = categories.find((c) => c.id === view.categoryId);
     if (!category) {
       return (
+        <EsportCanvas detail>
         <div className="space-y-4">
           <BackButton onClick={() => setView({ kind: "modules" })}>← Retour à l&apos;académie</BackButton>
           <p className="text-sm text-foreground-muted">Module introuvable.</p>
         </div>
+        </EsportCanvas>
       );
     }
     // Même purge « 0 exercice » que `CourseCurriculum` (feuille de route
@@ -161,6 +172,7 @@ export function LearnScreen({
     const visibleThemes = category.themes.filter((theme) => theme.totalPuzzles > 0);
     const masteredCount = visibleThemes.filter((t) => t.completedCount >= t.totalPuzzles).length;
     return (
+      <EsportCanvas detail>
       <div className="space-y-6">
         <div>
           <BackButton onClick={() => setView({ kind: "modules" })}>← Retour à l&apos;académie</BackButton>
@@ -180,6 +192,7 @@ export function LearnScreen({
           onReviewTheme={(themeId) => setView({ kind: "review", categoryId: category.id, themeId })}
         />
       </div>
+      </EsportCanvas>
     );
   }
 

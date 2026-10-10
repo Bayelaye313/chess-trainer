@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { qualitySquareColor } from "@/lib/labels";
 
 export function RetryBoard({
@@ -68,7 +69,7 @@ export function RetryBoard({
     <div className="rounded-lg border border-border bg-surface p-5">
       <div className="mx-auto max-w-[480px]">
         <Chessboard
-          options={{
+          options={{ ...ESPORT_BOARD_OPTIONS,
             id: "retry-board",
             position: fen,
             boardOrientation: playerColor === "w" ? "white" : "black",

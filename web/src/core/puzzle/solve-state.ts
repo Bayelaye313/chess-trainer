@@ -52,7 +52,12 @@ export interface SolvablePuzzle {
    * fournisseurs qui n'ont pas cette info sous la main (`ThemePuzzle`,
    * `theme-session.tsx`).
    */
-  setupMove?: { uci: string; san: string } | null;
+  setupMove?: {
+    uci: string;
+    san: string;
+    /** Position AVANT ce coup adverse : présente, `PuzzleBoard` part d'elle et ANIME le coup au chargement au lieu d'afficher une position déjà figée. */
+    fenBefore?: string;
+  } | null;
   /**
    * Motifs tactiques exploités par la solution (`core/chess/motifs`) — sert
    * au message du Coach avant résolution (`core/puzzle/pre-solve-coach.ts`).

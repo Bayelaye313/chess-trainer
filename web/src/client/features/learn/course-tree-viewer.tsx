@@ -22,7 +22,8 @@
  * `useLiveEvaluation` n'écrit qu'à l'arrivée de la réponse du moteur.
  */
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs, type SquareRenderer } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS, LICHESS_BRUSH, SquareCircle } from "@/client/features/board/board-theme";
 import { findNode, pathTo, plyOffsetOf, type ChessMoveNode } from "@/core/chess/move-tree";
 import { buildCoachFeedback } from "@/core/curriculum/coach-feedback";
 import type { CourseTree } from "@/core/curriculum/course-tree";
@@ -33,8 +34,9 @@ import { CoachFeedbackPanel } from "./coach-feedback-panel";
 import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, turnOfFen } from "./course-tree-nav";
 import { MoveTreeViewer } from "./move-tree-viewer";
 
-const GREEN = "var(--quality-best)";
-const RED = "var(--quality-blunder)";
+/** Flèches et cercles de l'auteur : pinceaux Lichess, comme dans l'étude d'origine. */
+const GREEN = LICHESS_BRUSH.green;
+const RED = LICHESS_BRUSH.red;
 /** Délai avant la réponse adverse automatique en mode jeu — le temps de voir son propre coup arriver. */
 const OPPONENT_REPLY_MS = 450;
 
@@ -193,12 +195,20 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
       : [];
   const arrows = [...dataArrows, ...engineArrow, ...hintArrow];
 
-  const squareStyles: Record<string, { backgroundColor: string }> = {};
+  // `[%csl]` : un CERCLE autour de la case, comme sur Lichess — jamais un fond coloré plein.
+  const circles = new Map<string, string>();
   if (!hideAnnotations) {
-    for (const highlight of currentNode.highlights) {
-      squareStyles[highlight.square] = { backgroundColor: highlight.color === "red" ? "rgba(239, 68, 68, 0.35)" : "rgba(34, 197, 94, 0.35)" };
-    }
+    for (const highlight of currentNode.highlights) circles.set(highlight.square, highlight.color === "red" ? RED : GREEN);
   }
+  const squareRenderer: SquareRenderer = ({ square, children }) => {
+    const circle = circles.get(square);
+    return (
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        {children}
+        {circle && <SquareCircle color={circle} />}
+      </div>
+    );
+  };
 
   const playPrompt = playing ? (
     playerToMove ? (
@@ -237,14 +247,14 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
             <EvaluationBar score={liveScore} size="lg" />
             <div className="min-w-0 flex-1">
               <Chessboard
-                options={{
+                options={{ ...ESPORT_BOARD_OPTIONS,
                   id: "course-tree-board",
                   position: currentNode.fen,
                   boardOrientation: playerColor === "b" ? "black" : "white",
                   canDragPiece,
                   onPieceDrop,
                   arrows,
-                  squareStyles,
+                  squareRenderer,
                 }}
               />
             </div>

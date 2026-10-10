@@ -1,6 +1,10 @@
 import { attachEngineSuggestion, parseMoveTree, type ChessMoveNode, type EngineSuggestion } from "@/core/chess/move-tree";
 import { AVANT_POSTE_DU_CAVALIER } from "./course-trees/pm-l-avant-poste-du-cavalier";
 import { CASE_FAIBLE_DANS_LE_CAMP_ADVERSE } from "./course-trees/pm-la-case-faible-dans-le-camp-adverse";
+import { LE_MAUVAIS_FOU } from "./course-trees/pm-le-mauvais-fou";
+import { LE_PION_ISOLE_DE_LA_DAME } from "./course-trees/pm-le-pion-isole-de-la-dame";
+import { LES_PIONS_PENDANTS } from "./course-trees/pm-les-pions-pendants";
+import { CAVALIER_CONTRE_FOU } from "./course-trees/pm-cavalier-contre-fou-qui-domine";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -222,6 +226,10 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   // Refonte « un commentaire par coup » (2026-10-09) — voir `course-trees/`.
   "pm-l-avant-poste-du-cavalier": AVANT_POSTE_DU_CAVALIER,
   "pm-la-case-faible-dans-le-camp-adverse": CASE_FAIBLE_DANS_LE_CAMP_ADVERSE,
+  "pm-les-pions-pendants": LES_PIONS_PENDANTS,
+  "pm-cavalier-contre-fou-qui-domine": CAVALIER_CONTRE_FOU,
+  "pm-le-mauvais-fou": LE_MAUVAIS_FOU,
+  "pm-le-pion-isole-de-la-dame": LE_PION_ISOLE_DE_LA_DAME,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },

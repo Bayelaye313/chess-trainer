@@ -35,6 +35,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { getMoveCommentary } from "@/core/curriculum/opening-commentary";
 import { computeHeuristicCommentary } from "@/core/curriculum/heuristic-commentary";
 import { findOpening, type OpeningLine } from "@/core/curriculum/openings";
@@ -142,7 +143,7 @@ export function OpeningMistakeExercise({
       <div className="mt-5 flex flex-col items-center">
         <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
           <Chessboard
-            options={{
+            options={{ ...ESPORT_BOARD_OPTIONS,
               id: "opening-mistake-board",
               position: drill.fen,
               // Sens du plateau dérivé du camp RÉELLEMENT joué par

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { EsportCanvas } from "@/components/ui/esport-page";
 import { OpeningExplorer } from "@/client/features/openings/opening-explorer";
 import { getRepertoireDeviations } from "@/server/queries/opening-mistakes";
 import { listOpeningVariationAccuracies, listPracticedVariationKeys } from "@/server/queries/opening-progress";
@@ -35,6 +36,7 @@ export default async function OpeningDetailPage({
   ]);
 
   return (
+    <EsportCanvas detail>
     <OpeningExplorer
       opening={detail.opening}
       plies={detail.plies}
@@ -45,5 +47,6 @@ export default async function OpeningDetailPage({
       deviations={deviations}
       variationAccuracies={variationAccuracies}
     />
+    </EsportCanvas>
   );
 }

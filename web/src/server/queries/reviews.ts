@@ -86,7 +86,7 @@ export interface DeckPuzzle {
    * pour un puzzle sans coup précédent (tout premier coup de la partie) ou
    * sans partie d'origine (import Lichess). Voir `SolvablePuzzle.setupMove`.
    */
-  setupMove: { uci: string; san: string } | null;
+  setupMove: { uci: string; san: string; fenBefore: string } | null;
   /** Motifs tactiques exploités par la solution — voir `SolvablePuzzle.motifs`. */
   motifs: Motif[];
 }
@@ -100,14 +100,14 @@ export interface DeckPuzzle {
 async function findSetupMove(
   moveId: number | null,
   gameId: string | null,
-): Promise<{ uci: string; san: string } | null> {
+): Promise<{ uci: string; san: string; fenBefore: string } | null> {
   if (moveId === null || gameId === null) return null;
 
   const [current] = await db.select({ ply: moves.ply }).from(moves).where(eq(moves.id, moveId)).limit(1);
   if (!current || current.ply <= 1) return null;
 
   const [previous] = await db
-    .select({ uci: moves.uci, san: moves.san })
+    .select({ uci: moves.uci, san: moves.san, fenBefore: moves.fenBefore })
     .from(moves)
     .where(and(eq(moves.gameId, gameId), eq(moves.ply, current.ply - 1)))
     .limit(1);

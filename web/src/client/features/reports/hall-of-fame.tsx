@@ -11,6 +11,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Chessboard } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import type { MoveQuality } from "@/core/chess/types";
 import { QUALITY_BADGE_INK_CLASS, QUALITY_BG_CLASS, QUALITY_SYMBOL, qualitySquareColor } from "@/lib/labels";
 import type { MasterpieceEntry } from "@/server/queries/games";
@@ -66,7 +67,7 @@ function MasterpieceRow({
         <div className="border-t border-border p-4">
           <div className="mx-auto max-w-[280px]">
             <Chessboard
-              options={{
+              options={{ ...ESPORT_BOARD_OPTIONS,
                 id: `masterpiece-${entry.gameId}-${entry.ply}`,
                 position: entry.fenAfter,
                 boardOrientation: entry.playerColor === "w" ? "white" : "black",

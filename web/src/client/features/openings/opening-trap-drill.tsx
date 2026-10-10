@@ -37,6 +37,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import type { OpeningTrap } from "@/core/curriculum/traps";
 import { useErrorShake } from "./error-feedback";
 import { familyIcon } from "./trap-family-icon";
@@ -200,7 +201,7 @@ export function OpeningTrapDrill({
       <div className="mt-5 flex flex-col items-center">
         <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
           <Chessboard
-            options={{
+            options={{ ...ESPORT_BOARD_OPTIONS,
               id: "opening-trap-board",
               position: drill.fen,
               boardOrientation: activeTrap.victimSide === "white" ? "white" : "black",

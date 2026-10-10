@@ -31,6 +31,7 @@ import type { OpeningTrap } from "@/core/curriculum/traps";
 import { DIFFICULTY_ORDER } from "@/core/curriculum/traps";
 import { familyIcon } from "./trap-family-icon";
 import { getSolvedTrapIds } from "./trap-progress";
+import { EsportHeader } from "@/components/ui/esport-page";
 
 /** Regroupe `items` par la clé de `keyOf`, dans l'ordre de première apparition — sert aux trois niveaux (famille, gambit). */
 function groupByKey<T>(items: readonly T[], keyOf: (item: T) => string): [string, T[]][] {
@@ -105,7 +106,7 @@ export function PiegesScreen({ traps }: { traps: readonly OpeningTrap[] }) {
   // ──────────────────────────────────────────────────────────────────────
   if (selectedFamily !== null) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 pt-8">
         <div>
           <BackButton onClick={goToFamilies}>← Retour aux ouvertures</BackButton>
           <h1 className="mt-2 text-xl font-semibold tracking-tight">
@@ -147,14 +148,11 @@ export function PiegesScreen({ traps }: { traps: readonly OpeningTrap[] }) {
   // ──────────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">⚔️ Pièges d&apos;ouverture</h1>
-        <p className="mt-2 max-w-prose text-sm text-foreground-muted">
-          {traps.length} puzzles répartis en {familyGroups.length} ouvertures, chacune découpée en séries de gambits.
-          L&apos;ordinateur amène chaque position de manière agressive — à toi de résister à la tentation et de trouver
-          la réfutation précise avant qu&apos;il ne referme le piège.
-        </p>
-      </div>
+      <EsportHeader eyebrow="Répertoire / 05 / Pièges" title="Ne tombe plus dans le piège.">
+        {traps.length} puzzles répartis en {familyGroups.length} ouvertures, chacune découpée en séries de gambits.
+        L&apos;ordinateur amène chaque position de manière agressive — à toi de résister à la tentation et de trouver
+        la réfutation précise avant qu&apos;il ne referme le piège.
+      </EsportHeader>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {familyGroups.map(([family, familyTraps]) => {

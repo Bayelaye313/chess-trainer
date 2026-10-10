@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Chess, type Move } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { useEngine } from "@/client/engine/engine-context";
 import { BookOpponentPolicy } from "@/core/engine/opponent-policy";
 import { useBookContinuations } from "./use-book-continuations";
@@ -166,7 +167,7 @@ export function OpeningSparring({
       {active && (
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,420px)_1fr]">
           <div className="mx-auto w-full max-w-[420px]">
-            <Chessboard options={{ id: "opening-sparring-board", position: fen, boardOrientation: playerColor === "w" ? "white" : "black", onPieceDrop, canDragPiece }} />
+            <Chessboard options={{ ...ESPORT_BOARD_OPTIONS, id: "opening-sparring-board", position: fen, boardOrientation: playerColor === "w" ? "white" : "black", onPieceDrop, canDragPiece }} />
           </div>
           <div className="flex flex-col justify-center gap-3 text-sm">
             <p className="font-medium text-foreground">{openingName}</p>

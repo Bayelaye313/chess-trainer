@@ -39,6 +39,25 @@ describe("parseMoveTree", () => {
     expect(g6.arrows).toEqual([{ from: "c4", to: "d5", color: "green" }]);
   });
 
+  it("[%txt] fournit le commentaire et gèle le nœud ; [%eval] et [%evalbar] alimentent la barre d'évaluation", () => {
+    const root = parseMoveTree(
+      '1. e4 { [%txt "Le pion prend le centre."] [%eval 0.4] [%csl Ge4] } e5 { Symétrie. [%eval -0.1] [%evalbar off] } 2. Nf3 { [%eval +2.5] }',
+    );
+    const [e4, e5, nf3] = mainLine(root);
+    expect(e4.comment).toBe("Le pion prend le centre.");
+    expect(e4.freeze).toBe(true);
+    expect(e4.evaluationScore).toBe(0.4);
+    expect(e4.showEvalBar).toBe(true);
+    expect(e4.highlights).toEqual([{ square: "e4", color: "green" }]);
+    expect(e5.comment).toBe("Symétrie.");
+    expect(e5.freeze).toBe(false);
+    expect(e5.evaluationScore).toBe(-0.1);
+    expect(e5.showEvalBar).toBe(false);
+    expect(nf3.evaluationScore).toBe(2.5);
+    expect(nf3.comment).toBeNull();
+    expect(root.showEvalBar).toBe(false);
+  });
+
   it("lève une erreur explicite sur un coup illégal, jamais un arbre corrompu en silence", () => {
     expect(() => parseMoveTree("1. e4 e5 2. Qh5 g6 3. Qxf7")).toThrow(/illégal/);
   });

@@ -23,6 +23,7 @@
  */
 import { useEngine } from "@/client/engine/engine-context";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { useExploreMode } from "@/client/features/board/use-explore-mode";
 import { EvaluationBar } from "@/client/features/board/evaluation-bar";
 import { ExplorePanel } from "@/client/features/board/explore-panel";
@@ -130,7 +131,7 @@ export function OpeningMistakeExplorer({
           <EvaluationBar score={explore.isExploring && explore.evaluation.status === "ready" ? { cp: explore.evaluation.evaluated.cpAfter, mate: explore.evaluation.evaluated.mateAfter } : null} />
           <div className="min-w-0 flex-1">
             <Chessboard
-              options={{
+              options={{ ...ESPORT_BOARD_OPTIONS,
                 id: "opening-mistake-explorer-board",
                 position: explore.fen,
                 boardOrientation: deviation.playerColor === "w" ? "white" : "black",

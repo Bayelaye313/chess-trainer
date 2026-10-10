@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
 import type { BankPuzzle } from "@/server/actions/puzzle-bank";
 
@@ -97,7 +98,7 @@ export function BankPuzzleBoard({ puzzle, onNext }: { puzzle: BankPuzzle; onNext
     <div className="rounded-lg border border-border bg-surface p-5">
       <div className="mx-auto max-w-[480px]">
         <Chessboard
-          options={{
+          options={{ ...ESPORT_BOARD_OPTIONS,
             id: "bank-puzzle-board",
             position: fen,
             boardOrientation: playerColor === "w" ? "white" : "black",

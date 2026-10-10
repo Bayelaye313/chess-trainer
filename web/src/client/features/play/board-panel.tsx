@@ -1,6 +1,7 @@
 "use client";
 
 import { Chessboard, type ChessboardOptions } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
 import { describeGameResult, TERMINATION_LABEL } from "@/lib/labels";
 import type { PlayStatus } from "./use-play-game";
@@ -50,7 +51,7 @@ export function BoardPanel({
     <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
       <div className="mx-auto max-w-[520px] overflow-hidden rounded-lg border-2 border-border/70">
         <Chessboard
-          options={{
+          options={{ ...ESPORT_BOARD_OPTIONS,
             id: "play-board",
             position: fen,
             boardOrientation: playerColor === "w" ? "white" : "black",

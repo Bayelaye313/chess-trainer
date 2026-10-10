@@ -36,6 +36,8 @@ import type { EvalScore } from "./evaluation-bar";
 import { OPPONENT_MOVE_ANIMATION_MS } from "./move-animation";
 
 const OPPONENT_REPLY_DELAY_MS = 500;
+/** Pause avant de jouer le coup adverse d'introduction — le temps de voir la position d'avant. */
+const SETUP_MOVE_DELAY_MS = 450;
 /** Même ordre de grandeur que le reste de l'appli (jauge). */
 const BASELINE_ANALYSIS_DEPTH = 16;
 /** Même ordre de grandeur que le Mode Exploration (`use-explore-mode.ts`). */
@@ -43,6 +45,24 @@ const HOVER_ANALYSIS_DEPTH = 16;
 
 function turnOf(fen: string): "w" | "b" {
   return fen.split(" ")[1] === "b" ? "b" : "w";
+}
+
+/**
+ * Position de départ de l'introduction animée : la position AVANT le coup
+ * adverse (`setupMove.fenBefore`), seulement si ce coup y est légal et mène
+ * bien à `puzzle.fenBefore` — sinon `null` et le puzzle s'ouvre comme avant,
+ * directement sur sa position.
+ */
+function introStartFen(puzzle: SolvablePuzzle): string | null {
+  const setup = puzzle.setupMove;
+  if (!setup?.fenBefore) return null;
+  try {
+    const replay = new Chess(setup.fenBefore);
+    replay.move(moveInputFromUci(setup.uci));
+    return replay.fen().split(" ")[0] === puzzle.fenBefore.split(" ")[0] ? setup.fenBefore : null;
+  } catch {
+    return null;
+  }
 }
 
 function markOf(move: Move, uci: string, quality: PlyMark["quality"] = null): PlyMark {
@@ -60,7 +80,12 @@ export function usePuzzleSolver({
   // Une seule instance, mutable, jamais remplacée pour ce puzzle — recréée à
   // neuf par le parent via `key={puzzle.id}` (voir PuzzleSession).
   const [chess] = useState(() => new Chess(puzzle.fenBefore));
-  const [fen, setFen] = useState(puzzle.fenBefore);
+  // Introduction : l'échiquier s'ouvre sur la position d'AVANT le coup
+  // adverse, puis la pièce adverse glisse jusqu'à sa case — le dernier coup se
+  // VOIT jouer au lieu d'être déjà figé. Le joueur ne peut rien toucher avant.
+  const [introFen] = useState(() => introStartFen(puzzle));
+  const [fen, setFen] = useState(introFen ?? puzzle.fenBefore);
+  const [introPlaying, setIntroPlaying] = useState(introFen !== null);
   const [state, dispatch] = useReducer(applyPuzzleEvent, puzzle.solution.length, initialSolveState);
   // Position juste AVANT le dernier coup DU JOUEUR accepté (jamais une réponse
   // adverse rejouée automatiquement) — alimente `buildProgressCoachMessage`
@@ -83,6 +108,22 @@ export function usePuzzleSolver({
   const opponentStatusTimerRef = useRef<number | null>(null);
 
   const playerColor: "w" | "b" = turnOf(puzzle.fenBefore);
+
+  // 0. Coup adverse d'introduction — même schéma en deux phases que la
+  //    réponse adverse ci-dessous : la pièce part, puis le statut (surbrillance,
+  //    droit de jouer) suit une fois l'animation terminée.
+  useEffect(() => {
+    if (!introPlaying) return;
+    let endTimer: number | null = null;
+    const timer = window.setTimeout(() => {
+      setFen(puzzle.fenBefore);
+      endTimer = window.setTimeout(() => setIntroPlaying(false), OPPONENT_MOVE_ANIMATION_MS);
+    }, SETUP_MOVE_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      if (endTimer !== null) window.clearTimeout(endTimer);
+    };
+  }, [introPlaying, puzzle.fenBefore]);
 
   // 1. Rejoue automatiquement le prochain coup adverse enregistré — en DEUX
   //    phases (feuille de route Zone 2, micro-animations) : le coup part à
@@ -150,7 +191,7 @@ export function usePuzzleSolver({
   // ne fait rien — c'est `activeHoverArrows` ci-dessous, une valeur dérivée,
   // qui masque les flèches immédiatement plutôt que de vider `hoverArrows`
   // dans le corps de l'effet.
-  const hoverEnabled = hovering && isHoverArrowsEnabled(state.phase);
+  const hoverEnabled = hovering && !introPlaying && isHoverArrowsEnabled(state.phase);
   useEffect(() => {
     if (!hoverEnabled || !engine) return;
     const requestId = ++hoverRequestIdRef.current;
@@ -179,7 +220,7 @@ export function usePuzzleSolver({
 
   const onPieceDrop = useCallback(
     ({ sourceSquare, targetSquare }: PieceDropHandlerArgs): boolean => {
-      if (state.phase !== "solving" || !targetSquare) return false;
+      if (introPlaying || state.phase !== "solving" || !targetSquare) return false;
       const fenBefore = chess.fen();
       let move: Move;
       try {
@@ -213,7 +254,7 @@ export function usePuzzleSolver({
       });
       return matchesSolution;
     },
-    [chess, state.phase, state.moveIndex, puzzle.solution, playerColor],
+    [chess, introPlaying, state.phase, state.moveIndex, puzzle.solution, playerColor],
   );
 
   const requestReveal = useCallback(() => {
@@ -221,8 +262,8 @@ export function usePuzzleSolver({
   }, [puzzle.solution.length, state.moveIndex]);
 
   const canDragPiece = useCallback(
-    ({ piece }: PieceHandlerArgs): boolean => state.phase === "solving" && piece.pieceType.startsWith(playerColor),
-    [state.phase, playerColor],
+    ({ piece }: PieceHandlerArgs): boolean => !introPlaying && state.phase === "solving" && piece.pieceType.startsWith(playerColor),
+    [introPlaying, state.phase, playerColor],
   );
 
   const onMouseOverSquare = useCallback(
@@ -240,6 +281,8 @@ export function usePuzzleSolver({
   return {
     phase: state.phase,
     fen,
+    /** Vrai pendant l'animation du coup adverse d'introduction — surbrillance et coach attendent qu'elle finisse. */
+    introPlaying,
     lastMove: state.lastMove,
     lastPlayerTransition,
     /** Plis de `puzzle.solution` restants après le dernier coup consommé — voir `buildProgressCoachMessage`. */

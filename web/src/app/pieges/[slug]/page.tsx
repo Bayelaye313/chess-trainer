@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { EsportCanvas } from "@/components/ui/esport-page";
 import { PiegeDrillScreen } from "@/client/features/openings/piege-drill-screen";
 import { DIFFICULTY_ORDER } from "@/core/curriculum/traps";
 import { listAllTraps } from "@/server/queries/traps";
@@ -16,5 +17,9 @@ export default async function PiegeDetailPage({ params }: { params: Promise<{ sl
     .filter((candidate) => candidate.family === trap.family && candidate.gambit === trap.gambit)
     .sort((a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty));
 
-  return <PiegeDrillScreen trap={trap} seriesTraps={seriesTraps} />;
+  return (
+    <EsportCanvas detail>
+      <PiegeDrillScreen trap={trap} seriesTraps={seriesTraps} />
+    </EsportCanvas>
+  );
 }

@@ -35,6 +35,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS, LICHESS_BRUSH, SquareCircle } from "@/client/features/board/board-theme";
 import { useEngine } from "@/client/engine/engine-context";
 import { kingInCheckSquare } from "@/core/chess/check";
 import type { MoveQuality } from "@/core/chess/types";
@@ -132,7 +133,7 @@ export function PuzzleBoard({
   // le texte redevient celui de la progression habituelle, jamais les deux à
   // la fois. Retour utilisateur : « on résout un puzzle sans savoir c'est
   // quoi la faiblesse ou l'opportunité présentée » (voir `pre-solve-coach.ts`).
-  const showPreSolveCoach = solver.phase === "solving" && !solver.lastMove;
+  const showPreSolveCoach = solver.phase === "solving" && !solver.lastMove && !solver.introPlaying;
   const preSolveMessage = showPreSolveCoach
     ? buildPreSolveCoachMessage({
         setupSan: puzzle.setupMove?.san ?? null,
@@ -167,7 +168,7 @@ export function PuzzleBoard({
    * Conseil PRATIQUE du panneau de feedback unique (feuille de route Zone 2) :
    * la qualification de l'erreur commise (« Tu laisses une pièce en prise… » +
    * essais restants) PRIORITAIRE, sinon les aides de reconnaissance (cases
-   * ambrées). Cette ligne vit dans le MÊME cadre que l'évaluation du Coach
+   * cerclées). Cette ligne vit dans le MÊME cadre que l'évaluation du Coach
    * (🎓) rendu plus bas — plus de deux sections parallèles qui se parasitent.
    */
   const practicalHint =
@@ -179,7 +180,7 @@ export function PuzzleBoard({
       : showPreSolveCoach && recognitionAids
         ? {
             kind: "info" as const,
-            text: `${recognitionAids.text} Les cases ambrées indiquent des cibles à examiner, pas la solution.`,
+            text: `${recognitionAids.text} Les cases cerclées indiquent des cibles à examiner, pas la solution.`,
           }
         : null;
 
@@ -236,7 +237,7 @@ export function PuzzleBoard({
     highlightColor = viewedPly ? (isPlayerPly ? qualitySquareColor("best") : OPPONENT_MOVE_SQUARE_COLOR) : null;
     badgeSquare = viewedPly && isPlayerPly ? highlightTo! : null;
     badgeQuality = viewedPly && isPlayerPly ? "best" : null;
-  } else if (!solver.lastMove && puzzle.setupMove) {
+  } else if (!solver.lastMove && puzzle.setupMove && !solver.introPlaying) {
     // Avant le premier coup du joueur : montre le coup adverse qui a créé la
     // position, plutôt qu'un échiquier nu sans aucun repère (retour
     // utilisateur : « on vient direct jouer sans savoir le dernier coup de
@@ -256,11 +257,9 @@ export function PuzzleBoard({
     highlightColor && highlightFrom && highlightTo
       ? { [highlightFrom]: { backgroundColor: highlightColor }, [highlightTo]: { backgroundColor: highlightColor } }
       : {};
-  if (recognitionAids) {
-    for (const square of recognitionAids.targetSquares) {
-      boardSquareStyles[square] = { backgroundColor: "rgba(244, 180, 0, 0.32)" };
-    }
-  }
+  // Aides de reconnaissance : des CERCLES façon Lichess autour des cibles —
+  // plus de cases ambrées pleines qui masquaient la surbrillance du dernier coup.
+  const circledSquares = new Set(recognitionAids?.targetSquares ?? []);
 
   // Roi en échec/mat : surbrillance AUTOMATIQUE, indépendante de tout ce qui
   // précède — retour utilisateur : « certains puzzles où notre roi est en
@@ -280,6 +279,7 @@ export function PuzzleBoard({
       }}
     >
       {children}
+      {circledSquares.has(square) && <SquareCircle color={LICHESS_BRUSH.green} />}
       {badgeQuality && square === badgeSquare && (
         <span className="pointer-events-none absolute right-0.5 top-0.5">
           <QualityBadge quality={badgeQuality} />
@@ -351,7 +351,7 @@ export function PuzzleBoard({
         <EvaluationBar score={boardScore} />
         <div className="min-w-0 flex-1">
           <Chessboard
-            options={{
+            options={{ ...ESPORT_BOARD_OPTIONS,
               id: "puzzle-review-board",
               position: boardFen,
               boardOrientation: solver.playerColor === "w" ? "white" : "black",

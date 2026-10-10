@@ -23,6 +23,7 @@
 import { useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { uciOf } from "@/core/analysis/evaluate-move";
 import { qualitySquareColor } from "@/lib/labels";
 
@@ -162,7 +163,7 @@ function DrillAttempt({
 
       <div className="mx-auto max-w-[480px]">
         <Chessboard
-          options={{
+          options={{ ...ESPORT_BOARD_OPTIONS,
             id: "mistakes-drill-board",
             position: fen,
             boardOrientation: playerColor === "w" ? "white" : "black",

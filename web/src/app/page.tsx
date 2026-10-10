@@ -1,3 +1,4 @@
+import { EsportCanvas, EsportHeader } from "@/components/ui/esport-page";
 import { PlayScreen } from "@/client/features/play/play-screen";
 import { LinkedAccounts } from "@/client/features/home/linked-accounts";
 import { GamesSearchList } from "@/client/features/home/games-search-list";
@@ -34,14 +35,12 @@ export default async function HomePage({
   const dueTotal = decks.reduce((sum, deck) => sum + deck.dueCount + deck.newCount, 0);
 
   return (
+    <EsportCanvas>
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Jouer contre des Bots</h1>
-        <p className="mt-2 text-sm text-foreground-muted">
-          Défie le moteur, lie ton compte Chess.com ou Lichess pour une synchro automatique, et
-          garde un œil sur ta progression.
-        </p>
-      </div>
+      <EsportHeader eyebrow="Arène / 01" title="Défie le moteur.">
+        Joue contre des bots, lie ton compte Chess.com ou Lichess pour une synchro automatique, et
+        garde un œil sur ta progression.
+      </EsportHeader>
 
       <PlayScreen />
 
@@ -61,5 +60,6 @@ export default async function HomePage({
         </div>
       </section>
     </div>
+    </EsportCanvas>
   );
 }

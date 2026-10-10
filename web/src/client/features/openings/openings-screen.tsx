@@ -16,6 +16,7 @@
  */
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { EsportHeader } from "@/components/ui/esport-page";
 import { MASTERY_STARS_FULL } from "@/core/curriculum/opening-mastery";
 import type { OpeningSide } from "@/core/curriculum/openings";
 import type { OpeningMasterySummary, OpeningReviewStatus } from "@/server/queries/opening-progress";
@@ -87,16 +88,10 @@ export function OpeningsScreen({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Ouvertures</h1>
-          <p className="mt-2 max-w-prose text-sm text-foreground-muted">
-            Explore {openings.length} ouvertures classiques : rejoue leur ligne de référence coup par coup, ou dévie
-            librement pour voir jusqu&apos;où la théorie te suit.
-          </p>
-        </div>
-
-        {dueReviews.length > 0 && (
+      <EsportHeader
+        eyebrow="Répertoire / 05"
+        title="Prends l'avantage dès le premier coup."
+        aside={dueReviews.length > 0 && (
           <button
             type="button"
             onClick={startTodaysReviews}
@@ -106,7 +101,10 @@ export function OpeningsScreen({
             <span className="ml-1.5 rounded-full bg-accent-foreground/20 px-1.5 py-0.5 text-xs">{dueReviews.length}</span>
           </button>
         )}
-      </div>
+      >
+        Explore {openings.length} ouvertures classiques : rejoue leur ligne de référence coup par coup, ou dévie
+        librement pour voir jusqu&apos;où la théorie te suit.
+      </EsportHeader>
 
       {/* Progression Totale du répertoire, façon Lotus Chess — même
           dénominateur que l'intro ci-dessus (le catalogue entier), pas

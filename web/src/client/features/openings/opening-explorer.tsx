@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { OPENING_COURSE_IDS } from "@/core/curriculum/opening-course-ids";
 import { findVariationByKey, MAIN_LINE_VARIATION_KEY } from "@/core/curriculum/opening-variation-key";
 import type { OpeningLine } from "@/core/curriculum/openings";
 import type { RepertoireDeviation } from "@/server/queries/opening-mistakes";
@@ -113,6 +114,14 @@ export function OpeningExplorer({
           </span>
         </div>
         <p className="mt-2 max-w-prose text-sm text-foreground-muted">{opening.description}</p>
+        {OPENING_COURSE_IDS.has(opening.id) && (
+          <Link
+            href={`/ouvertures/${opening.id}/cours`}
+            className="mt-3 inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+          >
+            📖 Cours commenté coup par coup
+          </Link>
+        )}
       </div>
 
       <StudyProgressBar variations={variations} accuracyByKey={accuracyByKey} />

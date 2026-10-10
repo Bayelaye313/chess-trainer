@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
+import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { useEngine } from "@/client/engine/engine-context";
 import { buildCoachMessage, buildGameCoachFindings } from "@/core/analysis/coach-narrative";
 import { buildLiveCommentaryFeed } from "@/core/analysis/live-commentary";
@@ -392,7 +393,7 @@ export function GameReviewScreen({
                 <EvaluationBar score={currentScore} />
                 <div className="min-w-0 flex-1">
                   <Chessboard
-                    options={{
+                    options={{ ...ESPORT_BOARD_OPTIONS,
                       id: "review-board",
                       position: explore.fen,
                       boardOrientation: game.playerColor === "w" ? "white" : "black",

@@ -1,3 +1,4 @@
+import { EsportCanvas, EsportHeader } from "@/components/ui/esport-page";
 import { ProgressOverview } from "@/client/features/games/progress-overview";
 import { QualitySummaryTable } from "@/client/features/reports/quality-summary-table";
 import { getMoveQualityTally, getPlayerProgress } from "@/server/queries/progress";
@@ -11,18 +12,17 @@ export default async function RapportPage() {
   const [overview, qualityTally] = await Promise.all([getPlayerProgress(), getMoveQualityTally()]);
 
   return (
+    <EsportCanvas>
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Rapport</h1>
-        <p className="mt-2 text-sm text-foreground-muted">
-          Précision par phase de jeu, fourchettes et clouages trouvés contre manqués, performance par ouverture,
-          pièces laissées en prise. Tout s&apos;agrège depuis la table des coups analysés.
-        </p>
-      </div>
+      <EsportHeader eyebrow="Rapport de performance / 02" title="Lis ton propre jeu.">
+        Précision par phase de jeu, fourchettes et clouages trouvés contre manqués, performance par ouverture,
+        pièces laissées en prise. Tout s&apos;agrège depuis la table des coups analysés.
+      </EsportHeader>
 
       <ProgressOverview overview={overview} />
 
       <QualitySummaryTable tally={qualityTally} />
     </div>
+    </EsportCanvas>
   );
 }

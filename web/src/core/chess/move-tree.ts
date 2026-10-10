@@ -57,6 +57,26 @@ export interface ChessMoveNode {
   tip: string | null;
   arrows: readonly CourseArrow[];
   highlights: readonly CourseHighlight[];
+  /**
+   * Évaluation de la position APRÈS ce coup, en pions et point de vue Blancs
+   * (`0.4`, `-2.5`), posée par l'auteur avec `[%eval]` — `null` sans balise.
+   * La barre d'évaluation du lecteur l'affiche tout de suite, sans attendre
+   * le moteur (voir `showEvalBar`).
+   */
+  evaluationScore: number | null;
+  /**
+   * `true` quand la barre d'évaluation doit montrer `evaluationScore` sur ce
+   * nœud : par défaut dès qu'un `[%eval]` est posé ; `[%evalbar off]` le coupe
+   * (position où le chiffre donnerait la réponse d'un exercice).
+   */
+  showEvalBar: boolean;
+  /**
+   * Balise `[%txt "…"]` : le commentaire doit être LU avant que le jeu
+   * reprenne. En mode « Jouer les coups », le lecteur ne joue pas la réponse
+   * adverse tant que l'utilisateur n'a pas cliqué « Suivant » ou appuyé sur
+   * Espace (voir `course-tree-viewer.tsx`).
+   */
+  freeze: boolean;
   /** Suggestion moteur affichée en permanence SUR ce nœud (le coup qu'on s'apprête à jouer depuis ici) — voir le docstring de `EngineSuggestion`. */
   engineSuggestion: EngineSuggestion | null;
   /** `children[0]` = ligne principale, `children[1..]` = variantes (RAV) — voir le docstring du fichier. */
@@ -69,7 +89,10 @@ const RESULT_RE = /^(1-0|0-1|1\/2-1\/2|\*)$/;
 /** Convention Lichess : `R`=rouge, `G`=vert, `Y`=jaune, `B`=bleu — seuls rouge et vert ont un équivalent dans `CourseArrow`/`CourseHighlight` (`core/curriculum/course-lesson.ts`), jaune/bleu retombent sur vert plutôt que d'être perdus. */
 const CSL_RE = /\[%csl\s+([^\]]+)\]/gi;
 const CAL_RE = /\[%cal\s+([^\]]+)\]/gi;
-const EVAL_RE = /\[%eval\s+(#-?\d+|-?\d+(?:\.\d+)?)\]/i;
+const EVAL_RE = /\[%eval\s+(#-?\d+|[+-]?\d+(?:\.\d+)?)\]/i;
+const EVALBAR_RE = /\[%evalbar\s+(on|off)\]/i;
+/** `[%txt "…"]` : le texte entre guillemets est le commentaire, et sa présence gèle le jeu (voir `ChessMoveNode.freeze`). */
+const TXT_RE = /\[%txt\s+"([\s\S]*?)"\]/gi;
 
 function annotationColor(code: string): "green" | "red" {
   return code === "R" ? "red" : "green";
@@ -109,7 +132,7 @@ export function splitCoachTip(text: string): { comment: string | null; tip: stri
   return { comment: before.length > 0 ? before : null, tip: tip.length > 0 ? tip : null };
 }
 
-/** Extrait `[%csl]`/`[%cal]`/`[%eval]` d'un texte de commentaire brut et renvoie le texte NETTOYÉ de ces balises (jamais affiché tel quel à l'utilisateur — voir `course-tree.ts`, qui n'affiche que le reste en prose). */
+/** Extrait `[%csl]`/`[%cal]`/`[%eval]`/`[%evalbar]`/`[%txt]` d'un texte de commentaire brut et renvoie le texte NETTOYÉ de ces balises (jamais affiché tel quel à l'utilisateur — voir `course-tree.ts`, qui n'affiche que le reste en prose). */
 function parseAnnotatedComment(raw: string): {
   text: string | null;
   tip: string | null;
@@ -117,6 +140,8 @@ function parseAnnotatedComment(raw: string): {
   highlights: CourseHighlight[];
   evalCp: number | null;
   evalMate: number | null;
+  evalBar: boolean | null;
+  freeze: boolean;
 } {
   const highlights: CourseHighlight[] = [];
   const arrows: CourseArrow[] = [];
@@ -145,9 +170,19 @@ function parseAnnotatedComment(raw: string): {
     else evalCp = Math.round(Number.parseFloat(evalMatch[1]) * 100);
   }
 
-  const cleaned = raw.replace(CSL_RE, "").replace(CAL_RE, "").replace(EVAL_RE, "").trim();
+  const evalBarMatch = raw.match(EVALBAR_RE);
+  const evalBar = evalBarMatch ? evalBarMatch[1].toLowerCase() === "on" : null;
+  const freeze = raw.search(TXT_RE) !== -1;
+
+  const cleaned = raw
+    .replace(CSL_RE, "")
+    .replace(CAL_RE, "")
+    .replace(EVAL_RE, "")
+    .replace(EVALBAR_RE, "")
+    .replace(TXT_RE, (_, text: string) => text.trim())
+    .trim();
   const { comment, tip } = splitCoachTip(cleaned);
-  return { text: comment, tip, arrows, highlights, evalCp, evalMate };
+  return { text: comment, tip, arrows, highlights, evalCp, evalMate, evalBar, freeze };
 }
 
 /**
@@ -175,7 +210,22 @@ function tokenize(pgn: string): string[] {
 }
 
 function makeRoot(startFen: string): ChessMoveNode {
-  return { id: "0", ply: 0, san: null, uci: null, fen: startFen, comment: null, tip: null, arrows: [], highlights: [], engineSuggestion: null, children: [] };
+  return {
+    id: "0",
+    ply: 0,
+    san: null,
+    uci: null,
+    fen: startFen,
+    comment: null,
+    tip: null,
+    arrows: [],
+    highlights: [],
+    evaluationScore: null,
+    showEvalBar: false,
+    freeze: false,
+    engineSuggestion: null,
+    children: [],
+  };
 }
 
 interface Cursor {
@@ -218,6 +268,12 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       if (currentNode.tip === null && parsed.tip) currentNode.tip = parsed.tip;
       if (parsed.arrows.length > 0) currentNode.arrows = [...currentNode.arrows, ...parsed.arrows];
       if (parsed.highlights.length > 0) currentNode.highlights = [...currentNode.highlights, ...parsed.highlights];
+      if (parsed.freeze) currentNode.freeze = true;
+      if (parsed.evalCp !== null && currentNode.evaluationScore === null) {
+        currentNode.evaluationScore = parsed.evalCp / 100;
+        currentNode.showEvalBar = true;
+      }
+      if (parsed.evalBar !== null) currentNode.showEvalBar = parsed.evalBar && currentNode.evaluationScore !== null;
       if ((parsed.evalCp !== null || parsed.evalMate !== null) && currentNode.engineSuggestion === null && currentNode.san !== null) {
         // L'éval porte sur LE COUP QUI VIENT D'ÊTRE JOUÉ (`currentNode`) — elle décrit la
         // qualité de ce choix, pas une suggestion pour le coup SUIVANT. Rien à poser ici :
@@ -256,6 +312,9 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       tip: null,
       arrows: [],
       highlights: [],
+      evaluationScore: null,
+      showEvalBar: false,
+      freeze: false,
       engineSuggestion: null,
       children: [],
     };

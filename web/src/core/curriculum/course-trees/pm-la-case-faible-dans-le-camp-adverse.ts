@@ -6,10 +6,14 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * — refonte du 2026-10-10 : chaque coup joué porte son explication.
  *
  * Sources des POSITIONS et des COUPS (jamais de leur prose, réécrite ici) :
- *  - chapitres 1 à 6 : étude Lichess « Weak Squares: Reassess your chess »
- *    (notes de lecture d'un utilisateur sur le livre de Jeremy Silman) ;
- *  - chapitre 7 : Silman – McCambridge, même étude ;
- *  - chapitres 8 et 9 : Mattison – Nimzowitsch 1929 et Domenech – Flohr 1935,
+ *  - chapitres 1-3, 5, 6 et 8 : étude Lichess « Weak Squares: Reassess your
+ *    chess » (notes de lecture d'un utilisateur sur le livre de Jeremy Silman) ;
+ *  - chapitres 4, 7, 9 et 10 (ajoutés le 2026-10-10) : étude Lichess « Weak
+ *    Squares » de MasterHinds (https://lichess.org/study/V6RPuBKa). Quand
+ *    Stockfish désapprouve la ligne de l'étude, le meilleur coup devient la
+ *    ligne principale et la ligne de l'étude la variante fautive ;
+ *  - chapitre 11 : Silman – McCambridge, étude « Reassess your chess » ;
+ *  - chapitres 12 et 13 : Mattison – Nimzowitsch 1929 et Domenech – Flohr 1935,
  *    coups relevés dans l'étude « 62 The Most Instructive Games of Chess ever
  *    Played » (https://lichess.org/study/w2JcfP5K) via
  *    `PILOT_pm-la-case-faible-dans-le-camp-adverse.pgn`.
@@ -76,6 +80,28 @@ PRO TIP : avant de déclarer une case faible, vérifie les pions des colonnes VO
 PRO TIP : quand l'adversaire avance un pion à côté d'un de tes pions, demande-toi si la prise en passant peut libérer une case forte pour tes pièces. [%csl Gd5][%cal Gc3d5,Ge4d5] } *`,
     ),
     chapter(
+      "Position symétrique : qui a la meilleure case ?",
+      "r1r3k1/1q3pp1/pp2p2p/2n5/8/4PN2/PP2QPPP/2R2RK1 b - - 0 1",
+      `{ Matériel égal, structures presque identiques : aucun camp n'a plus de pion c ni de pion d. Conséquence, chacun a une case faible devant son pion e : d3 pour les Blancs (le pion e est déjà en e3), d6 pour les Noirs (le pion e est en e6). La différence est ailleurs : les pièces noires visent DÉJÀ la case faible blanche — le cavalier c5 touche d3 et e4, la dame b7 vise e4 par la grande diagonale — alors qu'aucune pièce blanche ne regarde d6. Stockfish juge la position équilibrée : ce chapitre montre un plan, pas un gain. [%csl Gd3,Ge4,Yd6][%cal Gc5d3,Gc5e4,Gb7e4] }
+1... Rd8 { La tour prend la colonne d, celle qui mène à d3. Stockfish juge 1...Na4 aussi bon : on reste à l'équilibre, c'est l'idée qui compte. [%cal Gd8d3] }
+2. Rfd1 { Les Blancs contestent aussitôt la colonne : la tour attaque la tour d8. }
+2... Qe4 { La dame s'installe en e4, au cœur du camp blanc, et attaque e3 et le cavalier f3. Seul f2-f3 pourrait la chasser, mais ce coup priverait e3 de son défenseur. Stockfish préférait échanger d'abord les tours (2...Rxd1+). }
+3. Kf1 { Le roi se rapproche du centre en vue d'une finale. Stockfish préférait 3.b3. }
+3... e5 { Le plan : ...e4 pour chasser le cavalier f3 et, surtout, pour protéger d3 avec un pion. Stockfish préférait 3...Qb7, mais l'idée est instructive. [%cal Ge5e4,Gc5d3] }
+4. a3 { Les Blancs préparent b2-b4 pour chasser le cavalier c5. Stockfish préférait 4.h3. }
+4... Qf5 { La dame libère la case e4 pour le pion. }
+5. Ne1 { Le cavalier se replie pour surveiller d3 et c2, mais il devient passif. Stockfish préférait 5.Rc3. }
+5... e4 { Le pion s'installe en e4 : il protège désormais d3. La case faible des Blancs est devenue un avant-poste pour le cavalier noir. [%csl Gd3][%cal Ge4d3] }
+6. b4 { Les Blancs chassent le cavalier… mais il a déjà sa case. Stockfish préférait 6.h3 (−0,3 contre −0,7). }
+6... Nd3 { Le cavalier saute sur l'avant-poste, protégé par e4. Il attaque b4, la tour c1, le cavalier e1 et f2. [%csl Gd3][%cal Gd3b4,Gd3c1,Gd3e1,Gd3f2] }
+7. Nxd3 { Les Blancs échangent le cavalier envahisseur (7.Rc4 était un peu plus précis selon Stockfish). }
+7... exd3 { Le pion reprend et s'installe à son tour en d3, où il attaque la dame e2. Plus précis était 7...Rxd3 (−0,7 contre −0,3 selon Stockfish) : le pion d3, isolé et loin de ses bases, pourra devenir une cible. }
+8. Qf3 { La dame s'écarte en attaquant la dame f5 et, par la diagonale libérée, la tour a8. }
+8... Qe5 { La dame évite l'échange et attaque h2. Bilan : la position reste équilibrée selon Stockfish (−0,3), mais c'est le plan noir, bâti sur les cases d3 et e4, qui a dicté toute la séquence.
+
+PRO TIP : dans une position symétrique, compare les cases faibles des deux camps. Celui dont les pièces visent déjà la case faible adverse a le jeu le plus facile — et souvent l'initiative. } *`,
+    ),
+    chapter(
       "Se créer une case forte : la poussée 1...b4!",
       "r4r2/4qp1k/2np2p1/1pp1p2p/4P2P/1PPP1PP1/2Q3B1/1R3RK1 b - - 0 1",
       `{ Le fou blanc g2 est mauvais (bloqué par ses pions), mais le cavalier noir c6 n'a pas non plus de case forte : le pion blanc c3 contrôle à la fois b4 et d4. Comment créer une case pour le cavalier ? [%csl Yd4,Yb4] }
@@ -132,6 +158,50 @@ PRO TIP : pour créer une case forte pour ton cavalier, avance le pion de la col
 PRO TIP : une pièce sur une case forte n'est stable que si l'adversaire ne peut plus y pousser de pion. Pense au pion de la colonne voisine : bloque-le ou rends sa poussée perdante. } *`,
     ),
     chapter(
+      "Échanger le gardien, puis appuyer la case : c6",
+      "r2q1rk1/pb1nbppp/1p2pn2/8/1P6/P4NP1/1B1NPPBP/R2Q1RK1 w - - 0 1",
+      `{ Les Noirs n'ont plus ni pion c ni pion d, et leur pion b est déjà en b6 : plus aucun pion noir ne pourra jamais contrôler c6. Aujourd'hui, seul le fou b7 garde cette case. Le plan blanc tient en deux temps : échanger ce gardien, puis soutenir c6 avec un pion pour en faire un avant-poste. [%csl Yc6][%cal Gb7c6] }
+1. Nd4 { Le cavalier se rapproche de c6 et coupe la diagonale du fou b7, qui n'a plus que l'échange contre le fou g2. Meilleur coup selon Stockfish. [%cal Gd4c6] }
+1... Bxg2 { Les Noirs échangent les fous… }
+2. Kxg2 { …et le gardien de c6 a disparu : plus aucune pièce noire de cases blanches ne pourra la couvrir. }
+2... Qc7 { La dame prend la colonne c et surveille c6. }
+3. Qb3 { La dame se développe et vise e6. Stockfish préférait 3.b5 tout de suite. }
+3... Rfc8 { La tour soutient la dame sur la colonne c. }
+4. Rfc1 { Les Blancs contestent la colonne : la tour fait face à la dame c7. }
+4... Qb7+ { La dame quitte la colonne avec échec, sur la grande diagonale. }
+5. Qf3 { La dame s'interpose et propose l'échange. }
+(5. Kg1 { Le roi pouvait aussi reculer : même évaluation selon Stockfish. })
+5... Nd5 { Les Noirs refusent l'échange ; le cavalier attaque b4. Stockfish préférait 5...Qxf3+. }
+6. e4 { Le pion chasse le cavalier de d5. }
+6... N5f6 { Le cavalier recule et attaque e4. }
+7. b5! { Le coup clé : le pion b5 protège c6. La case n'est plus seulement hors de portée des pions noirs, elle est soutenue par un pion blanc : c'est un avant-poste parfait pour le cavalier d4. Meilleur coup selon Stockfish. [%csl Gc6][%cal Gb5c6,Gd4c6] }
+7... a6? { Les Noirs veulent ouvrir la colonne a, mais le cavalier va s'installer en c6 avec gain de temps. Stockfish préférait 7...Ne5 (+0,4 contre +1,1). }
+8. Nc6 { Le cavalier s'installe sur l'avant-poste et attaque le fou e7. [%csl Gc6] }
+(8. bxa6? { Prendre le pion serait une erreur : } 8... Rxa6 { la tour reprend, le pion b5 a disparu et c6 n'a plus de soutien. Égalité selon Stockfish. })
+8... Bf8 { Le fou recule. }
+9. a4 { Le pion vient protéger b5 : si ...axb5, axb5 et le soutien de c6 reste en place. }
+9... axb5 { Les Noirs prennent quand même… }
+10. axb5 { …le pion a reprend en b5 : c6 garde son pion de soutien, et la colonne a s'est ouverte. }
+10... Rxa1 { Les Noirs échangent les tours sur la colonne a. }
+11. Rxa1 { La tour reprend et tient la colonne a. }
+11... Ra8 { La tour noire conteste la colonne. }
+12. Rd1 { La tour blanche s'écarte vers la colonne d, en direction de d6 et du cavalier d7. }
+12... Ne8? { Une erreur (+1,4 contre +2,3 selon Stockfish) : le cavalier se replie trop passivement. 12...Rc8 s'imposait. }
+13. Nc4 { Le second cavalier blanc approche : il attaque b6 et vise d6. (13.e5 était encore plus fort selon Stockfish.) }
+13... Nc5 { Le cavalier attaque e4. }
+14. e5 { Le pion avance et contrôle d6 et f6 : le cavalier e8 et le fou f8 n'ont plus de bonnes cases. }
+14... Rc8? { La tour quitte la colonne a pour attaquer le cavalier c6 : c'est la faute décisive (+2,4 contre +4,4). }
+15. Ra1! { La tour prend aussitôt la colonne a abandonnée. }
+15... Rc7 { La tour attaque encore c6. }
+16. Ra7! { La tour entre en a7, protégée par le cavalier c6, et attaque la dame b7. [%cal Gc6a7,Ga7b7] }
+16... Qxa7 { La dame prend la tour… }
+(16... Qc8 { Si la dame recule… } 17. Nxb6 { …le cavalier c4 prend b6 et attaque la dame c8 : les Noirs perdent encore du matériel. })
+17. Nxa7 { …et le cavalier c6 la reprend. }
+17... Rxa7 { La tour reprend. Bilan : les Blancs ont donné tour et cavalier contre la dame, le pion b6 va tomber, et Stockfish leur donne un avantage décisif (+5,7). Tout est parti de la case c6.
+
+PRO TIP : pour conquérir une case faible, échange d'abord la pièce qui la garde, puis appuie-la avec un pion. Elle devient alors un avant-poste définitif. } *`,
+    ),
+    chapter(
       "En finale : le roi sur la case faible",
       "r3k2r/5pp1/p1pp4/P6p/1p1pPb2/1B1P1P1P/1PP2P2/R2R2K1 b kq - 0 1",
       `{ En finale, le roi devient une pièce d'attaque. Le pion f3 blanc est faible (doublé avec f2), et la case f4 est un trou dans le camp blanc : aucun pion blanc ne pourra plus jamais la contrôler (pas de pion g, et le pion e est déjà en e4). Plan : amener le roi noir en f4. [%csl Gf4,Rf3] }
@@ -170,6 +240,34 @@ PRO TIP : une pièce sur une case forte n'est stable que si l'adversaire ne peut
 PRO TIP : en finale, une case faible proche des pions adverses est une porte d'entrée pour ton ROI. Fais d'abord de la place (ici le fou a quitté f4), puis avance. } *`,
     ),
     chapter(
+      "Exercice : éliminer le gardien de d5",
+      "2rq1rk1/4bppp/pn1p4/1p2p1P1/4P2P/2N1BP1R/PPPQ4/1K1R4 w - - 0 1",
+      `{ La case d5 est un trou dans le camp noir : il n'y a plus de pion c, et le pion e est déjà en e5. Aujourd'hui, une seule pièce noire la défend : le cavalier b6. Comment les Blancs s'emparent-ils de d5 ? [%csl Yd5][%cal Rb6d5] }
+1. Bxb6! { Le fou s'échange contre le seul défenseur de d5. Les Blancs cèdent leur bon fou, mais le cavalier qui va s'installer en d5 vaudra bien davantage. Meilleur coup selon Stockfish (+2,0). }
+1... Qxb6 { Forcé : sinon les Noirs restent avec une pièce de moins. }
+(1... Qd7 { Si la dame ne reprend pas… } 2. Nd5 { …les Blancs gardent une pièce de plus et s'installent quand même en d5 (+5 selon Stockfish). })
+2. Nd5 { Le cavalier s'installe en d5. Les Noirs n'ont plus de cavalier, et leur fou circule sur les cases noires : plus aucune pièce mineure ne pourra le lui disputer. Il attaque la dame b6 et le fou e7. [%csl Gd5][%cal Gd5b6,Gd5e7] }
+2... Qb7 { La meilleure défense : la dame recule en b7, d'où elle protège encore le fou e7 le long de la 7e rangée. }
+3. Rhh1 { Les Blancs ne se pressent pas : la tour h3 revient vers le centre. Ils gardent un net avantage (+1,9 selon Stockfish). }
+(3. Nxe7+? { L'erreur à éviter : échanger le cavalier dominant contre le mauvais fou noir, bloqué derrière ses pions d6 et e5. } 3... Qxe7 { La dame reprend, la case d5 est vide à nouveau, et l'avantage blanc fond de moitié (+0,9 selon Stockfish). })
+3... Rc4 { La tour s'active sur la 4e rangée : c'est la meilleure défense selon Stockfish, mais le cavalier d5 reste intouchable et les Blancs gardent leur avantage (+1,9).
+
+PRO TIP : le défenseur d'une case faible est souvent une pièce mineure. Échange-la, même contre ton « bon » fou, si ton cavalier peut ensuite prendre sa place — et ne l'échange plus jamais contre une pièce moins utile. } *`,
+    ),
+    chapter(
+      "Exercice : créer le trou f6, puis l'occuper",
+      "r3rnk1/pp4pp/1q1p4/2bPn1BP/4N3/P5N1/1P3PK1/R2Q1R2 w - - 0 1",
+      `{ Les Noirs n'ont plus de pion f : la case f6, à côté de leur roi, n'est plus gardée que par le pion g7. Si ce pion quitte son poste, f6 devient un trou. Comment les Blancs y parviennent-ils ? [%csl Yf6,Yg7] }
+1. h6! { Le pion attaque g7. Quoi que fassent les Noirs, la structure autour de leur roi s'abîme. Meilleur coup selon Stockfish (+2,3). [%cal Gh6g7] }
+1... gxh6 { La meilleure défense : laisser les Blancs prendre en g7 aurait été pire (+3). Mais le pion g a quitté son poste : f6 est désormais un trou. [%csl Gf6] }
+2. Bf6! { Le fou s'installe dans le trou, protégé par le cavalier e4 : aucun pion noir ne pourra jamais l'en chasser. Il attaque le cavalier e5. Meilleur coup selon Stockfish. [%csl Gf6][%cal Gf6e5] }
+(2. Nf6+ { Tentant, mais moins fort : } 2... Kh8 { le roi s'écarte, et le fou g5 reste attaqué par le pion h6. Les Blancs doivent perdre un temps à le mettre à l'abri, et l'avantage tombe à +1,7. })
+2... Nfg6 { Le cavalier f8 vient protéger le cavalier e5 (meilleure défense selon Stockfish). }
+3. Kh1 { Le roi quitte g2 pour éviter ...Nf4+, qui aurait attaqué à la fois le roi et le pion d5. Les Blancs gardent un net avantage (environ +2,7 selon Stockfish).
+
+PRO TIP : quand un seul pion garde une case clé près du roi adverse, attaque ce pion. S'il prend ou s'il avance, la case devient un trou pour tes pièces. } *`,
+    ),
+    chapter(
       "Silman – McCambridge : tout donner pour une case",
       "2kr1b1r/3nq1n1/p2p1pp1/1ppP3p/4P1P1/2N1B1QP/PP3PB1/R4RK1 w - - 0 18",
       `{ Les Blancs ont déjà un net avantage (+2,2 selon Stockfish) : paire de fous, espace central, roi plus sûr. L'expansion noire à l'aile dame (b5, c5) a créé des faiblesses : si le pion c5 disparaît, la case d4 (puis c6) s'offrira aux pièces blanches. [%csl Yd4,Yc6] }
@@ -179,7 +277,7 @@ PRO TIP : en finale, une case faible proche des pions adverses est une porte d'e
 19. Qf3 { La dame se met à l'abri en attaquant f6. }
 19... cxb4 { Les Noirs prennent le pion et attaquent le cavalier c3. }
 20. Nb1 { Le cavalier recule… pour mieux revenir par d2 et b3 vers d4 ou c5. Stockfish préférait 20.a4, encore plus fort. }
-(20. Ne2? { Le retrait naturel vers d4 piège la dame : } 20... Ne5 21. Qf4 g5 22. Qh2 { la dame blanche est enfermée sur h2. })
+(20. Ne2? { Le retrait naturel vers d4 piège la dame : } 20... Ne5 { le cavalier attaque la dame f3… } 21. Qf4 { …qui file en f4… } 21... g5 { …d'où le pion g la chasse encore. } 22. Qh2 { La dame blanche est enfermée sur h2, hors du jeu. })
 20... Ne5 { Le cavalier attaque la dame et le pion g4. }
 21. Qe2 { La dame recule et attaque b5. }
 21... Ne8 { Le cavalier se replie pour défendre c7 et d6. }

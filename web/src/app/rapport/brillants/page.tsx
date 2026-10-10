@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EsportCanvas } from "@/components/ui/esport-page";
 import { HallOfFame } from "@/client/features/reports/hall-of-fame";
 import { listMasterpieces } from "@/server/queries/games";
 
@@ -21,6 +22,7 @@ export default async function BrillantsPage() {
   const masterpieces = await listMasterpieces(30, ["brilliant"]);
 
   return (
+    <EsportCanvas detail>
     <div className="space-y-6">
       <div>
         <Link href="/rapport" className="text-sm text-accent hover:underline">
@@ -34,5 +36,6 @@ export default async function BrillantsPage() {
 
       <HallOfFame masterpieces={masterpieces} />
     </div>
+    </EsportCanvas>
   );
 }

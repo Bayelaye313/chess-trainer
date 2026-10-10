@@ -4,6 +4,7 @@
  * la donnée est chargée par le parent (`ReviewsScreen`), ce composant ne fait
  * qu'afficher et remonter le choix.
  */
+import { EsportHeader } from "@/components/ui/esport-page";
 import type { DeckId } from "@/core/chess/decks";
 import type { DeckOverview } from "@/server/queries/reviews";
 import { DECK_ICON } from "./deck-icon";
@@ -20,12 +21,9 @@ export function DeckDashboard({
 }) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Entraîner</h1>
-        <p className="mt-2 text-sm text-foreground-muted">
-          Sept decks alimentés par tes propres erreurs, en répétition espacée FSRS.
-        </p>
-      </div>
+      <EsportHeader eyebrow="Salle d'entraînement / 03" title="Transforme tes erreurs en réflexes.">
+        Sept decks alimentés par tes propres erreurs, en répétition espacée FSRS.
+      </EsportHeader>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {decks.map((deck) => {

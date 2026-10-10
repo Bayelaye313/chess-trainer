@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { EsportCanvas } from "@/components/ui/esport-page";
 import { GameReviewScreen, type GameDeviation } from "@/client/features/games/game-review-screen";
 import { getAdjacentGameIds, getGameDetail } from "@/server/queries/games";
 import { getGameOpeningDeviation } from "@/server/queries/opening-mistakes";
@@ -37,6 +38,7 @@ export default async function GameDetailPage({
   const adjacent = await getAdjacentGameIds(id);
 
   return (
+    <EsportCanvas detail>
     <GameReviewScreen
       game={detail.game}
       timeline={detail.timeline}
@@ -47,6 +49,7 @@ export default async function GameDetailPage({
       previousGameId={adjacent.previousGameId}
       nextGameId={adjacent.nextGameId}
     />
+    </EsportCanvas>
   );
 }
 
