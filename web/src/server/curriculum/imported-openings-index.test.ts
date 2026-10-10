@@ -1,5 +1,5 @@
 import { Chess } from "chess.js";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { collectNodes, mainLine } from "@/core/chess/pgn-tree";
 import { findOpening, OPENINGS } from "@/core/curriculum/openings";
 import {
@@ -227,6 +227,13 @@ describe("scotch-game : plus aucun merge automatique avec la base Lichess (doubl
 });
 
 describe("getImportedChildren", () => {
+  // Le premier appel construit l'index FEN → coups sur les ~3810 lignes importées
+  // (plusieurs secondes à froid) : coût de mise en place, pas comportement testé —
+  // on le paie ici, avec un délai à sa mesure, plutôt que dans le premier `it`.
+  beforeAll(() => {
+    getImportedChildren("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  }, 60_000);
+
   it("renvoie [] pour une position hors de toute ligne importée", () => {
     const deepMiddlegame = "r2qk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1BN2/PPP2PPP/R2QK2R w KQkq - 4 9";
     expect(getImportedChildren(deepMiddlegame)).toEqual([]);

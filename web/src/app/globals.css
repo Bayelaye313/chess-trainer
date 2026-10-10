@@ -94,6 +94,27 @@ body {
 }
 
 /**
+ * Surface « papier » des textes de cours de l'Académie (annotations, arbre de
+ * notation) : fond clair chaud et texte sombre, pour une lecture prolongée sans
+ * fatigue sur un thème entièrement sombre. Redéfinit localement les jetons :
+ * grâce à `@theme inline`, `text-foreground`, `bg-surface-muted`, etc. suivent
+ * sans toucher aux composants. Seuls les deux jetons de qualité utilisés comme
+ * TEXTE dans ces volets sont assombris ici, pour rester lisibles sur clair.
+ */
+.paper-surface {
+  --foreground: #1f2328;
+  --foreground-muted: #5b5a54;
+  --surface-muted: #ebe8df;
+  --border: #d9d5ca;
+  --accent: #0b6aa2;
+  --accent-foreground: #ffffff;
+  --quality-best: #4d7c0f;
+  --quality-inaccuracy: #a15c07;
+  background: var(--eval-panel);
+  color: var(--foreground);
+}
+
+/**
  * Transitions fluides en CSS pur (pas de Framer Motion : son installation est
  * bloquée par le réseau de cet environnement — voir la note dans
  * `components/ui/nav.tsx`). Deux animations d'entrée réutilisées partout où

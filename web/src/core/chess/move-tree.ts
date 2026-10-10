@@ -86,9 +86,13 @@ function uciOfMove(move: Move): string {
  * pour le premier coup commenté d'un chapitre ; on sépare ce conseil du reste
  * de la prose pour pouvoir l'afficher comme un bloc à part, exactement comme
  * Lichess Study distingue une note d'auteur d'une glose. Insensible à la casse
- * et à l'espacement (`PRO TIP :`, `Pro Tip`, `protip`).
+ * et à l'espacement (`PRO TIP :`, `Pro Tip`, `protip`). Le catalogue qualifie
+ * souvent le marqueur (« PRO TIP de Jesper Hall : », « PRO TIP d'ouverture de
+ * ce module : ») : un qualificatif court qui se termine par « : » est absorbé
+ * avec le marqueur, sinon le conseil affiché commencerait par « de Jesper
+ * Hall : … ».
  */
-const COACH_TIP_RE = /PRO\s*TIP\b\s*:?\s*/i;
+const COACH_TIP_RE = /PRO\s*TIP\b(?:[^:.{}]{0,60}:)?\s*/i;
 
 /**
  * Sépare un commentaire nettoyé en `{ comment, tip }` : le texte qui SUIT le
@@ -97,7 +101,7 @@ const COACH_TIP_RE = /PRO\s*TIP\b\s*:?\s*/i;
  * Aucun marqueur : le commentaire ressort inchangé, `tip` reste `null` — jamais
  * un conseil fabriqué à partir d'une prose qui n'en portait pas.
  */
-function splitCoachTip(text: string): { comment: string | null; tip: string | null } {
+export function splitCoachTip(text: string): { comment: string | null; tip: string | null } {
   const match = text.match(COACH_TIP_RE);
   if (!match || match.index === undefined) return { comment: text.length > 0 ? text : null, tip: null };
   const before = text.slice(0, match.index).trim();
@@ -261,6 +265,18 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
     beforeParent = parentBeforeThisMove;
     cursor.i += 1;
   }
+}
+
+/**
+ * Demi-coups déjà joués AVANT la position `fen` (compteur de coups complets +
+ * camp au trait) — `ply` d'un nœud étant compté depuis la racine de SON arbre,
+ * un chapitre qui démarre au 24e coup doit ajouter ce décalage pour afficher
+ * « 24. Rxd4 » et non « 1. Rxd4 ». 0 pour la position initiale.
+ */
+export function plyOffsetOf(fen: string): number {
+  const fields = fen.split(" ");
+  const fullMove = Number.parseInt(fields[5] ?? "1", 10);
+  return (Number.isFinite(fullMove) && fullMove > 0 ? fullMove - 1 : 0) * 2 + (fields[1] === "b" ? 1 : 0);
 }
 
 /** Position de départ standard — même valeur que `pgn-tree.ts#PGN_TREE_START_FEN`, dupliquée pour ne pas créer de dépendance croisée (voir le docstring du fichier). */

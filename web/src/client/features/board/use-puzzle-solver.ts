@@ -25,6 +25,7 @@ import { classifyWrongMove } from "@/core/chess/coach-hints";
 import {
   applyPuzzleEvent,
   initialSolveState,
+  isAcceptedPlayerMove,
   isHoverArrowsEnabled,
   type PlyMark,
   type PuzzleSolveState,
@@ -187,7 +188,7 @@ export function usePuzzleSolver({
         return false;
       }
       const uci = uciOf(move);
-      const matchesSolution = uci === puzzle.solution[state.moveIndex];
+      const matchesSolution = isAcceptedPlayerMove(puzzle.solution, state.moveIndex, uci, chess.isCheckmate());
       // Nature de l'erreur — calculée AVANT l'annulation, pendant que `chess`
       // reflète encore la position résultant du coup faux (voir
       // `classifyWrongMove`). Sans objet quand le coup est correct : la

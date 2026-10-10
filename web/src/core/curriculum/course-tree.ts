@@ -1,27 +1,23 @@
 import { attachEngineSuggestion, parseMoveTree, type ChessMoveNode, type EngineSuggestion } from "@/core/chess/move-tree";
+import { AVANT_POSTE_DU_CAVALIER } from "./course-trees/pm-l-avant-poste-du-cavalier";
+import { CASE_FAIBLE_DANS_LE_CAMP_ADVERSE } from "./course-trees/pm-la-case-faible-dans-le-camp-adverse";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
- * 2026-09-12 (« rendu asynchrone d'arbre complet identique à 100% au format
- * Lichess Study »). Complète `COURSE_LESSONS` (`course-lesson.ts`, cours à
- * chapitres en ligne SAN plate) plutôt que de le remplacer : `CourseTree`
- * prend le pas sur `CourseLesson` quand un thème porte les deux (voir
- * `client/features/learn/theme-lesson.tsx`), mais ne réécrit RIEN de
- * l'existant — les ~40 cours déjà curatés dans `course-lesson.ts` restent
- * inchangés, zéro régression. Voir `move-tree-viewer.tsx` pour le composant
- * de rendu, `move-tree.ts` pour le parseur et le type `ChessMoveNode`.
+ * 2026-09-12. Les arbres RAV NATIFS : ceux dont la source publie de vraies
+ * variantes. Depuis le 2026-10-09, `CourseTree` est l'unique format
+ * d'affichage de l'Académie — les leçons de `course-lesson.ts` et les thèmes
+ * sans cours rédigé y sont convertis par `course-tree-adapters.ts` ; ce
+ * fichier garde la priorité sur eux. Voir `move-tree-viewer.tsx` pour le
+ * rendu, `move-tree.ts` pour le parseur et le type `ChessMoveNode`.
  *
- * ## Pourquoi seulement 5 cours ici, pas un retrofit des ~40 existants
+ * ## Pourquoi seulement 5 arbres natifs
  *
  * Un `CourseStep` de `course-lesson.ts` a été aplati À L'ÉCRITURE : les
  * embranchements théoriques réels des parties/études sources n'ont jamais
- * été conservés nulle part (voir le docstring de ce fichier). « Appliquer
- * rétroactivement » l'arbre à ces ~40 cours en RÉ-INVENTANT des variantes
- * qu'aucune source ne fournit serait exactement la fabrication de coups que
- * ce dépôt interdit — un cours sans embranchement réel n'est pas un
- * problème à corriger, c'est une source honnête à respecter telle quelle.
- * `CourseLessonViewer` (le lecteur existant) continue donc de servir ces ~40
- * cours sans changement.
+ * été conservés nulle part. Leur ajouter des variantes qu'aucune source ne
+ * fournit serait exactement la fabrication de coups que ce dépôt interdit :
+ * la conversion leur donne donc un arbre à une seule branche par chapitre.
  *
  * Les 5 cours ci-dessous (clôture du Palier Or, modules 21-25) sont
  * construits différemment : chaque partie a été retrouvée sous une forme
@@ -223,6 +219,9 @@ function buildModule25(): ChessMoveNode {
 }
 
 export const COURSE_TREES: Record<string, CourseTree> = {
+  // Refonte « un commentaire par coup » (2026-10-09) — voir `course-trees/`.
+  "pm-l-avant-poste-du-cavalier": AVANT_POSTE_DU_CAVALIER,
+  "pm-la-case-faible-dans-le-camp-adverse": CASE_FAIBLE_DANS_LE_CAMP_ADVERSE,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },

@@ -63,6 +63,19 @@ import "server-only";
  * — c'est le compte réel qui pilote "X/Y thèmes maîtrisés"
  * (`userThemeProgress`), l'orderIndex ne sert qu'à ordonner l'affichage.
  *
+ * ## Fichiers de remplacement (`*.override.json`)
+ *
+ * Un fichier dont le nom se termine par `.override.json` est une sélection
+ * curatée et vérifiée (géométrie du motif rejouée par chess.js, chaque coup du
+ * solveur confirmé par Stockfish — voir le cahier des charges du 2026-10-09,
+ * lot n°1 : sacrifice grec, canon d'Alekhine, mat de l'Opéra). Pour CHAQUE
+ * thème qu'il couvre, il REMPLACE toutes les autres sources : les entrées des
+ * autres fichiers pour ce thème sont écartées (« remplacé(s) » au résumé) et
+ * l'exercice de démonstration `sourceFile: null` de ce thème est supprimé.
+ * Sans ce mécanisme, un fichier généré en masse depuis un tag Lichess plus
+ * large que le motif (ex. `operaMate`, qui accepte un roi maté au centre)
+ * réimporterait à chaque run les positions hors motif qu'on a voulu retirer.
+ *
  * Usage :
  *   npm run db:seed-academy
  *   npm run db:seed-academy -- --only=checkmate-patterns.pgn
@@ -71,7 +84,7 @@ import "server-only";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { count, eq, inArray, max } from "drizzle-orm";
+import { and, count, eq, inArray, isNull, max } from "drizzle-orm";
 import {
   buildAcademyPuzzleFromGame,
   buildAcademyPuzzleFromJsonEntry,
@@ -103,6 +116,8 @@ interface FileResult {
   skipped: number;
   /** Sous-ensemble de `skipped` écarté par le filtre qualité (voir le docstring de fichier), jamais par une erreur de parsing/légalité. */
   qualityFiltered: number;
+  /** Sous-ensemble de `skipped` écarté parce qu'un fichier `*.override.json` couvre son thème. */
+  replaced: number;
 }
 
 /** `[]` si le dossier n'existe pas encore — un dossier d'import absent n'est jamais une erreur, juste « rien à faire ». */
@@ -129,6 +144,11 @@ async function listAcademyFiles(only?: string): Promise<string[]> {
  */
 function isBulkLichessFile(file: string): boolean {
   return file.endsWith("-lichess.json");
+}
+
+/** Voir « Fichiers de remplacement » dans le docstring de fichier. */
+function isOverrideFile(file: string): boolean {
+  return file.endsWith(".override.json");
 }
 
 /**
@@ -218,6 +238,37 @@ async function parseAllFiles(files: readonly string[]): Promise<ParsedFile[]> {
     results.push({ file, found, skipped, drafts });
   }
   return results;
+}
+
+/**
+ * Thèmes couverts par au moins un fichier `*.override.json` du run, et retrait
+ * des entrées des AUTRES fichiers pour ces thèmes — voir « Fichiers de
+ * remplacement » dans le docstring de fichier. Fonction pure sur les fichiers
+ * parsés : ne touche jamais à la base.
+ */
+function applyOverrides(parsedFiles: readonly ParsedFile[]): {
+  files: ParsedFile[];
+  overrideThemeIds: Set<string>;
+  replacedByFile: Map<string, number>;
+} {
+  const overrideThemeIds = new Set<string>();
+  for (const pf of parsedFiles) if (isOverrideFile(pf.file)) for (const draft of pf.drafts) overrideThemeIds.add(draft.themeId);
+
+  const replacedByFile = new Map<string, number>();
+  const files = parsedFiles.map((pf) => {
+    if (isOverrideFile(pf.file)) return pf;
+    const drafts = pf.drafts.filter((draft) => !overrideThemeIds.has(draft.themeId));
+    const replaced = pf.drafts.length - drafts.length;
+    if (replaced > 0) replacedByFile.set(pf.file, replaced);
+    return { ...pf, drafts };
+  });
+  return { files, overrideThemeIds, replacedByFile };
+}
+
+/** Supprime l'exercice de démonstration (`sourceFile: null`) des thèmes remplacés par un `*.override.json`. */
+async function purgeDemoRowsOf(themeIds: ReadonlySet<string>): Promise<void> {
+  if (themeIds.size === 0) return;
+  await db.delete(curriculumPuzzles).where(and(inArray(curriculumPuzzles.themeId, [...themeIds]), isNull(curriculumPuzzles.sourceFile)));
 }
 
 /** Priorité absolue au tag `sacrifice`, puis à l'Elo décroissant — voir le docstring de fichier. Un draft sans métadonnées (PGN/JSON écrit à la main, ou recalculé depuis `tactics.pgn`) obtient le score neutre `0`. */
@@ -403,7 +454,11 @@ function printSummary(results: FileResult[]): void {
   let totalSkipped = 0;
   let totalQualityFiltered = 0;
   for (const r of results) {
-    const qualityNote = r.qualityFiltered > 0 ? ` dont ${r.qualityFiltered} filtré(s) qualité (1 pli ou plafond de 50 dépassé)` : "";
+    const notes = [
+      r.qualityFiltered > 0 ? `${r.qualityFiltered} filtré(s) qualité (1 pli ou plafond de 50 dépassé)` : null,
+      r.replaced > 0 ? `${r.replaced} remplacé(s) par un .override.json` : null,
+    ].filter((note) => note !== null);
+    const qualityNote = notes.length > 0 ? ` dont ${notes.join(", ")}` : "";
     console.log(`  ${r.file} — ${r.built}/${r.found} importé(s)${r.skipped > 0 ? `, ${r.skipped} ignoré(s)${qualityNote}` : ""}`);
     totalBuilt += r.built;
     totalSkipped += r.skipped;
@@ -429,6 +484,7 @@ async function main() {
         "100% hors-ligne, idempotent (purge par fichier source avant réinsertion).",
         "Filtre qualité (thèmes tactiques/motifs de mat, sauf Mat en 1) : rejette les",
         "exercices à 1 pli et plafonne à 50/thème, priorité sacrifice puis Elo.",
+        "Un fichier *.override.json remplace toute autre source pour les thèmes qu'il couvre.",
       ].join("\n"),
     );
     return;
@@ -448,7 +504,11 @@ async function main() {
   // Phase 2 : parser TOUS les fichiers d'abord — le filtre qualité (voir le
   // docstring de fichier) doit voir, PAR THÈME, tout ce que ce run apporte
   // avant de décider quoi garder, jamais fichier par fichier.
-  const parsedFiles = await parseAllFiles(files);
+  // Les `*.override.json` remplacent toute autre source pour leurs thèmes —
+  // y compris l'exercice de démonstration, à retirer AVANT de mesurer le
+  // résidu en base (sinon il amputerait le budget du filtre qualité).
+  const { files: parsedFiles, overrideThemeIds, replacedByFile } = applyOverrides(await parseAllFiles(files));
+  if (!dryRun) await purgeDemoRowsOf(overrideThemeIds);
   // Résidu déjà en base pour les thèmes filtrés qualité (ex. l'exercice de
   // démonstration curaté, `sourceFile: null`, jamais purgé ci-dessus) — mesuré
   // uniquement pour un run réel (la purge de phase 1 doit avoir déjà eu lieu,
@@ -465,8 +525,9 @@ async function main() {
     file: pf.file,
     found: pf.found,
     built: builtByFile.get(pf.file) ?? 0,
-    skipped: pf.skipped + (qualityFilteredByFile.get(pf.file) ?? 0),
+    skipped: pf.skipped + (qualityFilteredByFile.get(pf.file) ?? 0) + (replacedByFile.get(pf.file) ?? 0),
     qualityFiltered: qualityFilteredByFile.get(pf.file) ?? 0,
+    replaced: replacedByFile.get(pf.file) ?? 0,
   }));
 
   printSummary(results);

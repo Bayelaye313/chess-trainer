@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyPuzzleEvent,
   initialSolveState,
+  isAcceptedPlayerMove,
   isHoverArrowsEnabled,
   MAX_PUZZLE_ATTEMPTS,
   type PlyMark,
@@ -254,5 +255,23 @@ describe("isHoverArrowsEnabled", () => {
 
   it.each(Object.keys(expected) as SolvePhase[])("phase '%s'", (phase) => {
     expect(isHoverArrowsEnabled(phase)).toBe(expected[phase]);
+  });
+});
+
+describe("isAcceptedPlayerMove", () => {
+  const solution = ["d1h5", "g8f8", "h5f7"];
+
+  it("accepte toujours le coup exact de la solution", () => {
+    expect(isAcceptedPlayerMove(solution, 0, "d1h5", false)).toBe(true);
+    expect(isAcceptedPlayerMove(solution, 2, "h5f7", true)).toBe(true);
+  });
+
+  it("au dernier pli, accepte tout autre coup qui fait mat (règle Lichess)", () => {
+    expect(isAcceptedPlayerMove(solution, 2, "h5h7", true)).toBe(true);
+    expect(isAcceptedPlayerMove(solution, 2, "h5h7", false)).toBe(false);
+  });
+
+  it("avant le dernier pli, un autre coup est refusé même s'il fait mat", () => {
+    expect(isAcceptedPlayerMove(solution, 0, "d1d8", true)).toBe(false);
   });
 });

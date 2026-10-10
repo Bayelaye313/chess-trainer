@@ -1,63 +1,139 @@
 "use client";
 
 /**
- * Lecteur d'un `CourseTree` (`core/curriculum/course-tree.ts`) — la version
- * arbre-complet façon Lichess Study de `CourseLessonViewer` : navigation
- * LIBRE dans l'arbre (clic sur n'importe quel nœud, y compris une variante
- * jamais jouée dans la vraie partie), pas un défi « devine le coup » à
- * résoudre pli par pli. Réservé aux thèmes qui portent un `COURSE_TREES`
- * (5 au 2026-09-12, clôture du Palier Or) — voir `theme-lesson.tsx`, qui lui
- * donne priorité sur `CourseLessonViewer`/`ThemeDemoBoard` quand présent.
+ * LE lecteur de cours de l'Académie — cahier des charges du 2026-10-09 : un
+ * seul format, l'arbre façon Lichess Study, pour TOUS les thèmes (voir
+ * `core/curriculum/course-tree-adapters.ts` pour l'origine des arbres : RAV
+ * natif, leçon convertie, ou exercices réels du thème).
  *
- * État de navigation géré par `useReducer` (jamais un `setState` dans un
- * `useEffect` pour dériver la position affichée — seule exception,
- * classique et conforme : l'abonnement clavier ci-dessous, qui enregistre un
- * ÉCOUTEUR d'évènement, il n'appelle `dispatch` que lorsqu'une vraie touche
- * est pressée). `←`/`→` suivent le CHEMIN courant (parent / premier enfant
- * du nœud courant, donc la continuation de LA VARIANTE affichée, jamais
- * forcément la ligne principale de la partie) — clic direct sur un nœud de
- * `MoveTreeViewer` pour sauter n'importe où ailleurs dans l'arbre,
- * synchronisation bidirectionnelle immédiate avec l'échiquier.
+ * Disposition calquée sur une étude Lichess : l'échiquier à gauche, à droite
+ * la liste numérotée des chapitres, l'arbre de notation (`MoveTreeViewer`),
+ * puis UN seul volet de feedback (`CoachFeedbackPanel`) — annotation, conseil
+ * de GM et légende de la flèche moteur réunis. Toutes les zones ont une taille
+ * fixe ou une hauteur minimale : changer de nœud ne fait jamais sauter la page.
+ *
+ * Deux modes (voir `course-tree-nav.ts`) : lecture libre (clic, ←/→) et
+ * « Jouer les coups », le mode gamebook de Lichess où le lecteur joue
+ * lui-même la ligne et où les réponses adverses sont jouées pour lui.
+ *
+ * L'état du curseur vit dans `courseTreeNavReducer` (pur, testé). Les effets
+ * du composant n'appellent jamais `setState` dans leur corps : l'un abonne le
+ * clavier, un autre annule la réponse adverse programmée au démontage, et
+ * `useLiveEvaluation` n'écrit qu'à l'arrivée de la réponse du moteur.
  */
-import { useCallback, useEffect, useMemo, useReducer } from "react";
-import { Chessboard } from "react-chessboard";
-import { findNode, pathTo, type ChessMoveNode } from "@/core/chess/move-tree";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
+import { findNode, pathTo, plyOffsetOf, type ChessMoveNode } from "@/core/chess/move-tree";
+import { buildCoachFeedback } from "@/core/curriculum/coach-feedback";
 import type { CourseTree } from "@/core/curriculum/course-tree";
+import { useEngine } from "@/client/engine/engine-context";
+import { EvaluationBar, type EvalScore } from "@/client/features/board/evaluation-bar";
 import { REVEAL_ARROW_COLOR } from "@/lib/labels";
+import { CoachFeedbackPanel } from "./coach-feedback-panel";
+import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, turnOfFen } from "./course-tree-nav";
 import { MoveTreeViewer } from "./move-tree-viewer";
 
 const GREEN = "var(--quality-best)";
 const RED = "var(--quality-blunder)";
+/** Délai avant la réponse adverse automatique en mode jeu — le temps de voir son propre coup arriver. */
+const OPPONENT_REPLY_MS = 450;
 
-interface NavState {
-  chapterIndex: number;
-  currentId: string;
+/** Profondeur de la jauge live — la même que l'analyse pli à pli après un puzzle (`use-post-solve-analysis.ts`). */
+const LIVE_EVAL_DEPTH = 16;
+/** Attente avant d'interroger le moteur : défiler vite avec ←/→ n'empile pas une analyse par position survolée. */
+const LIVE_EVAL_DEBOUNCE_MS = 150;
+
+/**
+ * Évaluation Stockfish RÉELLE de la position affichée, pour la barre
+ * d'évaluation. Compteur de requête : une réponse tardive ne s'applique jamais
+ * à une position déjà quittée ; la dernière valeur connue reste affichée en
+ * attendant (ou en cas d'échec) plutôt qu'une barre qui clignote.
+ */
+function useLiveEvaluation(fen: string): EvalScore | null {
+  const { engine } = useEngine();
+  const [score, setScore] = useState<EvalScore | null>(null);
+  const requestId = useRef(0);
+  useEffect(() => {
+    if (!engine) return;
+    const id = ++requestId.current;
+    const timer = setTimeout(() => {
+      engine
+        .analyse(fen, { depth: LIVE_EVAL_DEPTH })
+        .then((evaluation) => {
+          if (requestId.current === id) setScore({ cp: evaluation.cp, mate: evaluation.mate });
+        })
+        .catch(() => {});
+    }, LIVE_EVAL_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [engine, fen]);
+  return score;
 }
 
-type NavAction = { type: "select"; id: string } | { type: "chapter"; index: number; rootId: string };
-
-function navReducer(state: NavState, action: NavAction): NavState {
-  switch (action.type) {
-    case "select":
-      return { ...state, currentId: action.id };
-    case "chapter":
-      return { chapterIndex: action.index, currentId: action.rootId };
-    default:
-      return state;
-  }
+function sideLabel(color: "w" | "b"): string {
+  return color === "w" ? "Blancs" : "Noirs";
 }
 
 export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onComplete?: () => void }) {
-  const [state, dispatch] = useReducer(navReducer, { chapterIndex: 0, currentId: tree.chapters[0].root.id });
+  const [state, dispatch] = useReducer(courseTreeNavReducer, tree.chapters[0].root.id, initialCourseTreeNav);
   const chapter = tree.chapters[state.chapterIndex];
   const root = chapter.root;
+  const playerColor = turnOfFen(root.fen);
+  const playing = state.mode === "play";
 
   const currentNode = useMemo(() => findNode(root, state.currentId) ?? root, [root, state.currentId]);
   const path = useMemo(() => pathTo(root, currentNode.id), [root, currentNode.id]);
   const parentNode: ChessMoveNode | null = path.length >= 2 ? path[path.length - 2] : null;
+  const feedback = useMemo(() => buildCoachFeedback(currentNode, plyOffsetOf(root.fen)), [currentNode, root.fen]);
+  const playerToMove = playing && isPlayerTurn(currentNode, playerColor);
+  const lineFinished = currentNode.children.length === 0;
+  const liveScore = useLiveEvaluation(currentNode.fen);
 
-  const select = useCallback((id: string) => dispatch({ type: "select", id }), []);
-  const goToChapter = useCallback((index: number) => dispatch({ type: "chapter", index, rootId: tree.chapters[index].root.id }), [tree]);
+  // Réponse adverse programmée (mode jeu) — annulée à chaque nouvelle action
+  // et au démontage, pour ne jamais jouer un coup sur un chapitre déjà quitté.
+  const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelReply = useCallback(() => {
+    if (replyTimer.current !== null) clearTimeout(replyTimer.current);
+    replyTimer.current = null;
+  }, []);
+  useEffect(() => cancelReply, [cancelReply]);
+
+  const select = useCallback(
+    (id: string) => {
+      cancelReply();
+      dispatch({ type: "select", id });
+    },
+    [cancelReply],
+  );
+
+  /** Joue `child` pour le lecteur, puis programme la réponse adverse s'il y en a une. */
+  const playForPlayer = useCallback(
+    (child: ChessMoveNode) => {
+      select(child.id);
+      const reply = child.children[0];
+      if (reply && turnOfFen(child.fen) !== playerColor) {
+        replyTimer.current = setTimeout(() => {
+          replyTimer.current = null;
+          dispatch({ type: "select", id: reply.id });
+        }, OPPONENT_REPLY_MS);
+      }
+    },
+    [select, playerColor],
+  );
+
+  const goToChapter = useCallback(
+    (index: number) => {
+      cancelReply();
+      dispatch({ type: "chapter", index, rootId: tree.chapters[index].root.id });
+    },
+    [cancelReply, tree],
+  );
+  const setMode = useCallback(
+    (mode: "read" | "play") => {
+      cancelReply();
+      dispatch({ type: "mode", mode, rootId: root.id });
+    },
+    [cancelReply, root.id],
+  );
 
   const goPrev = useCallback(() => {
     if (parentNode) select(parentNode.id);
@@ -66,11 +142,12 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     if (currentNode.children.length > 0) select(currentNode.children[0].id);
   }, [currentNode, select]);
 
-  // Abonnement clavier — voir le docstring du fichier : un `useEffect` qui
-  // enregistre un écouteur d'évènement est l'usage NORMAL de cette API,
-  // distinct d'un `setState` appelé directement dans le corps de l'effet.
+  // Abonnement clavier : un écouteur d'évènement, `dispatch` n'est appelé
+  // qu'à la frappe d'une vraie touche — jamais dans le corps de l'effet.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
       if (event.key === "ArrowLeft") goPrev();
       if (event.key === "ArrowRight") goNext();
     }
@@ -78,92 +155,173 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [goPrev, goNext]);
 
-  // Dernier chapitre atteint = un seul appel à `onComplete`, même contrat que
-  // `CourseLessonViewer`/`ThemeDemoBoard` (voir leur docstring) — ici
-  // « atteint » veut dire avoir ouvert le dernier chapitre au moins une fois,
-  // jamais avoir parcouru tout son arbre (navigation libre, rien à
-  // « terminer » dans un arbre qu'on peut explorer dans n'importe quel ordre).
+  // Dernier chapitre ouvert au moins une fois = cours terminé (navigation
+  // libre : rien à « finir » dans un arbre qu'on explore dans tous les sens).
   useEffect(() => {
     if (state.chapterIndex === tree.chapters.length - 1) onComplete?.();
   }, [state.chapterIndex, tree.chapters.length, onComplete]);
 
-  const boardOrientation = currentNode.fen.split(" ")[1] === "b" ? "black" : "white";
+  function canDragPiece({ piece }: PieceHandlerArgs): boolean {
+    return playerToMove && piece.pieceType.startsWith(playerColor);
+  }
 
-  // Flèches permanentes : annotations du nœud courant (`[%cal]` source, vert/rouge)
-  // + suggestion moteur (émeraude, `--engine-arrow-best` — réutilise EXACTEMENT
-  // la teinte du double-flux de la Revue de partie, voir `lib/labels.ts`).
-  const dataArrows = currentNode.arrows.map((arrow) => ({ startSquare: arrow.from, endSquare: arrow.to, color: arrow.color === "red" ? RED : GREEN }));
-  const engineArrow = currentNode.engineSuggestion
-    ? [{ startSquare: currentNode.engineSuggestion.uci.slice(0, 2), endSquare: currentNode.engineSuggestion.uci.slice(2, 4), color: REVEAL_ARROW_COLOR }]
-    : [];
-  const arrows = [...dataArrows, ...engineArrow];
+  function onPieceDrop({ sourceSquare, targetSquare }: PieceDropHandlerArgs): boolean {
+    if (!playerToMove || !targetSquare) return false;
+    const child = childForDrop(currentNode, sourceSquare, targetSquare);
+    if (!child) {
+      dispatch({ type: "wrong" });
+      return false;
+    }
+    playForPlayer(child);
+    return true;
+  }
+
+  // En mode jeu, tant que c'est au lecteur de trouver le coup, les flèches et
+  // cases de l'auteur restent cachées (elles donneraient la réponse) — sauf
+  // indice demandé, qui montre la seule flèche du coup attendu.
+  const hideAnnotations = playerToMove && state.feedback !== "hint";
+  const dataArrows = hideAnnotations
+    ? []
+    : currentNode.arrows.map((arrow) => ({ startSquare: arrow.from, endSquare: arrow.to, color: arrow.color === "red" ? RED : GREEN }));
+  const engineArrow =
+    currentNode.engineSuggestion && !playing
+      ? [{ startSquare: currentNode.engineSuggestion.uci.slice(0, 2), endSquare: currentNode.engineSuggestion.uci.slice(2, 4), color: REVEAL_ARROW_COLOR }]
+      : [];
+  const hintArrow =
+    playerToMove && state.feedback === "hint"
+      ? [{ startSquare: currentNode.children[0].uci!.slice(0, 2), endSquare: currentNode.children[0].uci!.slice(2, 4), color: GREEN }]
+      : [];
+  const arrows = [...dataArrows, ...engineArrow, ...hintArrow];
 
   const squareStyles: Record<string, { backgroundColor: string }> = {};
-  for (const highlight of currentNode.highlights) {
-    squareStyles[highlight.square] = { backgroundColor: highlight.color === "red" ? "rgba(239, 68, 68, 0.35)" : "rgba(34, 197, 94, 0.35)" };
+  if (!hideAnnotations) {
+    for (const highlight of currentNode.highlights) {
+      squareStyles[highlight.square] = { backgroundColor: highlight.color === "red" ? "rgba(239, 68, 68, 0.35)" : "rgba(34, 197, 94, 0.35)" };
+    }
   }
 
-  function neverDraggable(): boolean {
-    return false;
-  }
+  const playPrompt = playing ? (
+    playerToMove ? (
+      <div className="flex items-center justify-between gap-2">
+        <p className={state.feedback === "wrong" ? "font-medium text-inaccuracy" : "font-medium text-foreground"}>
+          {state.feedback === "wrong" ? "Ce n'est pas le coup de l'étude — réessaie." : `À toi de jouer : trouve le coup des ${sideLabel(playerColor)}.`}
+        </p>
+        <div className="flex shrink-0 gap-1.5">
+          <button type="button" onClick={() => dispatch({ type: "hint" })} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+            Indice
+          </button>
+          <button type="button" onClick={() => playForPlayer(currentNode.children[0])} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+            Voir le coup
+          </button>
+        </div>
+      </div>
+    ) : lineFinished ? (
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-medium text-best">✓ Ligne terminée.</p>
+        {state.chapterIndex < tree.chapters.length - 1 && (
+          <button type="button" onClick={() => goToChapter(state.chapterIndex + 1)} className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+            Chapitre suivant →
+          </button>
+        )}
+      </div>
+    ) : (
+      <p className="text-foreground-muted">Réponse adverse…</p>
+    )
+  ) : null;
 
   return (
-    <div className="mx-auto w-full max-w-[760px]">
-      {tree.chapters.length > 1 && (
-        <div className="mb-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Chapitres">
-          {tree.chapters.map((c, index) => (
-            <button
-              key={index}
-              type="button"
-              role="tab"
-              aria-selected={index === state.chapterIndex}
-              onClick={() => goToChapter(index)}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                index === state.chapterIndex ? "bg-accent text-accent-foreground" : "bg-surface-muted text-foreground-muted hover:text-foreground"
-              }`}
-            >
-              {c.title}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="w-full shrink-0 sm:w-[360px]">
-          <Chessboard
-            options={{
-              id: "course-tree-board",
-              position: currentNode.fen,
-              boardOrientation,
-              canDragPiece: neverDraggable,
-              arrows,
-              squareStyles,
-            }}
-          />
-          <div className="mt-1.5 flex items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={goPrev}
-              disabled={!parentNode}
-              className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              ← Précédent
-            </button>
-            <button
-              type="button"
-              onClick={goNext}
-              disabled={currentNode.children.length === 0}
-              className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Suivant →
-            </button>
+    <div className="mx-auto w-full max-w-[1240px]">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
+        <div className="w-full shrink-0 md:w-[480px] lg:w-[600px]">
+          <div className="flex gap-2">
+            <EvaluationBar score={liveScore} size="lg" />
+            <div className="min-w-0 flex-1">
+              <Chessboard
+                options={{
+                  id: "course-tree-board",
+                  position: currentNode.fen,
+                  boardOrientation: playerColor === "b" ? "black" : "white",
+                  canDragPiece,
+                  onPieceDrop,
+                  arrows,
+                  squareStyles,
+                }}
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-2 pl-9 sm:pl-11">
+            <div className="inline-flex rounded-md border border-border p-0.5 text-xs" role="radiogroup" aria-label="Mode de lecture">
+              {(["read", "play"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  role="radio"
+                  aria-checked={state.mode === mode}
+                  onClick={() => setMode(mode)}
+                  className={`rounded px-2.5 py-1 font-medium transition-colors ${
+                    state.mode === mode ? "bg-accent text-accent-foreground" : "text-foreground-muted hover:text-foreground"
+                  }`}
+                >
+                  {mode === "read" ? "Lecture" : "Jouer les coups"}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={!parentNode}
+                aria-label="Coup précédent"
+                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={lineFinished}
+                aria-label="Coup suivant"
+                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                →
+              </button>
+            </div>
           </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">{chapter.title}</p>
-          {currentNode.comment && <p className="mt-2 text-sm leading-relaxed text-foreground">{currentNode.comment}</p>}
-          <div className="mt-2">
+
+        <div className="min-w-0 flex-1 space-y-4">
+          {tree.chapters.length > 1 ? (
+            <nav aria-label="Chapitres" className="max-h-44 overflow-y-auto rounded-md border border-border">
+              <ol>
+                {tree.chapters.map((c, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      aria-current={index === state.chapterIndex ? "true" : undefined}
+                      onClick={() => goToChapter(index)}
+                      className={`flex w-full items-baseline gap-2 px-3 py-1.5 text-left text-[13px] transition-colors ${
+                        index === state.chapterIndex ? "bg-accent/15 font-semibold text-foreground" : "text-foreground-muted hover:bg-surface-muted hover:text-foreground"
+                      }`}
+                    >
+                      <span className="w-5 shrink-0 text-right font-mono text-[11px] text-foreground-muted">{index + 1}</span>
+                      <span className="min-w-0 truncate">{c.title}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          ) : (
+            <p className="text-sm font-semibold text-foreground">{chapter.title}</p>
+          )}
+          {playing ? (
+            // Mode jeu : l'arbre complet donnerait la solution — on n'affiche que les coups déjà joués, comme le gamebook Lichess.
+            <p className="paper-surface min-h-[3rem] rounded-lg border border-border px-5 py-3 font-mono text-[13px] text-foreground shadow-sm">
+              {path.length > 1 ? path.slice(1).map((node) => node.san).join(" ") : "—"}
+            </p>
+          ) : (
             <MoveTreeViewer root={root} currentId={currentNode.id} onSelect={select} />
-          </div>
+          )}
+          <CoachFeedbackPanel feedback={feedback} chapterTitle={chapter.title} prompt={playPrompt} hideEngine={playing} />
         </div>
       </div>
     </div>

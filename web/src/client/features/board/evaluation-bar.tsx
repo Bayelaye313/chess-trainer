@@ -21,7 +21,12 @@ export interface EvalScore {
   mate: number | null;
 }
 
-export const EvaluationBar = memo(function EvaluationBar({ score }: { score: EvalScore | null }) {
+/**
+ * `size="lg"` : barre plus large et score plus grand, pour un échiquier
+ * lui-même agrandi (lecteur de cours de l'Académie) — à la taille par défaut,
+ * un score comme « +0.34 » y serait tronqué.
+ */
+export const EvaluationBar = memo(function EvaluationBar({ score, size = "md" }: { score: EvalScore | null; size?: "md" | "lg" }) {
   // `score` null = rien de fiable à montrer (chargement en cours en mode
   // Exploration, ou coup dont l'analyse a échoué) : barre neutre plutôt
   // qu'une valeur inventée. `winPercent` fait déjà tout le lissage — jamais
@@ -32,7 +37,7 @@ export const EvaluationBar = memo(function EvaluationBar({ score }: { score: Eva
 
   return (
     <div
-      className="relative w-5 shrink-0 self-stretch overflow-hidden rounded-sm sm:w-6"
+      className={`relative shrink-0 self-stretch overflow-hidden rounded-sm ${size === "lg" ? "w-7 sm:w-9" : "w-5 sm:w-6"}`}
       style={{ background: "var(--eval-black-fill)" }}
       role="img"
       aria-label={`Évaluation de la position : ${label}`}
@@ -45,7 +50,9 @@ export const EvaluationBar = memo(function EvaluationBar({ score }: { score: Eva
       {/* Le score se pose dans le territoire du camp qui mène — jamais sur la
           frontière, toujours sur un fond assez large pour rester lisible. */}
       <span
-        className={`pointer-events-none absolute inset-x-0 px-0.5 text-center font-mono text-[9px] font-semibold leading-tight sm:text-[10px] ${
+        className={`pointer-events-none absolute inset-x-0 px-0.5 text-center font-mono font-semibold leading-tight ${
+          size === "lg" ? "text-[10px] sm:text-[11px]" : "text-[9px] sm:text-[10px]"
+        } ${
           whiteLeads ? "top-1" : "bottom-1"
         }`}
         style={{ color: whiteLeads ? "var(--eval-black-fill)" : "var(--eval-white-fill)" }}

@@ -65,8 +65,11 @@ export function moveNumberLabel(ply: number): string {
  * module. La racine d'un chapitre (`san === null`) produit un modèle vide mais
  * valide (`moveNumber`/`san`/`engine` à `null`), jamais `null` tout court :
  * l'appelant peut toujours rendre le volet sans test de bordure.
+ * `plyOffset` = `plyOffsetOf(racine.fen)` : un chapitre qui démarre en milieu
+ * de partie affiche le VRAI numéro de coup, jamais « 1. » recompté depuis sa
+ * racine.
  */
-export function buildCoachFeedback(node: ChessMoveNode): CoachFeedback {
+export function buildCoachFeedback(node: ChessMoveNode, plyOffset: number = 0): CoachFeedback {
   const engine: CoachEngineNote | null = node.engineSuggestion
     ? {
         san: node.engineSuggestion.san,
@@ -77,7 +80,7 @@ export function buildCoachFeedback(node: ChessMoveNode): CoachFeedback {
     : null;
 
   return {
-    moveNumber: node.san === null ? null : moveNumberLabel(node.ply),
+    moveNumber: node.san === null ? null : moveNumberLabel(node.ply + plyOffset),
     san: node.san,
     comment: node.comment,
     tip: node.tip,

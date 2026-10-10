@@ -4,7 +4,7 @@
  * HUD « e-sport » de la phase Puzzles de l'Académie — cahier des charges du
  * 2026-09-10 (« Principal UI/UX Architect », format calqué sur les études
  * Lichess interactives) : une fois le tutoriel d'un thème terminé
- * (`CourseLessonViewer`, voir `theme-lesson.tsx`), `LearnScreen` bascule sur
+ * (`CourseTreeViewer`, voir `theme-lesson.tsx`), `LearnScreen` bascule sur
  * `ThemeSession`, qui rend désormais CE composant plutôt qu'une simple
  * `ProgressBar` + `PuzzleBoard` nus — une barre de complétion SEGMENTÉE (une
  * case lumineuse par puzzle de la vague, pas une barre continue), un fondu

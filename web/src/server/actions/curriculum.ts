@@ -7,11 +7,13 @@
  */
 import {
   completeThemePuzzle,
+  getThemeExamplePuzzles,
   getThemeReviewSession,
   getThemeSession,
   listCurriculumOverview,
   type CurriculumCategoryOverview,
   type CurriculumThemeOverview,
+  type ThemePuzzle,
   type ThemeReviewSession,
   type ThemeSession,
 } from "@/server/queries/curriculum";
@@ -37,4 +39,9 @@ export async function submitThemePuzzleSolved(themeId: string): Promise<Curricul
  */
 export async function getThemePuzzleReviewSession(themeId: string): Promise<ThemeReviewSession | null> {
   return getThemeReviewSession(themeId);
+}
+
+/** Exercices réels servant de chapitres au cours en arbre d'un thème sans cours rédigé — voir `getThemeExamplePuzzles`. */
+export async function getThemeCourseExamples(themeId: string): Promise<ThemePuzzle[]> {
+  return getThemeExamplePuzzles(themeId);
 }

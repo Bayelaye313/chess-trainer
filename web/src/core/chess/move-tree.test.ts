@@ -57,6 +57,17 @@ describe("parseMoveTree", () => {
     expect(path.map((n) => n.san)).toEqual([null, "e4", "e5", "Nf3"]);
     expect(pathTo(root, "introuvable")).toEqual([]);
   });
+
+  it("sépare le PRO TIP du commentaire, qualificatif du marqueur compris", () => {
+    const root = parseMoveTree("1. d4 { Coup central. PRO TIP de Jesper Hall : vise la case-clé. } d5 2. c4 { PRO TIP : patience. } e6 3. Nc3 { Rien à signaler. }");
+    const [d4, , c4, , nc3] = mainLine(root);
+    expect(d4.comment).toBe("Coup central.");
+    expect(d4.tip).toBe("vise la case-clé.");
+    expect(c4.comment).toBeNull();
+    expect(c4.tip).toBe("patience.");
+    expect(nc3.comment).toBe("Rien à signaler.");
+    expect(nc3.tip).toBeNull();
+  });
 });
 
 describe("attachEngineSuggestion", () => {

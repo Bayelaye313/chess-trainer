@@ -16,17 +16,14 @@
  *    Reste accessible par deep-link `?categoryId=` (parcours d'un module entier)
  *    — plus jamais ouvert comme étape obligatoire entre une fiche et son
  *    arène. Le clic sur un thème partage le MÊME routage direct.
- *  - `lesson`   : Page de Cours (`ThemeLesson`) — réservée aux thèmes portant
- *    un VRAI cours interactif (`COURSE_TREES`/`COURSE_LESSONS` : arbre annoté
- *    ou lecteur à chapitres à mini-défis) : « l'écran du lecteur de leçons »
- *    de la feuille de route, l'arène du cours. Son bouton « Passer aux
- *    exercices ➔ » mène ensuite à `session`.
- *  - `session`  : résolution effective (`ThemeSession` + `AcademyPuzzleArena`)
- *    — thème sans cours : on tombe directement sur l'échiquier, sans page
- *    générique (Objectif + Idées clés) intermédiaire — « court-circuiter
- *    toute sous-liste inutile » (feuille de route Zone 1). Sortie de session
- *    ramène à `themes` du MÊME module (pas à l'accueil), pour que le compteur
- *    « X/Y thèmes maîtrisés » reflète aussitôt la réussite.
+ *  - `lesson`   : Page de Cours (`ThemeLesson`) — TOUT thème a désormais
+ *    un cours en arbre façon Lichess Study (`CourseTreeViewer`, cahier des
+ *    charges du 2026-10-09 : rédigé, ou construit depuis ses exercices réels).
+ *    Son bouton « Passer aux exercices ➔ » mène ensuite à `session`.
+ *  - `session`  : résolution effective (`ThemeSession` + `AcademyPuzzleArena`).
+ *    Sortie de session ramène à `themes` du MÊME module (pas à l'accueil),
+ *    pour que le compteur « X/Y thèmes maîtrisés » reflète aussitôt la
+ *    réussite.
  *  - `review`   : rejeu libre d'une vague maîtrisée (`ThemeReviewSession`).
  *
  * Navigation entièrement côté client, comme `PiegesScreen` : aucune route
@@ -36,8 +33,6 @@
 import { useState } from "react";
 import { getCurriculumOverview } from "@/server/actions/curriculum";
 import type { CurriculumCategoryOverview, CurriculumThemeOverview } from "@/server/queries/curriculum";
-import { COURSE_LESSONS } from "@/core/curriculum/course-lesson";
-import { COURSE_TREES } from "@/core/curriculum/course-tree";
 import { CourseCurriculum } from "./course-curriculum";
 import { moduleIcon } from "./module-icon";
 import { ThemeLesson } from "./theme-lesson";
@@ -53,18 +48,13 @@ export type LearnView =
   | { kind: "review"; categoryId: string; themeId: string };
 
 /**
- * Routage Direct-to-Lesson (feuille de route Zone 1) : un thème portant un
- * cours interactif ouvre SON lecteur (`lesson` — `CourseTreeViewer`/
- * `CourseLessonViewer`, les véritables arènes à chapitres), tous les autres
- * vont droit à `session` (`ThemeSession`, l'arène de puzzles). Jamais de
- * sous-liste descriptive entre le clic et le vif du sujet — un seul point de
- * vérité partagé par la fiche Playbook et par l'accordéon `CourseCurriculum`.
+ * Routage Direct-to-Lesson (feuille de route Zone 1) : un clic sur un thème
+ * ouvre son cours (`lesson`), jamais une sous-liste descriptive — un seul
+ * point de vérité partagé par la fiche Playbook et par l'accordéon
+ * `CourseCurriculum`.
  */
 function directViewForTheme(categoryId: string, themeId: string): LearnView {
-  const hasInteractiveCourse = COURSE_TREES[themeId] !== undefined || COURSE_LESSONS[themeId] !== undefined;
-  return hasInteractiveCourse
-    ? { kind: "lesson", categoryId, themeId }
-    : { kind: "session", categoryId, themeId };
+  return { kind: "lesson", categoryId, themeId };
 }
 
 function BackButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
@@ -144,7 +134,7 @@ export function LearnScreen({
         // `key` force un remontage complet à chaque changement de thème (le
         // nœud `view.kind === "lesson"` lui-même ne change pas d'un thème à
         // l'autre) — réinitialise proprement tout l'état local dérivé du
-        // puzzle affiché (`ThemeLesson`/`MotifIntroBoard`) sans passer par un
+        // cours affiché (`ThemeLesson`/`CourseTreeViewer`) sans passer par un
         // `setState` en tête d'effet (voir leurs docstrings).
         key={found.theme.id}
         theme={found.theme}

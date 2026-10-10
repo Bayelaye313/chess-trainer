@@ -156,6 +156,20 @@ export function isHoverArrowsEnabled(phase: SolvePhase): boolean {
   return phase === "solved" || phase === "failed";
 }
 
+/**
+ * Le coup joué est-il accepté ? Le coup EXACT de la solution, toujours — et,
+ * au DERNIER pli seulement, n'importe quel coup qui fait mat (même règle que
+ * les puzzles Lichess : « any move that checkmates is accepted »). Sans cette
+ * exception, un mat final qui admet plusieurs coups gagnants (fréquent avec une
+ * dame, ex. roi et dame contre roi) refuserait un mat parfaitement correct.
+ * Avant ce pli, la solution reste unique : un autre coup, même bon, change la
+ * suite que le puzzle sait rejouer.
+ */
+export function isAcceptedPlayerMove(solution: readonly string[], moveIndex: number, playedUci: string, givesCheckmate: boolean): boolean {
+  if (playedUci === solution[moveIndex]) return true;
+  return givesCheckmate && moveIndex === solution.length - 1;
+}
+
 /** `true` si `moveIndex` a atteint la fin de `puzzle.solution` après avoir consommé un pli de plus. */
 function isLastPly(moveIndex: number, totalPlies: number): boolean {
   return moveIndex + 1 >= totalPlies;

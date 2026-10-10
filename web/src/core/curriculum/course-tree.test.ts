@@ -27,11 +27,29 @@ describe("COURSE_TREES", () => {
     }
   });
 
-  it("chaque arbre porte une vraie variante (au moins un nœud avec plus d'un enfant) — sinon ce ne serait qu'un CourseLesson mal nommé", () => {
+  // Les parties RAV de Jesper Hall (modules 21-25) sont des parties annotées par
+  // leurs auteurs : leur raison d'être, ce sont leurs variantes. Les cours
+  // « un commentaire par coup » (`course-trees/`) ont d'autres garanties, testées
+  // juste en dessous — un chapitre peut y être une simple position commentée.
+  it("chaque partie RAV de Jesper Hall porte une vraie variante (au moins un nœud avec plus d'un enfant)", () => {
     for (const [themeId, tree] of Object.entries(COURSE_TREES)) {
+      if (!themeId.startsWith("jh-")) continue;
       for (const chapter of tree.chapters) {
         const hasBranch = collectNodes(chapter.root).some((n) => n.children.length > 1);
         expect(hasBranch, `${themeId} (${chapter.title})`).toBe(true);
+      }
+    }
+  });
+
+  it("cours commentés (hors Jesper Hall) : chaque chapitre a une introduction et chaque coup, variantes comprises, son explication", () => {
+    for (const [themeId, tree] of Object.entries(COURSE_TREES)) {
+      if (themeId.startsWith("jh-")) continue;
+      for (const chapter of tree.chapters) {
+        expect(chapter.root.comment, `${themeId} (${chapter.title}) : introduction`).toBeTruthy();
+        for (const node of collectNodes(chapter.root)) {
+          if (node.san === null) continue;
+          expect(node.comment, `${themeId} (${chapter.title}) : ${node.san} sans explication`).toBeTruthy();
+        }
       }
     }
   });

@@ -1,27 +1,18 @@
 /**
- * Cours à PLUSIEURS CHAPITRES — la version « étude Lichess complète » de
- * `ThemeDemo` (`theme-demo.ts`), pour les sujets dont la source a assez de
- * matière pour être racontée en 5, 10 ou 17 positions réelles successives
- * plutôt qu'en 2-3 étapes de démonstration (cahier des charges du 2026-09-07 :
- * « il défile avec chaque partie des textes commentaires à côté », en
- * référence à l'étude Lichess « Pawn Structure » de Yushan
- * https://lichess.org/study/a8arx17S).
+ * Cours à PLUSIEURS CHAPITRES — format SOURCE des cours rédigés à partir
+ * d'une étude ou d'une partie réelle, pour les sujets dont la source a assez
+ * de matière pour être racontée en 5, 10 ou 17 positions réelles successives
+ * (cahier des charges du 2026-09-07, en référence à l'étude Lichess « Pawn
+ * Structure » de Yushan https://lichess.org/study/a8arx17S).
  *
- * Différence structurelle avec `ThemeDemo` :
- *  - `ThemeDemo` est un parcours GUIDÉ où le joueur doit lui-même jouer le
- *    coup indiqué (`expectedMove`) pour avancer — adapté à 2-3 coups d'une
- *    manœuvre précise.
- *  - `CourseLesson` est un cours à LIRE, chapitre par chapitre (bouton
- *    Précédent/Suivant, jamais bloqué par un coup à trouver) — chaque
- *    `CourseStep` est un chapitre RÉEL de l'étude source, avec sa propre
- *    position et son propre commentaire traduit. Ce module reste pur, sans
- *    dépendance à chess.js, comme `theme-demo.ts` : `moveSan` n'y est que du
- *    texte SAN. Cahier des charges du 2026-09-09, « possibilité de tenter de
- *    trouver le bon coup, de retenter » : c'est le VIEWER
- *    (`course-lesson-viewer.tsx`), pas ce module, qui rejoue `moveSan` avec
- *    chess.js au rendu pour transformer chaque chapitre qui en porte un en
- *    mini défi « devine le coup » pli par pli — indice et « voir la suite »
- *    toujours disponibles, jamais de blocage dur.
+ * Ce n'est plus un format d'AFFICHAGE : depuis le 2026-10-09, tout cours est
+ * lu comme un arbre façon Lichess Study (`CourseTreeViewer`). Chaque
+ * `CourseLesson` est converti par `courseLessonToTree`
+ * (`course-tree-adapters.ts`) — un `CourseStep` = un chapitre, `fen` = sa
+ * racine, `moveSan` = sa ligne principale rejouée par chess.js, `text` = le
+ * commentaire de la racine (le « PRO TIP » éventuel en est extrait). Ce
+ * module reste pur, sans dépendance à chess.js : `moveSan` n'y est que du
+ * texte SAN.
  *
  * `fen` porte la position qu'affiche le diagramme — le point de départ du
  * chapitre pour les chapitres purement explicatifs, ou la position obtenue
@@ -57,9 +48,10 @@ export interface CourseStep {
   text: string;
   /**
    * Coups clés joués depuis la position de départ RÉELLE du chapitre — texte
-   * SAN pur ici (ce module n'importe pas chess.js), mais le viewer
-   * (`course-lesson-viewer.tsx`) les rejoue avec chess.js au rendu pour en
-   * faire un défi « devine le coup » interactif, pli par pli.
+   * SAN pur ici (ce module n'importe pas chess.js) ; `courseLessonToTree`
+   * les rejoue avec chess.js pour en faire la ligne principale du chapitre,
+   * que le mode « Jouer les coups » de `CourseTreeViewer` fait trouver pli
+   * par pli.
    */
   moveSan?: readonly string[];
   arrows?: readonly CourseArrow[];
@@ -71,8 +63,9 @@ export interface CourseLesson {
 }
 
 /**
- * Clé = `CurriculumThemeOverview.id` (`catalog.ts`). Priorité sur `THEME_DEMOS`
- * dans `ThemeLesson` quand un thème porte les deux (aucun cas actuel).
+ * Clé = `CurriculumThemeOverview.id` (`catalog.ts`). Servi par
+ * `resolveAuthoredCourseTree` (`course-tree-adapters.ts`) quand le thème n'a
+ * pas d'arbre RAV natif dans `COURSE_TREES`.
  *
  * - « Formation Caro-Kann » (`ps-formation-caro-kann`) découpe en 8 chapitres
  *   le texte intégral de son chapitre Lichess (étude « Structures de pions »

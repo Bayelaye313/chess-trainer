@@ -18,26 +18,32 @@
  * profondeur d'IMBRICATION DE VARIANTES récurse, typiquement < 10 même pour
  * la partie la plus commentée du catalogue (Kasparov–Topalov, module 25).
  */
-import { Fragment, memo, type ReactNode } from "react";
-import type { ChessMoveNode } from "@/core/chess/move-tree";
+import { Fragment, memo, useEffect, useRef, type ReactNode } from "react";
+import { plyOffsetOf, type ChessMoveNode } from "@/core/chess/move-tree";
 
 const MoveToken = memo(function MoveToken({
   node,
   label,
   isCurrent,
   isMainLine,
-  hasEngineSuggestion,
   onSelect,
 }: {
   node: ChessMoveNode;
   label: string;
   isCurrent: boolean;
   isMainLine: boolean;
-  hasEngineSuggestion: boolean;
   onSelect: (id: string) => void;
 }) {
+  // Chaque coup portant désormais son commentaire, la liste dépasse vite la
+  // hauteur du panneau : le coup courant est ramené dans la zone visible du
+  // panneau (`block: "nearest"` — ne fait jamais défiler la page entière).
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (isCurrent) ref.current?.scrollIntoView({ block: "nearest" });
+  }, [isCurrent]);
   return (
     <button
+      ref={ref}
       type="button"
       onClick={() => onSelect(node.id)}
       className={[
@@ -48,14 +54,8 @@ const MoveToken = memo(function MoveToken({
             ? "font-semibold text-foreground hover:bg-surface-muted"
             : "text-foreground-muted hover:bg-surface-muted",
       ].join(" ")}
-      title={hasEngineSuggestion ? "Une suggestion moteur est affichée à ce nœud" : undefined}
     >
       {label}
-      {hasEngineSuggestion && (
-        <span aria-hidden="true" className="ml-0.5 text-[10px]" style={{ color: "var(--engine-arrow-best)" }}>
-          ⚙
-        </span>
-      )}
     </button>
   );
 });
@@ -69,6 +69,8 @@ function moveNumberLabel(ply: number, forceBlackNumber: boolean): string {
 
 interface RenderOpts {
   currentId: string;
+  /** `plyOffsetOf(racine.fen)` — numéros de coups RÉELS pour un chapitre qui démarre en milieu de partie. */
+  plyOffset: number;
   onSelect: (id: string) => void;
 }
 
@@ -84,7 +86,7 @@ function renderLine(startNode: ChessMoveNode, isMainLine: boolean, opts: RenderO
   let node = startNode;
   let forceBlackNumber = true;
   for (;;) {
-    const label = `${moveNumberLabel(node.ply, forceBlackNumber)}${node.san}`;
+    const label = `${moveNumberLabel(node.ply + opts.plyOffset, forceBlackNumber)}${node.san}`;
     out.push(
       <Fragment key={node.id}>
         <MoveToken
@@ -92,17 +94,16 @@ function renderLine(startNode: ChessMoveNode, isMainLine: boolean, opts: RenderO
           label={label}
           isCurrent={node.id === opts.currentId}
           isMainLine={isMainLine}
-          hasEngineSuggestion={node.engineSuggestion !== null}
           onSelect={opts.onSelect}
         />{" "}
-        {node.comment && <span className="mr-1 text-[12px] italic text-foreground-muted">{node.comment}</span>}
+        {node.comment && <span className="mr-1.5 text-[13px] text-foreground-muted">{node.comment}</span>}
       </Fragment>,
     );
     forceBlackNumber = false;
 
     for (let index = 1; index < node.children.length; index += 1) {
       out.push(
-        <span key={`${node.id}-v${index}`} className="mr-1 text-[12px] text-foreground-muted/80">
+        <span key={`${node.id}-v${index}`} className="mr-1.5 text-[13px] text-foreground-muted">
           ({renderLine(node.children[index], false, opts)})
         </span>,
       );
@@ -125,8 +126,8 @@ function renderLine(startNode: ChessMoveNode, isMainLine: boolean, opts: RenderO
 export function MoveTreeViewer({ root, currentId, onSelect }: { root: ChessMoveNode; currentId: string; onSelect: (id: string) => void }) {
   if (root.children.length === 0) return null;
   return (
-    <div className="max-h-[26rem] overflow-y-auto rounded-md border border-border bg-surface-muted/40 p-3 text-sm leading-loose">
-      {renderLine(root.children[0], true, { currentId, onSelect })}
+    <div className="paper-surface max-h-[30rem] overflow-y-auto rounded-lg border border-border px-5 py-4 text-sm leading-loose shadow-sm">
+      {renderLine(root.children[0], true, { currentId, onSelect, plyOffset: plyOffsetOf(root.fen) })}
     </div>
   );
 }

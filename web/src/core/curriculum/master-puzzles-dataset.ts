@@ -4032,8 +4032,9 @@ export const MASTER_PUZZLES_DATASET: readonly MasterPuzzle[] = [
   // Les 9 thèmes `pawn_structures` — chaque position vient d'une VRAIE
   // partie de maître citée par le chapitre Lichess correspondant (étude
   // https://lichess.org/study/srjMsNnC de Li-Pokamp), sur un moment DIFFÉRENT
-  // de celui déjà illustré par `THEME_DEMOS` (`theme-demo.ts`) pour ce même
-  // thème — jamais le même couple position/coup répété deux fois.
+  // de celui qu'illustrait l'ancienne démonstration `THEME_DEMOS` (retirée le
+  // 2026-10-09 au profit du cours en arbre) — jamais le même couple
+  // position/coup répété deux fois.
   // ─────────────────────────────────────────────────────────────────────
   {
     themeId: "ps-formation-caro-kann",

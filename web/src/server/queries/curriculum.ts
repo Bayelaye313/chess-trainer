@@ -246,6 +246,23 @@ export async function getThemeReviewSession(themeId: string): Promise<ThemeRevie
 }
 
 /**
+ * Les premiers exercices réels d'un thème, dans l'ordre de la vague — matière
+ * du cours en arbre des thèmes SANS cours rédigé (`puzzlesToCourseTree`,
+ * `core/curriculum/course-tree-adapters.ts`). Lecture seule, comme
+ * `getThemeReviewSession` : ne touche jamais à la progression. `[]` pour un
+ * thème inconnu ou vide, jamais un exemple inventé.
+ */
+export async function getThemeExamplePuzzles(themeId: string, limit: number = 3): Promise<ThemePuzzle[]> {
+  await ensureCurriculumSeeded();
+  return db
+    .select()
+    .from(curriculumPuzzles)
+    .where(eq(curriculumPuzzles.themeId, themeId))
+    .orderBy(asc(curriculumPuzzles.orderIndex))
+    .limit(limit);
+}
+
+/**
  * Valide un puzzle résolu : avance le curseur linéaire d'un cran (jamais deux
  * fois pour le même puzzle grâce au verrou `graded` côté client, comme
  * `PuzzleBoard` — voir `theme-puzzle-board.tsx`) et marque le thème terminé
