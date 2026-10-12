@@ -26,7 +26,7 @@ export async function startEngine(opts: { threads?: number; hash?: number; multi
   send("uci");
   await w;
   send(`setoption name Threads value ${opts.threads ?? Number(process.env.SF_THREADS ?? 2)}`);
-  send(`setoption name Hash value ${opts.hash ?? 256}`);
+  send(`setoption name Hash value ${opts.hash ?? Number(process.env.SF_HASH ?? 256)}`);
   send(`setoption name MultiPV value ${opts.multipv ?? 3}`);
   w = until((l) => l === "readyok");
   send("isready");

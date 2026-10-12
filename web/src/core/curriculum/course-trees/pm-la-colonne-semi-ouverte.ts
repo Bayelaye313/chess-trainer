@@ -19,8 +19,8 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * Plan : définition et structure asymétrique (chapitre 1), la colonne contre
  * le pion arriéré (2), naissance et exploitation d'une colonne dans le Benoni
  * (3 et 4), la colonne e contre le roi (5), la pression à long terme en finale
- * (6), le sacrifice de qualité …Txc3 (7), la colonne f vers le roi (8 et 9),
- * la colonne g ouverte par une rupture (10).
+ * (6), le sacrifice de qualité …Txc3 (7), la colonne f vers le roi (8),
+ * la colonne g ouverte par une rupture (9).
  *
  * Toutes les parties ont été rejouées avec chess.js et chaque coup sondé avec
  * Stockfish 18 (profondeur 18, 3 candidats par coup). Règle appliquée : quand
@@ -254,6 +254,28 @@ PRO TIP : après ...Rxc3, l'attaque des Noirs vient de la colonne c ET des pions
 16. g4 { Le pion chasse le cavalier. Les Blancs gardent un petit avantage (environ +0,6), mais les Noirs ont une position solide.
 
 PRO TIP : même quand l'adversaire échange les dames, le sacrifice ...Rxc3 laisse des traces : les pions c doublés resteront faibles jusqu'à la fin. }`,
+    ),
+    chapter(
+      "Tarrasch – Alekhine : la colonne f vers le roi",
+      "3r1rk1/pb1nq1pp/3bpn2/1Ppp4/8/1PN1PN2/PB2BPPP/R2Q1RK1 w - - 5 13",
+      `{ Bad Pistyan 1922. Alekhine a les Noirs. Les Noirs n'ont plus de pion f : la colonne f est semi-ouverte pour eux, face au pion f2, juste devant le roi blanc. Leur tour f8 y est déjà installée.
+
+Les autres pièces noires visent aussi l'aile roi : le fou d6 regarde h2, le fou b7 regarde la grande diagonale, et les pions c5 et d5 sont prêts à avancer pour chasser les défenseurs blancs.
+
+PRO TIP : une colonne semi-ouverte qui mène au roi adverse n'est pas seulement une ligne pour la tour. C'est un AXE d'attaque : chaque pièce qui chasse un défenseur de f2 (ou de f3) rend la tour plus dangereuse. [%csl Rf2] [%cal Gf8f2,Gd6h2,Gb7g2] }
+13. Qc2 { La dame se développe et surveille e4 et h7. Le meilleur coup selon Stockfish (environ -0,6). [%cal Gc2h7] }
+13... e5 { Le pion avance et prépare ...e4, qui chassera le cavalier f3, le meilleur défenseur du roi blanc. Le meilleur coup. [%cal Ge5e4,Ge4f3] }
+14. Nh4 { Le meilleur coup selon Stockfish : le cavalier quitte f3 AVANT d'être chassé et vise la case f5. Les Noirs gardent un léger avantage (-0,6). [%cal Gh4f5] }
+(14. Rfe1? { Le coup de la partie. La tour quitte la colonne f, et le roi perd un défenseur. Stockfish : -2,2 au lieu de -0,6. } 14... e4 { Le pion chasse le cavalier f3. Le meilleur coup. [%cal Ge4f3] } 15. Nd2 { Le meilleur coup. Le cavalier recule, mais f3 n'est plus protégé. } 15... Ne5 { Le cavalier se rapproche du roi blanc. Le meilleur coup. [%cal Ge5f3,Ge5g4] } 16. Nd1 { Le cavalier vient défendre f2. 16.h3 était un peu plus précis. } 16... Nfg4 { Le meilleur coup. Le cavalier attaque f2 et h2, et la tour f8 attaque f2 à travers la colonne. [%cal Gg4f2,Gf8f2,Gg4h2] } 17. Bxg4 { Les Blancs échangent un attaquant. 17.g3 était un peu meilleur. } 17... Nxg4 { L'autre cavalier reprend : la pression sur f2 et h2 ne change pas. } 18. Nf1 { Le cavalier défend h2. Stockfish préférait 18.g3, mais la position blanche est déjà très difficile (environ -3,5). } 18... Qg5 { La dame rejoint l'attaque. 18...Qh4 était plus précis, sans changer l'évaluation. } 19. h3 { Le pion chasse le cavalier, mais affaiblit g3. } 19... Nh6 { Le cavalier recule pour revenir en f5. } 20. Kh1 { Le roi quitte la colonne g. } 20... Nf5 { Le cavalier revient, avec les cases g3 et h4 en vue. [%cal Gf5g3,Gf5h4] } 21. Nh2 { Le meilleur coup. Le cavalier défend g4. } 21... d4 { Le pion d avance et ouvre la diagonale du fou b7. } 22. Bc1 { Une erreur (Stockfish : -5,3). Le fou recule et abandonne la grande diagonale. } 22... d3 { Le pion passé s'enfonce en d3 et coupe les pièces blanches en deux. 22...Ng3+ était encore plus fort. [%csl Gd3] } 23. Qc4+ { La dame donne échec. } 23... Kh8 { Le roi s'écarte. Le meilleur coup. } 24. Bb2 { Le fou revient sur la grande diagonale. } 24... Ng3+ { LA COLONNE F TRAVAILLE. Le cavalier entre en g3 avec échec. Si les Blancs le prennent avec fxg3, la colonne f s'ouvre complètement vers leur roi (Stockfish : -10,7). [%cal Gf8f1] } 25. Kg1 { Le seul coup raisonnable. } 25... Bd5 { Le fou chasse la dame. } 26. Qa4 { La dame s'éloigne de l'aile roi. } 26... Ne2+ { Le cavalier redonne échec. } 27. Kh1 { Le roi revient en h1. } 27... Rf7 { La tour reste sur la colonne f et protège la 7e rangée. 27...Ng3+ était plus précis, mais la position reste gagnante. } 28. Qa6 { La dame cherche du contre-jeu à l'aile dame. } 28... h5 { Le pion h avance pour soutenir l'attaque. } 29. b6 { Les Blancs tentent de créer un pion passé. } 29... Ng3+ { Nouvel échec. } 30. Kg1 { Le roi revient. } 30... axb6 { Les Noirs éliminent le pion b6. } 31. Qxb6 { La dame reprend. } 31... Ne2+ { Le cavalier gagne du temps avec des échecs. } 32. Kh1 { Le roi revient en h1. } 32... Ng3+ { Encore un échec. } 33. Kg1 { Le roi revient en g1. } 33... d2 { Le pion attaque la tour e1. 33...Be6 était plus fort, mais tout gagne. [%cal Gd2e1] } 34. Rf1 { La tour fuit en f1, une case contrôlée par le cavalier g3. } 34... Nxf1 { Le cavalier prend la tour. } 35. Nxf1 { Le cavalier reprend. } 35... Be6 { Le fou vise le pion h3, le dernier abri du roi. [%cal Ge6h3] } 36. Kh1 { Une erreur dans une position déjà perdue (Stockfish : -7,4). } 36... Bxh3 { LE SACRIFICE. Le fou se donne pour ouvrir le roi blanc. Le meilleur coup. } 37. gxh3 { Les Blancs acceptent. } 37... Rf3 { LA TOUR ENTRE PAR LA COLONNE F. Elle attaque h3 et vise le roi. Le meilleur coup. [%cal Gf3h3] } 38. Ng3 { Le cavalier vient se défendre. Le meilleur coup. } 38... h4 { Le pion chasse le cavalier. 38...Bxg3 était encore plus fort. } 39. Bf6 { Une tentative désespérée. } 39... Qxf6 { La dame prend le fou. } 40. Nxe4 { Le cavalier attaque la dame. } 40... Rxh3+ { La tour prend h3 avec échec. } 41. Kg2 { Le roi avance, mais il va se faire mater. } 41... Qf3+ { La dame entre en f3, sur la colonne f. } 42. Kg1 { Le roi recule. } 42... Rh1# { Mat.
+
+PRO TIP : toute l'attaque a tourné autour de la colonne f. Les pièces noires ont chassé un à un les défenseurs de f2 et de f3, puis la tour et la dame sont entrées par cette colonne. })
+14... g6 { Le pion empêche le cavalier d'entrer en f5. Le meilleur coup. }
+15. g3 { Le pion contrôle f4 et h4. Le meilleur coup. }
+15... e4 { Le pion prend de l'espace et contrôle f3 et d3. Le meilleur coup. [%csl Ge4] }
+16. Rae1 { La tour se prépare à défendre le centre. Le meilleur coup. }
+16... Ne5 { Le cavalier vise f3 et d3. Les Noirs gardent un léger avantage (environ -0,6).
+
+PRO TIP : la meilleure défense contre une colonne semi-ouverte dirigée vers ton roi, c'est de déplacer tes pièces AVANT qu'on ne les chasse, comme le cavalier ici (14.Nh4). }`,
     ),
     chapter(
       "Kramnik – Leko : la rupture qui ouvre la colonne g",

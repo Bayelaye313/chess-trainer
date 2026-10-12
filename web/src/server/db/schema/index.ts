@@ -3,6 +3,7 @@ export * from "./bot-game-results";
 export * from "./curriculum";
 export * from "./games";
 export * from "./moves";
+export * from "./opening-endurance";
 export * from "./opening-mistake-review";
 export * from "./opening-progress";
 export * from "./platform-links";

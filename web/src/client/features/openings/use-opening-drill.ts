@@ -99,6 +99,7 @@ import type { OpeningLine } from "@/core/curriculum/openings";
 import { findMatchingTrap } from "@/core/curriculum/opening-trap-alert";
 import { type TrackedDrillSelection, variationLabelFor } from "@/core/curriculum/opening-variation-key";
 import type { OpeningTrap } from "@/core/curriculum/traps";
+import { recordEnduranceSession } from "@/server/actions/opening-endurance";
 import { type OpeningDrillProgressSummary, recordOpeningDrillResult } from "@/server/actions/opening-progress";
 import type { AnnotatedPly, OpeningVariation } from "@/server/queries/openings";
 import { getMoveSuccessCount, moveSuccessKey, recordMoveSuccess } from "./move-success-counter";
@@ -148,9 +149,19 @@ function sleep(ms: number): Promise<void> {
 async function saveOpeningDrillResultWithRetry(
   input: Parameters<typeof recordOpeningDrillResult>[0],
 ): Promise<OpeningDrillProgressSummary | null> {
+  return callWithRetry(() => recordOpeningDrillResult(input));
+}
+
+/** Même politique de retry que `saveOpeningDrillResultWithRetry`, pour l'historique d'endurance « Sans Guide » (`recordEnduranceSession`). */
+async function saveEnduranceSessionWithRetry(input: Parameters<typeof recordEnduranceSession>[0]): Promise<void> {
+  await callWithRetry(() => recordEnduranceSession(input));
+}
+
+/** `SAVE_PROGRESS_MAX_ATTEMPTS` tentatives à backoff linéaire, puis `null` — jamais d'exception vers l'appelant. */
+async function callWithRetry<T>(call: () => Promise<T>): Promise<T | null> {
   for (let attempt = 1; attempt <= SAVE_PROGRESS_MAX_ATTEMPTS; attempt += 1) {
     try {
-      return await recordOpeningDrillResult(input);
+      return await call();
     } catch {
       if (attempt === SAVE_PROGRESS_MAX_ATTEMPTS) return null;
       await sleep(SAVE_PROGRESS_RETRY_DELAY_MS * attempt);
@@ -322,6 +333,15 @@ export function useOpeningDrill({
   const progressSavedRef = useRef(false);
   /** Manche/position en attente pendant `status === "round-gate"` (`manualRoundGate`) — consommée par `beginNextRound()`. `null` en dehors de cet état. */
   const pendingRoundRef = useRef<{ round: DrillRound; nextRound: LearningRound } | null>(null);
+  /**
+   * Ply ABSOLU du premier coup fautif (refusé, ou piège documenté joué) de la
+   * manche EN COURS — `null` tant qu'il n'y en a pas. Lu une seule fois, à la
+   * fin d'une Manche 2, pour l'historique d'endurance « Sans Guide » (voir
+   * `completeRound`), puis remis à `null` à chaque changement de manche : une
+   * faute de Manche 1 (guidée) ne doit jamais entacher la Manche 2. Une ref,
+   * pas un state : rien à l'écran n'en dépend.
+   */
+  const firstMistakePlyRef = useRef<number | null>(null);
 
   // Le camp du joueur — normalement `opening.side`, MAIS pour une correction
   // ciblée ou un piège (`kind: "mistake"`/`"trap"`) on le déduit plutôt du
@@ -568,7 +588,34 @@ export function useOpeningDrill({
       }
 
       if (activeRound && usesLearningRounds) {
-        const outcome = nextLearningRoundOutcome(learningRound, completedScore ?? score, playerMovesExpected);
+        const roundScore = completedScore ?? score;
+        // Fin d'une Manche 2 « Sans Guide » (ligne principale/variante) :
+        // UNE session d'endurance, fautive ou non — c'est justement la manche
+        // fautive qui dit à quel coup la mémoire a lâché. Envoi en arrière-plan
+        // (best-effort, comme la répétition espacée) : l'enchaînement de la
+        // manche ne l'attend jamais. Un piège (`"trap"`) n'est pas une ligne
+        // d'ouverture à tenir : jamais enregistré.
+        if (learningRound === 2 && (selection?.kind === "main-line" || selection?.kind === "variation")) {
+          const trackedSelection: TrackedDrillSelection =
+            selection.kind === "main-line"
+              ? { kind: "main-line" }
+              : { kind: "variation", eco: selection.variation.eco, name: selection.variation.name };
+          void saveEnduranceSessionWithRetry({
+            openingId: opening.id,
+            openingName: opening.name,
+            selection: trackedSelection,
+            variationLabel: variationLabelFor(trackedSelection),
+            firstMistakePly: firstMistakePlyRef.current,
+            // `boardRef` est déjà à jour, y compris quand la manche se termine
+            // sur le dernier coup du joueur (`onPieceDrop` appelle
+            // `completeRound` avant que `history` (state) n'ait suivi).
+            lastPly: roundStartPly + boardRef.current.history().length - leadInLength,
+            correct: roundScore.correct,
+            attempted: roundScore.attempted,
+          });
+        }
+        firstMistakePlyRef.current = null;
+        const outcome = nextLearningRoundOutcome(learningRound, roundScore, playerMovesExpected);
         if (outcome.shouldRestart) {
           if (manualRoundGate) {
             pendingRoundRef.current = { round: activeRound, nextRound: outcome.nextRound };
@@ -610,6 +657,10 @@ export function useOpeningDrill({
       learningRound,
       score,
       playerMovesExpected,
+      opening.id,
+      opening.name,
+      roundStartPly,
+      leadInLength,
     ],
   );
 
@@ -635,6 +686,7 @@ export function useOpeningDrill({
     const pending = pendingRoundRef.current;
     if (!pending) return;
     pendingRoundRef.current = null;
+    firstMistakePlyRef.current = null;
     boardRef.current = new Chess(pending.round.startFen);
     setHistory([]);
     setScore({ correct: 0, attempted: 0 });
@@ -886,6 +938,7 @@ export function useOpeningDrill({
     boardRef.current = new Chess(initialFen);
     progressSavedRef.current = false;
     pendingRoundRef.current = null;
+    firstMistakePlyRef.current = null;
     setRoundIndex(0);
     setSelection(sel);
     setHistory([]);
@@ -927,8 +980,9 @@ export function useOpeningDrill({
     setScore((s) => ({ correct: s.correct + 1, attempted: s.attempted + 1 }));
   }, []);
 
-  /** Coup refusé — jamais rejoint l'historique (react-chessboard fait revenir la pièce), jamais de message : voir le docstring du fichier. Un coup qui correspond à un piège DOCUMENTÉ ne passe jamais par ici, voir `triggerTrapPunishment`. */
-  const rejectMove = useCallback(() => {
+  /** Coup refusé — jamais rejoint l'historique (react-chessboard fait revenir la pièce), jamais de message : voir le docstring du fichier. Un coup qui correspond à un piège DOCUMENTÉ ne passe jamais par ici, voir `triggerTrapPunishment`. `ply` : ply ABSOLU du coup refusé, retenu dans `firstMistakePlyRef` si c'est la première faute de la manche. */
+  const rejectMove = useCallback((ply: number) => {
+    firstMistakePlyRef.current ??= ply;
     setScore((s) => ({ ...s, attempted: s.attempted + 1 }));
     setErrorPulse((n) => n + 1);
   }, []);
@@ -980,7 +1034,7 @@ export function useOpeningDrill({
       try {
         move = attempt.move({ from: sourceSquare, to: targetSquare, promotion: scriptedPromotion });
       } catch {
-        rejectMove();
+        rejectMove(roundStartPly + plyIndex + 1);
         return false;
       }
       const uci = uciOf(move);
@@ -994,6 +1048,8 @@ export function useOpeningDrill({
       // SAN depuis le tout premier coup, fiable quel que soit `leadInLength`.
       const matchedTrap = findMatchingTrap(board.history(), move.san);
       if (matchedTrap) {
+        // Un piège joué est une faute au même titre qu'un coup refusé.
+        firstMistakePlyRef.current ??= roundStartPly + plyIndex + 1;
         triggerTrapPunishment(matchedTrap, uci, history.length);
         return true;
       }
@@ -1051,7 +1107,7 @@ export function useOpeningDrill({
           }
           return true;
         }
-        rejectMove();
+        rejectMove(roundStartPly + plyIndex + 1);
         return false;
       }
 
@@ -1064,7 +1120,7 @@ export function useOpeningDrill({
         commitPlayerMove(uci);
         return true;
       }
-      rejectMove();
+      rejectMove(roundStartPly + plyIndex + 1);
       return false;
     },
     [
@@ -1078,6 +1134,7 @@ export function useOpeningDrill({
       expectedUci,
       freshContinuations,
       script,
+      roundStartPly,
       plyIndex,
       score.correct,
       score.attempted,

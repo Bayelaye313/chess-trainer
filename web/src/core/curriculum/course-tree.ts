@@ -9,6 +9,7 @@ import { DOUBLER_LES_PIONS_ADVERSES } from "./course-trees/pm-doubler-les-pions-
 import { LA_COLONNE_OUVERTE } from "./course-trees/pm-la-colonne-ouverte";
 import { LA_TOUR_A_LA_7E_RANGEE } from "./course-trees/pm-la-tour-a-la-7e-rangee";
 import { LA_COLONNE_SEMI_OUVERTE } from "./course-trees/pm-la-colonne-semi-ouverte";
+import { PROPHYLAXIE } from "./course-trees/pm-prophylaxie-anticiper-le-plan-adverse";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -238,6 +239,7 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-la-colonne-ouverte": LA_COLONNE_OUVERTE,
   "pm-la-colonne-semi-ouverte": LA_COLONNE_SEMI_OUVERTE,
   "pm-la-tour-a-la-7e-rangee": LA_TOUR_A_LA_7E_RANGEE,
+  "pm-prophylaxie-anticiper-le-plan-adverse": PROPHYLAXIE,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },

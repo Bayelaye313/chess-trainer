@@ -5,4 +5,4 @@
  * sans embarquer tous les cours dans son bundle. Le test de
  * `opening-course-trees.test.ts` garantit que les deux listes coïncident.
  */
-export const OPENING_COURSE_IDS: ReadonlySet<string> = new Set(["scotch-game", "ruy-lopez", "caro-kann", "scotch-gambit", "slav-defense", "kings-indian"]);
+export const OPENING_COURSE_IDS: ReadonlySet<string> = new Set(["scotch-game", "ruy-lopez", "caro-kann", "scotch-gambit", "slav-defense", "kings-indian", "sicilian-alapin"]);

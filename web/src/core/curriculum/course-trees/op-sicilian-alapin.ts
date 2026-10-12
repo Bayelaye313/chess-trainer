@@ -1,0 +1,363 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Sicilienne Alapine (avec les Blancs) » : 1.e4 c5 2.c3
+ * — onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu
+ * par `CourseTreeViewer` (route `/ouvertures/sicilian-alapin/cours`). Public
+ * visé : 1500-1800 Elo, qui veut contourner la théorie de la Sicilienne
+ * ouverte par un plan central simple (c3 puis d4).
+ *
+ * ## Contenu (2026-10-12)
+ *
+ * 1. Fiche d'identité et 2...d5 3.exd5 Qxd5 4.d4 Nf6 5.Nf3 e6 6.Be2 Nc6
+ *    7.O-O cxd4 8.cxd4 Be7 9.Nc3 Qd6 10.Nb5 Qd8 11.Bf4 Nd5 12.Bg3 jusqu'au
+ *    coup 14 : le pion dame isolé d4 contre le pion e6.
+ * 2. 2...Nf6 3.e5 Nd5 4.d4 cxd4 5.Nf3 Nc6 6.Bc4 Nb6 7.Bb3 d6 8.exd6 Qxd6
+ *    9.O-O Be6 10.Nxd4 jusqu'au coup 13 (de nouveau un pion d4 isolé), avec
+ *    la ligne d'espace 8.cxd4 dxe5 9.d5.
+ * 3. Les coups passifs : 2...e6 3.d4 d5 4.e5 (structure Française Avance,
+ *    fou c8 enfermé) et 2...d6 3.d4 (le duo e4-d4 gratuit, environ +0.7).
+ * 4. Anti-panique : 3...e5?! 4.c4 (+1.5), 4...e5?! 5.dxe5, et le faux
+ *    clouage 8...Bb4 9.O-O Bxf3?? 10.Nxd5 (avec 10.Bxf3 Qxd4?? 11.Bxc6+).
+ * 5. Aléatoire surprise : 12...a5?!, 15...h6?! et 16...Bg5? (le fou des
+ *    cases noires abandonne d6) punis par 17.Nxg5 et 18.Nd6.
+ *
+ * Indices progressifs : chaque faute noire porte trois balises `[%hint]`
+ * (1. principe violé, 2. case faible, 3. action de punition) et une balise
+ * `[%hintcsl]` (cases allumées à partir du 2e indice).
+ *
+ * Sources : les livres Alapine présents dans `docs/` (Rogozenko « Anti
+ * Sicilian: Alapin Variation », « Seven Ways to Smash the Sicilian »,
+ * « Dismantling the Sicilian ») sont des scans sans couche texte ; les
+ * lignes suivent la théorie courante de l'Alapine (Emms, Rogozenko) et sont
+ * toutes arbitrées par Stockfish 18 natif (profondeur 16). Le moteur a
+ * nuancé le cahier des charges : 5.Nf3 et 5.cxd4 se valent (+0.2) ; la
+ * ligne 2...Nf6 mène à un pion d4 isolé (pas à une attaque à l'aile roi) ;
+ * le piège du « clouage » est le faux clouage 8...Bb4 du cavalier c3, que
+ * le roque blanc annule. Toute la prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Voir `op-scotch-game.ts` : `evaluationScore` / `evaluationMate` (balise
+ * `[%eval]`), `showEvalBar`, `freeze` (balise `[%txt "…"]` sur CHAQUE
+ * commentaire), plus `hints` / `hintHighlights`.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/sicilian-alapin.pgn` (et l'en-tête
+ * `sicilian-alapin.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16 [pgn compilé]`
+ * (PGN compilé : `scripts/opening-course-src/alapin-sicilian.pgn`).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]` ni un `[%hint]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+export const OP_SICILIAN_ALAPIN: CourseTree = {
+  chapters: [
+    chapter(
+      "Fiche d'identité, tronc commun et la réponse centrale 2...d5",
+      `{ [%txt "LA SICILIENNE ALAPINE, AVEC LES BLANCS.
+
+Le vrai enjeu : contre 1...c5, au lieu d'entrer dans des milliers de coups de théorie après 2.Nf3 et 3.d4, on joue 2.c3 pour préparer d4 et construire le centre classique e4-d4. Si les Noirs prennent en d4, on reprend avec le pion c : on garde deux pions au centre.
+
+Les deux plans à connaître par coeur :
+- Plan blanc : d4 au coup 3 ou 4, développement rapide (Nf3, Be2 ou Bd3, O-O, Nc3), puis jeu actif des pièces autour du pion d4.
+- Plan noir : attaquer le centre tout de suite, soit par 2...d5 (chapitre 1), soit par 2...Nf6 (chapitre 2). Les coups passifs (chapitre 3) nous donnent le centre gratuitement.
+
+La règle d'or du joueur de club : dans l'Alapine on obtient souvent un PION DAME ISOLÉ en d4. Ce n'est pas une faiblesse à défendre, c'est un moteur d'activité : il contrôle e5 et c5, il ouvre les colonnes c et e, et la poussée d4-d5 est l'arme de rupture.
+
+Honnêteté moteur : 2.c3 ne réfute pas la Sicilienne. Stockfish 18 donne environ +0.2, un peu moins que 2.Nf3. Le gain est ailleurs : une structure qu'on connaît par coeur contre un adversaire qui a appris la Najdorf.
+
+Les structures types (relevées sur la position finale de chaque chapitre) :
+- Chapitres 1, 2 et 5 : pion d4 isolé contre le pion e6 noir ; colonnes c et e ouvertes, avant-postes blancs en e5 et b5, case de blocage noire en d5.
+- Chapitre 3 : le duo e4-d4 intact, ou la chaîne d4-e5 de la Française Avance contre un fou c8 enfermé.
+- Chapitre 4 : les tentatives noires de frapper trop tôt laissent des pions ou la dame en l'air."] [%eval 0.31] }
+1. e4 { [%txt "Le pion roi au centre."] [%eval 0.36] [%csl Ge4] }
+1... c5 { [%txt "La Sicilienne : les Noirs contrôlent d4 de côté."] [%eval 0.44] }
+2. c3 { [%txt "L'ALAPINE : le pion c3 prépare d4. Si les Noirs prennent en d4, le pion c reprendra et le centre e4-d4 restera debout."] [%eval 0.22] [%csl Gc3,Gd4] [%cal Gc3d4,Gd2d4] }
+2... d5 { [%txt "La réponse la plus directe : les Noirs frappent e4 tout de suite, avant que d4 soit joué."] [%eval 0.32] }
+(2... Nf6 { [%txt "La contre-attaque hypermoderne : voir le chapitre 2."] [%eval 0.18] }
+  3. e5 { [%txt "On chasse le cavalier avec gain de temps."] [%eval 0.19] [%cal Ge5f6] }
+  3... Nd5 { [%txt "Le cavalier se place au centre."] [%eval 0.17] }
+  4. d4 { [%txt "Le centre, puis 4...cxd4 5.Nf3 : la suite au chapitre 2."] [%eval 0.13] [%csl Gd4,Ge5] })
+3. exd5 { [%txt "On prend : laisser les Noirs prendre en e4 donnerait un centre vide."] [%eval 0.31] [%cal Ge4d5] }
+3... Qxd5 { [%txt "La dame reprend. Elle est exposée au centre, mais aucune pièce blanche ne peut l'attaquer tout de suite : le pion c3 enlève la case c3 à notre cavalier."] [%eval 0.33] }
+4. d4 { [%txt "On installe le pion dame. La dame noire en d5 le bloque, mais on va développer avec gain de temps autour d'elle."] [%eval 0.25] [%csl Gd4] [%cal Gd4c5] }
+4... Nf6 { [%txt "Développement naturel, le cavalier défend la dame et vise e4."] [%eval 0.26] }
+5. Nf3 { [%txt "Le cavalier protège d4 et prépare le roque."] [%eval 0.23] [%cal Gf3d4,Gf3e5] }
+5... e6 { [%txt "Les Noirs ouvrent la diagonale du fou f8. Leur structure sera e6 contre notre pion d."] [%eval 0.35] }
+6. Be2 { [%txt "Sobre et solide : le fou ne s'expose pas à ...c4 ou à la dame d5, et on roque au coup suivant."] [%eval 0.14] [%cal Ge1g1] }
+6... Nc6 { [%txt "Troisième pression sur d4 : dame, cavalier et pion c5."] [%eval 0.19] [%cal Gc6d4,Gc5d4] }
+7. O-O { [%txt "Le roi à l'abri avant que le centre s'ouvre."] [%eval 0.28] [%csl Gg1] }
+7... cxd4 { [%txt "Les Noirs échangent : la structure se fixe."] [%eval 0.20] }
+8. cxd4 { [%txt "On reprend avec le pion c. VOICI LE PION DAME ISOLÉ : plus de pion c ni de pion e blanc à côté de lui. Il contrôle e5 et c5, et les colonnes c et e s'ouvrent pour nos tours."] [%eval 0.18] [%csl Gd4,Ge5,Gc5] [%cal Gd4e5,Gd4c5] }
+8... Be7 { [%txt "Les Noirs préparent le roque."] [%eval 0.16] }
+9. Nc3 { [%txt "Développement avec gain de temps : le cavalier attaque la dame d5."] [%eval 0.13] [%cal Gc3d5] }
+9... Qd6 { [%txt "La dame recule et vise la diagonale b8-h2."] [%eval 0.12] }
+10. Nb5 { [%txt "Le cavalier saute en b5, une case qu'aucun pion noir ne peut plus défendre facilement : il attaque la dame et vise c7 et d6."] [%eval 0.09] [%csl Gb5] [%cal Gb5c7,Gb5d6] }
+10... Qd8 { [%txt "La dame rentre."] [%eval 0.18] }
+11. Bf4 { [%txt "Le fou se développe avec une menace : Nc7+ suivi de la fourchette, et la case d6 est contrôlée."] [%eval 0.10] [%cal Gf4c7,Gb5c7] }
+11... Nd5 { [%txt "Le cavalier bloque d5, la case devant le pion isolé : c'est le plan défensif des Noirs."] [%eval 0.11] [%csl Rd5] }
+12. Bg3 { [%txt "Le fou reste sur la diagonale b8-h2 et évite l'échange contre le cavalier d5."] [%eval 0.18] [%cal Gg3b8] }
+12... O-O { [%txt "Les Noirs roquent."] [%eval 0.15] }
+13. Rc1 { [%txt "La tour prend la colonne c ouverte : elle vise c6 et c7."] [%eval 0.15] [%cal Gc1c7] }
+13... Bd7 { [%txt "Les Noirs développent le dernier fou."] [%eval 0.17] }
+14. Nc3 { [%txt "RETENIR (
+
+PRO TIP : le cavalier revient pour défier le bloqueur d5. Position environ +0.1 : avec le pion d4 isolé, on cherche l'activité (colonne c, avant-poste e5, cavalier qui défie d5) et la rupture d4-d5 dès que les pièces noires sont mal placées. Ne jamais échanger les pièces sans raison : en finale, le pion isolé devient une faiblesse."] [%eval 0.07] [%csl Gd4] [%cal Gc3d5,Gd4d5] } *`,
+    ),
+    chapter(
+      "La contre-attaque hypermoderne 2...Nf6",
+      `{ [%txt "LA LIGNE 2...Nf6.
+
+Les Noirs attaquent e4 avec le cavalier. On ne défend pas e4 : on le pousse en e5 avec gain de temps, et le cavalier noir s'installe en d5, en plein centre mais sans pion pour le soutenir.
+
+Ce qu'il faut savoir : après 4...cxd4, le coup 5.Nf3 est aussi bon que 5.cxd4 (environ +0.2 pour les deux selon Stockfish 18). Son intérêt pratique : on garde le choix de reprendre en d4 avec le pion c ou avec une pièce, et on développe d'abord.
+
+Honnêteté moteur : le cahier des charges parlait d'espace à l'aile roi. La ligne principale moderne aboutit plutôt, une fois encore, à un PION d4 ISOLÉ contre le pion e6 : les mêmes plans qu'au chapitre 1. La ligne d'espace 8.cxd4 dxe5 9.d5 est donnée en variante."] [%eval 0.31] }
+1. e4 { [%txt "Le pion roi."] [%eval 0.36] }
+1... c5 { [%txt "La Sicilienne."] [%eval 0.44] }
+2. c3 { [%txt "L'Alapine."] [%eval 0.22] [%cal Gc3d4] }
+2... Nf6 { [%txt "Les Noirs attaquent e4 avec une pièce."] [%eval 0.18] }
+3. e5 { [%txt "On chasse le cavalier avec gain de temps : le pion e5 prend de l'espace."] [%eval 0.19] [%csl Ge5] [%cal Ge5f6] }
+3... Nd5 { [%txt "Le cavalier se place au centre. Notre pion c3 l'empêche d'aller en c3, il n'a pas de soutien de pion."] [%eval 0.17] }
+4. d4 { [%txt "Le centre : on soutient e5 et on menace de reprendre en d4 avec le pion c."] [%eval 0.13] [%csl Gd4,Ge5] }
+4... cxd4 { [%txt "Les Noirs échangent tout de suite."] [%eval 0.15] }
+5. Nf3 { [%txt "Développer d'abord : le cavalier soutient e5 et attaque d4. On reprendra en d4 quand on voudra."] [%eval 0.17] [%cal Gf3d4,Gf3e5] }
+5... Nc6 { [%txt "Le cavalier attaque e5."] [%eval 0.19] }
+6. Bc4 { [%txt "Le fou chasse le cavalier d5, qui n'a pas de soutien de pion."] [%eval 0.13] [%cal Gc4d5] }
+6... Nb6 { [%txt "Le cavalier recule en attaquant le fou."] [%eval 0.12] }
+7. Bb3 { [%txt "Le fou reste sur la diagonale a2-g8 : il vise f7 et d5."] [%eval 0.12] [%cal Gb3f7] }
+7... d6 { [%txt "Les Noirs frappent e5, la pointe de notre centre."] [%eval 0.09] }
+8. exd6 { [%txt "On prend : ouvrir le jeu sert nos pièces mieux développées."] [%eval 0.10] [%cal Ge5d6] }
+(8. cxd4 { [%txt "La ligne d'espace : on garde les deux pions centraux."] [%eval 0.03] }
+  8... dxe5 { [%txt "Les Noirs prennent."] [%eval 0.07] }
+  9. d5 { [%txt "On chasse le cavalier c6 avec le pion : il prend de l'espace et coupe les Noirs en deux."] [%eval 0.06] [%csl Gd5] [%cal Gd5c6] }
+  9... Na5 { [%txt "Le cavalier attaque notre fou b3."] [%eval 0.13] }
+  10. Nc3 { [%txt "Développement. On accepte l'échange du fou b3."] [%eval 0.04] }
+  10... Nxb3 { [%txt "L'échange."] [%eval -0.11] }
+  11. Qxb3 { [%txt "La dame reprend : le pion d5 et le développement compensent la paire de fous. Environ 0.00 : plus tranchant, mais pas meilleur que 8.exd6."] [%eval -0.12] [%csl Gd5] })
+8... Qxd6 { [%txt "La dame reprend et attaque d4."] [%eval 0.06] }
+9. O-O { [%txt "Le roi d'abord. Le gambit 9.Na3 ou 10.Na3 (après ...Be6) est séduisant mais Stockfish 18 le juge mauvais : environ -0.2."] [%eval 0.07] [%csl Gg1] }
+9... Be6 { [%txt "Les Noirs défient notre fou b3."] [%eval 0.09] }
+10. Nxd4 { [%txt "On reprend le pion en d4 avec le cavalier : on récupère notre pion."] [%eval 0.08] [%cal Gf3d4] }
+10... Nxd4 { [%txt "Les Noirs échangent."] [%eval 0.09] }
+11. cxd4 { [%txt "Le pion c reprend : de nouveau un pion dame ISOLÉ."] [%eval 0.04] [%csl Gd4] }
+11... Bxb3 { [%txt "Les Noirs échangent le fou actif."] [%eval 0.08] }
+12. Qxb3 { [%txt "La dame reprend, active sur la diagonale a2-g8 et la colonne b."] [%eval 0.00] [%cal Gb3b7,Gb3f7] }
+12... e6 { [%txt "Les Noirs ferment la diagonale du roi."] [%eval -0.02] }
+13. Rd1 { [%txt "RETENIR (
+
+PRO TIP : la tour se place derrière le pion isolé, elle le défend et soutient la rupture d4-d5. Position équilibrée (environ 0.00) : la structure est celle du chapitre 1 (pion d4 isolé contre e6). Nos atouts : colonnes c et d, cavalier vers c3 puis b5 ou e4, rupture d4-d5. Le plan : Nc3, Bf4 ou Bg5, puis Ne4 ou Nb5."] [%eval 0.05] [%csl Gd4] [%cal Gd1d4,Gd4d5] } *`,
+    ),
+    chapter(
+      "La variante fermée de club : 2...e6 et 2...d6",
+      `{ [%txt "LES COUPS PASSIFS DE CLUB.
+
+Beaucoup de joueurs de club répondent à 2.c3 par un coup tranquille : 2...e6 ou 2...d6. Ils ne contestent pas le centre tout de suite. Notre réponse est toujours la même : 3.d4 ! On installe le duo e4-d4 gratuitement.
+
+Contre 2...e6, les Noirs jouent souvent 3...d5. On pousse alors 4.e5 : c'est une Française Avance où notre pion c3 est déjà joué. Le fou c8 noir est ENFERMÉ derrière e6 et d5.
+
+Contre 2...d6, c'est encore mieux : Stockfish 18 donne environ +0.7. Le duo e4-d4 reste debout et les Noirs n'ont aucune rupture centrale."] [%eval 0.31] }
+1. e4 { [%txt "Le pion roi."] [%eval 0.36] }
+1... c5 { [%txt "La Sicilienne."] [%eval 0.44] }
+2. c3 { [%txt "L'Alapine."] [%eval 0.22] [%cal Gc3d4] }
+2... e6 { [%txt "Un coup passif : les Noirs ne frappent pas le centre."] [%eval 0.30] }
+(2... d6 { [%txt "Encore plus passif : la Sicilienne sans le contrôle de d4. Environ +0.7."] [%hint "Les Noirs ne contestent pas le centre : leur pion d6 ne frappe ni e4 ni d4."] [%hint "Les cases d4 et e4 : rien n'empêche les Blancs de les occuper toutes les deux."] [%hint "d4 ! Le duo e4-d4 se construit gratuitement."] [%hintcsl Gd4,Ge4] [%eval 0.63] }
+  3. d4 { [%txt "Le duo central."] [%eval 0.67] [%csl Gd4,Ge4] [%cal Gd4c5] }
+  3... Nf6 { [%txt "Le cavalier attaque e4."] [%eval 0.75] }
+  4. Bd3 { [%txt "Le fou défend e4 : le duo reste intact."] [%eval 0.65] [%cal Gd3e4] }
+  4... cxd4 { [%txt "Les Noirs échangent."] [%eval 0.63] }
+  5. cxd4 { [%txt "Le pion c reprend : deux pions centraux contre un."] [%eval 0.62] [%csl Gd4,Ge4] }
+  5... g6 { [%txt "Fianchetto du fou f8."] [%eval 0.62] }
+  6. Nf3 { [%txt "Le cavalier soutient d4."] [%eval 0.72] [%cal Gf3d4] }
+  6... Bg4 { [%txt "Le fou cloue le cavalier."] [%eval 0.66] }
+  7. Be3 { [%txt "On renforce d4 : le clouage ne gagne rien."] [%eval 0.72] [%cal Ge3d4] }
+  7... Bxf3 { [%txt "Les Noirs donnent la paire de fous."] [%eval 0.85] }
+  8. Qxf3 { [%txt "La dame reprend et vise l'aile roi."] [%eval 0.80] [%cal Gf3f7] }
+  8... Bg7 { [%txt "Le fou sur la grande diagonale vise d4."] [%eval 0.82] }
+  9. Nc3 { [%txt "Le dernier cavalier : il soutient e4 et d5."] [%eval 0.82] [%cal Gc3d5] }
+  9... Nc6 { [%txt "Pression sur d4."] [%eval 0.80] }
+  10. O-O { [%txt "Le roi à l'abri."] [%eval 0.67] }
+  10... O-O { [%txt "Les Noirs roquent."] [%eval 0.67] }
+  11. Bb5 { [%txt "On cloue le cavalier c6 qui frappe d4."] [%eval 0.60] [%cal Gb5c6] }
+  11... a6 { [%txt "Les Noirs questionnent le fou."] [%eval 0.67] }
+  12. Bxc6 { [%txt "On échange : après ...bxc6, les pions noirs a6 et c6 deviennent des cibles fixes."] [%eval 0.69] [%cal Gb5c6] }
+  12... bxc6 { [%txt "La reprise."] [%eval 0.69] }
+  13. Rac1 { [%txt "RETENIR (
+
+PRO TIP : la tour vise le pion c6. Environ +0.7 : duo e4-d4 intact, pions noirs faibles en a6 et c6. Contre les coups passifs, on prend le centre et on attaque les pions noirs qui restent derrière."] [%eval 0.68] [%csl Gd4,Ge4,Rc6] [%cal Gc1c6] })
+(2... Nf6 { [%txt "La contre-attaque hypermoderne : voir le chapitre 2."] [%eval 0.18] }
+  3. e5 { [%txt "On chasse le cavalier avec gain de temps."] [%eval 0.19] [%cal Ge5f6] }
+  3... Nd5 { [%txt "Le cavalier se place au centre."] [%eval 0.17] }
+  4. d4 { [%txt "Le centre, puis 4...cxd4 5.Nf3 : la suite au chapitre 2."] [%eval 0.13] [%csl Gd4,Ge5] })
+3. d4 { [%txt "Le duo e4-d4 : le centre classique en trois coups."] [%eval 0.33] [%csl Gd4,Ge4] }
+3... d5 { [%txt "Les Noirs frappent e4 avec un pion : comme dans la Française."] [%eval 0.31] }
+4. e5 { [%txt "On pousse : la chaîne c3-d4-e5 prend de l'espace à l'aile roi et ENFERME le fou c8 derrière e6."] [%eval 0.32] [%csl Ge5,Rc8] [%cal Ge5f6] }
+(4. exd5 { [%txt "Aussi jouable : 4...exd5 donne une structure symétrique, environ +0.3, mais moins d'espace."] [%eval 0.19] })
+4... Nc6 { [%txt "Les Noirs attaquent d4 avec les pièces."] [%eval 0.31] }
+5. Nf3 { [%txt "Le cavalier défend d4 et e5."] [%eval 0.35] [%cal Gf3d4,Gf3e5] }
+5... Bd7 { [%txt "Le fou enfermé sort par d7 : il n'a pas d'avenir sur la diagonale c8-h3."] [%eval 0.31] }
+6. Be2 { [%txt "Développement sobre, on roque ensuite."] [%eval 0.37] }
+6... Nge7 { [%txt "Le cavalier vise f5 ou g6 pour frapper d4."] [%eval 0.36] }
+7. O-O { [%txt "Le roi à l'abri."] [%eval 0.33] [%csl Gg1] }
+7... Ng6 { [%txt "Le cavalier attaque e5."] [%eval 0.34] }
+8. Be3 { [%txt "Le fou défend d4, la base de la chaîne."] [%eval 0.36] [%cal Ge3d4] }
+8... Qb6 { [%txt "La dame frappe b2 et d4."] [%eval 0.37] }
+9. Na3 { [%txt "Le cavalier va en c2 pour défendre d4 une fois de plus."] [%eval 0.48] [%cal Ga3c2,Gc2d4] }
+9... Be7 { [%txt "Les Noirs préparent le roque."] [%eval 0.36] }
+10. Nc2 { [%txt "RETENIR (
+
+PRO TIP : d4 est défendu trois fois (cavaliers f3 et c2, fou e3). Environ +0.4 : notre espace à l'aile roi (pion e5) est durable, le fou d7 noir est passif. Le plan : g3, h4-h5 contre le cavalier g6, ou b4 à l'aile dame."] [%eval 0.42] [%csl Gd4,Ge5,Rd7] [%cal Gc2d4,Gh2h4] } *`,
+    ),
+    chapter(
+      "Anti-panique : 3...e5, 4...e5 et le faux clouage 8...Bb4",
+      `{ [%txt "LE CHAPITRE ANTI-PANIQUE.
+
+Trois tentatives noires agressives à connaître :
+1. 3...e5?! : les Noirs laissent le pion d5 et frappent le centre. On garde le pion avec 4.c4 (environ +1.4). Leurs cases blanches (d5, e4, la diagonale h1-a8) sont à nous.
+2. 4...e5?! : la dame d5 soutient un pion e5 qui tombe. 5.dxe5 force l'échange des dames, et notre avance de développement compte en finale (environ +1.0).
+3. LE PIÈGE : 8...Bb4 cloue notre cavalier c3 contre le roi. Le clouage disparaît dès qu'on roque : la dame d5 est alors attaquée par le cavalier c3. Si les Noirs ne la déplacent pas, elle tombe."] [%eval 0.31] }
+1. e4 { [%txt "Le pion roi."] [%eval 0.36] }
+1... c5 { [%txt "La Sicilienne."] [%eval 0.44] }
+2. c3 { [%txt "L'Alapine."] [%eval 0.22] }
+2... d5 { [%txt "La réponse centrale."] [%eval 0.32] }
+(2... Nf6 { [%txt "La contre-attaque hypermoderne : voir le chapitre 2."] [%eval 0.18] }
+  3. e5 { [%txt "On chasse le cavalier avec gain de temps."] [%eval 0.19] [%cal Ge5f6] }
+  3... Nd5 { [%txt "Le cavalier se place au centre."] [%eval 0.17] }
+  4. d4 { [%txt "Le centre, puis 4...cxd4 5.Nf3 : la suite au chapitre 2."] [%eval 0.13] [%csl Gd4,Ge5] })
+3. exd5 { [%txt "On prend."] [%eval 0.31] }
+3... Qxd5 { [%txt "Le coup normal."] [%eval 0.33] }
+(3... e5 { [%txt "Les Noirs laissent le pion d5 pour frapper le centre."] [%hint "Les Noirs abandonnent un pion pour une poussée centrale qui ne développe aucune pièce."] [%hint "Le pion d5 : si on le soutient, il coupe l'échiquier en deux et les cases blanches du centre (d5, e4) sont à nous."] [%hint "c4 ! On garde le pion d5 avec un autre pion."] [%hintcsl Gd5,Ge4] [%eval 1.53] }
+  4. c4 { [%txt "On soutient le pion d5 : un pion de plus, environ +1.4. La prise en passant 4.dxe6 rendait le pion (environ +0.9)."] [%eval 1.36] [%csl Gd5] [%cal Gc4d5] }
+  4... Bd6 { [%txt "Les Noirs développent."] [%eval 1.42] }
+  5. Nc3 { [%txt "Le cavalier soutient d5 et vise e4."] [%eval 1.38] [%cal Gc3d5,Gc3e4] }
+  5... Ne7 { [%txt "Le cavalier vise f5 et d5."] [%eval 1.52] }
+  6. d3 { [%txt "On fixe la case e4 et on ouvre le fou c1."] [%eval 1.38] [%csl Ge4] }
+  6... Nf5 { [%txt "Le cavalier vise d4."] [%eval 1.40] }
+  7. Nf3 { [%txt "Le cavalier contrôle d4."] [%eval 1.45] [%cal Gf3d4] }
+  7... Nd4 { [%txt "Les Noirs s'installent en d4."] [%eval 1.42] }
+  8. Be2 { [%txt "On développe et on prépare le roque."] [%eval 1.36] }
+  8... f5 { [%txt "Les Noirs prennent de l'espace."] [%eval 1.35] }
+  9. Nxd4 { [%txt "On échange le cavalier actif."] [%eval 1.46] [%cal Gf3d4] }
+  9... cxd4 { [%txt "Reprise."] [%eval 1.39] }
+  10. Nb5 { [%txt "RETENIR (
+
+PRO TIP : le cavalier attaque d4 et d6. Un pion de plus, environ +1.5 : le pion d5 bloque le fou d6 et les Noirs n'ont rien pour le pion."] [%eval 1.53] [%csl Gd5,Rd4] [%cal Gb5d4,Gb5d6] })
+4. d4 { [%txt "Le pion dame."] [%eval 0.25] }
+4... Nc6 { [%txt "Le cavalier attaque d4."] [%eval 0.21] }
+(4... e5 { [%txt "Les Noirs veulent tout le centre."] [%hint "La dame d5 soutient un pion central : les Noirs sortent la dame tôt et ne développent rien."] [%hint "Le pion e5 : défendu par la dame seule, et notre pion d4 le touche."] [%hint "dxe5 ! On prend, et l'échange des dames vient avec un temps."] [%hintcsl Re5] [%eval 0.67] }
+  5. dxe5 { [%txt "On prend : les dames vont s'échanger."] [%eval 0.72] [%cal Gd4e5] }
+  5... Qxd1+ { [%txt "Les Noirs échangent les dames."] [%eval 0.74] }
+  6. Kxd1 { [%txt "Le roi reprend : sans dames, il est en sécurité au centre."] [%eval 0.77] }
+  6... Nc6 { [%txt "Le cavalier attaque e5."] [%eval 0.76] }
+  7. Nf3 { [%txt "On défend e5."] [%eval 0.81] [%cal Gf3e5] }
+  7... Bg4 { [%txt "Les Noirs clouent le cavalier."] [%eval 0.80] }
+  8. Bf4 { [%txt "Le fou défend e5 une deuxième fois."] [%eval 0.89] [%cal Gf4e5] }
+  8... O-O-O+ { [%txt "Échec de la tour."] [%eval 0.87] }
+  9. Nd2 { [%txt "RETENIR (
+
+PRO TIP : le cavalier pare l'échec et se développe. Le pion e5 est solide, environ +1.0 : finale meilleure pour les Blancs, les Noirs ont un pion de moins au centre."] [%eval 1.04] [%csl Ge5] })
+5. Nf3 { [%txt "Le cavalier défend d4."] [%eval 0.25] [%cal Gf3d4] }
+5... Bg4 { [%txt "Les Noirs clouent le cavalier qui défend d4."] [%eval 0.34] }
+6. Be2 { [%txt "On déloue le cavalier."] [%eval 0.30] }
+6... cxd4 { [%txt "Échange."] [%eval 0.30] }
+7. cxd4 { [%txt "Le pion c reprend : pion d4 isolé."] [%eval 0.38] }
+7... e6 { [%txt "Les Noirs ouvrent le fou f8."] [%eval 0.36] }
+8. Nc3 { [%txt "On attaque la dame avec gain de temps."] [%eval 0.34] [%cal Gc3d5] }
+8... Bb4 { [%txt "LE FAUX CLOUAGE : le fou cloue le cavalier c3 contre notre roi e1. La dame d5 semble en sécurité."] [%eval 0.33] [%cal Gb4e1] }
+9. O-O { [%txt "On roque : le roi quitte la diagonale, le cavalier c3 n'est plus cloué. La menace Nxd5 est réelle."] [%eval 0.29] [%csl Gg1] [%cal Gc3d5] }
+9... Bxf3 { [%txt "La faute : les Noirs prennent en f3 pour gagner le pion d4, et oublient leur dame."] [%hint "Les Noirs jouent comme si le cavalier c3 était encore cloué : le clouage a disparu avec le roque."] [%hint "La dame d5 : attaquée par le cavalier c3, plus aucun clouage ne la protège."] [%hint "Nxd5 ! On prend la dame."] [%hintcsl Rd5,Gc3] [%eval 3.05] }
+(9... Qa5 { [%txt "Le bon coup : la dame s'écarte de la case d5 et garde la pression sur c3 avec le fou b4. Environ +0.3."] [%eval 0.31] }
+  10. h3 { [%txt "On questionne le fou g4."] [%eval 0.27] [%cal Gh3g4] }
+  10... Bxf3 { [%txt "Les Noirs échangent."] [%eval 0.30] }
+  11. Bxf3 { [%txt "RETENIR (
+
+PRO TIP : la paire de fous et le pion d4 actif compensent la structure, environ +0.3."] [%eval 0.26] [%cal Gf3c6] })
+10. Nxd5 { [%txt "On prend la dame. Environ +3 : deux fous contre une dame."] [%eval 3.00] [%csl Gd5] [%cal Gc3d5] }
+(10. Bxf3 { [%txt "Moins fort, mais avec un piège :"] [%eval 1.77] }
+  10... Qxd4 { [%txt "Les Noirs croient gagner un pion : notre fou c1 ne défend pas d4."] [%hint "Les Noirs prennent un pion avec la dame sans vérifier les échecs à la découverte."] [%hint "La case c6 : le cavalier c6 est la seule pièce entre notre fou f3 et le roi e8, et notre dame d1 vise d4."] [%hint "Bxc6+ ! L'échec découvre notre dame d1 sur la dame d4."] [%hintcsl Rc6,Rd4] [%eval 7.37] }
+  11. Bxc6+ { [%txt "Échec, et notre dame d1 attaque la dame d4."] [%eval 7.30] [%cal Gf3c6,Gd1d4] }
+  11... bxc6 { [%txt "Obligé."] [%eval 7.59] }
+  12. Qxd4 { [%txt "RETENIR (
+
+PRO TIP : on gagne la dame. Avant de prendre un pion avec la dame, toujours regarder les échecs à la découverte."] [%eval 7.77] [%csl Gd4] })
+10... Bxd5 { [%txt "Le fou f3 reprend le cavalier en d5 : les Noirs ont deux fous pour la dame."] [%eval 2.99] }
+11. a3 { [%txt "On attaque le fou b4."] [%eval 3.03] [%cal Ga3b4] }
+11... Bd6 { [%txt "Le fou recule."] [%eval 3.04] }
+12. b4 { [%txt "On prend de l'espace et on prépare b5 contre le cavalier c6."] [%eval 2.84] [%cal Gb4b5] }
+12... Nf6 { [%txt "Le cavalier se développe."] [%eval 2.71] }
+13. b5 { [%txt "RETENIR (
+
+PRO TIP : on chasse le cavalier c6. Environ +3 : la dame vaut plus que deux fous. Le principe : un clouage contre le roi disparaît quand le roi bouge ; chaque fois que l'adversaire cloue un cavalier, vérifier ce qui se passe après le roque."] [%eval 2.69] [%cal Gb5c6] } *`,
+    ),
+    chapter(
+      "Aléatoire Surprise : les coups de pion latéraux et le fou noir abandonné",
+      `{ [%txt "MODULE ALÉATOIRE SURPRISE.
+
+Une partie de club typique : les Noirs suivent la ligne du chapitre 1 jusqu'au coup 12, puis jouent deux coups de pion latéraux inutiles (12...a5 et 15...h6) au lieu de finir leur développement. Puis ils échangent leur fou des cases noires (16...Bg5), le seul défenseur de la case d6.
+
+À toi de trouver la punition. Utilise les indices dans l'ordre : 1. le principe violé, 2. la case faible, 3. l'action.
+
+La méthode à retenir (
+
+PRO TIP : quand l'adversaire pousse des pions latéraux, ses pièces ne défendent plus le centre. Avec le pion d4 isolé, on cherche les avant-postes (b5, d6, e5) et on échange les défenseurs de ces cases."] [%eval 0.31] }
+1. e4 { [%txt "Le pion roi."] [%eval 0.36] }
+1... c5 { [%txt "La Sicilienne."] [%eval 0.44] }
+2. c3 { [%txt "L'Alapine."] [%eval 0.22] }
+2... d5 { [%txt "La réponse centrale."] [%eval 0.32] }
+(2... Nf6 { [%txt "La contre-attaque hypermoderne : voir le chapitre 2."] [%eval 0.18] }
+  3. e5 { [%txt "On chasse le cavalier avec gain de temps."] [%eval 0.19] [%cal Ge5f6] }
+  3... Nd5 { [%txt "Le cavalier se place au centre."] [%eval 0.17] }
+  4. d4 { [%txt "Le centre, puis 4...cxd4 5.Nf3 : la suite au chapitre 2."] [%eval 0.13] [%csl Gd4,Ge5] })
+3. exd5 { [%txt "On prend."] [%eval 0.31] }
+3... Qxd5 { [%txt "La dame reprend."] [%eval 0.33] }
+4. d4 { [%txt "Le pion dame."] [%eval 0.25] }
+4... Nf6 { [%txt "Développement."] [%eval 0.26] }
+5. Nf3 { [%txt "Développement."] [%eval 0.23] }
+5... e6 { [%txt "Le fou f8 est libre."] [%eval 0.35] }
+6. Be2 { [%txt "Le fou."] [%eval 0.14] }
+6... Nc6 { [%txt "Pression sur d4."] [%eval 0.19] }
+7. O-O { [%txt "Le roque."] [%eval 0.28] }
+7... cxd4 { [%txt "Échange."] [%eval 0.20] }
+8. cxd4 { [%txt "Le pion isolé."] [%eval 0.18] [%csl Gd4] }
+8... Be7 { [%txt "Les Noirs préparent le roque."] [%eval 0.16] }
+9. Nc3 { [%txt "Gain de temps sur la dame."] [%eval 0.13] [%cal Gc3d5] }
+9... Qd6 { [%txt "La dame recule."] [%eval 0.12] }
+10. Nb5 { [%txt "L'avant-poste b5."] [%eval 0.09] [%csl Gb5] }
+10... Qd8 { [%txt "La dame rentre."] [%eval 0.18] }
+11. Bf4 { [%txt "Le fou actif."] [%eval 0.10] [%cal Gf4c7] }
+11... Nd5 { [%txt "Le blocage."] [%eval 0.11] }
+12. Bg3 { [%txt "Fin du terrain connu, environ +0.2."] [%eval 0.18] }
+12... a5 { [%txt "PREMIER COUP LATÉRAL : les Noirs ne roquent pas et poussent un pion à l'aile dame. Il ne pourra plus jamais chasser notre cavalier b5 par ...a6. Environ +0.5."] [%hint "Les Noirs poussent un pion latéral au lieu de roquer : le développement n'est pas fini."] [%hint "La case b5 : avec le pion en a5, aucun pion noir ne pourra plus chasser notre cavalier."] [%hint "a3 ! On empêche ...a4-a3 et ...Bb4, puis on prépare Re1 et Bc4 : le cavalier b5 reste pour toujours."] [%hintcsl Gb5,Rb6] [%eval 0.58] }
+13. a3 { [%txt "On fixe l'aile dame : plus de ...Bb4 ni de ...a4-a3."] [%eval 0.56] [%csl Gb5] [%cal Ga3b4] }
+13... O-O { [%txt "Les Noirs roquent enfin."] [%eval 0.51] }
+14. Re1 { [%txt "La tour sur la colonne e : elle soutient la rupture d4-d5 et l'avant-poste e5."] [%eval 0.52] [%cal Ge1e6] }
+14... Bd7 { [%txt "Le fou se développe."] [%eval 0.55] }
+15. Bc4 { [%txt "Le fou vise le cavalier d5 bloqueur."] [%eval 0.60] [%cal Gc4d5] }
+15... h6 { [%txt "DEUXIÈME COUP LATÉRAL : un pion qui ne défend rien. Environ +1.0."] [%hint "Encore un coup de pion latéral : les Noirs ne défendent pas le centre et le cavalier d5 n'est soutenu que par le pion e6."] [%hint "Le cavalier d5 et la case c7 : si le pion e6 reprend en d5, notre cavalier b5 saute en c7 avec fourchette."] [%hint "Bxd5 ! puis Nc7 : le pion d5 tombe. Rc1 est aussi bon."] [%hintcsl Rd5,Rc7] [%eval 0.90] }
+16. Rc1 { [%txt "La tour prend la colonne c et vise c7. Le coup tactique 16.Bxd5 gagnait aussi un pion."] [%eval 0.92] [%cal Gc1c7] }
+(16. Bxd5 { [%txt "On élimine le bloqueur."] [%eval 0.84] }
+  16... exd5 { [%txt "Le pion reprend."] [%eval 0.98] }
+  17. Nc7 { [%txt "Fourchette : le cavalier attaque la tour a8 et le pion d5."] [%eval 0.86] [%cal Gc7a8,Gc7d5] }
+  17... Rc8 { [%txt "La tour s'échappe."] [%eval 0.87] }
+  18. Nxd5 { [%txt "RETENIR (
+
+PRO TIP : le pion d5 est tombé, un pion de plus, environ +1.0."] [%eval 0.98] [%csl Gd5] })
+16... Bg5 { [%txt "LA FAUTE DÉCISIVE : les Noirs offrent l'échange de leur fou des cases noires, le seul défenseur de la case d6. Environ +1.5."] [%hint "Les Noirs échangent leur fou des cases noires contre un cavalier : les cases noires de leur camp n'ont plus de défenseur."] [%hint "La case d6 : sans le fou e7, notre cavalier b5 peut s'y installer, et aucune pièce noire ne peut le chasser."] [%hint "Nxg5 ! On prend le fou, puis Nd6 : le cavalier s'installe sur le trou."] [%hintcsl Rd6,Gb5] [%eval 1.56] }
+17. Nxg5 { [%txt "On prend le fou : la case d6 n'a plus de défenseur noir de cases noires."] [%eval 1.39] [%cal Gf3g5] }
+17... Qxg5 { [%txt "La dame reprend."] [%eval 1.47] }
+18. Nd6 { [%txt "LE TROU : le cavalier s'installe en d6, il attaque b7 et f7 et paralyse la tour c8 future."] [%eval 1.58] [%csl Gd6] [%cal Gd6b7,Gd6f7] }
+18... Ra7 { [%txt "La tour défend b7 : position passive."] [%eval 1.77] }
+19. f4 { [%txt "RETENIR (
+
+PRO TIP : le pion f4 chasse la dame et prépare f5 contre le roi noir. Environ +1.8. Deux coups de pion latéraux plus un fou des cases noires échangé = un cavalier en d6 que les Noirs ne pourront jamais chasser."] [%eval 1.88] [%csl Gd6,Gf4] [%cal Gf4f5,Gf4g5] } *`,
+    ),
+  ],
+};
