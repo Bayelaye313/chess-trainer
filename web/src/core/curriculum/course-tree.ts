@@ -8,6 +8,7 @@ import { CAVALIER_CONTRE_FOU } from "./course-trees/pm-cavalier-contre-fou-qui-d
 import { DOUBLER_LES_PIONS_ADVERSES } from "./course-trees/pm-doubler-les-pions-adverses";
 import { LA_COLONNE_OUVERTE } from "./course-trees/pm-la-colonne-ouverte";
 import { LA_TOUR_A_LA_7E_RANGEE } from "./course-trees/pm-la-tour-a-la-7e-rangee";
+import { LA_COLONNE_SEMI_OUVERTE } from "./course-trees/pm-la-colonne-semi-ouverte";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -235,6 +236,7 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-le-pion-isole-de-la-dame": LE_PION_ISOLE_DE_LA_DAME,
   "pm-doubler-les-pions-adverses": DOUBLER_LES_PIONS_ADVERSES,
   "pm-la-colonne-ouverte": LA_COLONNE_OUVERTE,
+  "pm-la-colonne-semi-ouverte": LA_COLONNE_SEMI_OUVERTE,
   "pm-la-tour-a-la-7e-rangee": LA_TOUR_A_LA_7E_RANGEE,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
