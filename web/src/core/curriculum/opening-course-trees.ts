@@ -1,5 +1,6 @@
 import type { CourseTree } from "./course-tree";
 import { OP_CARO_KANN } from "./course-trees/op-caro-kann";
+import { OP_KINGS_INDIAN } from "./course-trees/op-kings-indian";
 import { OP_RUY_LOPEZ } from "./course-trees/op-ruy-lopez";
 import { OP_SCOTCH_GAMBIT } from "./course-trees/op-scotch-gambit";
 import { OP_SCOTCH_GAME } from "./course-trees/op-scotch-game";
@@ -21,6 +22,7 @@ export const OPENING_COURSE_TREES: Record<string, CourseTree> = {
   "caro-kann": OP_CARO_KANN,
   "scotch-gambit": OP_SCOTCH_GAMBIT,
   "slav-defense": OP_SLAV_DEFENSE,
+  "kings-indian": OP_KINGS_INDIAN,
 };
 
 export function findOpeningCourseTree(openingId: string): CourseTree | null {

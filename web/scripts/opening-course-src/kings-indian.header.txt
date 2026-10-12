@@ -1,0 +1,56 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Défense Est-Indienne (avec les Noirs) » : 1.d4 Nf6
+ * 2.c4 g6 3.Nc3 Bg7 4.e4 d6 — onglet Ouvertures, format « un commentaire par
+ * coup » de l'Académie, lu par `CourseTreeViewer` (route
+ * `/ouvertures/kings-indian/cours`). Public visé : 1500-1800 Elo, joueur
+ * tactique qui a besoin de plans stricts.
+ *
+ * ## Contenu (2026-10-12)
+ *
+ * 1. Fiche d'identité et Variante Classique 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6
+ *    8.d5 Ne7 9.Ne1 Nd7 10.Nd3 f5 11.Bd2 f4 12.f3 g5 jusqu'au coup 15, avec
+ *    11.f3 (le coup principal) et le piège 13.c5? Nxc5.
+ * 2. Attaque Bayonnette 9.b4 Nh5 10.Re1 f5 11.Ng5 Nf6 12.Bf3 c6 jusqu'à
+ *    18...d5 (Xu Jun-Ponomariov 2000, environ +0.2), avec 12.f3 Kh8.
+ * 3. Variante d'Échange 7.dxe5 dxe5 8.Qxd8 Rxd8 (0.00) : 9.Bg5 Re8, 9.Be3 Nc6
+ *    10.O-O Nd4 (la case d4) et le coup de club 9.Nxe5? Nxe4.
+ * 4. Anti-panique : Sämisch 5.f3 O-O 6.Be3 c5! (et 6...e5) puis Quatre
+ *    Pions 5.f4 O-O 6.Nf3 c5 7.d5 e6 8.Be2 exd5 9.cxd5 Re8.
+ * 5. Aléatoire surprise : 13.h3 et 14.a3 (deux coups de pion mous) punis
+ *    par ...Nf6, ...h5 et le levier ...g4 (8 coups après la faute).
+ *
+ * Indices progressifs : chaque faute blanche porte trois balises `[%hint]`
+ * (1. principe violé, 2. zone faible, 3. levier de pion) et une balise
+ * `[%hintcsl]` (cases allumées à partir du 2e indice).
+ *
+ * Sources : Andrew Martin, « Classical King's Indian E90-E99 » (ChessPub
+ * 2002, `docs/`, couche texte) pour les lignes 9.Ne1 et 9.b4 ; Anatoli
+ * Vaisser, « Beating the King's Indian and Benoni » (Batsford 1997, `docs/`)
+ * pour la ligne principale des Quatre Pions 9...Re8. Toutes les lignes sont
+ * arbitrées par Stockfish 18 natif (profondeur 16) ; le moteur a nuancé le
+ * cahier des charges : 6...c5 est meilleur que 6...e5 contre la Sämisch
+ * (+0.4 contre +0.9), et le levier ...g4 n'est bon qu'APRÈS ...h5 et
+ * ...Nf6 (poussé trop tôt, il ne donne rien). Toute la prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Voir `op-scotch-game.ts` : `evaluationScore` / `evaluationMate` (balise
+ * `[%eval]`), `showEvalBar`, `freeze` (balise `[%txt "…"]` sur CHAQUE
+ * commentaire), plus `hints` / `hintHighlights`.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/kings-indian.pgn` (et l'en-tête
+ * `kings-indian.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16 [pgn compilé]`.
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]` ni un `[%hint]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
