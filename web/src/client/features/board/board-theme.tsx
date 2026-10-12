@@ -6,10 +6,14 @@
  *
  * Remplace les cases brun/ambre par défaut de `react-chessboard`
  * (#B58863/#F0D9B5) par une ardoise froide assortie au canevas e-sport
- * (`components/ui/esport-page.module.css`), cadre à halo cyan. Les couleurs de
- * surbrillance de qualité (`qualitySquareColor`) restent lisibles dessus.
+ * (`components/ui/esport-page.module.css`), cadre à halo cyan.
+ *
+ * Marquage des cases façon Lichess, commun lui aussi : voile cyan léger sur
+ * le dernier coup, CERCLES (qualité du coup, indices) — jamais une case
+ * pleine teintée qui masque la pièce. Voir `lastMoveSquareStyles`.
  */
 import type { CSSProperties } from "react";
+import type { MoveQuality } from "@/core/chess/types";
 
 /** Durée d'animation par défaut de TOUT déplacement de pièce — fluide, jamais un saut sec. L'easing ease-in-out est forcé dans `globals.css`. */
 export const BOARD_MOVE_ANIMATION_MS = 200;
@@ -41,6 +45,46 @@ export const LICHESS_BRUSH = {
   blue: "#003088",
   yellow: "#e68f00",
 } as const;
+
+/** Voile du dernier coup joué — cyan e-sport discret, jamais un fond plein. */
+export const LAST_MOVE_TINT = "rgb(102 252 241 / .22)";
+
+/**
+ * Qualités ordinaires : badge seul, PAS de cercle sur la pièce — un cercle
+ * vert sur chaque bon coup attendu (puzzle, coup correct) surcharge le plateau.
+ */
+const UNRINGED_QUALITIES: ReadonlySet<MoveQuality> = new Set(["best", "okay", "book"]);
+
+/**
+ * Couleur du cercle de qualité d'un coup (mêmes jetons `--quality-*` que les
+ * pastilles), ou `null` pour une qualité ordinaire — le cercle est réservé
+ * aux coups remarquables : Brillant, Critique, Imprécision, Gaffe.
+ */
+export function qualityRingColor(quality: MoveQuality): string | null {
+  return UNRINGED_QUALITIES.has(quality) ? null : `var(--quality-${quality})`;
+}
+
+/** Anneau dessiné en fond de case (`squareStyles`) — même rendu que `SquareCircle`, sans `squareRenderer`. */
+function ringImage(color: string): string {
+  return `radial-gradient(circle closest-side, transparent 84%, ${color} 86%, ${color} 97%, transparent 99%)`;
+}
+
+/**
+ * `squareStyles` du dernier coup : voile sur les deux cases, et un cercle
+ * `ringColor` sur la case d'arrivée pour un coup qualifié (`null` : coup
+ * adverse, jamais noté).
+ */
+export function lastMoveSquareStyles(from: string, to: string, ringColor: string | null = null): Record<string, CSSProperties> {
+  return {
+    [from]: { backgroundColor: LAST_MOVE_TINT },
+    [to]: { backgroundColor: LAST_MOVE_TINT, ...(ringColor ? { backgroundImage: ringImage(ringColor) } : {}) },
+  };
+}
+
+/** `squareStyles` d'indice : un cercle (vert par défaut) autour de chaque case. */
+export function circledSquareStyles(squares: readonly string[], color: string = LICHESS_BRUSH.green): Record<string, CSSProperties> {
+  return Object.fromEntries(squares.map((square) => [square, { backgroundImage: ringImage(color) }]));
+}
 
 /**
  * Cercle d'annotation Lichess posé SUR une case (au-dessus de la pièce,

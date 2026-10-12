@@ -166,7 +166,7 @@ export function OpeningSparring({
       </div>
       {active && (
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,420px)_1fr]">
-          <div className="mx-auto w-full max-w-[420px]">
+          <div className="mx-auto w-full max-w-[600px]">
             <Chessboard options={{ ...ESPORT_BOARD_OPTIONS, id: "opening-sparring-board", position: fen, boardOrientation: playerColor === "w" ? "white" : "black", onPieceDrop, canDragPiece }} />
           </div>
           <div className="flex flex-col justify-center gap-3 text-sm">

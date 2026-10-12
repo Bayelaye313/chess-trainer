@@ -33,17 +33,20 @@
  * flèches et les 3 essais sont IDENTIQUES dans les deux — voir le docstring de
  * `SolvablePuzzle` (`core/puzzle/solve-state.ts`).
  */
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS, LICHESS_BRUSH, SquareCircle } from "@/client/features/board/board-theme";
+import { ESPORT_BOARD_OPTIONS, LAST_MOVE_TINT, LICHESS_BRUSH, qualityRingColor, SquareCircle } from "@/client/features/board/board-theme";
 import { useEngine } from "@/client/engine/engine-context";
 import { kingInCheckSquare } from "@/core/chess/check";
 import type { MoveQuality } from "@/core/chess/types";
 import { buildPreSolveCoachMessage } from "@/core/puzzle/pre-solve-coach";
 import { buildProgressCoachMessage } from "@/core/puzzle/progress-coach";
+import { identifyPuzzlePattern } from "@/core/puzzle/puzzle-pattern";
 import { buildRecognitionAids } from "@/core/puzzle/recognition-aids";
-import type { SolvablePuzzle, SolvePhase } from "@/core/puzzle/solve-state";
-import { CHECK_SQUARE_RING_COLOR, OPPONENT_MOVE_SQUARE_COLOR, WRONG_MOVE_HINT_LABEL, qualitySquareColor } from "@/lib/labels";
+import { solutionMoveQuality } from "@/core/puzzle/solution-quality";
+import { hasFailedAttempt, type SolvablePuzzle, type SolvePhase } from "@/core/puzzle/solve-state";
+import { CHECK_SQUARE_RING_COLOR, WRONG_MOVE_HINT_LABEL } from "@/lib/labels";
 import type { ReviewGrade } from "@/server/srs/fsrs";
 import { EvaluationBar } from "./evaluation-bar";
 import { ExplorePanel } from "./explore-panel";
@@ -51,7 +54,7 @@ import { GradePanel } from "./grade-panel";
 import { QualityBadge } from "./quality-badge";
 import { usePostSolveAnalysis } from "./use-post-solve-analysis";
 import { usePuzzleSolver } from "./use-puzzle-solver";
-import { OPPONENT_MOVE_ANIMATION_MS } from "./move-animation";
+import { OPPONENT_MOVE_ANIMATION_MS, SETUP_MOVE_ANIMATION_MS } from "./move-animation";
 
 const STATUS_TEXT: Record<SolvePhase, string> = {
   solving: "Trouve le coup à jouer.",
@@ -134,10 +137,25 @@ export function PuzzleBoard({
   // la fois. Retour utilisateur : « on résout un puzzle sans savoir c'est
   // quoi la faiblesse ou l'opportunité présentée » (voir `pre-solve-coach.ts`).
   const showPreSolveCoach = solver.phase === "solving" && !solver.lastMove && !solver.introPlaying;
+  // Le pattern du puzzle et son cours d'Académie (voir `puzzle-pattern.ts`) —
+  // retour utilisateur : nommer le schéma et le cours à revoir plutôt qu'un
+  // conseil générique « Observe les menaces… ».
+  const pattern = useMemo(
+    () => identifyPuzzlePattern(puzzle.fenBefore, puzzle.solution, puzzle.motifs ?? []),
+    [puzzle.fenBefore, puzzle.solution, puzzle.motifs],
+  );
+  // Indices textuels (🎓 Pattern / motifs nommés, 📘 Cours à revoir) masqués
+  // au chargement — ils facilitaient le puzzle dès le départ — et révélés
+  // seulement après un PREMIER essai infructueux. Les cercles verts des
+  // cibles (`recognitionAids`), eux, restent visibles d'emblée.
+  const hasFailed = hasFailedAttempt(solver);
   const preSolveMessage = showPreSolveCoach
     ? buildPreSolveCoachMessage({
-        setupSan: puzzle.setupMove?.san ?? null,
-        motifs: puzzle.motifs ?? [],
+        // Coup adverse VU se jouer sur l'échiquier (intro animée) : inutile de
+        // le dicter en plus. Seulement en repli, quand il n'a pas pu être animé.
+        setupSan: solver.introAnimated ? null : (puzzle.setupMove?.san ?? null),
+        pattern: hasFailed ? pattern : null,
+        motifs: hasFailed ? (puzzle.motifs ?? []) : [],
         playerMoveCount,
       })
     : null;
@@ -183,6 +201,11 @@ export function PuzzleBoard({
             text: `${recognitionAids.text} Les cases cerclées indiquent des cibles à examiner, pas la solution.`,
           }
         : null;
+  // 📘 Cours à revoir : ligne à part (elle s'affiche en même temps que l'indice
+  // d'erreur ⚠️, qui reste prioritaire sur `practicalHint`), seulement après
+  // un premier essai raté, puis jusqu'à la fin du puzzle.
+  const courseToReview =
+    hasFailed && pattern?.theme ? { title: pattern.theme.title, href: `/apprendre?themeId=${pattern.theme.themeId}` } : null;
 
   const hintClassName =
     solver.phase === "failed"
@@ -197,13 +220,12 @@ export function PuzzleBoard({
   const boardFen = postAnalysisActive ? postAnalysis.explore.fen : solver.fen;
   const boardOnPieceDrop = postAnalysisActive ? postAnalysis.explore.onPieceDrop : solver.onPieceDrop;
   const boardCanDragPiece = postAnalysisActive ? postAnalysis.explore.canDragPiece : solver.canDragPiece;
-  // Flèche du coup adverse affiché en préambule (voir `showPreSolveCoach`
-  // ci-dessus) — même case que `highlightFrom`/`highlightTo` de cette même
-  // situation, mais une flèche se voit même quand la case de départ est vide
-  // à l'œil (pièce partie), donc plus lisible qu'une simple surbrillance.
+  // Flèche du coup adverse en préambule : SEULEMENT en repli, quand ce coup
+  // n'a pas pu être joué en animation (position d'avant inconnue, voir
+  // `introStartFen`) — sinon on l'a VU se jouer, une flèche serait redondante.
   const setupArrow =
-    showPreSolveCoach && puzzle.setupMove
-      ? [{ startSquare: puzzle.setupMove.uci.slice(0, 2), endSquare: puzzle.setupMove.uci.slice(2, 4), color: OPPONENT_MOVE_SQUARE_COLOR }]
+    showPreSolveCoach && puzzle.setupMove && !solver.introAnimated
+      ? [{ startSquare: puzzle.setupMove.uci.slice(0, 2), endSquare: puzzle.setupMove.uci.slice(2, 4), color: LICHESS_BRUSH.blue }]
       : [];
   const boardArrows = [...(postAnalysisActive ? postAnalysis.arrows : solver.boardArrows), ...setupArrow];
   const boardScore = postAnalysisActive ? postAnalysis.currentScore : solver.currentScore;
@@ -215,7 +237,6 @@ export function PuzzleBoard({
   // cours — le pli de la solution qu'on est en train de consulter.
   let highlightFrom: string | undefined;
   let highlightTo: string | undefined;
-  let highlightColor: string | null = null;
   let badgeSquare: string | null = null;
   let badgeQuality: MoveQuality | null = null;
 
@@ -224,7 +245,6 @@ export function PuzzleBoard({
     const exploreQuality = postAnalysis.explore.evaluation.status === "ready" ? postAnalysis.explore.evaluation.evaluated.quality : null;
     highlightFrom = lastExplorerMove?.from;
     highlightTo = lastExplorerMove?.to;
-    highlightColor = lastExplorerMove ? (exploreQuality ? qualitySquareColor(exploreQuality) : OPPONENT_MOVE_SQUARE_COLOR) : null;
     badgeSquare = lastExplorerMove?.to ?? null;
     badgeQuality = exploreQuality;
   } else if (postAnalysisActive) {
@@ -234,9 +254,9 @@ export function PuzzleBoard({
     const isPlayerPly = viewedPly !== null && (postAnalysis.viewPly - 1) % 2 === 0;
     highlightFrom = viewedPly?.uci.slice(0, 2);
     highlightTo = viewedPly?.uci.slice(2, 4);
-    highlightColor = viewedPly ? (isPlayerPly ? qualitySquareColor("best") : OPPONENT_MOVE_SQUARE_COLOR) : null;
+    const viewedFenBefore = postAnalysis.viewPly > 1 ? postAnalysis.plies[postAnalysis.viewPly - 2].fenAfter : puzzle.fenBefore;
     badgeSquare = viewedPly && isPlayerPly ? highlightTo! : null;
-    badgeQuality = viewedPly && isPlayerPly ? "best" : null;
+    badgeQuality = viewedPly && isPlayerPly ? solutionMoveQuality(viewedFenBefore, viewedPly.uci) : null;
   } else if (!solver.lastMove && puzzle.setupMove && !solver.introPlaying) {
     // Avant le premier coup du joueur : montre le coup adverse qui a créé la
     // position, plutôt qu'un échiquier nu sans aucun repère (retour
@@ -244,19 +264,19 @@ export function PuzzleBoard({
     // l'adversaire »). Jamais de badge de qualité — ce n'est pas un coup noté.
     highlightFrom = puzzle.setupMove.uci.slice(0, 2);
     highlightTo = puzzle.setupMove.uci.slice(2, 4);
-    highlightColor = OPPONENT_MOVE_SQUARE_COLOR;
   } else if (solver.lastMove) {
     highlightFrom = solver.lastMove.from;
     highlightTo = solver.lastMove.to;
-    highlightColor = solver.lastMove.quality ? qualitySquareColor(solver.lastMove.quality) : OPPONENT_MOVE_SQUARE_COLOR;
     badgeSquare = solver.lastMove.quality ? solver.lastMove.to : null;
     badgeQuality = solver.lastMove.quality;
   }
 
-  const boardSquareStyles: Record<string, { backgroundColor: string }> =
-    highlightColor && highlightFrom && highlightTo
-      ? { [highlightFrom]: { backgroundColor: highlightColor }, [highlightTo]: { backgroundColor: highlightColor } }
-      : {};
+  // Dernier coup façon Lichess : un léger voile sur les deux cases, et pour un
+  // coup REMARQUABLE (voir `qualityRingColor`) un cercle de sa couleur —
+  // plus de cases pleines teintées (ambre/vert) qui masquaient les pièces.
+  const lastMoveTint = highlightFrom && highlightTo ? new Set([highlightFrom, highlightTo]) : new Set<string>();
+  const ringColor = badgeQuality ? qualityRingColor(badgeQuality) : null;
+  const qualityCircleSquare = ringColor && badgeSquare ? badgeSquare : null;
   // Aides de reconnaissance : des CERCLES façon Lichess autour des cibles —
   // plus de cases ambrées pleines qui masquaient la surbrillance du dernier coup.
   const circledSquares = new Set(recognitionAids?.targetSquares ?? []);
@@ -274,12 +294,13 @@ export function PuzzleBoard({
       style={{
         width: "100%",
         height: "100%",
-        ...(boardSquareStyles[square] ?? {}),
+        ...(lastMoveTint.has(square) ? { backgroundColor: LAST_MOVE_TINT } : {}),
         ...(square === checkSquare ? { boxShadow: `inset 0 0 0 4px ${CHECK_SQUARE_RING_COLOR}` } : {}),
       }}
     >
       {children}
       {circledSquares.has(square) && <SquareCircle color={LICHESS_BRUSH.green} />}
+      {square === qualityCircleSquare && ringColor && <SquareCircle color={ringColor} />}
       {badgeQuality && square === badgeSquare && (
         <span className="pointer-events-none absolute right-0.5 top-0.5">
           <QualityBadge quality={badgeQuality} />
@@ -306,130 +327,153 @@ export function PuzzleBoard({
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
-      {postAnalysisActive && postAnalysis.explore.isExploring && (
-        <div className="mb-4">
-          <ExplorePanel
-            explorerMoves={postAnalysis.explore.explorerMoves}
-            evaluation={postAnalysis.explore.evaluation}
-            onExit={() => postAnalysis.explore.exit()}
-            exitLabel="↩ Revenir à la solution"
-          />
-        </div>
-      )}
+      {/* Même mise en page que le cours d'Apprendre (`CourseTreeViewer`) :
+          grand échiquier à gauche, commentaire et contrôles à droite. */}
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
+        <div className="w-full shrink-0 md:w-[480px] lg:w-[600px]">
+          <div className="flex items-stretch gap-2">
+            <EvaluationBar score={boardScore} size="lg" />
+            <div className="min-w-0 flex-1">
+              <Chessboard
+                options={{ ...ESPORT_BOARD_OPTIONS,
+                  id: "puzzle-review-board",
+                  position: boardFen,
+                  boardOrientation: solver.playerColor === "w" ? "white" : "black",
+                  onPieceDrop: boardOnPieceDrop,
+                  canDragPiece: boardCanDragPiece,
+                  onMouseOverSquare: solver.onMouseOverSquare,
+                  onMouseOutSquare: solver.onMouseOutSquare,
+                  squareRenderer,
+                  arrows: boardArrows,
+                  // Micro-animation du coup adverse en 180 ms ease-in-out
+                  // (feuille de route Zone 2) — la surbrillance des cases, elle,
+                  // attend la fin de l'animation (dispatch différé dans
+                  // `use-puzzle-solver.ts`, voir `move-animation.ts`).
+                  animationDurationInMs: solver.introPlaying ? SETUP_MOVE_ANIMATION_MS : OPPONENT_MOVE_ANIMATION_MS,
+                }}
+              />
+            </div>
+          </div>
 
-      {/* UN SEUL panneau de feedback contextuel (feuille de route Zone 2) :
-          l'évaluation textuelle du Grand Maître (🎓) ET le conseil pratique
-          (erreur commise ⚠️ / aides de reconnaissance 👁) au même endroit —
-          les deux sections concurrentes qui se parasitaient au-dessus du
-          plateau n'existent plus séparément. `key` rejoue l'animation
-          d'entrée à chaque changement de contenu. */}
-      {(coachMessage || practicalHint) && (
-        <div
-          key={`${coachMessage ?? ""}|${practicalHint?.text ?? ""}`}
-          className="mx-auto mb-4 max-w-[480px] rounded-lg border border-border bg-surface-muted/40 px-4 py-3 text-sm animate-fade-up-in"
-        >
-          {coachMessage && (
-            <p className="text-foreground">
-              <span aria-hidden="true">🎓 </span>
-              {coachMessage}
-            </p>
+          <div className="mt-3 min-h-6 text-center text-sm">
+            <p className={hintClassName}>{statusMessage}</p>
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 space-y-4">
+          {postAnalysisActive && postAnalysis.explore.isExploring && (
+            <div>
+              <ExplorePanel
+                explorerMoves={postAnalysis.explore.explorerMoves}
+                evaluation={postAnalysis.explore.evaluation}
+                onExit={() => postAnalysis.explore.exit()}
+                exitLabel="↩ Revenir à la solution"
+              />
+            </div>
           )}
-          {practicalHint && (
-            <p
-              className={`mt-1.5 flex items-start gap-2 ${
-                practicalHint.kind === "error" ? "font-medium text-inaccuracy" : "text-foreground-muted"
-              }`}
+
+          {/* UN SEUL panneau de feedback contextuel (feuille de route Zone 2) :
+              l'évaluation textuelle du Grand Maître (🎓) ET le conseil pratique
+              (erreur commise ⚠️ / aides de reconnaissance 👁) au même endroit —
+              les deux sections concurrentes qui se parasitaient au-dessus du
+              plateau n'existent plus séparément. `key` rejoue l'animation
+              d'entrée à chaque changement de contenu. */}
+          {(coachMessage || practicalHint || courseToReview) && (
+            <div
+              key={`${coachMessage ?? ""}|${practicalHint?.text ?? ""}|${courseToReview?.href ?? ""}`}
+              className="rounded-lg border border-border bg-surface-muted/40 px-4 py-3 text-sm animate-fade-up-in"
             >
-              <span aria-hidden="true">{practicalHint.kind === "error" ? "⚠️" : "👁"}</span>
-              <span>{practicalHint.text}</span>
-            </p>
+              {coachMessage && (
+                <p className="text-foreground">
+                  <span aria-hidden="true">🎓 </span>
+                  {coachMessage}
+                </p>
+              )}
+              {practicalHint && (
+                <p
+                  className={`mt-1.5 flex items-start gap-2 ${
+                    practicalHint.kind === "error" ? "font-medium text-inaccuracy" : "text-foreground-muted"
+                  }`}
+                >
+                  <span aria-hidden="true">{practicalHint.kind === "error" ? "⚠️" : "👁"}</span>
+                  <span>{practicalHint.text}</span>
+                </p>
+              )}
+              {courseToReview && (
+                <p className="mt-1.5 flex items-start gap-2 text-foreground-muted">
+                  <span aria-hidden="true">📘</span>
+                  <span>
+                    Cours à revoir :{" "}
+                    <Link
+                      href={courseToReview.href}
+                      target="_blank"
+                      rel="noopener"
+                      className="font-medium text-foreground underline underline-offset-2 hover:text-best"
+                    >
+                      {courseToReview.title} ↗
+                    </Link>
+                  </span>
+                </p>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      <div className="mx-auto flex max-w-[480px] items-stretch gap-2">
-        <EvaluationBar score={boardScore} />
-        <div className="min-w-0 flex-1">
-          <Chessboard
-            options={{ ...ESPORT_BOARD_OPTIONS,
-              id: "puzzle-review-board",
-              position: boardFen,
-              boardOrientation: solver.playerColor === "w" ? "white" : "black",
-              onPieceDrop: boardOnPieceDrop,
-              canDragPiece: boardCanDragPiece,
-              onMouseOverSquare: solver.onMouseOverSquare,
-              onMouseOutSquare: solver.onMouseOutSquare,
-              squareRenderer,
-              arrows: boardArrows,
-              // Micro-animation du coup adverse en 180 ms ease-in-out
-              // (feuille de route Zone 2) — la surbrillance des cases, elle,
-              // attend la fin de l'animation (dispatch différé dans
-              // `use-puzzle-solver.ts`, voir `move-animation.ts`).
-              animationDurationInMs: OPPONENT_MOVE_ANIMATION_MS,
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 min-h-6 text-center text-sm">
-        <p className={hintClassName}>{statusMessage}</p>
-      </div>
-
-      {postAnalysisActive && (
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => postAnalysis.goToPly(postAnalysis.viewPly - 1)}
-            disabled={!postAnalysis.canGoPrevious}
-            className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
-          >
-            ← Précédent
-          </button>
-          <span className="font-mono text-sm text-foreground-muted">
-            {postAnalysis.viewPly} / {postAnalysis.totalPlies}
-          </span>
-          <button
-            type="button"
-            onClick={() => postAnalysis.goToPly(postAnalysis.viewPly + 1)}
-            disabled={!postAnalysis.canGoNext}
-            className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
-          >
-            Suivant →
-          </button>
-        </div>
-      )}
-
-      {isTerminal && (
-        <div className="mt-4">
-          {solver.phase === "failed" && solver.canReveal ? (
-            <div className="flex justify-center">
+          {postAnalysisActive && (
+            <div className="flex items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={solver.requestReveal}
-                className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+                onClick={() => postAnalysis.goToPly(postAnalysis.viewPly - 1)}
+                disabled={!postAnalysis.canGoPrevious}
+                className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
               >
-                Révéler la solution
+                ← Précédent
               </button>
-            </div>
-          ) : solver.phase === "failed" && solver.revealing ? null : graded ? (
-            <p className="text-center text-sm text-foreground-muted">
-              {onComplete ? "Chargement…" : "Enregistrement…"}
-            </p>
-          ) : onComplete ? (
-            <div className="flex justify-center">
+              <span className="font-mono text-sm text-foreground-muted">
+                {postAnalysis.viewPly} / {postAnalysis.totalPlies}
+              </span>
               <button
                 type="button"
-                onClick={handleComplete}
-                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+                onClick={() => postAnalysis.goToPly(postAnalysis.viewPly + 1)}
+                disabled={!postAnalysis.canGoNext}
+                className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
               >
-                Continuer →
+                Suivant →
               </button>
             </div>
-          ) : (
-            <GradePanel onGrade={handleGrade} />
+          )}
+
+          {isTerminal && (
+            <div>
+              {solver.phase === "failed" && solver.canReveal ? (
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={solver.requestReveal}
+                    className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+                  >
+                    Révéler la solution
+                  </button>
+                </div>
+              ) : solver.phase === "failed" && solver.revealing ? null : graded ? (
+                <p className="text-center text-sm text-foreground-muted">
+                  {onComplete ? "Chargement…" : "Enregistrement…"}
+                </p>
+              ) : onComplete ? (
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleComplete}
+                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+                  >
+                    Continuer →
+                  </button>
+                </div>
+              ) : (
+                <GradePanel onGrade={handleGrade} />
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

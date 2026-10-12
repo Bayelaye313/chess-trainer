@@ -24,6 +24,12 @@ export interface PreSolveCoachInput {
   motifs: readonly Motif[];
   /** Nombre de coups DU JOUEUR à trouver (plis pairs de `solution`) — > 1 signale une suite à enchaîner, pas un coup isolé. */
   playerMoveCount: number;
+  /**
+   * Schéma du puzzle (`identifyPuzzlePattern`) — présent, il REMPLACE l'invite
+   * générique ou la liste des motifs : le Coach nomme le pattern et ce qu'il
+   * faut y chercher (retour utilisateur, onglet Entraîner).
+   */
+  pattern?: { name: string; idea: string } | null;
 }
 
 const MOTIF_HINT: Record<Motif, string> = {
@@ -39,12 +45,14 @@ const MOTIF_HINT: Record<Motif, string> = {
  * Construit le message, toujours non vide : au minimum une invite à jouer,
  * enrichie du coup adverse et/ou du motif quand ils sont connus.
  */
-export function buildPreSolveCoachMessage({ setupSan, motifs, playerMoveCount }: PreSolveCoachInput): string {
+export function buildPreSolveCoachMessage({ setupSan, motifs, playerMoveCount, pattern }: PreSolveCoachInput): string {
   const parts: string[] = [];
 
   if (setupSan) parts.push(`L'adversaire vient de jouer ${setupSan}.`);
 
-  if (motifs.length > 0) {
+  if (pattern) {
+    parts.push(`Pattern : ${pattern.name}. ${pattern.idea}`);
+  } else if (motifs.length > 0) {
     const named = motifs.map((motif) => MOTIF_HINT[motif]).join(" et ");
     parts.push(`Cherche ${named}.`);
   } else {

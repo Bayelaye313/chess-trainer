@@ -1,0 +1,71 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Partie Écossaise (avec les Blancs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/scotch-game/cours`).
+ *
+ * ## Contenu (refonte du 2026-10-10)
+ *
+ * 1. Fiche d'identité et réponses noires au 3e coup.
+ * 2. Le 4e coup noir : toutes les réponses de club après 4.Nxd4.
+ * 3. Branche A, 4...Nf6 5.Nc3 (Écossaise des Quatre Cavaliers) : à chaque
+ *    coup noir, les réponses réelles entre 1500 et 1800 et la réplique blanche.
+ * 4. Branche B, 4...Bc5 5.Nxc6 Qf6 6.Qf3 (choix de répertoire confirmé par
+ *    l'utilisateur : la finale sans dames plutôt que 6.Qd2 de Kasparov).
+ * 5. Anti-panique : les pièges des coups rares (4...Qh4, 4...Nxd4, 4...Bb4+,
+ *    4...Nge7).
+ * 6-11. Aléatoire surprise : séquences longues (5 à 10 coups après la
+ *    théorie) où l'adversaire dérive, joue « mou » ou se crée une faiblesse,
+ *    avec la méthode pour accentuer la pression et le punir.
+ *
+ * Sources : John Emms, « Starting Out: The Scotch Game » (Everyman 2005,
+ * chapitres 1, 4 et 7, OCR du PDF de `docs/`) et Gary Lane, « The Scotch Game
+ * Explained » (Batsford, chapitre « Other Black Defences »). Les livres de
+ * Watson et de Flores Rios présents dans `docs/` ne traitent pas l'Écossaise.
+ * Les sources fournissent les coups et les idées ; toute la prose est
+ * originale. Chaque coup a été contrôlé par Stockfish 18 natif (profondeur
+ * 16) : quand le moteur contredit nettement le livre, la ligne suit le
+ * moteur (ex. 4...g6 ... 8...Ng8 9.f4 plutôt que 9.Bd4).
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) — nœud clé de la
+ * ligne principale comme nœud surprise d'une variante — porte :
+ * - `evaluationScore: number | null` : évaluation Stockfish de la position
+ *   après le coup, en pions et point de vue Blancs (ex. `0.4`, `-2.5`), écrite
+ *   `[%eval 0.40]` dans le PGN ; un mat s'écrit `[%eval #3]` et remplit
+ *   `evaluationMate` ;
+ * - `showEvalBar: boolean` : `true` dès qu'une évaluation est posée (tous les
+ *   nœuds de ce cours), `[%evalbar off]` le coupe. Le lecteur affiche alors ce
+ *   score dans la barre d'évaluation immédiatement, sans attendre le moteur :
+ *   l'utilisateur voit tout de suite l'impact de son coup ou de la gaffe
+ *   adverse ;
+ * - `freeze: boolean` : posé par la balise `[%txt "…"]`, qui enveloppe CHAQUE
+ *   commentaire de pièce ou de transition de ce cours.
+ *
+ * ## Consigne de code pour l'interface (balise [%txt])
+ *
+ * La présence de la balise [%txt] doit impérativement FREEZER (geler) le flux
+ * du jeu. L'ordinateur a interdiction de jouer son coup tant que
+ * l'utilisateur n'a pas cliqué sur un bouton « Suivant » ou appuyé sur Espace
+ * pour valider la lecture du commentaire. (Implémenté dans
+ * `client/features/learn/course-tree-viewer.tsx`, mode « Jouer les coups ».)
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/scotch-game.pgn` (et l'en-tête
+ * `scotch-game.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main ; `scripts/_tmp-check-evals.mts` signale les coups
+ * blancs recommandés qui feraient chuter l'évaluation.
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

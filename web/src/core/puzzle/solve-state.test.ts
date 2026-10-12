@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyPuzzleEvent,
+  hasFailedAttempt,
   initialSolveState,
   isAcceptedPlayerMove,
   isHoverArrowsEnabled,
@@ -255,6 +256,28 @@ describe("isHoverArrowsEnabled", () => {
 
   it.each(Object.keys(expected) as SolvePhase[])("phase '%s'", (phase) => {
     expect(isHoverArrowsEnabled(phase)).toBe(expected[phase]);
+  });
+});
+
+describe("hasFailedAttempt", () => {
+  const wrong = { type: "PLAYER_MOVED" as const, move: move({ uci: "a2a3", san: "a3" }), matchesSolution: false, fenBefore: "", hint: "generic" as const };
+  const right = { type: "PLAYER_MOVED" as const, move: move(), matchesSolution: true, fenBefore: "", hint: "generic" as const };
+
+  it("faux au chargement de la position", () => {
+    expect(hasFailedAttempt(initialSolveState(3))).toBe(false);
+  });
+
+  it("vrai dès le premier essai infructueux", () => {
+    expect(hasFailedAttempt(applyPuzzleEvent(initialSolveState(3), wrong))).toBe(true);
+  });
+
+  it("reste vrai après un coup correct joué ensuite", () => {
+    const afterWrong = applyPuzzleEvent(initialSolveState(3), wrong);
+    expect(hasFailedAttempt(applyPuzzleEvent(afterWrong, right))).toBe(true);
+  });
+
+  it("reste faux quand le premier coup est correct", () => {
+    expect(hasFailedAttempt(applyPuzzleEvent(initialSolveState(3), right))).toBe(false);
   });
 });
 

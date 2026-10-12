@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { Chessboard, type ChessboardOptions } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
@@ -29,7 +30,7 @@ export function BoardPanel({
   status: PlayStatus;
   playerColor: "w" | "b";
   outcome: { result: "1-0" | "0-1" | "1/2-1/2"; termination: keyof typeof TERMINATION_LABEL } | null;
-  squareStyles: Record<string, { backgroundColor: string }>;
+  squareStyles: Record<string, CSSProperties>;
   onPieceDrop: ChessboardOptions["onPieceDrop"];
   canDragPiece: ChessboardOptions["canDragPiece"];
   onTakeback: () => void;

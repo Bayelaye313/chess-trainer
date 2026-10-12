@@ -16,6 +16,22 @@
  * « Jouer les coups », le mode gamebook de Lichess où le lecteur joue
  * lui-même la ligne et où les réponses adverses sont jouées pour lui.
  *
+ * Gel de lecture (`[%txt "…"]`, `ChessMoveNode.freeze`) : la présence de la
+ * balise [%txt] doit impérativement FREEZER (geler) le flux du jeu.
+ * L'ordinateur a interdiction de jouer son coup tant que l'utilisateur n'a
+ * pas cliqué sur le bouton « Suivant » ou appuyé sur Espace pour valider la
+ * lecture du commentaire. Sans la balise, la réponse part après
+ * `OPPONENT_REPLY_MS` comme avant.
+ *
+ * Barre d'évaluation : le score posé par l'auteur (`[%eval]` →
+ * `evaluationScore`, affiché si `showEvalBar`) s'affiche immédiatement ;
+ * sans lui, la barre montre l'analyse Stockfish live de la position.
+ *
+ * Indices progressifs (`ChessMoveNode.hints`, balise `[%hint]`) : sur la
+ * position où il faut punir une faute adverse, « Indice » dévoile le principe
+ * violé, puis la faiblesse (cases `[%hintcsl]` allumées), puis l'action ; un
+ * dernier clic montre la flèche du coup. Disponible en lecture comme en jeu.
+ *
  * L'état du curseur vit dans `courseTreeNavReducer` (pur, testé). Les effets
  * du composant n'appellent jamais `setState` dans leur corps : l'un abonne le
  * clavier, un autre annule la réponse adverse programmée au démontage, et
@@ -31,7 +47,7 @@ import { useEngine } from "@/client/engine/engine-context";
 import { EvaluationBar, type EvalScore } from "@/client/features/board/evaluation-bar";
 import { REVEAL_ARROW_COLOR } from "@/lib/labels";
 import { CoachFeedbackPanel } from "./coach-feedback-panel";
-import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, turnOfFen } from "./course-tree-nav";
+import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, moveArrowRevealed, turnOfFen } from "./course-tree-nav";
 import { MoveTreeViewer } from "./move-tree-viewer";
 
 /** Flèches et cercles de l'auteur : pinceaux Lichess, comme dans l'étude d'origine. */
@@ -88,7 +104,19 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
   const feedback = useMemo(() => buildCoachFeedback(currentNode, plyOffsetOf(root.fen)), [currentNode, root.fen]);
   const playerToMove = playing && isPlayerTurn(currentNode, playerColor);
   const lineFinished = currentNode.children.length === 0;
+  // Gel `[%txt]` : le coup qui vient d'être joué porte un commentaire à lire,
+  // et la réponse adverse attend « Suivant » / Espace (voir le docstring).
+  const awaitingRead = playing && !lineFinished && currentNode.freeze && turnOfFen(currentNode.fen) !== playerColor;
   const liveScore = useLiveEvaluation(currentNode.fen);
+  // `[%eval #0]` : la position est un mat, le camp au trait est maté.
+  const checkmatedBy = currentNode.showEvalBar && currentNode.evaluationMate === 0 ? (turnOfFen(currentNode.fen) === "w" ? "b" : "w") : null;
+  const evalScore: EvalScore | null = !currentNode.showEvalBar
+    ? liveScore
+    : currentNode.evaluationMate !== null
+      ? { cp: null, mate: currentNode.evaluationMate }
+      : currentNode.evaluationScore !== null
+        ? { cp: Math.round(currentNode.evaluationScore * 100), mate: null }
+        : liveScore;
 
   // Réponse adverse programmée (mode jeu) — annulée à chaque nouvelle action
   // et au démontage, pour ne jamais jouer un coup sur un chapitre déjà quitté.
@@ -107,12 +135,12 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     [cancelReply],
   );
 
-  /** Joue `child` pour le lecteur, puis programme la réponse adverse s'il y en a une. */
+  /** Joue `child` pour le lecteur, puis programme la réponse adverse s'il y en a une — sauf gel `[%txt]`, où elle attend `playReply`. */
   const playForPlayer = useCallback(
     (child: ChessMoveNode) => {
       select(child.id);
       const reply = child.children[0];
-      if (reply && turnOfFen(child.fen) !== playerColor) {
+      if (reply && turnOfFen(child.fen) !== playerColor && !child.freeze) {
         replyTimer.current = setTimeout(() => {
           replyTimer.current = null;
           dispatch({ type: "select", id: reply.id });
@@ -121,6 +149,11 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     },
     [select, playerColor],
   );
+
+  /** « Suivant » / Espace pendant un gel : l'adversaire joue enfin sa réponse (ligne principale). */
+  const playReply = useCallback(() => {
+    if (currentNode.children.length > 0) select(currentNode.children[0].id);
+  }, [currentNode, select]);
 
   const goToChapter = useCallback(
     (index: number) => {
@@ -152,10 +185,16 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
       if (event.key === "ArrowLeft") goPrev();
       if (event.key === "ArrowRight") goNext();
+      // Espace = « Suivant » pendant un gel `[%txt]`. Un bouton qui a le focus
+      // reçoit déjà Espace comme un clic : on ne le double pas.
+      if (event.key === " " && awaitingRead && target?.tagName !== "BUTTON") {
+        event.preventDefault();
+        playReply();
+      }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goPrev, goNext]);
+  }, [goPrev, goNext, awaitingRead, playReply]);
 
   // Dernier chapitre ouvert au moins une fois = cours terminé (navigation
   // libre : rien à « finir » dans un arbre qu'on explore dans tous les sens).
@@ -180,8 +219,10 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
 
   // En mode jeu, tant que c'est au lecteur de trouver le coup, les flèches et
   // cases de l'auteur restent cachées (elles donneraient la réponse) — sauf
-  // indice demandé, qui montre la seule flèche du coup attendu.
-  const hideAnnotations = playerToMove && state.feedback !== "hint";
+  // flèche du coup attendu dévoilée, après les indices textuels du nœud.
+  const arrowRevealed = state.feedback === "hint" && moveArrowRevealed(currentNode, state.hintLevel);
+  const hideAnnotations = playerToMove && !arrowRevealed;
+  const shownHints = currentNode.hints.slice(0, state.hintLevel);
   const dataArrows = hideAnnotations
     ? []
     : currentNode.arrows.map((arrow) => ({ startSquare: arrow.from, endSquare: arrow.to, color: arrow.color === "red" ? RED : GREEN }));
@@ -190,7 +231,7 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
       ? [{ startSquare: currentNode.engineSuggestion.uci.slice(0, 2), endSquare: currentNode.engineSuggestion.uci.slice(2, 4), color: REVEAL_ARROW_COLOR }]
       : [];
   const hintArrow =
-    playerToMove && state.feedback === "hint"
+    playerToMove && arrowRevealed
       ? [{ startSquare: currentNode.children[0].uci!.slice(0, 2), endSquare: currentNode.children[0].uci!.slice(2, 4), color: GREEN }]
       : [];
   const arrows = [...dataArrows, ...engineArrow, ...hintArrow];
@@ -199,6 +240,10 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
   const circles = new Map<string, string>();
   if (!hideAnnotations) {
     for (const highlight of currentNode.highlights) circles.set(highlight.square, highlight.color === "red" ? RED : GREEN);
+  }
+  // À partir du 2e indice, la faiblesse à viser s'allume (`[%hintcsl]`).
+  if (shownHints.length >= 2) {
+    for (const highlight of currentNode.hintHighlights) circles.set(highlight.square, highlight.color === "red" ? RED : GREEN);
   }
   const squareRenderer: SquareRenderer = ({ square, children }) => {
     const circle = circles.get(square);
@@ -218,7 +263,7 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
         </p>
         <div className="flex shrink-0 gap-1.5">
           <button type="button" onClick={() => dispatch({ type: "hint" })} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
-            Indice
+            {hintButtonLabel(currentNode, state.hintLevel)}
           </button>
           <button type="button" onClick={() => playForPlayer(currentNode.children[0])} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
             Voir le coup
@@ -234,17 +279,60 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
           </button>
         )}
       </div>
+    ) : awaitingRead ? (
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-medium text-foreground">Lis le commentaire, puis passe à la réponse adverse.</p>
+        <button type="button" onClick={playReply} className="shrink-0 rounded bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+          Suivant (Espace)
+        </button>
+      </div>
     ) : (
       <p className="text-foreground-muted">Réponse adverse…</p>
     )
   ) : null;
+
+  // Lecture libre : les indices se dévoilent aussi, sans flèche (l'arbre montre déjà la suite).
+  const readHintButton =
+    !playing && currentNode.hints.length > 0 && state.hintLevel < currentNode.hints.length ? (
+      <button type="button" onClick={() => dispatch({ type: "hint" })} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+        {hintButtonLabel(currentNode, state.hintLevel)}
+      </button>
+    ) : null;
+  const hintLadder =
+    shownHints.length > 0 || readHintButton ? (
+      <div className="space-y-1.5">
+        {readHintButton && (
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-medium text-foreground">Trouve la punition : des indices sont disponibles.</p>
+            {readHintButton}
+          </div>
+        )}
+        {shownHints.length > 0 && (
+          <ol className="space-y-1">
+            {shownHints.map((hint, index) => (
+              <li key={index} className="rounded border border-border bg-surface-muted px-2 py-1 text-xs text-foreground">
+                <span className="font-semibold">Indice {index + 1} : </span>
+                {hint}
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    ) : null;
+  const prompt =
+    playPrompt || hintLadder ? (
+      <div className="space-y-2">
+        {playPrompt}
+        {hintLadder}
+      </div>
+    ) : null;
 
   return (
     <div className="mx-auto w-full max-w-[1240px]">
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         <div className="w-full shrink-0 md:w-[480px] lg:w-[600px]">
           <div className="flex gap-2">
-            <EvaluationBar score={liveScore} size="lg" />
+            <EvaluationBar score={evalScore} size="lg" checkmatedBy={checkmatedBy} />
             <div className="min-w-0 flex-1">
               <Chessboard
                 options={{ ...ESPORT_BOARD_OPTIONS,
@@ -331,9 +419,15 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
           ) : (
             <MoveTreeViewer root={root} currentId={currentNode.id} onSelect={select} />
           )}
-          <CoachFeedbackPanel feedback={feedback} chapterTitle={chapter.title} prompt={playPrompt} hideEngine={playing} />
+          <CoachFeedbackPanel feedback={feedback} chapterTitle={chapter.title} prompt={prompt} hideEngine={playing} />
         </div>
       </div>
     </div>
   );
+}
+
+/** Libellé du bouton d'indice : « Indice 2/3 » tant qu'il reste des indices textuels, puis « Montrer le coup ». */
+function hintButtonLabel(node: ChessMoveNode, hintLevel: number): string {
+  if (hintLevel < node.hints.length) return `Indice ${hintLevel + 1}/${node.hints.length}`;
+  return node.hints.length > 0 ? "Montrer le coup" : "Indice";
 }

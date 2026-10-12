@@ -1,0 +1,55 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Défense Caro-Kann (avec les Noirs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/caro-kann/cours`). Public visé :
+ * 1500-1800 Elo, répertoire complet contre 1.e4 c6 2.d4 d5.
+ *
+ * ## Contenu (2026-10-11)
+ *
+ * 1. Fiche d'identité, tronc commun (avec 2.Nc3) et Variante d'Échange
+ *    4.Bd3 jusqu'à l'attaque de minorité ...a6/...b5 (piège 5.h3? Nxd4).
+ * 2. Avance, Variante Courte 4.Nf3 e6 5.Be2 c5 : 6.O-O (ligne principale),
+ *    6.Be3 et 6.c3, prolongées jusqu'au levier ...f6.
+ * 3. Avance agressive 4.h4 h5 5.c4 e6 6.Nc3, et l'effondrement après le
+ *    passif 4...h6? 5.g4 Bh7 6.e6!.
+ * 4. Classique 3.Nc3 dxe4 4.Nxe4 Bf5 jusqu'au coup 16, avec 5.Nc5 et le
+ *    piège 5.Bd3 Qxd4 6.Nf3 Qd8 7.Qe2 Nd7?? 8.Nd6#.
+ * 5. Anti-panique Panov 4.c4 (blocage en d5, 5.c5 e5!).
+ * 6. Anti-panique Fantaisie 3.f3 (clouage ...Bb4, motif ...Qh4+).
+ * 7. Aléatoire surprise : grand roque blanc sans plan puni par ...Rc8 et
+ *    ...c5 (8 coups après la théorie).
+ *
+ * Sources : les livres de Schandorff (« Playing the Caro-Kann ») et de
+ * Houska ne sont PAS dans `docs/` (le PDF « Chessbook_Lars_Schandorff » est
+ * « Playing 1.d4 - The Queen's Gambit », et « Beating the Caro-Kann » de
+ * Kotronias est un scan sans couche texte). Les lignes suivent la théorie
+ * établie de la Caro-Kann et sont TOUTES arbitrées par Stockfish 18 natif
+ * (profondeur 16) ; quand une ligne usuelle ne tenait pas au moteur, elle a
+ * été remplacée (ex. 10...Qa5? dans la 6.Be3 de l'Avance, 12...g6? dans la
+ * Panov, 5...dxe4 dans la Fantaisie). Toute la prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Voir `op-scotch-game.ts` : chaque nœud porte `evaluationScore` /
+ * `evaluationMate` (balise `[%eval]`, point de vue Blancs), `showEvalBar`
+ * et `freeze` (balise `[%txt "…"]` sur CHAQUE commentaire : le lecteur
+ * attend « Suivant » ou Espace avant la réponse de l'ordinateur). Chaque
+ * coup noir (le coup de l'utilisateur) porte au moins une case `[%csl]` ou
+ * une flèche `[%cal]`.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/caro-kann.pgn` (et l'en-tête
+ * `caro-kann.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16 [pgn compilé]`.
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

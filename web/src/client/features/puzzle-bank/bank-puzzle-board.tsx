@@ -7,11 +7,10 @@
  * clair. Diffère sur un point : pas de notation FSRS à la fin (banque tierce,
  * hors file de révision) — juste "Résolu !" et un bouton pour enchaîner.
  */
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
-import { OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
+import { circledSquareStyles, ESPORT_BOARD_OPTIONS, lastMoveSquareStyles } from "@/client/features/board/board-theme";
 import type { BankPuzzle } from "@/server/actions/puzzle-bank";
 
 const OPPONENT_REPLY_DELAY_MS = 500;
@@ -24,7 +23,7 @@ export function BankPuzzleBoard({ puzzle, onNext }: { puzzle: BankPuzzle; onNext
   const [moveIndex, setMoveIndex] = useState(0);
   const [status, setStatus] = useState<Status>("playing");
   const [pendingOpponentIndex, setPendingOpponentIndex] = useState<number | null>(null);
-  const [lastMoveSquares, setLastMoveSquares] = useState<Record<string, { backgroundColor: string }>>({});
+  const [lastMoveSquares, setLastMoveSquares] = useState<Record<string, CSSProperties>>({});
 
   const playerColor: "w" | "b" = puzzle.fen.split(" ")[1] === "b" ? "b" : "w";
 
@@ -38,10 +37,7 @@ export function BankPuzzleBoard({ puzzle, onNext }: { puzzle: BankPuzzle; onNext
         promotion: uci.slice(4, 5) || undefined,
       });
       setFen(chess.fen());
-      setLastMoveSquares({
-        [move.from]: { backgroundColor: OPPONENT_MOVE_SQUARE_COLOR },
-        [move.to]: { backgroundColor: OPPONENT_MOVE_SQUARE_COLOR },
-      });
+      setLastMoveSquares(lastMoveSquareStyles(move.from, move.to));
       const afterIndex = pendingOpponentIndex + 1;
       setMoveIndex(afterIndex);
       setPendingOpponentIndex(null);
@@ -88,15 +84,12 @@ export function BankPuzzleBoard({ puzzle, onNext }: { puzzle: BankPuzzle; onNext
 
   const hintSquares =
     status === "wrong"
-      ? {
-          [puzzle.solutionUci[moveIndex].slice(0, 2)]: { backgroundColor: qualitySquareColor("inaccuracy") },
-          [puzzle.solutionUci[moveIndex].slice(2, 4)]: { backgroundColor: qualitySquareColor("inaccuracy") },
-        }
+      ? circledSquareStyles([puzzle.solutionUci[moveIndex].slice(0, 2), puzzle.solutionUci[moveIndex].slice(2, 4)])
       : lastMoveSquares;
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="mx-auto max-w-[480px]">
+      <div className="mx-auto max-w-[600px]">
         <Chessboard
           options={{ ...ESPORT_BOARD_OPTIONS,
             id: "bank-puzzle-board",

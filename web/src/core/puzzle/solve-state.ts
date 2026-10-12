@@ -162,6 +162,16 @@ export function isHoverArrowsEnabled(phase: SolvePhase): boolean {
 }
 
 /**
+ * Au moins un essai infructueux a-t-il été soumis ? Conditionne les indices
+ * textuels du Coach (pattern nommé, cours à revoir) : masqués au chargement
+ * pour ne pas faciliter le puzzle d'emblée, révélés dès le premier échec et
+ * jusqu'à la fin du puzzle (un coup correct ultérieur ne les re-cache pas).
+ */
+export function hasFailedAttempt(state: Pick<PuzzleSolveState, "attemptsLeft">): boolean {
+  return state.attemptsLeft < MAX_PUZZLE_ATTEMPTS;
+}
+
+/**
  * Le coup joué est-il accepté ? Le coup EXACT de la solution, toujours — et,
  * au DERNIER pli seulement, n'importe quel coup qui fait mat (même règle que
  * les puzzles Lichess : « any move that checkmates is accepted »). Sans cette
@@ -225,7 +235,9 @@ function applyWhileSolving(state: PuzzleSolveState, event: PuzzleEvent): PuzzleS
     ...state,
     phase: done ? "solved" : "opponent-reply",
     firstPlayedUci,
-    lastMove: { ...event.move, quality: "best" },
+    // Qualité posée par l'appelant (« brilliant » pour un sacrifice, voir
+    // `solutionMoveQuality`), sinon « best » : la solution est le meilleur coup.
+    lastMove: { ...event.move, quality: event.move.quality ?? "best" },
     lastWrongUci: null,
     lastWrongHint: null,
     moveIndex: nextIndex,
@@ -260,7 +272,7 @@ function applyWhileFailed(state: PuzzleSolveState, event: PuzzleEvent): PuzzleSo
       return {
         ...state,
         // Chaque pli révélé EST la solution enregistrée — badge honnête sans appel moteur.
-        lastMove: { ...event.ply, quality: "best" },
+        lastMove: { ...event.ply, quality: event.ply.quality ?? "best" },
         revealPlyIndex: nextIndex,
         revealed: done,
       };

@@ -21,3 +21,10 @@
  * fork du composant.
  */
 export const OPPONENT_MOVE_ANIMATION_MS = 180;
+
+/**
+ * Glissement du coup adverse d'INTRODUCTION d'un puzzle (le coup qui a créé la
+ * position), volontairement plus lent : retour utilisateur — à 180 ms le coup
+ * passait inaperçu et le Coach semblait le « dicter » au lieu de le jouer.
+ */
+export const SETUP_MOVE_ANIMATION_MS = 600;

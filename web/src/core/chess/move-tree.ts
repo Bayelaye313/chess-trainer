@@ -64,6 +64,8 @@ export interface ChessMoveNode {
    * le moteur (voir `showEvalBar`).
    */
   evaluationScore: number | null;
+  /** `[%eval #n]` : mat en n après ce coup (positif = les Blancs matent), `null` sinon — remplace `evaluationScore` pour la barre. */
+  evaluationMate: number | null;
   /**
    * `true` quand la barre d'évaluation doit montrer `evaluationScore` sur ce
    * nœud : par défaut dès qu'un `[%eval]` est posé ; `[%evalbar off]` le coupe
@@ -77,6 +79,16 @@ export interface ChessMoveNode {
    * Espace (voir `course-tree-viewer.tsx`).
    */
   freeze: boolean;
+  /**
+   * Indices progressifs (`[%hint "…"]`, dans l'ordre d'écriture, 3 au plus
+   * par convention) posés sur la position où le lecteur doit trouver la
+   * punition d'une faute adverse : 1. le principe violé, 2. la case ou la
+   * diagonale affaiblie, 3. l'action à jouer. Le lecteur les dévoile un par un
+   * (bouton « Indice »), jamais tous d'un coup.
+   */
+  hints: readonly string[];
+  /** `[%hintcsl …]` : cases allumées à partir du 2e indice (la faiblesse à viser), cachées avant. */
+  hintHighlights: readonly CourseHighlight[];
   /** Suggestion moteur affichée en permanence SUR ce nœud (le coup qu'on s'apprête à jouer depuis ici) — voir le docstring de `EngineSuggestion`. */
   engineSuggestion: EngineSuggestion | null;
   /** `children[0]` = ligne principale, `children[1..]` = variantes (RAV) — voir le docstring du fichier. */
@@ -93,6 +105,9 @@ const EVAL_RE = /\[%eval\s+(#-?\d+|[+-]?\d+(?:\.\d+)?)\]/i;
 const EVALBAR_RE = /\[%evalbar\s+(on|off)\]/i;
 /** `[%txt "…"]` : le texte entre guillemets est le commentaire, et sa présence gèle le jeu (voir `ChessMoveNode.freeze`). */
 const TXT_RE = /\[%txt\s+"([\s\S]*?)"\]/gi;
+/** `[%hint "…"]` : un indice progressif (voir `ChessMoveNode.hints`) ; `[%hintcsl …]` : ses cases (`ChessMoveNode.hintHighlights`). */
+const HINT_RE = /\[%hint\s+"([\s\S]*?)"\]/gi;
+const HINT_CSL_RE = /\[%hintcsl\s+([^\]]+)\]/gi;
 
 function annotationColor(code: string): "green" | "red" {
   return code === "R" ? "red" : "green";
@@ -132,7 +147,7 @@ export function splitCoachTip(text: string): { comment: string | null; tip: stri
   return { comment: before.length > 0 ? before : null, tip: tip.length > 0 ? tip : null };
 }
 
-/** Extrait `[%csl]`/`[%cal]`/`[%eval]`/`[%evalbar]`/`[%txt]` d'un texte de commentaire brut et renvoie le texte NETTOYÉ de ces balises (jamais affiché tel quel à l'utilisateur — voir `course-tree.ts`, qui n'affiche que le reste en prose). */
+/** Extrait `[%csl]`/`[%cal]`/`[%eval]`/`[%evalbar]`/`[%txt]`/`[%hint]`/`[%hintcsl]` d'un texte de commentaire brut et renvoie le texte NETTOYÉ de ces balises (jamais affiché tel quel à l'utilisateur — voir `course-tree.ts`, qui n'affiche que le reste en prose). */
 function parseAnnotatedComment(raw: string): {
   text: string | null;
   tip: string | null;
@@ -142,19 +157,18 @@ function parseAnnotatedComment(raw: string): {
   evalMate: number | null;
   evalBar: boolean | null;
   freeze: boolean;
+  hints: string[];
+  hintHighlights: CourseHighlight[];
 } {
   const highlights: CourseHighlight[] = [];
   const arrows: CourseArrow[] = [];
   let evalCp: number | null = null;
   let evalMate: number | null = null;
 
-  for (const match of raw.matchAll(CSL_RE)) {
-    for (const entry of match[1].split(",")) {
-      const square = entry.trim().slice(1);
-      const color = annotationColor(entry.trim().slice(0, 1));
-      if (/^[a-h][1-8]$/.test(square)) highlights.push({ square, color });
-    }
-  }
+  for (const match of raw.matchAll(CSL_RE)) highlights.push(...parseSquareList(match[1]));
+  const hintHighlights: CourseHighlight[] = [];
+  for (const match of raw.matchAll(HINT_CSL_RE)) hintHighlights.push(...parseSquareList(match[1]));
+  const hints = [...raw.matchAll(HINT_RE)].map((match) => match[1].trim()).filter((hint) => hint.length > 0);
   for (const match of raw.matchAll(CAL_RE)) {
     for (const entry of match[1].split(",")) {
       const trimmed = entry.trim();
@@ -175,6 +189,8 @@ function parseAnnotatedComment(raw: string): {
   const freeze = raw.search(TXT_RE) !== -1;
 
   const cleaned = raw
+    .replace(HINT_RE, "")
+    .replace(HINT_CSL_RE, "")
     .replace(CSL_RE, "")
     .replace(CAL_RE, "")
     .replace(EVAL_RE, "")
@@ -182,7 +198,17 @@ function parseAnnotatedComment(raw: string): {
     .replace(TXT_RE, (_, text: string) => text.trim())
     .trim();
   const { comment, tip } = splitCoachTip(cleaned);
-  return { text: comment, tip, arrows, highlights, evalCp, evalMate, evalBar, freeze };
+  return { text: comment, tip, arrows, highlights, evalCp, evalMate, evalBar, freeze, hints, hintHighlights };
+}
+
+/** Liste `Rf7,Gg2` d'une balise de cases (`[%csl]`, `[%hintcsl]`) — les entrées mal formées sont ignorées. */
+function parseSquareList(list: string): CourseHighlight[] {
+  const out: CourseHighlight[] = [];
+  for (const entry of list.split(",")) {
+    const square = entry.trim().slice(1);
+    if (/^[a-h][1-8]$/.test(square)) out.push({ square, color: annotationColor(entry.trim().slice(0, 1)) });
+  }
+  return out;
 }
 
 /**
@@ -221,8 +247,11 @@ function makeRoot(startFen: string): ChessMoveNode {
     arrows: [],
     highlights: [],
     evaluationScore: null,
+    evaluationMate: null,
     showEvalBar: false,
     freeze: false,
+    hints: [],
+    hintHighlights: [],
     engineSuggestion: null,
     children: [],
   };
@@ -269,11 +298,19 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       if (parsed.arrows.length > 0) currentNode.arrows = [...currentNode.arrows, ...parsed.arrows];
       if (parsed.highlights.length > 0) currentNode.highlights = [...currentNode.highlights, ...parsed.highlights];
       if (parsed.freeze) currentNode.freeze = true;
-      if (parsed.evalCp !== null && currentNode.evaluationScore === null) {
+      if (parsed.hints.length > 0) currentNode.hints = [...currentNode.hints, ...parsed.hints];
+      if (parsed.hintHighlights.length > 0) currentNode.hintHighlights = [...currentNode.hintHighlights, ...parsed.hintHighlights];
+      if (parsed.evalCp !== null && currentNode.evaluationScore === null && currentNode.evaluationMate === null) {
         currentNode.evaluationScore = parsed.evalCp / 100;
         currentNode.showEvalBar = true;
       }
-      if (parsed.evalBar !== null) currentNode.showEvalBar = parsed.evalBar && currentNode.evaluationScore !== null;
+      if (parsed.evalMate !== null && currentNode.evaluationScore === null && currentNode.evaluationMate === null) {
+        currentNode.evaluationMate = parsed.evalMate;
+        currentNode.showEvalBar = true;
+      }
+      if (parsed.evalBar !== null) {
+        currentNode.showEvalBar = parsed.evalBar && (currentNode.evaluationScore !== null || currentNode.evaluationMate !== null);
+      }
       if ((parsed.evalCp !== null || parsed.evalMate !== null) && currentNode.engineSuggestion === null && currentNode.san !== null) {
         // L'éval porte sur LE COUP QUI VIENT D'ÊTRE JOUÉ (`currentNode`) — elle décrit la
         // qualité de ce choix, pas une suggestion pour le coup SUIVANT. Rien à poser ici :
@@ -313,8 +350,11 @@ function parseSequence(tokens: readonly string[], cursor: Cursor, chess: Chess, 
       arrows: [],
       highlights: [],
       evaluationScore: null,
+      evaluationMate: null,
       showEvalBar: false,
       freeze: false,
+      hints: [],
+      hintHighlights: [],
       engineSuggestion: null,
       children: [],
     };

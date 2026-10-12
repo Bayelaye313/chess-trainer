@@ -420,7 +420,7 @@ export function OpeningDrill({
         {/* Colonne centrale, épurée : échiquier, bouton d'indice, commentaire — rien d'autre (méthode Listudy, voir le docstring du fichier). */}
         <div className="flex flex-col items-center">
           {selection === null ? (
-            <div className="flex aspect-square w-full max-w-[420px] flex-col items-center justify-center rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground-muted">
+            <div className="flex aspect-square w-full max-w-[600px] flex-col items-center justify-center rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground-muted">
               👉 Choisis un chapitre à droite pour commencer.
             </div>
           ) : (
@@ -438,12 +438,12 @@ export function OpeningDrill({
                   l'arbre fusionné, ex. Zukertort/Défense Benima) DOIT se voir
                   à l'écran, jamais un simple reset silencieux du plateau. */}
               {drill.roundTransitionNotice && (
-                <div className="mb-2 w-full max-w-[420px] rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-center text-sm font-medium text-foreground">
+                <div className="mb-2 w-full max-w-[600px] rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-center text-sm font-medium text-foreground">
                   {drill.roundTransitionNotice}
                 </div>
               )}
 
-              <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
+              <div className={`w-full max-w-[600px] ${shaking ? "animate-shake-error" : ""}`}>
                 <Chessboard
                   options={{ ...ESPORT_BOARD_OPTIONS,
                     id: "opening-drill-board",
@@ -456,7 +456,7 @@ export function OpeningDrill({
                 />
               </div>
 
-              <div className="mt-3 min-h-6 w-full max-w-[420px] text-center text-sm">
+              <div className="mt-3 min-h-6 w-full max-w-[600px] text-center text-sm">
                 {drill.status === "autoplaying" ? (
                   <p className="text-foreground-muted">🔁 Relecture de ta partie…</p>
                 ) : drill.status === "finished" ? (
@@ -473,7 +473,7 @@ export function OpeningDrill({
               </div>
 
               {mistakeAlert && (
-                <div className="mt-3 w-full max-w-[420px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+                <div className="mt-3 w-full max-w-[600px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
                   Dans ta partie, tu as joué <span className="font-mono font-semibold">{mistakeAlert}</span>. Trouve le
                   bon coup théorique.
                 </div>

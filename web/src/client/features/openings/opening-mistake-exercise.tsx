@@ -141,7 +141,7 @@ export function OpeningMistakeExercise({
       </div>
 
       <div className="mt-5 flex flex-col items-center">
-        <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
+        <div className={`w-full max-w-[600px] ${shaking ? "animate-shake-error" : ""}`}>
           <Chessboard
             options={{ ...ESPORT_BOARD_OPTIONS,
               id: "opening-mistake-board",
@@ -168,7 +168,7 @@ export function OpeningMistakeExercise({
           />
         </div>
 
-        <div className="mt-3 min-h-6 w-full max-w-[420px] text-center text-sm">
+        <div className="mt-3 min-h-6 w-full max-w-[600px] text-center text-sm">
           {drill.status === "autoplaying" ? (
             <p className="text-foreground-muted">🔁 Relecture de ta partie…</p>
           ) : drill.status === "finished" ? (
@@ -177,7 +177,7 @@ export function OpeningMistakeExercise({
         </div>
 
         {mistakeAlert && (
-          <div className="mt-3 w-full max-w-[420px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+          <div className="mt-3 w-full max-w-[600px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
             Dans ta partie avec {deviation.playerColor === "w" ? "les Blancs" : "les Noirs"} contre{" "}
             <span className="font-medium">{deviation.opponentName ?? "ton adversaire"}</span>, tu as joué{" "}
             <span className="font-mono font-semibold">{mistakeAlert}</span>. Trouve le bon coup théorique.
@@ -185,12 +185,12 @@ export function OpeningMistakeExercise({
         )}
 
         {!mistakeAlert && drill.status === "playing" && drill.lastPly > 0 && (
-          <div className="w-full max-w-[420px]">
+          <div className="w-full max-w-[600px]">
             <MoveCommentary openingId={opening.id} ply={drill.lastPly} lastMove={drill.history.at(-1)} />
           </div>
         )}
         {drill.status === "autoplaying" && drill.history.length > 0 && (
-          <div className="w-full max-w-[420px]">
+          <div className="w-full max-w-[600px]">
             <MoveCommentary openingId={opening.id} ply={drill.history.length} lastMove={drill.history.at(-1)} />
           </div>
         )}

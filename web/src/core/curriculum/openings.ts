@@ -722,6 +722,23 @@ export const OPENINGS: readonly OpeningLine[] = [
     annotations: SCOTCH_GAME_ANNOTATIONS,
   },
   {
+    // Ouverture distincte de `scotch-game` (choix de l'utilisateur, 2026-10-11) :
+    // elle porte son propre cours `course-trees/op-scotch-gambit.ts`. La
+    // branche `(4.Bc4 ...)` de `scotch-game` reste en place pour l'explorateur.
+    // Lignes contrôlées par Stockfish 18 (voir `scripts/opening-course-src/scotch-gambit.pgn`).
+    id: "scotch-gambit",
+    name: "Gambit Écossais",
+    eco: "C44",
+    side: "white",
+    description: "Le fou c4 vise f7 avant de reprendre d4 : avance de développement et initiative contre un roi noir resté au centre.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "d4", "exd4", "Bc4"],
+    pgn: `1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 {Défense des Deux Cavaliers}
+      (4...Bc5 {Défense classique} 5.c3 Nf6 (5...dxc3 6.Bxf7+ Kxf7 7.Qd5+ Ke8 8.Qh5+ Kf8 9.Qxc5+ d6 10.Qc4) 6.e5 d5 7.Be2 Ne4 8.cxd4 Bb6 9.Nc3 O-O 10.O-O Be6 11.Be3 f6 12.Na4)
+      (4...Bb4+ 5.c3 dxc3 6.bxc3 Ba5 7.O-O Bb6 8.a4 d6 9.Nbd2 a6 10.Ba2 Nf6 11.Nc4 O-O 12.Nxb6)
+      (4...d6 5.Nxd4 Nf6 6.Nc3 Be7 7.O-O O-O 8.h3 Nxd4 9.Qxd4 Nd7 10.Be3 Bf6 11.Qd2 Nc5 12.Bd4)
+      5.e5 d5 6.Bb5 Ne4 7.Nxd4 Bd7 8.Bxc6 bxc6 9.O-O Bc5 10.f3 Ng5 11.Be3 Ne6 12.f4 Qe7 13.Nc3`,
+  },
+  {
     id: "vienna-gambit",
     name: "Gambit Viennois",
     eco: "C29",

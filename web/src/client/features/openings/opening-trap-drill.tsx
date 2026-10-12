@@ -199,7 +199,7 @@ export function OpeningTrapDrill({
       </div>
 
       <div className="mt-5 flex flex-col items-center">
-        <div className={`w-full max-w-[420px] ${shaking ? "animate-shake-error" : ""}`}>
+        <div className={`w-full max-w-[600px] ${shaking ? "animate-shake-error" : ""}`}>
           <Chessboard
             options={{ ...ESPORT_BOARD_OPTIONS,
               id: "opening-trap-board",
@@ -214,7 +214,7 @@ export function OpeningTrapDrill({
           />
         </div>
 
-        <div className="mt-3 min-h-6 w-full max-w-[420px] text-center text-sm">
+        <div className="mt-3 min-h-6 w-full max-w-[600px] text-center text-sm">
           {drill.status === "autoplaying" ? (
             <p className="text-foreground-muted">🔁 {isPoisonRun ? "L'IA amène le piège…" : "Mise en place du piège…"}</p>
           ) : drill.status === "finished" ? (
@@ -225,7 +225,7 @@ export function OpeningTrapDrill({
         </div>
 
         {drill.status === "round-gate" && (
-          <div className="mt-3 w-full max-w-[420px] rounded-md border border-accent/30 bg-accent/5 p-4 text-center">
+          <div className="mt-3 w-full max-w-[600px] rounded-md border border-accent/30 bg-accent/5 p-4 text-center">
             <p className="text-sm font-medium text-foreground">
               {drill.learningRound === 1
                 ? "✅ Manche 1 réussie ! Manche 2 : retrouve la réfutation sans indice."
@@ -242,7 +242,7 @@ export function OpeningTrapDrill({
         )}
 
         {trapAlert && (
-          <div className="mt-3 w-full max-w-[420px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+          <div className="mt-3 w-full max-w-[600px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
             Le piège classique tente <span className="font-mono font-semibold">{trapAlert}</span> ici.{" "}
             {activeTrap.trapExplanation}
           </div>
@@ -265,10 +265,10 @@ export function OpeningTrapDrill({
 
         {drill.status === "finished" && (
           <>
-            <p className="mt-3 max-w-[420px] text-center text-sm text-foreground-muted">
+            <p className="mt-3 max-w-[600px] text-center text-sm text-foreground-muted">
               {isPoisonRun ? activeTrap.trapExplanation : activeTrap.outcome}
             </p>
-            <p className="mt-3 max-w-[420px] rounded-md border border-border bg-surface-muted/30 p-3 text-center text-xs text-foreground-muted">
+            <p className="mt-3 max-w-[600px] rounded-md border border-border bg-surface-muted/30 p-3 text-center text-xs text-foreground-muted">
               💬 {activeTrap.comments}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">

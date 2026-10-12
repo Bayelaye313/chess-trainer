@@ -23,9 +23,8 @@
 import { useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
+import { circledSquareStyles, ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { uciOf } from "@/core/analysis/evaluate-move";
-import { qualitySquareColor } from "@/lib/labels";
 
 export interface DrillMistake {
   ply: number;
@@ -144,10 +143,7 @@ function DrillAttempt({
 
   const hintSquares =
     result === "incorrect"
-      ? {
-          [mistake.bestUci.slice(0, 2)]: { backgroundColor: qualitySquareColor("best") },
-          [mistake.bestUci.slice(2, 4)]: { backgroundColor: qualitySquareColor("best") },
-        }
+      ? circledSquareStyles([mistake.bestUci.slice(0, 2), mistake.bestUci.slice(2, 4)])
       : {};
 
   return (

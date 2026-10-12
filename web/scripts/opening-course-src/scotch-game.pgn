@@ -1,0 +1,457 @@
+## Fiche d'identité et réponses au 3e coup
+{ LA PARTIE ÉCOSSAISE, AVEC LES BLANCS.
+
+Le vrai enjeu : ouvrir le centre tout de suite, avant que les Noirs aient fini leur développement, et garder un pion e4 contre un pion d6 ou d7, donc plus d'espace. Emms appelle cette structure le centre pur de l'Écossaise : elle est bonne par nature pour les Blancs.
+
+Le déséquilibre recherché : l'échange Nxc6 laisse souvent aux Noirs des pions c doublés ou un pion a isolé, des cibles fixes pour toute la partie. En échange, les Noirs reçoivent un jeu de pièces actif (colonne b semi-ouverte, centre mobile).
+
+Les structures types (relevées sur la position finale de chaque branche) :
+- Branche A (4...Nf6) : Blancs a2-b2-c2 et f2-g2-h2, sans faiblesse ; Noirs a7 isolé, duo c6-d5, f7-g7-h7. La case c5 n'est plus contrôlée par aucun pion noir.
+- Branche B (4...Bc5) : finale sans dames. Blancs a4-b2-c2, e3-e4, f3-h2 (colonne g ouverte) ; Noirs a5, c6-c7 doublés, d6, f7-g7-h7.
+
+Ce chapitre traite les réponses noires au 3e coup ; le suivant, celles au 4e coup. }
+1. e4 { Le pion occupe le centre et ouvre les diagonales du fou f1 et de la dame. [%csl Ge4] }
+1... e5 { Les Noirs prennent leur part du centre. }
+2. Nf3 { Le cavalier se développe en attaquant e5 : les Noirs doivent répondre tout de suite. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5 en se développant. }
+3. d4 { Le coup de l'Écossaise : on attaque e5 une deuxième fois, immédiatement. Le fou c1 respire aussi. Voici toutes les réponses noires qu'on rencontre en club. [%cal Gd4e5,Gf3e5] }
+3... exd4 { Le seul bon coup : les Noirs cèdent le centre, mais se développent vite. }
+(3... d6 { Les Noirs défendent e5 au lieu de prendre. Principe violé : la passivité, le fou f8 reste enfermé derrière d6. [%csl Rf8] } 4. d5 { Le coup du moteur : on gagne de l'espace avec gain de temps, le cavalier doit reculer. [%cal Gd5c6] } 4... Nb8 { Le meilleur repli : le cavalier passera par d7. } (4... Nce7 { Le cavalier part vers g6. } 5. c4 { On renforce la chaîne d5 et on gagne encore de l'espace à l'aile dame. } 5... Ng6 { Le cavalier se replace. } 6. Nc3 { Développement : les Blancs ont un gros avantage d'espace, environ un pion selon le moteur. }) 5. c4 { La chaîne c4-d5-e4 verrouille le centre : les Blancs joueront Nc3, Be2, O-O puis c5. Voir le chapitre surprise 5 pour la suite. [%csl Gc4,Gd5,Ge4] })
+(3... Nxd4 { Les Noirs échangent leur seule pièce développée. } 4. Nxd4 { On reprend. } 4... exd4 { La seule bonne reprise. } 5. Qxd4 { La dame se centralise : aucun cavalier c6 ne peut plus la chasser. C'est la même position que 3...exd4 4.Nxd4 Nxd4 5.Qxd4, traitée dans l'anti-panique. [%csl Gd4] } 5... Nf6 { Le cavalier attaque e4. } 6. e5 { Le moteur préfère pousser : le cavalier f6 est chassé avec gain de temps, et e5 gêne tout le camp noir (+1.7). [%cal Ge5f6] })
+(3... Bb4+ { Un échec sans but : e5 reste en prise. } 4. c3 { On chasse le fou avec gain de temps. } 4... Ba5 { Le fou reste sur la diagonale. } 5. d5 { Le pion chasse le cavalier c6, défenseur de e5. [%cal Gd5c6] } 5... Nce7 { Le cavalier recule. } 6. Nxe5 { Un pion de plus, et le centre blanc reste intact (+2.6). [%csl Ge5] })
+(3... Nf6 { Les Noirs contre-attaquent e4 sans défendre e5. } 4. d5 { Le moteur chasse d'abord le cavalier c6, défenseur de e5. [%cal Gd5c6] } 4... Nb8 { Le cavalier recule. } (4... Ne7 { Le cavalier recule vers g6. } 5. Nxe5 { On prend le pion. } 5... Nxe4 { Les Noirs reprennent un pion. } 6. Qe2 { La dame attaque le cavalier e4 sur la colonne e, et le roi noir est encore en e8 : les Blancs gardent l'avantage. [%cal Ge2e4] }) 5. Nxe5 { On prend e5. Les Noirs peuvent récupérer un pion par 5...Qe7 6.Nd3 Qxe4+, mais leur dame part seule à l'aventure pendant que les Blancs se développent avec gain de temps : environ +1 selon le moteur. [%csl Ge5] })
+(3... Qf6 { Une sortie de dame prématurée pour défendre e5. } 4. d5 { On chasse le cavalier avec gain de temps. } 4... Nce7 { Le cavalier recule. } 5. Nc3 { On se développe en menaçant Nb5 contre c7 : la dame f6 sera vite une cible pour Bg5. })
+(3... f6 { Ce coup défend e5 mais affaiblit la diagonale a2-g8, celle du roi. [%csl Rf7,Rg8] } 4. Bc4 { Le fou prend tout de suite cette diagonale. [%cal Gc4g8] } 4... Nxd4 { Les Noirs échangent. } 5. Nxd4 { On reprend. } 5... exd4 { Reprise. } 6. O-O { Le moteur ne se presse pas de reprendre d4 : le roi d'abord, le pion d4 ne s'enfuira pas (+1.6). })
+(3... Qe7 { La dame défend e5 mais bloque le fou f8. } 4. Nc3 { Développement. } 4... exd4 { Les Noirs prennent finalement. } 5. Nxd4 { On reprend : par rapport à la ligne normale, la dame e7 bloque le fou f8. })
+4. Nxd4 { On reprend avec une pièce : le centre est à nous, pion e4 contre pion d7.
+
+PRO TIP : 4.c3 et 4.Bc4 sont des gambits plus théoriques. 4.Nxd4 garde un jeu simple et sain. Les réponses noires au 4e coup sont au chapitre suivant. [%csl Ge4,Gd4] } *
+## Le 4e coup noir : tour d'horizon des réponses de club
+{ Après 4.Nxd4, Emms estime qu'un joueur de club rencontre 4...Nf6 ou 4...Bc5 neuf fois sur dix. Ce chapitre traite la dixième fois : les coups rares mais réels, et la réponse blanche qui garde l'avantage. La règle générale : contre un coup qui ne conteste pas le centre, on se développe normalement et le centre pur de l'Écossaise (pion e4 contre aucun pion noir central) suffit. Les pièges (4...Qh4, 4...Nxd4, 4...Bb4+) sont détaillés dans le chapitre anti-panique. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Le cavalier est au centre : c'est la position de référence de l'Écossaise. Voici les réponses noires classées par fréquence en club. [%csl Gd4,Ge4] }
+4... Nf6 { La plus jouée : attaque immédiate sur e4. [%cal Rf6e4] }
+(4... Bc5 { La deuxième plus jouée : le fou attaque d4. } 5. Nxc6 { Notre réponse : voir la branche B. })
+(4... Qf6 { La dame vise d4 et f2. Emms : ce coup rejoint souvent 4...Bc5. } 5. Nxc6 { On échange, comme contre 4...Bc5. } 5... Bc5 { Le meilleur coup noir : le fou menace le mat en f2 avec la dame. } 6. Qf3 { Exactement la position de la branche B (4...Bc5 5.Nxc6 Qf6 6.Qf3) : on connaît déjà la suite. [%cal Gf3f2] })
+(4... d6 { Solide mais passif : un joueur qui veut juste sortir de l'ouverture. } 5. Nc3 { Développement. } 5... Nf6 { Développement. } 6. Bc4 { Le fou se place sur la diagonale de f7. [%cal Gc4f7] } 6... Be7 { Développement. } 7. O-O { Roque. } 7... O-O { Roque. } 8. h3 { On interdit ...Bg4 et ...Ng4 : les Blancs ont plus d'espace et un jeu facile, avec Be3, Re1 puis f4. })
+(4... g6 { Le fou ira en g7 viser le cavalier d4, comme dans un Dragon. } 5. Nc3 { Développement. } 5... Bg7 { Le fou vise d4. [%cal Rg7d4] } 6. Be3 { On protège d4 en développant. } 6... Nf6 { Le cavalier attaque e4. } 7. Nxc6 { On échange d'abord… } 7... bxc6 { …puis… } 8. e5 { …le pion chasse le cavalier. [%cal Ge5f6] } 8... Ng8 { Le seul repli : un mauvais signe en partie ouverte. } 9. f4 { Le moteur préfère soutenir e5 tout de suite plutôt que 9.Bd4 : le cavalier g8 n'a plus de bonne case et les Blancs ont beaucoup d'espace. [%csl Ge5] })
+(4... d5 { Ce contre-coup central est prématuré. } 5. Nxc6 { On échange d'abord. } 5... bxc6 { Reprise. } 6. exd5 { On prend. } 6... Qxd5 { La seule reprise correcte : voir l'autre variante pour 6...cxd5. } (6... cxd5 { Cette reprise perd un pion… } 7. Bb5+ { …à cause de l'échec… } 7... Bd7 { …l'interposition… } 8. Qxd5 { …et d5 tombe. [%csl Gd5] }) 7. Qe2+ { L'échec du moteur : la dame noire doit se mettre en e6 ou échanger. } 7... Qe6 { La dame s'interpose. } 8. Nc3 { Développement : les pions c noirs sont faibles et les Blancs se développent avec gain de temps (Bd2, grand roque). })
+(4... Be7 { Le fou se développe, mais ne fait rien au centre. } 5. Nc3 { Développement. } 5... d6 { Les Noirs soutiennent leur jeu. } 6. Bb5 { On cloue le cavalier c6. [%cal Gb5c6] } 6... Bd7 { Interposition. } 7. Nxc6 { On échange au bon moment. } 7... bxc6 { Reprise. } 8. Bd3 { Le fou revient défendre e4 : les pions c noirs sont doublés et les Blancs ont le centre. })
+(4... Nge7 { Le plan : ...Nxd4 puis ...Nc6. } 5. Nc3 { Développement. } 5... Nxd4 { Les Noirs échangent. } 6. Qxd4 { La dame se centralise. } 6... Nc6 { Le cavalier chasse la dame. } 7. Qe3 { Emms : la dame ira en g3, contre g7. On joue ensuite Bd2 et le grand roque. [%cal Ge3g3] })
+(4... Qh4 { La sortie de dame agressive : voir le chapitre anti-panique. } 5. Nc3 { La réponse d'Emms : développer en limitant les ruses noires. })
+(4... Nxd4 { L'échange que les joueurs de club adorent : voir le chapitre anti-panique. } 5. Qxd4 { La dame se centralise. })
+(4... Bb4+ { L'échec du spécialiste Tony Miles : voir le chapitre anti-panique. } 5. c3 { On chasse le fou avec gain de temps. })
+5. Nc3 { Notre réponse : voir la branche A. [%cal Gc3e4] } *
+## Branche A : 4...Nf6 5.Nc3, toutes les réponses noires
+{ La réponse la plus jouée : les Noirs attaquent e4 tout de suite. On répond 5.Nc3, l'Écossaise des Quatre Cavaliers, qu'Emms conseille aux joueurs en progression : peu de théorie, un jeu de pièces simple. À chaque coup noir, l'arbre montre les réponses qu'on rencontre vraiment entre 1500 et 1800, et la réplique blanche qui les punit. La ligne principale vise une position où le duo noir c6-d5 devient une cible et où la case c5 appartient à nos pièces. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Nf6 { Développement avec gain de temps : e4 est attaqué. [%cal Rf6e4] }
+5. Nc3 { On défend e4 en développant une pièce. Les Noirs ont maintenant six réponses courantes ; la plus forte est 5...Bb4. [%cal Gc3e4] }
+5... Bb4 { Le meilleur coup : le fou cloue le cavalier c3 et renouvelle la menace sur e4, puisque son défenseur est paralysé. [%cal Rb4c3,Rf6e4] }
+(5... Bc5 { Le fou attaque le cavalier d4 au lieu de e4. Coup sous-estimé selon Emms, mais il demande de la précision. } 6. Be3 { Le coup logique : d4 est protégé, et on menace Nxc6 suivi de Bxc5, qui gagnerait une pièce. [%cal Gd4c6,Ge3c5] } 6... Bb6 { La bonne parade : le fou s'écarte de la menace. } (6... O-O { La gaffe la plus fréquente de toute la variante : Emms l'a trouvée 35 fois dans sa base. Le roque laisse le fou c5 sans défense réelle. } 7. Nxc6 { On élimine le cavalier c6 en gardant le fou e3 face au fou c5… [%cal Gd4c6] } 7... bxc6 { …la reprise… } 8. Bxc5 { …et le fou c5 tombe : une pièce de plus. [%csl Gc5] }) (6... Nxd4 { Les Noirs échangent pour se libérer. } 7. Bxd4 { On reprend avec le fou, qui fait face au fou c5. } 7... Bxd4 { Échange des fous. } 8. Qxd4 { La dame se centralise sans craindre de cavalier en c6. } 8... d6 { Les Noirs restent passifs. } 9. O-O-O { Grand roque : les Blancs ont le centre pur de l'Écossaise et une initiative durable. [%csl Ge4] }) (6... d6 { Ce coup calme ignore la menace. } 7. Nxc6 { On prend en c6… } 7... bxc6 { …la reprise… } 8. Bxc5 { …et on échange le fou… } 8... dxc5 { …ce qui laisse aux Noirs trois pions c triplés et isolés, le centre irlandais d'Emms : une faiblesse pour toute la partie. [%csl Rc7,Rc6,Rc5] }) 7. Qd2 { Le coup du moteur, qu'Emms juge très sérieux : la dame prépare le grand roque, puis f3 et g4-g5 contre le cavalier f6, comme l'attaque anglaise de la Sicilienne. [%cal Gg2g4] } 7... O-O { Les Noirs roquent du côté où vont avancer nos pions. } 8. O-O-O { Les rois sont sur des ailes opposées : la course à l'attaque commence. } 8... Re8 { La tour presse e4. [%cal Re8e4] } 9. f3 { On protège e4 solidement et on prépare g4. } 9... d6 { Trop lent selon Emms : les Noirs n'ont plus de contre-jeu central. (9...d5 était l'essai le plus actif.) } 10. g4 { La marée de pions commence : g5 chassera le cavalier f6. Dans Reefat-Hebden (1995), les Noirs ont vite été en grande difficulté. [%cal Gg4g5] })
+(5... Nxd4 { Une erreur fréquente : les Noirs croient gagner du temps contre la dame centralisée. } 6. Qxd4 { La dame est bien placée en d4 : aucun cavalier c6 ne peut plus la chasser. [%csl Gd4] } 6... d6 { Les Noirs se développent calmement : c'est le moindre mal. } (6... c5 { Ce coup chasse la dame, mais il affaiblit d5 et d6 pour toujours et laisse un pion d arriéré. } 7. Qe3 { La dame recule vers g3, d'où elle visera g7. Le moteur juge 7.Qd3, qui surveille d6, encore un peu plus précis. } 7... d6 { Les Noirs couvrent la case d6. } 8. Bb5+ { On échange le bon fou noir. } 8... Bd7 { Interposition. } 9. Bxd7+ { Échange. } 9... Qxd7 { Reprise forcée. } 10. O-O { On met le roi à l'abri. } 10... Be7 { Les Noirs développent. } 11. Qg3 { La dame vise g7 et d6. [%cal Gg3g7] } 11... O-O { Roque. } 12. Bh6 { Le fou attaque g7 : les Noirs doivent réagir. Plus tard, Rad1 mettra le pion d6 arriéré sous pression. [%csl Rd6][%cal Gh6g7] }) 7. Bf4 { Le coup du moteur : le fou se développe sur une bonne diagonale et prépare le grand roque. [%cal Gf4d6] } 7... Be7 { Développement. } 8. O-O-O { Le grand roque : la tour d1 vise d6, les Blancs ont plus d'espace et une initiative claire (+1.2). [%cal Gd1d6] })
+(5... d6 { Solide mais passif : les Noirs empêchent e5 mais ne font aucune pression. } 6. Bc4 { Le fou prend la diagonale de f7. [%cal Gc4f7] } 6... Be7 { Développement. } 7. O-O { Roque. } 7... O-O { Roque. } 8. h3 { On interdit ...Bg4 et ...Ng4. Les Blancs gardent le centre pur et peuvent augmenter la pression avec Re1, Be3 puis f4. })
+(5... Nxe4 { Le coup incroyable étudié par Emms : le cavalier prend e4 en comptant sur la fourchette ...d5. } 6. Nxe4 { On prend le cavalier. } 6... Qe7 { La dame cloue le cavalier e4 sur la colonne e. [%cal Re7e1] } 7. f3 { On soutient le cavalier cloué. } 7... d5 { La fourchette du pion : le cavalier e4 est attaqué deux fois. } 8. Bb5 { Le fou cloue le cavalier c6, qui protège… d4 ! Les Blancs gardent la pièce de plus. [%cal Gb5c6] })
+(5... Be7 { Ce coup développe, mais ne conteste rien au centre. } 6. Nxc6 { On échange d'abord… } 6... bxc6 { …la reprise… } 7. e5 { …puis le pion chasse le cavalier. } 7... Nd5 { Le cavalier va au centre. } 8. Nxd5 { On prend. } 8... cxd5 { Reprise. } 9. Qxd5 { Un pion de plus pour les Blancs, sans compensation. [%csl Gd5] })
+(5... d5 { Trop tôt : le contre-coup au centre est réfuté. } 6. Bb5 { On cloue le cavalier c6. [%cal Gb5c6] } 6... Bd7 { Interposition. } 7. exd5 { On prend le pion. } 7... Nxd4 { Les Noirs échangent… } 8. Bxd7+ { …on prend avec échec… } 8... Qxd7 { …la reprise… } 9. Qxd4 { …et les Blancs ont un pion de plus net. })
+6. Nxc6 { On échange avant que le cavalier d4 devienne une cible et on prépare Bd3, qui défendra e4 solidement. }
+6... bxc6 { Reprise vers le centre : les Noirs préparent ...d5. }
+(6... dxc6 { Cette reprise ouvre la colonne d… } 7. Qxd8+ { …et l'échange des dames se fait avec échec. } 7... Kxd8 { Le roi noir a perdu le droit de roquer. } 8. Bd2 { Emms : le roi noir est mal placé et les Noirs n'ont rien pour compenser la meilleure structure blanche. Le chapitre surprise 2 montre comment gagner cette finale. [%csl Rd8] })
+7. Bd3 { Le fou défend e4 et prépare le petit roque. [%cal Gd3e4] }
+7... d5 { Le coup le plus joué, de loin. [%cal Rd5e4] }
+(7... d6 { Moins forcé, plus original. } 8. O-O { Roque. } 8... O-O { Roque. } 9. Bg5 { Maintenant que le roi noir est en g8, le clouage gêne beaucoup : ...h6 et ...g5 affaibliraient son propre roi. [%cal Gg5f6] } 9... h6 { Les Noirs questionnent le fou. } 10. Bh4 { On maintient le clouage. Avancer ...g5 maintenant ouvrirait le roi noir. })
+(7... O-O { Les Noirs gardent le choix entre ...d5 et ...d6. } 8. O-O { Roque. } 8... d5 { Retour aux lignes principales. } 9. exd5 { On prend. } 9... cxd5 { Reprise. } 10. Bg5 { Même position que la ligne principale : le clouage du cavalier f6. })
+8. exd5 { On ouvre la colonne e pendant que le roi noir est encore en e8. [%cal Ge1e8] }
+8... cxd5 { La reprise habituelle : les Noirs défont leurs pions doublés et forment le duo c-d. }
+(8... Qe7+ { L'échec qui gâche la fête : les Blancs doivent proposer l'échange des dames. } 9. Qe2 { On propose l'échange. } 9... cxd5 { Reprise au centre. } 10. Qxe7+ { On échange. } 10... Kxe7 { Le roi reprend. } 11. Bd2 { On développe et on prépare le grand roque. } 11... c6 { Les Noirs consolident d5. } 12. O-O-O { Le roi rejoint l'aile dame. } 12... Rd8 { La tour prend la colonne d. } 13. Rhe1+ { Le moteur commence par l'échec : la tour prend la colonne e avec gain de temps. Le plan d'Emms suit : Na4, échange des fous de cases noires, puis cavalier en c5. [%cal Ge1e7] })
+(8... Nxd5 { Le cavalier reprend en visant c3. } 9. O-O { Le sacrifice de pion recommandé par Emms. } 9... Nxc3 { Les Noirs prennent… } 10. bxc3 { …on reprend… } 10... Bxc3 { …et ils gagnent un pion. } 11. Ba3 { Le fou empêche le roque : le roi noir reste au centre face à Re1 et Qf3. [%cal Ga3f8] })
+9. O-O { On met le roi à l'abri et on prépare Re1. }
+9... O-O { Les Noirs roquent aussi. }
+10. Bg5 { Le seul vrai essai pour un avantage selon Emms : le fou cloue le cavalier f6, qui défend d5. [%cal Gg5f6,Gf6d5] }
+10... c6 { Les Noirs consolident d5 avant que Bxf6 ne supprime son défenseur. [%csl Rd5] }
+(10... h6 { Ce coup oublie la menace créée par Bg5. } 11. Bxf6 { On supprime le défenseur de d5… } 11... Qxf6 { …la reprise… } 12. Nxd5 { …et le pion d5 tombe avec attaque sur la dame. } 12... Qd6 { La dame s'écarte et attaque le cavalier d5. } 13. Nxb4 { On prend le fou. } 13... Qxb4 { La reprise : les Blancs ont un pion de plus. })
+(10... Be7 { Le fou décloue, mais il devient passif. } 11. Re1 { Le coup du moteur : la tour prend la colonne e, face au fou e7. Attention, 11.Bxf6 Bxf6 12.Nxd5 ne gagne rien, car 12...Bxb2 reprend le pion. [%cal Ge1e7] } 11... Be6 { Les Noirs protègent d5 une deuxième fois. } 12. Ne2 { Le cavalier se replace vers d4 ou f4, d'où il visera e6 et d5. [%cal Ge2d4] })
+(10... Be6 { L'autre façon de protéger d5. } 11. h3 { Le coup du moteur : on interdit ...Ng4 et ...Bg4 avant de placer la dame. } 11... c5 { Les Noirs gagnent de l'espace au centre. } 12. Qf3 { La dame augmente la pression sur f6 et d5. [%cal Gf3f6,Gf3d5] })
+11. Qf3 { La ligne principale traditionnelle : la dame ajoute sa pression sur f6 et d5 et regarde l'aile roi. [%cal Gf3f6,Gf3d5] }
+11... Be7 { Le fou décloue le cavalier : c'est le coup le plus ambitieux selon Emms, car il refuse la finale égale après Bxf6. }
+(11... Bd6 { Les Noirs laissent la prise en f6. } 12. h3 { On empêche ...Bg4 une fois pour toutes. } 12... Rb8 { La tour vise b2. } 13. b3 { On protège b2 par un pion, ce qui laisse la tour a1 libre. } 13... h6 { Les Noirs questionnent le fou. } 14. Bf4 { On propose l'échange du fou d6, le meilleur défenseur des cases noires. Après 14.Bxf6 Qxf6 15.Qxf6 gxf6, la finale est égale. [%cal Gf4d6] })
+(11... Bg4 { Une gaffe classique. } 12. Bxf6 { Le fou prend f6 avec attaque sur la dame… } 12... Bxf3 { …les Noirs prennent la dame… } 13. Bxd8 { …on prend la leur… } 13... Raxd8 { …ils reprennent… } 14. gxf3 { …et les Blancs ont gagné une pièce. })
+(11... Rb8 { La tour vise b2. } 12. h3 { Le moteur préfère d'abord ce coup utile : ...Bg4 est interdit, et le roi a une case de fuite. Na4-c5 viendra ensuite. })
+12. Rae1 { La tour a1 prend la colonne e et attaque le fou e7. On garde la tour f1 pour soutenir f4 plus tard. [%cal Ge1e7] }
+12... Rb8 { La tour noire utilise la colonne b semi-ouverte contre b2. [%cal Rb8b2] }
+(12... Re8 { Le coup prophylactique : le fou e7 est défendu. } 13. h3 { Un coup utile : ...Bg4 est interdit et le roi a une case de fuite. })
+(12... h6 { Objectivement jouable, mais un piège pratique : les Blancs peuvent sacrifier. } 13. Bxh6 { Le sacrifice : on ouvre le roi noir. Le chapitre surprise 1 montre la suite complète. } 13... gxh6 { Reprise. } 14. Qe3 { Double attaque sur e7 et h6. [%cal Ge3e7,Ge3h6] } 14... d4 { La meilleure défense : le pion attaque à la fois la dame e3 et le cavalier c3. } 15. Qxh6 { On prend le pion. } 15... Qd6 { La dame empêche Re5. Emms pensait que les Blancs devaient se contenter de l'échec perpétuel ; Stockfish 18 trouve 16.Qg5+ Kh8 17.Na4 et donne environ +1.8 aux Blancs. })
+13. Na4 { Le cavalier va vers c5, l'avant-poste que plus aucun pion noir ne peut chasser. Il évite aussi ...Rb4 et ...d4 avec gain de temps.
+
+PRO TIP : la feuille de route après la théorie.
+1. Installer un cavalier en c5 (Na4-c5), puis jouer b3 et Bd4 ou Bf4. Le cavalier bloque ...c5 et frappe d7, e6 et b7.
+2. Viser d5 : Bxf6 supprime son défenseur, puis on double sur la colonne d et on prépare le levier c4.
+3. Tenir la colonne e (Re1, Re3 vers g3 ou h3) pour attaquer le roi si les Noirs restent passifs.
+À empêcher : ...c5-c4 et ...d4, qui rendraient le duo noir mobile. On bloque sur les cases devant ces pions (c5 et d4). [%csl Gc5,Rd5,Rc6][%cal Ga4c5] } *
+## Branche B : 4...Bc5 5.Nxc6 Qf6 6.Qf3, toutes les réponses noires
+{ La défense classique : le fou c5 attaque le cavalier d4 et vise f2. On simplifie par 5.Nxc6, puis on pare la menace de mat par 6.Qf3, qui propose l'échange des dames. Emms rappelle que l'échange des dames favorise en général les Blancs dans cette variante : le développement rapide des Noirs perd de sa force, et la meilleure structure blanche compte davantage. À chaque coup noir, l'arbre donne les réponses de club et notre réplique. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Bc5 { Le fou attaque le cavalier d4 une deuxième fois : le cavalier c6 et le fou c5 contre la seule dame d1. [%cal Rc5d4,Rc6d4] }
+5. Nxc6 { On règle la tension tout de suite, sans théorie à apprendre : c'est la réponse la plus simple selon Emms. }
+5... Qf6 { Le coup intermédiaire : ...Qxf2 serait mat, car le fou c5 protège f2. [%csl Rf2][%cal Rf6f2,Rc5f2] }
+(5... bxc6 { Reprise simple, peu jouée mais saine. } 6. Bd3 { On défend e4 et on prépare le roque. } 6... d6 { Le pion libère le fou c8. } 7. O-O { Roque. } 7... Nf6 { Développement. } 8. Nc3 { Développement : les Blancs gardent le centre pur e4 contre d6 et plus d'espace. } 8... O-O { Roque. })
+(5... dxc6 { Cette reprise permet l'échange des dames avec échec. } 6. Qxd8+ { On échange… } 6... Kxd8 { …et le roi noir est coincé au centre. } 7. Nc3 { Emms : une version nettement inférieure pour les Noirs de la finale de majorité. Les Blancs ont l'aile roi majoritaire et un roi en sécurité. [%csl Rd8] })
+(5... Bxf2+ { Un faux sacrifice : les Noirs donnent le fou pour un pion et un échec. } 6. Kxf2 { On prend. } 6... Qf6+ { L'échec avec la dame. } 7. Qf3 { On interpose la dame, qui propose l'échange. } 7... Qxc6 { Les Noirs récupèrent le cavalier, mais restent avec une pièce de moins pour un seul pion. })
+(5... Qh4 { La dame attaque e4 et f2, mais oublie de reprendre la pièce. } 6. Nd4 { Le cavalier rentre au centre avec une pièce de plus : en d4, il coupe aussi la diagonale c5-f2 du fou noir. Plus de mat possible en f2 (+3.8). [%csl Gd4][%cal Rc5f2] })
+6. Qf3 { On pare le mat et on propose l'échange des dames. Le moteur préfère ce coup à 6.Qd2 (le choix de Kasparov, plus théorique). [%cal Gf3f2] }
+6... bxc6 { Les Noirs reprennent vers le centre et gardent la dame. }
+(6... Qxf3 { L'échange tout de suite abîme notre aile roi… } 7. gxf3 { …la reprise est forcée, mais la colonne g s'ouvre pour notre tour. } 7... bxc6 { Les Noirs reprennent. } 8. Rg1 { La tour attaque g7 tout de suite. Attention, 9.Rxg7 serait une erreur après ...Ng6, qui enferme la tour. [%cal Gg1g7] } 8... Ne7 { Le cavalier défend g6 et g8. } 9. Be3 { On propose l'échange du fou c5. C'est la partie Tseshkovsky-Morozevich (2004), reprise en entier dans le chapitre surprise 4. [%cal Ge3c5] })
+(6... dxc6 { Cette reprise ouvre la diagonale du fou c8 et donne la structure de majorité. } 7. Nc3 { Le moteur garde les dames : échanger en f6 développerait le cavalier noir avec un jeu actif. [%cal Gc3e4] } 7... Be6 { Le fou se développe. } 8. Be3 { On propose l'échange du fou c5. [%cal Ge3c5] } 8... Bb6 { Le fou garde la diagonale. } 9. Bd3 { Développement : la majorité blanche à l'aile roi (e4, f2, g2, h2 contre f7, g7, h7) comptera dans toute finale. })
+(6... Qxc6 { Les Noirs gardent les dames, mais la dame est mal placée en c6. } 7. Nc3 { Développement : Bb5 et Nd5 menacent de gagner du temps sur la dame. } 7... Nf6 { Développement. } 8. e5 { Le coup du moteur : le pion chasse le cavalier, la case d5 s'ouvre pour notre cavalier. [%cal Ge5f6,Gc3d5] } 8... Qxf3 { Les Noirs échangent. } 9. gxf3 { Reprise. } 9... Nh5 { Le cavalier part au bord. } 10. Nd5 { Le cavalier menace Nxc7+, avec fourchette sur le roi et la tour. [%cal Gd5c7] } 10... Kd8 { Le roi défend c7 et perd le roque : les Blancs ont un net avantage de développement. })
+7. Nd2 { Le cavalier se dirige vers b3 pour chasser le fou c5 avec gain de temps. En c3, il pourrait subir ...Bd4. [%cal Gd2b3] }
+7... d6 { Le pion libère le fou c8. }
+(7... Ne7 { Développement, mais le cavalier ne défend plus la dame f6. } 8. Qxf6 { Le moteur échange tout de suite : le cavalier e7 ne peut pas reprendre en f6. (8.Nb3 Bb6 9.Bd2 laisserait les Noirs égaliser.) } 8... gxf6 { Reprise forcée : les pions f noirs sont doublés et isolés. [%csl Rf6,Rf7] } 9. Nc4 { Le cavalier vise d6 et e3 ; Be3 suivra pour échanger le fou c5. Les Blancs ont la meilleure structure (+0.5). [%cal Gc4d6] })
+(7... Qxf3 { Les Noirs échangent tout de suite. } 8. Nxf3 { Le cavalier reprend et garde notre structure intacte. } 8... d6 { Le pion libère le fou c8. } 9. Bd3 { Développement : les pions c doublés seront la cible de la finale. })
+8. Nb3 { Gain de temps sur le fou. [%cal Gb3c5] }
+8... Bb6 { Le fou garde la diagonale a7-g1, toujours tournée vers f2. [%cal Rb6f2] }
+(8... Bb4+ { L'échec ne sert à rien… } 9. c3 { …le fou doit reculer encore. } 9... Qxf3 { Les Noirs échangent. } 10. gxf3 { Reprise : le fou b4 est attaqué et la colonne g est à nous. })
+9. Bd2 { On prépare Bc3 contre g7 et f6, et le grand roque. }
+9... Qxf3 { Les Noirs échangent les dames. }
+(9... Ne7 { Une erreur fréquente : ce coup laisse la dame f6 défendue une seule fois… } 10. Qxf6 { …et on échange tout de suite. } 10... gxf6 { La reprise est forcée : la structure noire est abîmée. } 11. Bc3 { Le fou attaque f6. [%cal Gc3f6] } 11... Rg8 { La tour cherche du contre-jeu sur la colonne g. } 12. Bxf6 { Les Blancs gagnent un pion net. [%csl Gf6] })
+(9... Qg6 { Les Noirs évitent l'échange. } 10. Bd3 { On développe en défendant e4 : le grand roque suit, et la dame noire n'a rien à attaquer. })
+10. gxf3 { La reprise est forcée. La colonne g s'ouvre pour notre tour. [%cal Gh1g1] }
+10... a5 { Les Noirs préparent ...a4, qui chasserait le cavalier b3. [%cal Ra5a4] }
+11. a4 { On bloque le pion et on le fixe en a5. }
+11... Ne7 { Le cavalier se développe. }
+12. Be3 { On propose l'échange du fou b6, la meilleure pièce noire. [%cal Ge3b6] }
+12... Bxe3 { Les Noirs échangent. }
+13. fxe3 { On reprend vers le centre : le pion e3 contrôle d4, la future case du cavalier.
+
+PRO TIP : la feuille de route après la théorie.
+1. Colonne g ouverte : Rg1 contre g7, puis Rg5 ou Rg3.
+2. Les pions c doublés : un cavalier en d4 contre c6, le roi en d2 ou le grand roque, puis Rd1 contre d6.
+3. Les leviers f4-f5 et c4-c5 ouvrent des lignes et fixent les faiblesses noires. [%csl Gd4,Rc6,Rc7][%cal Gb3d4] } *
+## Anti-panique : les pièges des coups rares
+{ À 1500 Elo, les adversaires sortent souvent de la théorie au 4e coup. Chaque déviation viole un principe : il faut savoir lequel, et la réponse précise qui le punit. La ligne principale traite 4...Qh4, la sortie de dame la plus dangereuse ; les variantes traitent 4...Nxd4, 4...Bb4+ et le piège de mat de 4...Nge7. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Qh4 { La sortie de dame la plus agressive : e4 est attaqué. Emms ne la recommande pas aux Noirs, mais elle est piégeuse si on ne la connaît pas. Principe violé : la dame sort avant les pièces légères. [%cal Rh4e4] }
+(4... Nxd4 { L'échange que les joueurs de club adorent : ils pensent gagner du temps contre la dame. } 5. Qxd4 { La dame centralisée ne craint rien : aucun cavalier c6 ne peut plus la chasser. [%csl Gd4] } 5... Qf6 { Les Noirs proposent l'échange des dames. } (5... d6 { Les Noirs empêchent e5, mais s'enferment : voir le chapitre surprise 3, où l'on étouffe ce camp. } 6. Nc3 { Développement : les Blancs préparent Be2, Bd2 et le grand roque. }) 6. e5 { Lane : on ne prend pas en f6, ce qui développerait le cavalier noir. Le pion chasse la dame avec gain de temps. [%cal Ge5f6] } 6... Qb6 { La dame propose encore l'échange. } 7. Qxb6 { Cette fois on échange : la finale est facile pour les Blancs. } 7... axb6 { Reprise : les pions b noirs sont doublés. } 8. Nc3 { Développement, avec l'idée Nb5 contre c7. [%cal Gc3b5] } 8... Bb4 { Les Noirs clouent le cavalier. } 9. Bd2 { On décloue : les Blancs se développent plus facilement et gardent l'idée Nb5 (Lane). })
+(4... Bb4+ { L'échec de Tony Miles : il pousse les Blancs à jouer c3, qui enlève la case c3 au cavalier b1. } 5. c3 { La seule façon d'essayer de punir l'échec, selon Emms. } 5... Bc5 { Le fou revient sur la diagonale de f2. } (5... Be7 { Le repli passif. } 6. Nxc6 { On échange. } 6... bxc6 { Reprise. } 7. Bc4 { Le fou vise f7. [%cal Gc4f7] } 7... d6 { Les Noirs libèrent le fou c8, mais oublient f7. } 8. Qb3 { La dame et le fou attaquent f7 ensemble. [%cal Gb3f7,Gc4f7] } 8... Nf6 { Les Noirs développent. } 9. Bxf7+ { On prend le pion avec échec. } 9... Kf8 { Le roi ne peut plus roquer. } 10. Be6 { Emms : on échange le fou c8 avant que le fou f7 ne soit pris au piège. Le roi noir restera mal placé. }) 6. Be3 { On protège d4 : maintenant c3 aide les Blancs, comme dans les lignes 4...Bc5 5.Be3. } 6... Bb6 { Le fou s'écarte de la menace Nxc6. } 7. Nf5 { Le coup du moteur : le cavalier attaque g7 et propose de prendre le fou b6. La nouveauté de Kasparov, 7.Qg4, ne donne rien selon Stockfish 18 : après 7...Nf6! 8.Qxg7 Rg8 9.Qh6 d5, les Noirs ont un jeu actif pour le pion. [%cal Gf5g7] } 7... g6 { Les Noirs chassent le cavalier. } 8. Bxb6 { On échange le fou b6, la meilleure pièce noire. } 8... axb6 { Reprise : pions b doublés. } 9. Ne3 { Le cavalier revient au centre et contrôle d5 et g4. Les Blancs gardent le centre pur et une petite avance (+0.7). [%csl Gd5] })
+(4... Nge7 { Le plan : ...Nxd4 puis ...Nc6. } 5. Nc3 { Développement. } 5... g6 { La gaffe qu'Emms signale : le fou veut aller en g7, mais il y a un mat. } 6. Bg5 { Le fou cloue le cavalier e7 sur la dame d8. [%cal Gg5e7] } 6... Bg7 { Les Noirs continuent leur idée. } 7. Nd5 { Le cavalier menace Nf6+ et attaque le cavalier e7 cloué. [%cal Gd5f6] } 7... Bxd4 { Les Noirs prennent le cavalier d4… } 8. Qxd4 { …et on sacrifie la dame ! } 8... Nxd4 { Les Noirs prennent la dame. } 9. Nf6+ { L'échec du cavalier. } 9... Kf8 { Le seul coup. } 10. Bh6# { Mat : le roi n'a plus de case. Le cavalier f6 couvre g8 et h7, le fou h6 couvre g7 et f8. [%csl Rf8] })
+5. Nc3 { La réponse d'Emms : on développe en limitant les ruses noires. 5.Nb5 contre c7 est aussi possible. }
+5... Bb4 { Le seul coup cohérent : le fou cloue le cavalier et renouvelle l'attaque sur e4. }
+6. Be2 { On laisse e4 en prise, exprès : le développement compte plus que le pion. }
+6... Qxe4 { Les Noirs prennent le pion. (6...Nf6 7.O-O mène au chapitre surprise 5, une attaque de mat.) }
+7. Nb5 { Le cavalier d4 attaque c7 : fourchette menacée sur le roi et la tour a8. Le cavalier c3 est cloué, c'est donc bien celui de d4 qui saute. [%cal Gb5c7,Gc7a8] }
+7... Bxc3+ { Les Noirs échangent d'abord. Défendre c7 par 7...Ba5 ne marche pas : 8.Nxc7+ et le fou surchargé ne peut pas tout tenir. }
+8. bxc3 { On reprend vers le centre. }
+8... Kd8 { La seule défense de c7 : le roi. Les Noirs ont un pion de plus, mais leur roi est coincé au centre pour longtemps. [%csl Rd8] }
+9. O-O { On met le roi à l'abri et on prépare Re1 et Bf3. }
+9... a6 { Les Noirs chassent le cavalier. }
+10. Bf3 { Le coup du moteur, joué par Oral contre Kantorik (2000) : le fou chasse la dame avec gain de temps et vise la grande diagonale. [%cal Gf3c6] }
+10... Qf5 { La meilleure retraite : la dame surveille c2 et f7. }
+(10... Qc4 { Le recul naturel… qui perd. } 11. Nd6 { Le coup brillant cité par Emms : le cavalier se sacrifie pour ouvrir la colonne d vers le roi d8. [%cal Gd1d8] } 11... cxd6 { Les Noirs prennent : ils ont une pièce de plus. } 12. Qxd6 { Mais la dame s'installe en d6 : Qf8+, Be3-b6+ et Bf4 suivi de Qc7+ menacent, et les Noirs n'ont aucune pièce développée sur l'aile dame. Ils ont perdu quelques coups plus tard. [%csl Rd8][%cal Gd6f8] })
+11. Nd4 { Le cavalier se centralise. Emms : les Blancs ne sont pas pressés, les problèmes du roi noir ne disparaîtront pas tout seuls. Re1, Bf4 et Rb1 suivront.
+
+PRO TIP : contre les coups passifs, prends l'espace. Contre les sorties de dame précoces, développe-toi en créant des menaces. Contre les échanges prématurés, centralise la pièce qui reprend. [%csl Gd4] } *
+## Surprise 1 : 12...h6?! 13.Bxh6, la marche du roi noir vers le mat
+{ ALÉATOIRE SURPRISE. Dans la ligne principale de la branche A, l'adversaire chasse le fou par 12...h6, un coup naturel. Mais avec la dame en f3 et une tour en e1, les Blancs peuvent sacrifier le fou en h6 pour ouvrir le roi noir. Emms cite Ardeleanu-Vajda (Iasi 1999). Regarde comment les Blancs ne se contentent pas d'un échec perpétuel : ils amènent une pièce de plus (la tour e1 vers e3 puis g3) avant de porter le coup. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Nf6 { Attaque sur e4. [%cal Rf6e4] }
+5. Nc3 { On défend e4. }
+5... Bb4 { Clouage. [%cal Rb4c3] }
+6. Nxc6 { On échange. }
+6... bxc6 { Reprise vers le centre. }
+7. Bd3 { Le fou défend e4. }
+7... d5 { Contre-coup central. }
+8. exd5 { On ouvre la colonne e. }
+8... cxd5 { Reprise. }
+9. O-O { Roque. }
+9... O-O { Roque. }
+10. Bg5 { Clouage du cavalier f6. [%cal Gg5f6] }
+10... c6 { Consolidation de d5. }
+11. Qf3 { La dame vise f6 et l'aile roi. [%cal Gf3f6] }
+11... Be7 { Le fou décloue. }
+12. Rae1 { La tour sur la colonne e : fin de la théorie. Retiens bien pourquoi c'est la tour a1 qui vient en e1 : la tour f1 reste libre de soutenir f4 ou d'aller en e1 plus tard. [%cal Ge1e7] }
+12... h6 { LA FAUTE PRATIQUE. Le coup chasse le fou, mais affaiblit le roi noir : le pion h6 n'est défendu que par le pion g7. [%csl Rh6] }
+13. Bxh6 { Le sacrifice. On donne le fou pour deux pions et un roi ouvert. Le moteur donne déjà environ +1.4. [%cal Gg5h6] }
+13... gxh6 { Les Noirs acceptent. Refuser laisserait simplement un pion de moins et un roi affaibli. }
+14. Qe3 { L'idée clé : une double attaque sur le fou e7 et le pion h6. Les Noirs ne peuvent pas tout défendre. [%cal Ge3e7,Ge3h6] }
+14... Re8 { Le coup naturel : la tour défend le fou e7. Selon Emms, les Noirs sont probablement déjà perdus. }
+(14... d4 { La meilleure défense : le pion attaque à la fois la dame et le cavalier c3. } 15. Qxh6 { La dame prend h6 et s'installe devant le roi. } 15... Qd6 { La dame empêche Re5, qui menaçait Rg5+. } 16. Qg5+ { Échec : on chasse le roi dans le coin. } 16... Kh8 { Le seul coup. } 17. Na4 { Le cavalier se met à l'abri de ...dxc3 et vise c5. Les Blancs ont deux pions pour la pièce et une attaque durable : environ +1.6 selon Stockfish 18, alors qu'Emms ne voyait qu'une nulle par échec perpétuel. [%cal Ga4c5] })
+15. Qxh6 { La dame prend h6 : maintenant Re5 suivi de Rg5+ menace un mat rapide. [%cal Ge1e5] }
+15... Qd6 { La dame noire empêche Re5. Bouger le fou e7 ne marche pas : 15...Bb4 16.Rxe8+ Nxe8 17.Bh7+ et le mat arrive en f7. }
+16. Re3 { Le renfort : la tour quitte e1 et rejoint l'attaque par la 3e rangée. Emms : ce coup immédiat est plus fort que les répétitions jouées dans la partie. Menace : Rg3+. [%cal Ge3g3] }
+16... Bg4 { Le fou se place en g4 pour boucher la colonne g. }
+17. Rg3 { La tour attaque le fou g4, qui est cloué sur le roi g8. Menace : Rxg4+ Nxg4 puis Qh7+ et Qh8 mat. [%cal Gg3g4,Gh6h7] }
+17... Qe6 { La meilleure défense : la dame protège le fou g4 et la case g6. }
+18. Qg5+ { Échec : le roi doit aller dans le coin. }
+18... Kh8 { Le seul coup. }
+19. Qh6+ { On revient : le roi n'a que g8. Répéter une fois ne coûte rien et garde toutes les menaces. }
+19... Kg8 { Retour forcé. }
+20. h3 { Un pion attaque le fou g4, cloué sur la colonne g : il ne peut pas s'enfuir. [%cal Gh3g4,Gg3g8] }
+20... Bd6 { Les Noirs contre-attaquent la tour g3. [%cal Rd6g3] }
+21. Bh7+ { La déviation : le fou attire le cavalier f6 en h7, et le fou g4 perd son défenseur. [%cal Gd3h7] }
+21... Nxh7 { Forcé. }
+22. Rxg4+ { La tour prend le fou avec échec. }
+22... Qxg4 { Les Noirs donnent leur dame pour la tour. }
+23. hxg4 { Bilan : dame et deux pions de plus contre tour et fou, et un roi noir sans abri (+3.7).
+
+PRO TIP : la méthode du sacrifice en h6.
+1. Le sacrifice Bxh6 ne marche que si une deuxième pièce arrive tout de suite (Qe3 avec double attaque).
+2. Ne te contente pas de l'échec perpétuel : cherche le renfort (Re3-g3).
+3. Une pièce clouée devant le roi est une cible : attaque-la avec un pion (h3), puis dévie son défenseur (Bh7+). [%csl Gg4] } *
+## Surprise 2 : la finale où le roi noir reste au centre
+{ ALÉATOIRE SURPRISE. Dans la branche A, l'adversaire reprend 6...dxc6 et accepte l'échange des dames. La théorie s'arrête à 8.Bd2 : les Blancs sont un peu mieux, sans plus. La suite est une dérive typique de club : au lieu de se développer, les Noirs poussent un pion de l'aile roi pour faire quelque chose. Regarde comment les Blancs n'attaquent pas au hasard : chaque coup gagne un temps, fixe une faiblesse ou rapproche une pièce, jusqu'à deux pions de plus. Suis la barre d'évaluation : elle monte d'environ +0.6 à +3. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Nf6 { Attaque sur e4. [%cal Rf6e4] }
+5. Nc3 { On défend e4 en développant. }
+5... Bb4 { Clouage du cavalier c3. [%cal Rb4c3] }
+6. Nxc6 { On échange. }
+6... dxc6 { La reprise qui permet l'échange des dames : premier écart des Noirs. }
+7. Qxd8+ { On échange avec échec : le roi noir perd le roque. }
+7... Kxd8 { Reprise forcée. [%csl Rd8] }
+8. Bd2 { Fin de la théorie. Le fou défend c3, et le grand roque mettra une tour sur la colonne d, face au roi noir. Le moteur donne environ +0.6. [%cal Gd2c3] }
+8... h5 { LA DÉRIVE. Les Noirs poussent un pion de bord au lieu de développer le fou c8 (8...Be6 était le bon coup). Le roi d8 reste sur la colonne d. [%csl Rd8,Rc8] }
+9. O-O-O { On met le roi à l'abri et la tour d1 arrive derrière le fou d2, en face du roi noir : une batterie à la découverte est prête. [%cal Gd1d8] }
+9... h4 { Les Noirs continuent leur idée : le pion veut gêner g3. Ce coup ne développe toujours rien. }
+10. Bg5+ { L'échec à la découverte : le fou quitte d2, la tour d1 donne échec au roi d8. En même temps, le fou cloue le cavalier f6 sur la diagonale. [%cal Gd1d8,Gg5f6] }
+10... Ke8 { Le roi quitte la colonne d. }
+11. e5 { On chasse le cavalier f6 avec gain de temps. Le pion e5 prend aussi les cases d6 et f6 aux pièces noires. [%cal Ge5f6] }
+11... Nd5 { Le cavalier va au centre, mais il n'y est défendu que par le pion c6 (11...Nd7 était plus solide). }
+12. Nxd5 { On échange le seul défenseur de c7 et de la colonne d. }
+12... cxd5 { Reprise forcée : le pion d5 est maintenant isolé sur la colonne ouverte. [%csl Rd5] }
+13. Rxd5 { Premier pion gagné : la tour prend d5 et domine la colonne. Barre d'évaluation : environ +1.3. [%csl Gd5] }
+13... Bd7 { Les Noirs développent enfin le fou c8. }
+14. Be2 { On développe la dernière pièce mineure et on prépare Rhd1. Pas de précipitation : le pion h4 ne s'enfuira pas. }
+14... Bc6 { Le fou attaque la tour d5. [%cal Rc6d5] }
+15. Rd4 { La tour recule en attaquant deux cibles : le fou b4 et le pion h4. [%cal Gd4b4,Gd4h4] }
+15... Bc5 { Le fou s'échappe avec gain de temps sur la tour, mais oublie le pion h4 (15...Be7 était plus tenace). }
+16. Rxh4 { Deuxième pion gagné : la conséquence directe de 8...h5 et 9...h4. Un pion qui avance seul, loin de ses pièces, devient une cible. [%csl Gh4] }
+16... Rg8 { Les Noirs évitent l'échange des tours, mais leur tour devient passive en g8. }
+17. f3 { Un coup calme : le pion protège e4 et g4 et coupe la diagonale du fou c6. On consolide avant de convertir. [%cal Gf3e4] }
+17... a5 { Les Noirs n'ont plus de plan et poussent un pion. }
+18. Bd3 { Le fou se place sur la diagonale b1-h7 et vise h7. Les Blancs ont deux pions de plus et toutes leurs pièces actives (+3).
+
+PRO TIP : la méthode contre un adversaire qui dérive.
+1. Développe-toi avec gain de temps (O-O-O, Bg5+ à la découverte, e5).
+2. Échange le défenseur d'une faiblesse (Nxd5), puis prends la faiblesse (Rxd5).
+3. Une pièce qui attaque deux cibles (Rd4) gagne presque toujours l'une d'elles.
+4. Un pion avancé seul (h4) loin de ses pièces est une cible, pas une attaque.
+5. Une fois le matériel gagné, consolide (f3, Bd3) avant de chercher davantage. [%cal Gd3h7] } *
+## Surprise 3 : étouffer un adversaire passif (4...Nxd4 5.Qxd4 d6)
+{ ALÉATOIRE SURPRISE. Après l'échange 4...Nxd4, beaucoup de joueurs de club se replient : ...d6, ...Nf6, ...Be7, ...O-O, puis ils attendent. Lane montre le traitement modèle (Lalic-Gjergji, Olympiade d'Istanbul 2000) : grand roque, puis une marée de pions à l'aile roi (f4, g4, g5, f5) pendant que les Noirs n'ont pas assez d'espace pour se défendre. Regarde comment chaque poussée de pion chasse une pièce noire de sa meilleure case. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Nxd4 { L'échange prématuré : il développe notre dame. }
+5. Qxd4 { La dame centralisée. [%csl Gd4] }
+5... d6 { Les Noirs empêchent e5, mais leur fou f8 est enfermé et leur camp manque d'espace. }
+6. Nc3 { Développement. }
+6... Nf6 { Développement. }
+7. Be2 { On développe le fou en gardant la diagonale ouverte pour f4 et g4 plus tard. }
+7... Be7 { Les Noirs se développent sans ambition. }
+8. Bd2 { Le coup de la partie : il prépare le grand roque. Stockfish préfère 8.Bf4 (environ +1.2 contre +0.6), qui fait la même chose en mettant le fou sur une meilleure diagonale ; le plan qui suit reste valable. }
+8... O-O { Le roi noir va à l'aile roi : c'est exactement là que nos pions vont avancer. }
+9. O-O-O { Fin de la théorie. Les rois sont sur des ailes opposées : celui qui attaque le premier gagne souvent. Nos pions f, g et h peuvent avancer sans exposer notre roi. [%csl Gc1,Rg8] }
+9... b6 { LA DÉRIVE : un fianchetto calme pour viser e4, au lieu d'une vraie contre-attaque à l'aile dame. }
+10. f4 { Premier pion de la marée : f4 protège e5 et prépare g4. [%cal Gf4f5] }
+10... Bb7 { Le fou vise e4. [%cal Rb7e4] }
+11. Bf3 { On protège e4 et on coupe la diagonale du fou b7. }
+11... c5 { Les Noirs chassent la dame. }
+12. Qf2 { La dame recule en gardant un œil sur l'aile roi. Menace : 13.e5, et après 13...Bxf3 14.exf6, les Blancs gagnent une pièce. [%cal Ge4e5] }
+12... Qc7 { Les Noirs relient leurs tours. }
+13. g4 { Deuxième pion : g5 chassera le cavalier f6, le seul défenseur du roi noir. [%cal Gg4g5] }
+13... Rfd8 { Les Noirs n'ont pas de contre-jeu : ils attendent. }
+14. g5 { Le cavalier f6 est chassé. [%cal Gg5f6] }
+14... Ne8 { Le seul repli : le cavalier ne défend plus rien depuis e8. }
+15. Rhg1 { La tour se place derrière le pion g : elle soutiendra la percée. [%cal Gg1g8] }
+15... Bf8 { Les Noirs défendent avec une pièce de plus, ce qui montre à quel point ils sont à l'étroit. }
+16. f5 { Troisième pion : f6 et g6 sont menacés. [%cal Gf5f6] }
+16... f6 { Les Noirs bloquent, mais ouvrent la diagonale g8-a2 et la case e6. }
+17. Qh4 { La dame rejoint l'attaque contre h7. [%cal Gh4h7] }
+17... fxg5 { Les Noirs prennent. }
+18. Bxg5 { Le fou reprend en attaquant la tour d8. [%cal Gg5d8] }
+18... Rd7 { La tour s'écarte. }
+19. Be2 { Le fou part vers c4, sur la diagonale du roi noir. [%cal Ge2c4] }
+19... Kh8 { Le roi quitte la diagonale. }
+20. Bc4 { Le fou vise e6 et g8. }
+20... Be7 { Les Noirs proposent l'échange du fou g5. }
+21. Be6 { Le fou s'installe en e6, au cœur du camp noir, et attaque la tour d7. [%cal Ge6d7] }
+21... Bxg5+ { Les Noirs échangent avec échec. }
+22. Rxg5 { La tour reprend et rejoint l'attaque. }
+22... Re7 { La tour noire s'écarte du fou. }
+23. Qxh7+ { Le sacrifice final : la dame prend h7 avec échec. Après 23...Kxh7, 24.Rh5 est mat (le fou e6 couvre g8). Les Noirs ont abandonné.
+
+PRO TIP : la méthode contre un adversaire qui s'enferme.
+1. Roque du côté opposé, puis avance les pions devant le roi adverse : chaque poussée chasse une pièce de défense (g5 contre le cavalier f6).
+2. Place les tours derrière les pions (Rhg1) avant la percée.
+3. Quand le camp adverse s'ouvre, amène les pièces sur les diagonales du roi (Bc4-e6, Qh4). [%csl Rh7] } *
+## Surprise 4 : la finale de la branche B quand les Noirs jouent mou
+{ ALÉATOIRE SURPRISE. La branche B mène à une finale sans dames où les Blancs n'ont qu'un petit avantage. Contre un adversaire qui joue des coups de développement sans plan, cet avantage grandit tout seul si l'on suit trois idées : gagner de l'espace à l'aile roi avec les pions, enlever les bonnes cases au cavalier noir, puis ouvrir la colonne g pour la tour. La ligne principale montre la dérive ; la variante au 6e coup donne la partie modèle Tseshkovsky-Morozevich (2004), citée par Emms. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Bc5 { Le fou attaque d4. [%cal Rc5d4] }
+5. Nxc6 { On échange. }
+5... Qf6 { Menace de mat en f2. [%cal Rf6f2] }
+6. Qf3 { On pare et on propose l'échange des dames. }
+6... bxc6 { Reprise vers le centre. }
+(6... Qxf3 { Les Noirs échangent tout de suite. } 7. gxf3 { Reprise forcée : la colonne g est ouverte pour nous. } 7... bxc6 { Reprise. } 8. Rg1 { La tour attaque g7 tout de suite. Ne pas prendre g7 trop vite : après ...Ng6, la tour serait enfermée. [%cal Gg1g7] } 8... Ne7 { Le cavalier couvre g6 et g8. } 9. Be3 { On propose l'échange du fou c5, la meilleure pièce noire. [%cal Ge3c5] } 9... Bb6 { Selon Emms, une imprécision : 9...Bxe3 tout de suite était plus fort. } 10. c4 { On gagne de l'espace et on enlève la case d5 aux pièces noires. [%csl Gd5] } 10... Bxe3 { Les Noirs échangent quand même. } 11. fxe3 { Reprise vers le centre : e3 contrôle d4 et f4. } 11... O-O { Les Noirs roquent face à la colonne g ouverte. } 12. f4 { Le pion prend la case e5 et prépare f5. [%cal Gf4f5] } 12... Rb8 { La tour vise b2. } 13. b3 { On protège b2 simplement. } 13... d6 { Les Noirs libèrent le fou c8. } 14. Nc3 { Le dernier développement. } 14... f6 { Les Noirs ferment la diagonale et la case e5, mais affaiblissent e6. } 15. c5 { Le levier qui fixe les pions doublés : si les Noirs prennent, leurs pions c restent isolés. [%cal Gc4c5] } 15... Be6 { Le fou se développe. } 16. O-O-O { Le roi rejoint la colonne d. Emms : la structure noire est sous pression, et si 16...dxc5, 17.Na4 puis Nc5 installe le cavalier sur l'avant-poste. [%csl Gc5][%cal Gc3a4,Ga4c5] })
+7. Nd2 { Le cavalier va vers b3 pour chasser le fou. [%cal Gd2b3] }
+7... d6 { Libère le fou c8. }
+8. Nb3 { Gain de temps sur le fou. }
+8... Bb6 { Le fou garde la diagonale de f2. }
+9. Bd2 { On prépare Bc3 et le grand roque. }
+9... Qxf3 { Échange des dames. }
+10. gxf3 { Reprise : la colonne g est ouverte. }
+10... a5 { Les Noirs préparent ...a4. }
+11. a4 { On bloque le pion. }
+11... Ne7 { Développement. }
+12. Be3 { On propose l'échange du fou b6. }
+12... Bxe3 { Échange. }
+13. fxe3 { Fin de la théorie : environ +0.2 pour les Blancs. Le pion e3 contrôle d4 et f4. [%csl Gd4,Gf4] }
+13... Bd7 { LA DÉRIVE commence : un coup de développement sans plan. Le fou n'a rien à faire en d7. }
+14. h4 { Premier temps du plan : les pions de l'aile roi gagnent de l'espace. Le pion h ira en h5 pour fixer h7 et g7. [%cal Gh4h5] }
+14... c5 { Les Noirs défont un peu leurs pions doublés. }
+15. h5 { Le pion h5 enlève la case g6 au cavalier noir. [%csl Gg6] }
+15... Nc6 { Le cavalier cherche une autre route, vers e5. }
+16. Bb5 { Le fou se développe avec gain de temps sur le cavalier c6. [%cal Gb5c6] }
+16... Ne5 { Le cavalier s'installe en e5 : c'est sa meilleure case (16...Ke7 était plus solide). }
+17. Nd2 { Le cavalier se replace vers le centre et protège f3 contre ...Nxf3+. }
+17... Ke7 { Le roi se centralise, comme il se doit en finale. }
+18. f4 { Deuxième temps du plan : on chasse le cavalier de sa meilleure case. Il n'aura plus ni e5, ni g6. [%cal Gf4e5] }
+18... c6 { Les Noirs chassent le fou, mais ce coup laisse le pion d6 plus faible. }
+19. Be2 { Le fou recule et surveille g4. }
+19... Ng4 { Le cavalier va en g4, mais il n'y a pas d'avenir. }
+20. Rg1 { Troisième temps du plan : la tour attaque le cavalier g4, et derrière lui le pion g7. [%cal Gg1g4] }
+20... Nf6 { Le cavalier recule et oublie g7 (20...Nxe3 limitait les dégâts). }
+21. Rxg7 { Le pion g7 tombe : la colonne g ouverte au 10e coup paie enfin. [%csl Gg7] }
+21... Rag8 { Les Noirs proposent l'échange des tours. }
+22. Rxg8 { On échange : avec un pion de plus, les échanges rapprochent la victoire. }
+22... Rxg8 { Reprise. }
+23. Kf2 { Le roi se rapproche du centre et protège e3 et f3 : un pion de plus et une meilleure structure (+1.2).
+
+PRO TIP : la méthode dans les finales de la branche B.
+1. Avance les pions de l'aile roi (h4-h5, f4) pour enlever les bonnes cases au cavalier noir.
+2. Garde la colonne g ouverte pour la tour, et attaque g7 au moment où le cavalier ne peut plus le défendre.
+3. Après le gain d'un pion, échange les tours et centralise le roi. [%csl Gg7] } *
+## Surprise 5 : 3...d6, étouffer puis viser le pion d6
+{ ALÉATOIRE SURPRISE. Contre 3...d6, on pousse 4.d5 et le cavalier recule en b8 : les Noirs ont déjà perdu deux temps. La suite simule un adversaire de club qui se développe sans plan. Les Blancs gagnent de l'espace (c4), développent tout, puis ouvrent la colonne d au bon moment pour attaquer le pion d6, devenu faible. La barre d'évaluation monte d'environ +0.9 à +2. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... d6 { Les Noirs refusent de prendre : position passive. }
+(3... exd4 { La prise normale mène aux branches A et B. } 4. Nxd4 { Reprise par une pièce : voir les chapitres de théorie. })
+4. d5 { On gagne de l'espace avec gain de temps. [%cal Gd5c6] }
+4... Nb8 { Le cavalier retourne à la maison : deux temps perdus. }
+5. h3 { Un coup prophylactique : le fou c8 n'ira jamais en g4 clouer le cavalier f3. [%csl Gg4] }
+5... Nf6 { Développement. }
+6. Bd3 { On défend e4 et on garde la case c4 libre pour le pion. }
+6... g6 { Les Noirs choisissent un fianchetto. }
+7. c4 { La chaîne c4-d5-e4 : les Blancs ont beaucoup plus d'espace. [%csl Gc4,Gd5,Ge4] }
+7... c6 { Les Noirs contestent d5 (7...Bg7 était plus utile). [%cal Rc6d5] }
+8. Be3 { Développement. Le fou e3 surveille aussi a7 et c5. }
+8... Na6 { Le cavalier cherche c5, mais il est mal placé au bord. }
+9. O-O { Le roi est à l'abri : place maintenant à l'ouverture du centre. }
+9... Bd7 { Un coup sans plan : le fou n'a pas d'avenir en d7 (9...Bg7 était nécessaire). }
+10. dxc6 { Le bon moment pour ouvrir la colonne d : le pion d6 devient une cible sur une colonne ouverte. [%cal Gd1d6] }
+10... bxc6 { Reprise. }
+11. a3 { Un petit coup très utile : le cavalier a6 n'a plus la case b4. [%csl Gb4] }
+11... c5 { Les Noirs laissent leur pion d6 arriéré, derrière un trou en d5. [%csl Rd6,Rd5] }
+12. Nc3 { Le cavalier vise d5 et b5, les deux cases faibles du camp noir. [%cal Gc3d5,Gc3b5] }
+12... Bg7 { Le fou se développe enfin. }
+13. Bc2 { Le fou libère la case d3 pour la dame, qui visera d6. }
+13... Qb8 { La dame s'éloigne de la défense de d6. }
+14. Qd3 { La dame attaque d6 ; Rad1 et Nb5 suivront. Les Blancs ont environ +2.
+
+PRO TIP : la méthode contre 3...d6.
+1. Prends l'espace (d5, c4) et interdis les bonnes cases (h3 contre ...Bg4, a3 contre ...Nb4).
+2. Ouvre la colonne d (dxc6) seulement quand tes pièces sont prêtes.
+3. Attaque la faiblesse avec toutes les pièces : dame, tour sur la colonne d, cavalier vers b5 ou d5. [%csl Rd6][%cal Gd3d6] } *
+## Surprise 6 : 4...Qh4, la dame gourmande et la chasse au roi
+{ ALÉATOIRE SURPRISE. Contre 4...Qh4, le chapitre anti-panique montre la ligne 6...Qxe4. Ici l'adversaire choisit 6...Nf6 puis prend tout ce qu'on lui offre : un cavalier, un pion. Karjakin-Malinin (Sudak 2002), cité par Emms, montre la punition : les Blancs sacrifient pour ouvrir le roi noir et le traquent jusqu'au mat. La leçon : quand l'adversaire a sorti sa dame trop tôt et que son roi est seul, chaque temps gagné vaut plus qu'une pièce. }
+1. e4 { On occupe le centre. [%csl Ge4] }
+1... e5 { Symétrie. }
+2. Nf3 { On attaque e5. [%cal Gf3e5] }
+2... Nc6 { Défense de e5. }
+3. d4 { On ouvre le centre. [%cal Gd4e5] }
+3... exd4 { Les Noirs prennent. }
+4. Nxd4 { Reprise par une pièce. }
+4... Qh4 { La sortie de dame provocatrice : e4 est attaqué. [%cal Rh4e4] }
+5. Nc3 { La réponse d'Emms : développer en limitant les ruses noires. }
+5... Bb4 { Le fou cloue le cavalier et renouvelle l'attaque sur e4. }
+6. Be2 { On laisse e4 en prise : le développement d'abord. }
+6... Nf6 { Les Noirs développent au lieu de prendre tout de suite. }
+7. O-O { Un bon coup selon Emms : le roi est à l'abri et la tour f1 entrera dans l'attaque. Attention au piège : 7...O-O?? 8.Nf5 enferme la dame h4. }
+7... Bxc3 { Les Noirs veulent gagner du matériel. }
+8. Nf5 { Le coup intermédiaire : le cavalier attaque la dame et g7 au lieu de reprendre en c3. [%cal Gf5h4,Gf5g7] }
+8... Qxe4 { La dame s'échappe en prenant un pion. }
+9. Bd3 { Le fou chasse la dame avec gain de temps et vise h7. [%cal Gd3e4] }
+9... Qg4 { La dame se replie en restant près de l'aile roi. }
+10. f3 { Encore un gain de temps sur la dame. [%cal Gf3g4] }
+10... Qa4 { La dame part loin, à l'aile dame. Le roi noir va se retrouver seul. }
+11. bxc3 { Maintenant on reprend la pièce : les Blancs ont un pion de moins, mais toutes leurs pièces visent le roi noir. }
+11... O-O { Le roque naturel… qui permet un coup écrasant. }
+12. Nxg7 { Le sacrifice du cavalier ouvre le roi. [%csl Rg7] }
+12... Kxg7 { Les Noirs ne peuvent guère refuser. }
+13. Bh6+ { Deuxième sacrifice : le fou attaque le roi et la tour f8. [%cal Gh6g7] }
+13... Kxh6 { Le roi prend, et se retrouve devant ses pions. }
+14. Qd2+ { La dame entre avec échec par la diagonale c1-h6. [%cal Gd2h6] }
+14... Kh5 { Le roi monte encore. Après 14...Kg7 15.Qg5+ Kh8 16.Qxf6+, les Blancs matent vite. }
+15. g4+ { Le pion attaque le roi : il faut ouvrir encore des lignes. }
+15... Nxg4 { Le cavalier prend. Après 15...Kh4, 16.Qh6+ Nh5 et le mat suit. }
+16. fxg4+ { On reprend avec échec : la colonne f s'ouvre pour la tour f1. [%cal Gf1f7] }
+16... Qxg4+ { La dame noire revient avec échec… }
+17. Kh1 { …le roi se met à l'abri en h1 : plus d'échec possible. }
+17... d6 { Les Noirs libèrent le fou c8 pour défendre. }
+18. Rf6 { Le coup le plus précis selon Emms : la tour enferme le roi noir sur la 5e rangée. Stockfish 18 annonce un mat forcé en 9 coups au plus. [%cal Gf6h6] }
+18... Qg5 { La dame couvre h6 et g6. }
+19. Be2+ { Le fou donne échec par la diagonale d1-h5. [%cal Ge2h5] }
+19... Bg4 { Les Noirs interposent le fou. }
+20. Bxg4+ { On prend avec échec : le mat suit en quelques coups (par exemple 20...Kxg4 21.Rg1+). Les Noirs ont abandonné.
+
+PRO TIP : la méthode contre une dame sortie trop tôt.
+1. Développe avec gain de temps sur la dame (Bd3, f3) : chaque coup de dame noire est un coup de développement de moins.
+2. Quand la dame s'éloigne de son roi, sacrifie pour ouvrir le roi (Nxg7, Bh6+).
+3. Amène les pièces avec échec (Qd2+, g4+, fxg4+) et mets ton propre roi à l'abri avant le coup final (Kh1). [%cal Gf1g1] } *

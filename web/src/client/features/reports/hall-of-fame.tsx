@@ -5,15 +5,15 @@
  * coups classés `!! Brillant`/`! Critique` (`classify.ts`) rejoués par le
  * joueur dans ses parties importées (`listMasterpieces`,
  * `server/queries/games.ts`). Un clic développe un mini échiquier figé sur la
- * position juste après le coup, avec les mêmes codes couleur que la Revue de
- * partie (`qualitySquareColor`) — un seul développé à la fois.
+ * position juste après le coup, avec le même marquage que la Revue de
+ * partie (`lastMoveSquareStyles`) — un seul développé à la fois.
  */
 import { useState } from "react";
 import Link from "next/link";
 import { Chessboard } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
+import { ESPORT_BOARD_OPTIONS, lastMoveSquareStyles, qualityRingColor } from "@/client/features/board/board-theme";
 import type { MoveQuality } from "@/core/chess/types";
-import { QUALITY_BADGE_INK_CLASS, QUALITY_BG_CLASS, QUALITY_SYMBOL, qualitySquareColor } from "@/lib/labels";
+import { QUALITY_BADGE_INK_CLASS, QUALITY_BG_CLASS, QUALITY_SYMBOL } from "@/lib/labels";
 import type { MasterpieceEntry } from "@/server/queries/games";
 
 const MASTERPIECE_BLURB: Record<"brilliant" | "critical", string> = {
@@ -36,7 +36,7 @@ function MasterpieceRow({
 }) {
   const from = entry.uci.slice(0, 2);
   const to = entry.uci.slice(2, 4);
-  const highlight = { backgroundColor: qualitySquareColor(entry.quality as MoveQuality) };
+  const squareStyles = lastMoveSquareStyles(from, to, qualityRingColor(entry.quality as MoveQuality));
 
   return (
     <div className="rounded-lg border border-border bg-surface">
@@ -72,7 +72,7 @@ function MasterpieceRow({
                 position: entry.fenAfter,
                 boardOrientation: entry.playerColor === "w" ? "white" : "black",
                 canDragPiece: neverDraggable,
-                squareStyles: { [from]: highlight, [to]: highlight },
+                squareStyles,
               }}
             />
           </div>

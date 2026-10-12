@@ -26,14 +26,27 @@ export interface EvalScore {
  * lui-même agrandi (lecteur de cours de l'Académie) — à la taille par défaut,
  * un score comme « +0.34 » y serait tronqué.
  */
-export const EvaluationBar = memo(function EvaluationBar({ score, size = "md" }: { score: EvalScore | null; size?: "md" | "lg" }) {
+/**
+ * `checkmatedBy` : la position affichée est déjà un mat (score moteur `#0`,
+ * sans signe exploitable) — la barre se remplit pour le camp qui a maté et
+ * affiche « # ».
+ */
+export const EvaluationBar = memo(function EvaluationBar({
+  score,
+  size = "md",
+  checkmatedBy = null,
+}: {
+  score: EvalScore | null;
+  size?: "md" | "lg";
+  checkmatedBy?: "w" | "b" | null;
+}) {
   // `score` null = rien de fiable à montrer (chargement en cours en mode
   // Exploration, ou coup dont l'analyse a échoué) : barre neutre plutôt
   // qu'une valeur inventée. `winPercent` fait déjà tout le lissage — jamais
   // d'échelle linéaire brute de centipions (voir sa propre docstring).
-  const whitePercent = score ? winPercent(score.cp, score.mate) : 50;
+  const whitePercent = checkmatedBy ? (checkmatedBy === "w" ? 100 : 0) : score ? winPercent(score.cp, score.mate) : 50;
   const whiteLeads = whitePercent >= 50;
-  const label = score ? formatEvaluation(score.cp, score.mate) : "—";
+  const label = checkmatedBy ? "#" : score ? formatEvaluation(score.cp, score.mate) : "—";
 
   return (
     <div

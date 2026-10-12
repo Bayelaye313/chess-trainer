@@ -50,9 +50,18 @@ export interface MotifTheme {
 
 /** Le thème d'Académie recommandé pour s'entraîner sur `motif` — `null` si aucun thème du catalogue ne le couvre (ne devrait pas arriver pour les 6 `Motif` connus, voir le test). */
 export function themeForMotif(motif: Motif): MotifTheme | null {
-  const tag = MOTIF_LICHESS_TAG[motif];
+  return themeForLichessTag(MOTIF_LICHESS_TAG[motif]);
+}
+
+/** Même résolution que `themeForMotif`, depuis un tag Lichess quelconque (`mateIn2`, `promotion`, `quietMove`…) — sert aux patterns repérés en rejouant la solution (`core/puzzle/puzzle-pattern.ts`). */
+export function themeForLichessTag(tag: string, preferCategory?: CurriculumCategory): MotifTheme | null {
   const candidates = CURRICULUM_THEMES.filter((theme) => theme.lichessThemes?.includes(tag));
   if (candidates.length === 0) return null;
+  // Un tag partagé par deux thèmes qui n'enseignent pas la même chose (ex.
+  // `quietMove` : « Le coup intercalaire » curaté ET « Le coup tranquille »)
+  // — l'appelant désigne alors la catégorie du bon cours.
+  const preferred = preferCategory ? candidates.find((theme) => theme.category === preferCategory) : undefined;
+  if (preferred) return { themeId: preferred.id, categoryId: preferred.category, title: preferred.title };
 
   const best = [...candidates].sort(
     (a, b) => CATEGORY_PRIORITY.indexOf(a.category) - CATEGORY_PRIORITY.indexOf(b.category),

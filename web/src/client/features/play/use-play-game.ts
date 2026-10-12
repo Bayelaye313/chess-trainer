@@ -25,7 +25,7 @@ import { gameOutcome, type GameOutcome } from "@/core/chess/termination";
 import { getBotProfile, pickMoveLimit, type BotProfile, type BotProfileId } from "@/core/chess/bot-profiles";
 import type { Motif, MoveQuality } from "@/core/chess/types";
 import { useEngine } from "@/client/engine/engine-context";
-import { OPPONENT_MOVE_SQUARE_COLOR, qualitySquareColor } from "@/lib/labels";
+import { lastMoveSquareStyles, qualityRingColor } from "@/client/features/board/board-theme";
 import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
 import {
   createGame,
@@ -50,7 +50,8 @@ export interface FeedEntry {
 interface MoveHighlight {
   from: string;
   to: string;
-  color: string;
+  /** Cercle de qualité sur la case d'arrivée — `null` pour un coup adverse (voile seul). */
+  ring: string | null;
 }
 
 /** Mode de force actuellement configuré sur le moteur partagé. */
@@ -266,7 +267,7 @@ export function usePlayGame() {
             appendFeed({ by: "ai", san: move.san });
             // Surbrillance différée : la pièce anime d'abord (Zone 2), le
             // statut des cases la suit à la fin de la transition.
-            scheduleOpponentHighlight({ from: move.from, to: move.to, color: OPPONENT_MOVE_SQUARE_COLOR }, epoch);
+            scheduleOpponentHighlight({ from: move.from, to: move.to, ring: null }, epoch);
           }
         }
 
@@ -326,7 +327,7 @@ export function usePlayGame() {
           bestSan: evaluated.bestSan,
           motifs: evaluated.motifs,
         });
-        setHighlight({ from: move.from, to: move.to, color: qualitySquareColor(evaluated.quality) });
+        setHighlight({ from: move.from, to: move.to, ring: qualityRingColor(evaluated.quality) });
         setCoachMessage(buildLiveCoachMessage(chess, evaluated, playerColor));
 
         await recordPlayerMove({
@@ -358,7 +359,7 @@ export function usePlayGame() {
         appendFeed({ by: "ai", san: aiMove.san });
         // Même différé que le coup d'ouverture du bot : animation de la pièce
         // d'abord, surbrillance des cases ensuite (Zone 2).
-        scheduleOpponentHighlight({ from: aiMove.from, to: aiMove.to, color: OPPONENT_MOVE_SQUARE_COLOR }, epoch);
+        scheduleOpponentHighlight({ from: aiMove.from, to: aiMove.to, ring: null }, epoch);
 
         const afterAi = gameOutcome(chess);
         if (afterAi) {
@@ -454,12 +455,7 @@ export function usePlayGame() {
     void finalize(chess, gameId, { result, termination: "resignation" }, playerColor);
   }, [status, engine, playerColor, finalize]);
 
-  const squareStyles = highlight
-    ? {
-        [highlight.from]: { backgroundColor: highlight.color },
-        [highlight.to]: { backgroundColor: highlight.color },
-      }
-    : {};
+  const squareStyles = highlight ? lastMoveSquareStyles(highlight.from, highlight.to, highlight.ring) : {};
 
   return {
     engineReady: engineStatus === "ready",

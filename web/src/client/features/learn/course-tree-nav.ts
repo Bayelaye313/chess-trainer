@@ -12,6 +12,11 @@ import type { ChessMoveNode } from "@/core/chess/move-tree";
  *    les coups du camp qui a le trait à la racine du chapitre, les réponses
  *    adverses sont jouées pour lui. Un coup qui n'est pas dans l'arbre est refusé
  *    (`feedback: "wrong"`), un indice montre la flèche du coup attendu.
+ *
+ * Indices progressifs (`ChessMoveNode.hints`) : chaque « Indice » monte
+ * `hintLevel` d'un cran. Sur un nœud qui porte N indices, les niveaux 1..N
+ * dévoilent les textes un par un, et seul le niveau N+1 montre la flèche du
+ * coup attendu ; sans indice, le niveau 1 montre directement la flèche.
  */
 export type CourseTreeMode = "read" | "play";
 export type CourseTreeFeedback = "idle" | "wrong" | "hint";
@@ -21,6 +26,8 @@ export interface CourseTreeNavState {
   currentId: string;
   mode: CourseTreeMode;
   feedback: CourseTreeFeedback;
+  /** Nombre de clics « Indice » sur le nœud courant (remis à 0 à chaque changement de nœud). */
+  hintLevel: number;
 }
 
 export type CourseTreeNavAction =
@@ -31,23 +38,23 @@ export type CourseTreeNavAction =
   | { type: "hint" };
 
 export function initialCourseTreeNav(rootId: string): CourseTreeNavState {
-  return { chapterIndex: 0, currentId: rootId, mode: "read", feedback: "idle" };
+  return { chapterIndex: 0, currentId: rootId, mode: "read", feedback: "idle", hintLevel: 0 };
 }
 
 export function courseTreeNavReducer(state: CourseTreeNavState, action: CourseTreeNavAction): CourseTreeNavState {
   switch (action.type) {
     case "select":
-      return { ...state, currentId: action.id, feedback: "idle" };
+      return { ...state, currentId: action.id, feedback: "idle", hintLevel: 0 };
     case "chapter":
-      return { ...state, chapterIndex: action.index, currentId: action.rootId, feedback: "idle" };
+      return { ...state, chapterIndex: action.index, currentId: action.rootId, feedback: "idle", hintLevel: 0 };
     case "mode":
       // Entrer en mode jeu repart de la racine du chapitre : on rejoue la ligne
       // depuis le début, jamais depuis un nœud où les coups sont déjà visibles.
-      return { ...state, mode: action.mode, currentId: action.mode === "play" ? action.rootId : state.currentId, feedback: "idle" };
+      return { ...state, mode: action.mode, currentId: action.mode === "play" ? action.rootId : state.currentId, feedback: "idle", hintLevel: 0 };
     case "wrong":
       return { ...state, feedback: "wrong" };
     case "hint":
-      return { ...state, feedback: "hint" };
+      return { ...state, feedback: "hint", hintLevel: state.hintLevel + 1 };
     default:
       return state;
   }
@@ -74,4 +81,9 @@ export function childForDrop(node: ChessMoveNode, from: string, to: string): Che
 /** `true` si c'est au lecteur de jouer sur `node` en mode `play` : il reste un coup ET le trait est au camp du lecteur. */
 export function isPlayerTurn(node: ChessMoveNode, playerColor: "w" | "b"): boolean {
   return node.children.length > 0 && turnOfFen(node.fen) === playerColor;
+}
+
+/** `true` quand la flèche du coup attendu est dévoilée : tous les indices textuels de `node` ont été lus, puis un clic de plus. */
+export function moveArrowRevealed(node: ChessMoveNode, hintLevel: number): boolean {
+  return hintLevel > node.hints.length;
 }

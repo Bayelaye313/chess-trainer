@@ -58,6 +58,26 @@ describe("parseMoveTree", () => {
     expect(root.showEvalBar).toBe(false);
   });
 
+  it("[%hint] empile les indices dans l'ordre et [%hintcsl] leurs cases, sans polluer le commentaire", () => {
+    const [, f6] = mainLine(
+      parseMoveTree('1. e4 f6 { [%txt "Le roi est affaibli."] [%hint "Principe violé."] [%hint "La diagonale h5-e8."] [%hintcsl Rh5,Re8] [%hint "Qh5+ !"] [%csl Rf6] }'),
+    );
+    expect(f6.comment).toBe("Le roi est affaibli.");
+    expect(f6.hints).toEqual(["Principe violé.", "La diagonale h5-e8.", "Qh5+ !"]);
+    expect(f6.hintHighlights).toEqual([
+      { square: "h5", color: "red" },
+      { square: "e8", color: "red" },
+    ]);
+    expect(f6.highlights).toEqual([{ square: "f6", color: "red" }]);
+  });
+
+  it("[%eval #n] pose un mat annoncé au lieu d'un score en pions", () => {
+    const [, , , , , , qxf7] = mainLine(parseMoveTree("1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# { Mat. [%eval #0] }"));
+    expect(qxf7.evaluationMate).toBe(0);
+    expect(qxf7.evaluationScore).toBeNull();
+    expect(qxf7.showEvalBar).toBe(true);
+  });
+
   it("lève une erreur explicite sur un coup illégal, jamais un arbre corrompu en silence", () => {
     expect(() => parseMoveTree("1. e4 e5 2. Qh5 g6 3. Qxf7")).toThrow(/illégal/);
   });

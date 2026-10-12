@@ -49,6 +49,32 @@ describe("OPENING_COURSE_TREES", () => {
     }
   });
 
+  it.each(["scotch-game", "caro-kann", "scotch-gambit"])("%s : chaque coup porte une évaluation pour la barre et chaque commentaire gèle le jeu ([%%txt])", (openingId) => {
+    for (const chapter of OPENING_COURSE_TREES[openingId].chapters) {
+      for (const node of collectNodes(chapter.root)) {
+        if (node.san === null) continue;
+        const where = `${chapter.title} : ${node.san} (${node.id})`;
+        expect(node.evaluationScore !== null || node.evaluationMate !== null, where).toBe(true);
+        expect(node.showEvalBar, where).toBe(true);
+        expect(node.freeze, where).toBe(true);
+      }
+    }
+  });
+
+  it("Gambit Écossais : chaque faute noire signalée porte 3 indices progressifs, et ses cases d'indice existent", () => {
+    let withHints = 0;
+    for (const chapter of OPENING_COURSE_TREES["scotch-gambit"].chapters) {
+      for (const node of collectNodes(chapter.root)) {
+        if (node.hints.length === 0) continue;
+        withHints++;
+        expect(node.hints, `${chapter.title} : ${node.san}`).toHaveLength(3);
+        expect(node.hintHighlights.length, `${chapter.title} : ${node.san}`).toBeGreaterThan(0);
+        for (const highlight of node.hintHighlights) expect(highlight.square).toMatch(SQUARE);
+      }
+    }
+    expect(withHints).toBeGreaterThanOrEqual(8);
+  });
+
   it("aucune figurine Unicode dans les commentaires, flèches et surbrillances sur des cases réelles", () => {
     for (const [openingId, tree] of Object.entries(OPENING_COURSE_TREES)) {
       for (const chapter of tree.chapters) {

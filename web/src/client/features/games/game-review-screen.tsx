@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
+import { ESPORT_BOARD_OPTIONS, lastMoveSquareStyles, qualityRingColor } from "@/client/features/board/board-theme";
 import { useEngine } from "@/client/engine/engine-context";
 import { buildCoachMessage, buildGameCoachFindings } from "@/core/analysis/coach-narrative";
 import { buildLiveCommentaryFeed } from "@/core/analysis/live-commentary";
 import { findKeyMoments, type TimelinePly } from "@/core/analysis/timeline";
 import { isReviewable } from "@/core/chess/types";
-import { arrowsFromEngineLines, OPPONENT_MOVE_SQUARE_COLOR, playedVsBestArrows, qualitySquareColor } from "@/lib/labels";
+import { arrowsFromEngineLines, playedVsBestArrows } from "@/lib/labels";
 import type { Game } from "@/server/db/schema";
 import type { GameOverview as GameOverviewData } from "@/server/queries/games";
 import { EvaluationBar, type EvalScore } from "../board/evaluation-bar";
@@ -170,11 +170,11 @@ export function GameReviewScreen({
   const retryEntry = retryPly !== null ? timeline[retryPly - 1] : null;
   const canRetry = retryEntry?.analysis?.bestUci && retryEntry.analysis.bestSan;
 
-  // Coup affiché sur l'échiquier : ses cases de départ/arrivée reprennent la
-  // même couleur que le journal, joueur COMME adversaire — les deux camps sont
-  // analysés depuis l'import. Le gris neutre ne sert plus qu'aux coups où
-  // l'analyse a échoué (voir `analyseImportedGame`, ce cas reste possible mais
-  // rare). Une seule source de couleur, voir `qualitySquareColor`.
+  // Coup affiché sur l'échiquier : voile cyan sur ses cases de départ/arrivée,
+  // et un cercle de la couleur du journal sur la case d'arrivée, joueur COMME
+  // adversaire — les deux camps sont analysés depuis l'import. Sans analyse
+  // (échec de `analyseImportedGame`, rare), voile seul. Voir
+  // `lastMoveSquareStyles` (`board-theme.tsx`).
   //
   // En exploration, le plateau ne montre plus la partie réelle : ces mêmes
   // codes couleur/badge se reportent sur le DERNIER coup exploré (neutre tant
@@ -250,20 +250,13 @@ export function GameReviewScreen({
     return currentEntry ? playedVsBestArrows(currentEntry) : [];
   }, [explore.evaluation, currentEntry]);
 
-  const boardHighlightColor = explore.isExploring
-    ? lastExplorerMove
-      ? (exploreQuality ? qualitySquareColor(exploreQuality) : OPPONENT_MOVE_SQUARE_COLOR)
-      : null
-    : currentEntry
-      ? currentEntry.analysis
-        ? qualitySquareColor(currentEntry.analysis.quality)
-        : OPPONENT_MOVE_SQUARE_COLOR
-      : null;
+  // Cercle de qualité sur la case d'arrivée (coup noté) ; coup adverse : voile seul.
+  const boardRingQuality = explore.isExploring ? exploreQuality : (currentEntry?.analysis?.quality ?? null);
   const highlightFrom = explore.isExploring ? lastExplorerMove?.from : currentEntry?.uci.slice(0, 2);
   const highlightTo = explore.isExploring ? lastExplorerMove?.to : currentEntry?.uci.slice(2, 4);
-  const boardSquareStyles: Record<string, { backgroundColor: string }> =
-    boardHighlightColor && highlightFrom && highlightTo
-      ? { [highlightFrom]: { backgroundColor: boardHighlightColor }, [highlightTo]: { backgroundColor: boardHighlightColor } }
+  const boardSquareStyles =
+    highlightFrom && highlightTo
+      ? lastMoveSquareStyles(highlightFrom, highlightTo, boardRingQuality ? qualityRingColor(boardRingQuality) : null)
       : {};
   // La pastille de qualité, elle, ne se pose que sur la case d'arrivée du coup
   // du joueur — l'adversaire n'a pas de qualité à afficher.

@@ -23,12 +23,12 @@
  */
 import { useEngine } from "@/client/engine/engine-context";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
+import { ESPORT_BOARD_OPTIONS, lastMoveSquareStyles, qualityRingColor } from "@/client/features/board/board-theme";
 import { useExploreMode } from "@/client/features/board/use-explore-mode";
 import { EvaluationBar } from "@/client/features/board/evaluation-bar";
 import { ExplorePanel } from "@/client/features/board/explore-panel";
 import { QualityBadge } from "@/client/features/board/quality-badge";
-import { arrowsFromEngineLines, qualitySquareColor } from "@/lib/labels";
+import { arrowsFromEngineLines } from "@/lib/labels";
 
 export interface MistakeExplorerSource {
   fenBefore: string;
@@ -64,14 +64,9 @@ export function OpeningMistakeExplorer({
   // docstring du fichier.
   const lastExplorerMove = explore.explorerMoves[explore.explorerMoves.length - 1] ?? null;
   const exploreQuality = explore.evaluation.status === "ready" ? explore.evaluation.evaluated.quality : null;
-  const boardHighlightColor = lastExplorerMove && exploreQuality ? qualitySquareColor(exploreQuality) : null;
-  const boardSquareStyles: Record<string, { backgroundColor: string }> =
-    boardHighlightColor && lastExplorerMove
-      ? {
-          [lastExplorerMove.from]: { backgroundColor: boardHighlightColor },
-          [lastExplorerMove.to]: { backgroundColor: boardHighlightColor },
-        }
-      : {};
+  const boardSquareStyles = lastExplorerMove
+    ? lastMoveSquareStyles(lastExplorerMove.from, lastExplorerMove.to, exploreQuality ? qualityRingColor(exploreQuality) : null)
+    : {};
   const badgeSquare = lastExplorerMove?.to ?? null;
 
   const squareRenderer: SquareRenderer = ({ square, children }) => (
@@ -127,7 +122,7 @@ export function OpeningMistakeExplorer({
       )}
 
       <div className="mt-5 flex flex-col items-center">
-        <div className="mx-auto flex w-full max-w-[420px] items-stretch gap-2">
+        <div className="mx-auto flex w-full max-w-[600px] items-stretch gap-2">
           <EvaluationBar score={explore.isExploring && explore.evaluation.status === "ready" ? { cp: explore.evaluation.evaluated.cpAfter, mate: explore.evaluation.evaluated.mateAfter } : null} />
           <div className="min-w-0 flex-1">
             <Chessboard

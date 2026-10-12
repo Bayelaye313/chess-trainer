@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mainLine, parseMoveTree } from "@/core/chess/move-tree";
-import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, turnOfFen } from "./course-tree-nav";
+import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, moveArrowRevealed, turnOfFen } from "./course-tree-nav";
 
 describe("courseTreeNavReducer", () => {
   it("sélectionne un nœud et efface le feedback", () => {
@@ -25,6 +25,23 @@ describe("courseTreeNavReducer", () => {
     const state = initialCourseTreeNav("0");
     expect(courseTreeNavReducer(state, { type: "wrong" })).toMatchObject({ currentId: "0", feedback: "wrong" });
     expect(courseTreeNavReducer(state, { type: "hint" })).toMatchObject({ currentId: "0", feedback: "hint" });
+  });
+});
+
+describe("indices progressifs", () => {
+  it("chaque « Indice » monte d'un cran, et changer de nœud remet le compteur à zéro", () => {
+    const once = courseTreeNavReducer(initialCourseTreeNav("0"), { type: "hint" });
+    const twice = courseTreeNavReducer(once, { type: "hint" });
+    expect(twice.hintLevel).toBe(2);
+    expect(courseTreeNavReducer(twice, { type: "select", id: "0.0" }).hintLevel).toBe(0);
+  });
+
+  it("la flèche du coup n'arrive qu'après tous les indices textuels du nœud", () => {
+    const [, f6] = mainLine(parseMoveTree('1. e4 f6 { [%hint "Un."] [%hint "Deux."] [%hint "Trois."] }'));
+    expect(moveArrowRevealed(f6, 3)).toBe(false);
+    expect(moveArrowRevealed(f6, 4)).toBe(true);
+    const [e4] = mainLine(parseMoveTree("1. e4 e5"));
+    expect(moveArrowRevealed(e4, 1)).toBe(true);
   });
 });
 

@@ -9,8 +9,7 @@
 import { useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
-import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
-import { qualitySquareColor } from "@/lib/labels";
+import { circledSquareStyles, ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 
 export function RetryBoard({
   fenBefore,
@@ -62,12 +61,12 @@ export function RetryBoard({
 
   const hintSquares =
     result === "incorrect"
-      ? { [bestUci.slice(0, 2)]: { backgroundColor: qualitySquareColor("best") }, [bestUci.slice(2, 4)]: { backgroundColor: qualitySquareColor("best") } }
+      ? circledSquareStyles([bestUci.slice(0, 2), bestUci.slice(2, 4)])
       : {};
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="mx-auto max-w-[480px]">
+      <div className="mx-auto max-w-[600px]">
         <Chessboard
           options={{ ...ESPORT_BOARD_OPTIONS,
             id: "retry-board",

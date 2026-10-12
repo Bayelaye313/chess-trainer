@@ -22,6 +22,7 @@ import type {
 import { moveInputFromUci, uciOf } from "@/core/analysis/evaluate-move";
 import type { PositionAnalyser } from "@/core/analysis/types";
 import { classifyWrongMove } from "@/core/chess/coach-hints";
+import { solutionMoveQuality } from "@/core/puzzle/solution-quality";
 import {
   applyPuzzleEvent,
   initialSolveState,
@@ -33,11 +34,11 @@ import {
 } from "@/core/puzzle/solve-state";
 import { arrowsFromEngineLines, ENGINE_ARROW_LINE_COUNT, REVEAL_ARROW_COLOR } from "@/lib/labels";
 import type { EvalScore } from "./evaluation-bar";
-import { OPPONENT_MOVE_ANIMATION_MS } from "./move-animation";
+import { OPPONENT_MOVE_ANIMATION_MS, SETUP_MOVE_ANIMATION_MS } from "./move-animation";
 
 const OPPONENT_REPLY_DELAY_MS = 500;
 /** Pause avant de jouer le coup adverse d'introduction — le temps de voir la position d'avant. */
-const SETUP_MOVE_DELAY_MS = 450;
+const SETUP_MOVE_DELAY_MS = 1000;
 /** Même ordre de grandeur que le reste de l'appli (jauge). */
 const BASELINE_ANALYSIS_DEPTH = 16;
 /** Même ordre de grandeur que le Mode Exploration (`use-explore-mode.ts`). */
@@ -117,7 +118,7 @@ export function usePuzzleSolver({
     let endTimer: number | null = null;
     const timer = window.setTimeout(() => {
       setFen(puzzle.fenBefore);
-      endTimer = window.setTimeout(() => setIntroPlaying(false), OPPONENT_MOVE_ANIMATION_MS);
+      endTimer = window.setTimeout(() => setIntroPlaying(false), SETUP_MOVE_ANIMATION_MS);
     }, SETUP_MOVE_DELAY_MS);
     return () => {
       window.clearTimeout(timer);
@@ -160,9 +161,12 @@ export function usePuzzleSolver({
     if (state.phase !== "failed" || state.revealTotalPlies === 0 || state.revealed) return;
     const uci = puzzle.solution[state.moveIndex + state.revealPlyIndex];
     const timer = setTimeout(() => {
+      const fenBeforePly = chess.fen();
       const move = chess.move(moveInputFromUci(uci));
       setFen(chess.fen());
-      dispatch({ type: "REVEAL_PLY_PLAYED", ply: markOf(move, uci) });
+      // Plis pairs révélés = coups du joueur : « Brillant » s'ils sacrifient.
+      const isPlayerPly = (state.moveIndex + state.revealPlyIndex) % 2 === 0;
+      dispatch({ type: "REVEAL_PLY_PLAYED", ply: markOf(move, uci, isPlayerPly ? solutionMoveQuality(fenBeforePly, uci) : null) });
     }, OPPONENT_REPLY_DELAY_MS);
     return () => clearTimeout(timer);
   }, [state.phase, state.revealTotalPlies, state.revealPlyIndex, state.revealed, state.moveIndex, chess, puzzle.solution]);
@@ -247,7 +251,7 @@ export function usePuzzleSolver({
       }
       dispatch({
         type: "PLAYER_MOVED",
-        move: markOf(move, uci),
+        move: markOf(move, uci, matchesSolution ? solutionMoveQuality(fenBefore, uci) : null),
         matchesSolution,
         fenBefore,
         hint,
@@ -283,6 +287,8 @@ export function usePuzzleSolver({
     fen,
     /** Vrai pendant l'animation du coup adverse d'introduction — surbrillance et coach attendent qu'elle finisse. */
     introPlaying,
+    /** Vrai si le coup adverse d'introduction est JOUÉ sur l'échiquier (position d'avant connue) — plus besoin de flèche pour le montrer. */
+    introAnimated: introFen !== null,
     lastMove: state.lastMove,
     lastPlayerTransition,
     /** Plis de `puzzle.solution` restants après le dernier coup consommé — voir `buildProgressCoachMessage`. */

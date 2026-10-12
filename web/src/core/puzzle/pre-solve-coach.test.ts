@@ -32,3 +32,15 @@ describe("buildPreSolveCoachMessage", () => {
     expect(message).toBe("L'adversaire vient de jouer Qxd5. Cherche une pièce en prise. (2 coups à enchaîner.)");
   });
 });
+
+describe("buildPreSolveCoachMessage — pattern nommé", () => {
+  it("nomme le pattern à la place des motifs et de l'invite générique", () => {
+    const message = buildPreSolveCoachMessage({
+      setupSan: null,
+      motifs: ["fork"],
+      playerMoveCount: 2,
+      pattern: { name: "La fourchette", idea: "Une seule pièce va attaquer deux cibles à la fois." },
+    });
+    expect(message).toBe("Pattern : La fourchette. Une seule pièce va attaquer deux cibles à la fois. (2 coups à enchaîner.)");
+  });
+});

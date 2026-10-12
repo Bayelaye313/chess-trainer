@@ -5,6 +5,9 @@ import { LE_MAUVAIS_FOU } from "./course-trees/pm-le-mauvais-fou";
 import { LE_PION_ISOLE_DE_LA_DAME } from "./course-trees/pm-le-pion-isole-de-la-dame";
 import { LES_PIONS_PENDANTS } from "./course-trees/pm-les-pions-pendants";
 import { CAVALIER_CONTRE_FOU } from "./course-trees/pm-cavalier-contre-fou-qui-domine";
+import { DOUBLER_LES_PIONS_ADVERSES } from "./course-trees/pm-doubler-les-pions-adverses";
+import { LA_COLONNE_OUVERTE } from "./course-trees/pm-la-colonne-ouverte";
+import { LA_TOUR_A_LA_7E_RANGEE } from "./course-trees/pm-la-tour-a-la-7e-rangee";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -230,6 +233,9 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-cavalier-contre-fou-qui-domine": CAVALIER_CONTRE_FOU,
   "pm-le-mauvais-fou": LE_MAUVAIS_FOU,
   "pm-le-pion-isole-de-la-dame": LE_PION_ISOLE_DE_LA_DAME,
+  "pm-doubler-les-pions-adverses": DOUBLER_LES_PIONS_ADVERSES,
+  "pm-la-colonne-ouverte": LA_COLONNE_OUVERTE,
+  "pm-la-tour-a-la-7e-rangee": LA_TOUR_A_LA_7E_RANGEE,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },
