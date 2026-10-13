@@ -152,6 +152,7 @@ export function ThemeReviewSession({
             fenBefore: currentPuzzle.fen,
             solution: currentPuzzle.solution,
             solutionSan: currentPuzzle.solutionSan,
+            alternatives: currentPuzzle.alternatives,
           }}
           completedCount={reviewIndex}
           totalPuzzles={puzzles.length}

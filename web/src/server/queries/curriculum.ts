@@ -20,6 +20,7 @@ import { db } from "@/server/db";
 import { curriculumPuzzles, curriculumThemes, userThemeProgress } from "@/server/db/schema";
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
 import { CURRICULUM_CATEGORIES, CURRICULUM_THEMES, type CurriculumCategoryMeta } from "@/core/curriculum/catalog";
+import { alternativesFor } from "@/core/curriculum/puzzle-alternatives";
 import { buildDemoCurriculumPuzzleRows } from "@/server/db/seed/curriculum-puzzles";
 
 /**
@@ -153,6 +154,13 @@ export interface ThemePuzzle {
   solutionSan: string[];
   /** Provenance libre (partie, tournoi, Elo Lichess…) — matière première de la bulle du coach en client, voir `theme-session.tsx`. */
   sourceRef: string | null;
+  /** Coups équivalents acceptés par le solveur (`core/curriculum/puzzle-alternatives.ts`) — absent si aucun. */
+  alternatives?: string[][];
+}
+
+function withAlternatives<P extends { fen: string; solution: string[] }>(puzzle: P): P & { alternatives?: string[][] } {
+  const alternatives = alternativesFor(puzzle.fen, puzzle.solution);
+  return alternatives ? { ...puzzle, alternatives } : puzzle;
 }
 
 export interface ThemeSession {
@@ -208,7 +216,7 @@ export async function getThemeSession(themeId: string, userId: string = LOCAL_US
     title: theme.title,
     totalPuzzles: theme.totalPuzzles,
     completedCount,
-    puzzle: puzzleRow ?? null,
+    puzzle: puzzleRow ? withAlternatives(puzzleRow) : null,
   };
 }
 
@@ -242,7 +250,7 @@ export async function getThemeReviewSession(themeId: string): Promise<ThemeRevie
     .where(eq(curriculumPuzzles.themeId, themeId))
     .orderBy(asc(curriculumPuzzles.orderIndex));
 
-  return { themeId: theme.id, title: theme.title, puzzles };
+  return { themeId: theme.id, title: theme.title, puzzles: puzzles.map(withAlternatives) };
 }
 
 /**

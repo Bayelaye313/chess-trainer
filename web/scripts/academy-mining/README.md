@@ -31,6 +31,43 @@ node scripts/academy-mining/build-import.mjs out/sel-all.json out/v data/import/
 - Les thèmes `tm-*` / `cm-*` sont remplacés (fichier `.override.json`). Les autres
   sont complétés jusqu'à 15 sans rien effacer (voir `seed-academy.ts`).
 
+## Unicité de la solution (lot 5)
+
+`verify-stockfish.mjs` accepte un coup « aussi bon » que le meilleur. Ça ne suffit
+pas : dans une vague tirée d'une partie de maître, un coup calme admet souvent
+plusieurs bonnes réponses, et le solveur refusait des coups corrects. Un puzzle
+d'Apprendre doit donc aussi passer le contrôle d'unicité : à chaque coup du
+solveur, au moins 10 points de probabilité de gain d'avance sur le 2e meilleur coup.
+
+```sh
+# Audit des puzzles en base (catégories pédagogiques), 3 processus
+for i in 0 1 2; do SHARD=$i/3 node --import tsx scripts/academy-mining/check-uniqueness.mts out/u/all-$i.jsonl & done; wait
+node scripts/academy-mining/classify-uniqueness.mjs out/u            # → out/u/classified.json
+```
+
+### Remplacer une vague ambiguë
+
+```sh
+# 1. Candidats du mineur pour les thèmes visés (ONLY=…)
+# 2. Garde les puzzles uniques, tire des candidats pour compléter à 15
+THEMES=pm-le-mauvais-fou,… node scripts/academy-mining/waves.mjs select out/candidats.json out/u out
+# 3. Contrôle d'unicité des candidats
+for i in 0 1 2; do INPUT=out/waves-check-in.json SHARD=$i/3 node --import tsx scripts/academy-mining/check-uniqueness.mts out/c/c-$i.jsonl & done; wait
+# 4. Fichier de remplacement
+node scripts/academy-mining/waves.mjs build out out/c data/import/academy/lot5-positionnel-verifie.override.json
+```
+
+### Coups équivalents acceptés par le solveur
+
+Les puzzles qui restent ambigus (en attendant leur remplacement) acceptent les coups
+que Stockfish juge aussi bons : l'échiquier joue alors le coup du maître et le
+signale. Table générée, jamais écrite à la main :
+
+```sh
+for i in 0 1 2; do SHARD=$i/3 node --import tsx scripts/academy-mining/analyse-alternatives.mts out/ids.json out/alt/out-$i.jsonl & done; wait
+node scripts/academy-mining/build-alternatives.mjs out/alt   # → src/core/curriculum/puzzle-alternatives.json
+```
+
 ## Puzzles de finales tirés d'études
 
 Lichess n'a presque pas de finales élémentaires à coup unique. Celles-ci viennent

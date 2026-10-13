@@ -195,6 +195,11 @@ export function PuzzleBoard({
           kind: "error" as const,
           text: `${WRONG_MOVE_HINT_LABEL[solver.lastWrongHint ?? "generic"]} Il vous reste ${solver.attemptsLeft} tentative${solver.attemptsLeft > 1 ? "s" : ""}.`,
         }
+      : solver.lastAlternative && solver.phase !== "failed"
+        ? {
+            kind: "info" as const,
+            text: `${solver.lastAlternative.playedSan} est aussi bon selon le moteur ! Dans la partie, le maître a joué ${solver.lastAlternative.masterSan} : on poursuit avec sa suite.`,
+          }
       : showPreSolveCoach && recognitionAids
         ? {
             kind: "info" as const,

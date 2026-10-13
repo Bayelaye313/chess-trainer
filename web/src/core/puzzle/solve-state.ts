@@ -64,6 +64,14 @@ export interface SolvablePuzzle {
    * Optionnel, même raison que `setupMove`.
    */
   motifs?: Motif[];
+  /**
+   * Coups ÉQUIVALENTS acceptés, alignés sur `solution` (indice = pli) : pour
+   * un pli du joueur, les coups UCI que Stockfish juge aussi bons que la
+   * solution (`core/curriculum/puzzle-alternatives.ts`). Sert aux puzzles tirés
+   * de parties de maîtres, où un coup calme admet souvent plusieurs bonnes
+   * réponses. Absent = seule la solution (et un mat final) est acceptée.
+   */
+  alternatives?: readonly (readonly string[])[];
 }
 
 export type SolvePhase =
@@ -112,6 +120,13 @@ export interface PuzzleSolveState {
    * Même cycle de vie que `lastWrongUci` : remis à `null` sur coup correct.
    */
   lastWrongHint: WrongMoveHint | null;
+  /**
+   * Dernier coup du joueur accepté comme ÉQUIVALENT à la solution (voir
+   * `SolvablePuzzle.alternatives`) : le coup joué et celui du maître, que
+   * l'échiquier a joué à sa place pour garder la suite enregistrée. Remis à
+   * `null` au coup suivant du joueur.
+   */
+  lastAlternative: { playedSan: string; masterSan: string } | null;
 
   // Renseignés une fois la révélation demandée en phase "failed" (voir REVEAL_*).
   /** Nombre de plis à rejouer pour la révélation ; `0` tant qu'elle n'a pas été demandée. */
@@ -130,6 +145,8 @@ export type PuzzleEvent =
       fenBefore: string;
       /** Nature de l'erreur — voir `PuzzleSolveState.lastWrongHint`. Ignoré quand `matchesSolution`. */
       hint: WrongMoveHint;
+      /** SAN du coup équivalent réellement joué, quand `move` est le coup du maître substitué — voir `lastAlternative`. */
+      alternativeSan?: string;
     }
   | { type: "OPPONENT_REPLY_PLAYED"; move: PlyMark }
   /** Bouton « Révéler la solution » — `totalPlies` = plis restants de `puzzle.solution` à partir de `moveIndex`. */
@@ -146,6 +163,7 @@ export function initialSolveState(totalPlies: number): PuzzleSolveState {
     attemptsLeft: MAX_PUZZLE_ATTEMPTS,
     lastWrongUci: null,
     lastWrongHint: null,
+    lastAlternative: null,
     revealTotalPlies: 0,
     revealPlyIndex: 0,
     revealed: false,
@@ -183,6 +201,19 @@ export function hasFailedAttempt(state: Pick<PuzzleSolveState, "attemptsLeft">):
 export function isAcceptedPlayerMove(solution: readonly string[], moveIndex: number, playedUci: string, givesCheckmate: boolean): boolean {
   if (playedUci === solution[moveIndex]) return true;
   return givesCheckmate && moveIndex === solution.length - 1;
+}
+
+/**
+ * Le coup joué, refusé par `isAcceptedPlayerMove`, figure-t-il parmi les coups
+ * équivalents de ce pli ? L'appelant joue alors le coup du MAÎTRE à sa place
+ * (la suite enregistrée ne connaît que lui) et le signale au joueur.
+ */
+export function isEquivalentAlternative(
+  alternatives: SolvablePuzzle["alternatives"],
+  moveIndex: number,
+  playedUci: string,
+): boolean {
+  return alternatives?.[moveIndex]?.includes(playedUci) ?? false;
 }
 
 /** `true` si `moveIndex` a atteint la fin de `puzzle.solution` après avoir consommé un pli de plus. */
@@ -240,6 +271,7 @@ function applyWhileSolving(state: PuzzleSolveState, event: PuzzleEvent): PuzzleS
     lastMove: { ...event.move, quality: event.move.quality ?? "best" },
     lastWrongUci: null,
     lastWrongHint: null,
+    lastAlternative: event.alternativeSan ? { playedSan: event.alternativeSan, masterSan: event.move.san } : null,
     moveIndex: nextIndex,
   };
 }

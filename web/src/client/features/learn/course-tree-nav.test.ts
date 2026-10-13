@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { mainLine, parseMoveTree } from "@/core/chess/move-tree";
-import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, moveArrowRevealed, turnOfFen } from "./course-tree-nav";
+import { resolveCoachSlot } from "@/core/curriculum/coach-feedbacks";
+import {
+  childForDrop,
+  courseTreeNavReducer,
+  initialCourseTreeNav,
+  isPlayerTurn,
+  moveArrowRevealed,
+  sessionAccuracy,
+  turnOfFen,
+  type CourseTreeNavState,
+  type PlayedMove,
+} from "./course-tree-nav";
 
 describe("courseTreeNavReducer", () => {
   it("sélectionne un nœud et efface le feedback", () => {
@@ -23,7 +34,7 @@ describe("courseTreeNavReducer", () => {
 
   it("wrong / hint posent le feedback sans bouger le curseur", () => {
     const state = initialCourseTreeNav("0");
-    expect(courseTreeNavReducer(state, { type: "wrong" })).toMatchObject({ currentId: "0", feedback: "wrong" });
+    expect(courseTreeNavReducer(state, { type: "wrong", ply: 1, san: null })).toMatchObject({ currentId: "0", feedback: "wrong" });
     expect(courseTreeNavReducer(state, { type: "hint" })).toMatchObject({ currentId: "0", feedback: "hint" });
   });
 });
@@ -68,5 +79,56 @@ describe("childForDrop / isPlayerTurn", () => {
     expect(isPlayerTurn(e4, "w")).toBe(false);
     expect(isPlayerTurn(e5, "w")).toBe(true);
     expect(isPlayerTurn(nf3, "b")).toBe(false); // fin de ligne
+  });
+});
+
+describe("courseTreeNavReducer — Coach Virtuel", () => {
+  const move = (id: string, ply: number, extra: Partial<PlayedMove> = {}): PlayedMove => ({
+    id,
+    ply,
+    san: "Nf3",
+    punishesBlunder: false,
+    revealed: false,
+    ...extra,
+  });
+  const playing = (): CourseTreeNavState => courseTreeNavReducer(initialCourseTreeNav("0"), { type: "mode", mode: "play", rootId: "0" });
+
+  it("une erreur précoce ouvre l'amnésie, la correction la félicite", () => {
+    const wrong = courseTreeNavReducer(playing(), { type: "wrong", ply: 3, san: "h4" });
+    expect(wrong.coach?.ctx).toMatchObject({ outcome: "echec", isFirstError: true, ply: 3 });
+    expect(resolveCoachSlot(wrong.coach!.ctx)).toEqual({ profile: "amnesiePrecoce", situation: "echecHorsRepertoire" });
+    const fixed = courseTreeNavReducer(wrong, { type: "played", move: move("0.0", 3) });
+    expect(fixed.coach?.ctx.afterFailure).toBe(true);
+    expect(resolveCoachSlot(fixed.coach!.ctx)).toEqual({ profile: "amnesiePrecoce", situation: "succesCorrection" });
+    expect(fixed.session).toEqual({ played: 1, clean: 0, errors: 1 });
+  });
+
+  it("seule la toute première erreur de la manche est isFirstError", () => {
+    const once = courseTreeNavReducer(playing(), { type: "wrong", ply: 25, san: null });
+    const twice = courseTreeNavReducer(once, { type: "wrong", ply: 25, san: null });
+    expect(once.coach?.ctx.isFirstError).toBe(true);
+    expect(twice.coach?.ctx.isFirstError).toBe(false);
+  });
+
+  it("réfutation du premier coup = surprise, mais pas après un indice", () => {
+    const found = courseTreeNavReducer(playing(), { type: "played", move: move("0.0", 21, { punishesBlunder: true }) });
+    expect(found.coach?.ctx.isSurprise).toBe(true);
+    const hinted = courseTreeNavReducer(courseTreeNavReducer(playing(), { type: "hint" }), { type: "played", move: move("0.0", 21, { punishesBlunder: true }) });
+    expect(hinted.coach?.ctx.isSurprise).toBe(false);
+    expect(hinted.session.clean).toBe(0);
+  });
+
+  it("précision cumulée : coups propres / coups joués, « Voir le coup » jamais commenté", () => {
+    const shown = courseTreeNavReducer(playing(), { type: "played", move: move("0.0", 1, { revealed: true }) });
+    expect(shown.coach).toBeNull();
+    const clean = courseTreeNavReducer(shown, { type: "played", move: move("0.0.0.0", 3) });
+    expect(sessionAccuracy(clean.session)).toBe(50);
+    expect(clean.coach?.ctx).toMatchObject({ userMovesPlayed: 2, accuracy: 50 });
+  });
+
+  it("select ferme la bulle, chapitre et entrée en jeu remettent la manche à zéro", () => {
+    const wrong = courseTreeNavReducer(playing(), { type: "wrong", ply: 3, san: null });
+    expect(courseTreeNavReducer(wrong, { type: "select", id: "0.0" })).toMatchObject({ coach: null, wrongOnNode: 0, session: { errors: 1 } });
+    expect(courseTreeNavReducer(wrong, { type: "chapter", index: 1, rootId: "0" })).toMatchObject({ coach: null, session: { played: 0, clean: 0, errors: 0 } });
   });
 });

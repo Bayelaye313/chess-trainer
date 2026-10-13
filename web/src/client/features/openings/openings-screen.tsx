@@ -15,6 +15,7 @@
  * sur `/ouvertures/[slug]`, jamais ici).
  */
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EsportHeader } from "@/components/ui/esport-page";
 import { MASTERY_STARS_FULL } from "@/core/curriculum/opening-mastery";
@@ -126,6 +127,28 @@ export function OpeningsScreen({
           </div>
         </div>
       )}
+
+      {/* Accès à l'historique d'endurance « Sans Guide » (toutes ouvertures). */}
+      <Link
+        href="/ouvertures/historique-endurance"
+        className="group flex items-center gap-4 rounded-lg border border-accent/30 bg-accent/10 p-4 transition-colors hover:border-accent/60 hover:bg-accent/15"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent/20 text-accent" aria-hidden>
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v18h18" />
+            <path d="m7 15 4-4 3 3 5-6" />
+          </svg>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium text-foreground">Suivre mon historique d&apos;endurance positionnelle</span>
+          <span className="block text-sm text-foreground-muted">
+            Ton record sans faute, ta tendance et tes ouvertures les plus solides.
+          </span>
+        </span>
+        <span className="shrink-0 text-accent transition-transform group-hover:translate-x-0.5" aria-hidden>
+          →
+        </span>
+      </Link>
 
       <div className="flex flex-wrap items-center gap-2">
         <input

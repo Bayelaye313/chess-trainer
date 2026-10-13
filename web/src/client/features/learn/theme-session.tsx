@@ -152,6 +152,7 @@ export function ThemeSession({
             fenBefore: state.session.puzzle.fen,
             solution: state.session.puzzle.solution,
             solutionSan: state.session.puzzle.solutionSan,
+            alternatives: state.session.puzzle.alternatives,
           }}
           completedCount={state.session.completedCount}
           totalPuzzles={state.session.totalPuzzles}

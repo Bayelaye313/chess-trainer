@@ -27,6 +27,7 @@ import {
   applyPuzzleEvent,
   initialSolveState,
   isAcceptedPlayerMove,
+  isEquivalentAlternative,
   isHoverArrowsEnabled,
   type PlyMark,
   type PuzzleSolveState,
@@ -232,8 +233,19 @@ export function usePuzzleSolver({
       } catch {
         return false;
       }
-      const uci = uciOf(move);
-      const matchesSolution = isAcceptedPlayerMove(puzzle.solution, state.moveIndex, uci, chess.isCheckmate());
+      let uci = uciOf(move);
+      let matchesSolution = isAcceptedPlayerMove(puzzle.solution, state.moveIndex, uci, chess.isCheckmate());
+      // Coup équivalent (aussi bon selon Stockfish) : accepté, mais c'est le
+      // coup du MAÎTRE qui est joué à sa place — la suite enregistrée (réponses
+      // adverses) n'existe que pour lui.
+      let alternativeSan: string | undefined;
+      if (!matchesSolution && isEquivalentAlternative(puzzle.alternatives, state.moveIndex, uci)) {
+        alternativeSan = move.san;
+        chess.undo();
+        uci = puzzle.solution[state.moveIndex];
+        move = chess.move(moveInputFromUci(uci));
+        matchesSolution = true;
+      }
       // Nature de l'erreur — calculée AVANT l'annulation, pendant que `chess`
       // reflète encore la position résultant du coup faux (voir
       // `classifyWrongMove`). Sans objet quand le coup est correct : la
@@ -255,10 +267,11 @@ export function usePuzzleSolver({
         matchesSolution,
         fenBefore,
         hint,
+        alternativeSan,
       });
       return matchesSolution;
     },
-    [chess, introPlaying, state.phase, state.moveIndex, puzzle.solution, playerColor],
+    [chess, introPlaying, state.phase, state.moveIndex, puzzle.solution, puzzle.alternatives, playerColor],
   );
 
   const requestReveal = useCallback(() => {
@@ -297,6 +310,7 @@ export function usePuzzleSolver({
     attemptsLeft: state.attemptsLeft,
     lastWrongUci: state.lastWrongUci,
     lastWrongHint: state.lastWrongHint,
+    lastAlternative: state.lastAlternative,
     canReveal: state.phase === "failed" && state.revealTotalPlies === 0 && !state.revealed,
     revealing: state.phase === "failed" && state.revealTotalPlies > 0 && !state.revealed,
     revealed: state.revealed,

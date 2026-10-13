@@ -23,6 +23,13 @@
  * lecture du commentaire. Sans la balise, la réponse part après
  * `OPPONENT_REPLY_MS` comme avant.
  *
+ * Coach Virtuel (`CourseCoachBubble`, catalogue `coach-feedbacks.ts`) : en
+ * mode jeu, `resolveCoachSlot` décide après chaque tentative si le coach
+ * parle ; sa bulle s'affiche au-dessus du volet de feedback. Une bulle sur un
+ * coup juste gèle la réponse adverse exactement comme `[%txt]` : « Suivant » /
+ * Espace la referme ET fait jouer l'adversaire. Après un coup refusé, elle
+ * reste jusqu'à la tentative suivante.
+ *
  * Barre d'évaluation : le score posé par l'auteur (`[%eval]` →
  * `evaluationScore`, affiché si `showEvalBar`) s'affiche immédiatement ;
  * sans lui, la barre montre l'analyse Stockfish live de la position.
@@ -38,16 +45,28 @@
  * `useLiveEvaluation` n'écrit qu'à l'arrivée de la réponse du moteur.
  */
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs, type SquareRenderer } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS, LICHESS_BRUSH, SquareCircle } from "@/client/features/board/board-theme";
 import { findNode, pathTo, plyOffsetOf, type ChessMoveNode } from "@/core/chess/move-tree";
 import { buildCoachFeedback } from "@/core/curriculum/coach-feedback";
+import { pickCoachMessage, resolveCoachSlot } from "@/core/curriculum/coach-feedbacks";
 import type { CourseTree } from "@/core/curriculum/course-tree";
 import { useEngine } from "@/client/engine/engine-context";
 import { EvaluationBar, type EvalScore } from "@/client/features/board/evaluation-bar";
 import { REVEAL_ARROW_COLOR } from "@/lib/labels";
 import { CoachFeedbackPanel } from "./coach-feedback-panel";
-import { childForDrop, courseTreeNavReducer, initialCourseTreeNav, isPlayerTurn, moveArrowRevealed, turnOfFen } from "./course-tree-nav";
+import { CourseCoachBubble } from "./course-coach-bubble";
+import {
+  childForDrop,
+  courseTreeNavReducer,
+  initialCourseTreeNav,
+  isPlayerTurn,
+  moveArrowRevealed,
+  playedCoachContext,
+  turnOfFen,
+  type PlayedMove,
+} from "./course-tree-nav";
 import { MoveTreeViewer } from "./move-tree-viewer";
 
 /** Flèches et cercles de l'auteur : pinceaux Lichess, comme dans l'étude d'origine. */
@@ -87,6 +106,15 @@ function useLiveEvaluation(fen: string): EvalScore | null {
   return score;
 }
 
+/** SAN d'un glisser-déposer hors de l'arbre, pour que le coach le cite — `null` si le coup est illégal. */
+function sanOfDrop(fen: string, from: string, to: string): string | null {
+  try {
+    return new Chess(fen).move({ from, to, promotion: "q" }).san;
+  } catch {
+    return null;
+  }
+}
+
 function sideLabel(color: "w" | "b"): string {
   return color === "w" ? "Blancs" : "Noirs";
 }
@@ -101,12 +129,23 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
   const currentNode = useMemo(() => findNode(root, state.currentId) ?? root, [root, state.currentId]);
   const path = useMemo(() => pathTo(root, currentNode.id), [root, currentNode.id]);
   const parentNode: ChessMoveNode | null = path.length >= 2 ? path[path.length - 2] : null;
-  const feedback = useMemo(() => buildCoachFeedback(currentNode, plyOffsetOf(root.fen)), [currentNode, root.fen]);
+  const plyOffset = plyOffsetOf(root.fen);
+  const feedback = useMemo(() => buildCoachFeedback(currentNode, plyOffset), [currentNode, plyOffset]);
   const playerToMove = playing && isPlayerTurn(currentNode, playerColor);
   const lineFinished = currentNode.children.length === 0;
-  // Gel `[%txt]` : le coup qui vient d'être joué porte un commentaire à lire,
-  // et la réponse adverse attend « Suivant » / Espace (voir le docstring).
-  const awaitingRead = playing && !lineFinished && currentNode.freeze && turnOfFen(currentNode.fen) !== playerColor;
+  // Coach Virtuel : le slot se dérive du dernier coup tenté (rangé par le reducer).
+  const coachSlot = playing && state.coach ? resolveCoachSlot(state.coach.ctx) : null;
+  const coachMessage =
+    coachSlot && state.coach
+      ? pickCoachMessage(coachSlot, state.coach.ctx.ply, {
+          coup: Math.ceil(state.coach.ctx.ply / 2),
+          san: state.coach.san ?? undefined,
+          precision: state.coach.ctx.accuracy ?? undefined,
+        })
+      : null;
+  // Gel `[%txt]` ou bulle du coach : le coup qui vient d'être joué porte un
+  // texte à lire, et la réponse adverse attend « Suivant » / Espace.
+  const awaitingRead = playing && !lineFinished && (currentNode.freeze || coachSlot !== null) && turnOfFen(currentNode.fen) !== playerColor;
   const liveScore = useLiveEvaluation(currentNode.fen);
   // `[%eval #0]` : la position est un mat, le camp au trait est maté.
   const checkmatedBy = currentNode.showEvalBar && currentNode.evaluationMate === 0 ? (turnOfFen(currentNode.fen) === "w" ? "b" : "w") : null;
@@ -135,19 +174,33 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     [cancelReply],
   );
 
-  /** Joue `child` pour le lecteur, puis programme la réponse adverse s'il y en a une — sauf gel `[%txt]`, où elle attend `playReply`. */
+  /**
+   * Joue `child` pour le lecteur, puis programme la réponse adverse s'il y en
+   * a une — sauf gel `[%txt]` ou bulle du coach, où elle attend `playReply`.
+   * Le slot du coach est évalué ICI, avant le dispatch, avec le même contexte
+   * que le reducer : la décision de geler ne dépend pas d'un rendu à venir.
+   */
   const playForPlayer = useCallback(
-    (child: ChessMoveNode) => {
-      select(child.id);
+    (child: ChessMoveNode, revealed = false) => {
+      cancelReply();
+      const move: PlayedMove = {
+        id: child.id,
+        ply: child.ply + plyOffset,
+        san: child.san,
+        punishesBlunder: currentNode.hints.length > 0,
+        revealed,
+      };
+      dispatch({ type: "played", move });
+      const coachSpeaks = !revealed && resolveCoachSlot(playedCoachContext(state, move)) !== null;
       const reply = child.children[0];
-      if (reply && turnOfFen(child.fen) !== playerColor && !child.freeze) {
+      if (reply && turnOfFen(child.fen) !== playerColor && !child.freeze && !coachSpeaks) {
         replyTimer.current = setTimeout(() => {
           replyTimer.current = null;
           dispatch({ type: "select", id: reply.id });
         }, OPPONENT_REPLY_MS);
       }
     },
-    [select, playerColor],
+    [cancelReply, currentNode, plyOffset, state, playerColor],
   );
 
   /** « Suivant » / Espace pendant un gel : l'adversaire joue enfin sa réponse (ligne principale). */
@@ -210,7 +263,7 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     if (!playerToMove || !targetSquare) return false;
     const child = childForDrop(currentNode, sourceSquare, targetSquare);
     if (!child) {
-      dispatch({ type: "wrong" });
+      dispatch({ type: "wrong", ply: currentNode.ply + 1 + plyOffset, san: sanOfDrop(currentNode.fen, sourceSquare, targetSquare) });
       return false;
     }
     playForPlayer(child);
@@ -265,7 +318,7 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
           <button type="button" onClick={() => dispatch({ type: "hint" })} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
             {hintButtonLabel(currentNode, state.hintLevel)}
           </button>
-          <button type="button" onClick={() => playForPlayer(currentNode.children[0])} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+          <button type="button" onClick={() => playForPlayer(currentNode.children[0], true)} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
             Voir le coup
           </button>
         </div>
@@ -419,6 +472,7 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
           ) : (
             <MoveTreeViewer root={root} currentId={currentNode.id} onSelect={select} />
           )}
+          {coachMessage && <CourseCoachBubble message={coachMessage} />}
           <CoachFeedbackPanel feedback={feedback} chapterTitle={chapter.title} prompt={prompt} hideEngine={playing} />
         </div>
       </div>

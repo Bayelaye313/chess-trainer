@@ -447,13 +447,19 @@ D["tm-l-ouverture-de-colonne"] = (x, t) => (decisive(t) || gain(t) ? opensLine(x
 D["tm-l-ouverture-de-diagonale"] = (x, t) => (decisive(t) || gain(t) ? opensLine(x, ["b", "q"], false) : null);
 
 // Stratégie (Positional Mastery)
+// Partie entre joueurs titrés (tags Lichess) : passe en priorité à la sélection.
+const masterGame = (t) => /\bmaster(VsMaster)?\b|superGM/.test(t);
+/** Avant-poste : case des rangées relatives 4-6, protégée par un pion, hors d'atteinte des pions adverses. */
+const isOutpost = (c, sq, color) => rel(sq, color) >= 4 && rel(sq, color) <= 6 && defendedByPawn(c, sq, color) && !pawnCanAttack(c, sq, opp(color));
+// Lot 5 : un cavalier du solveur part d'un avant-poste ou s'y installe, à n'importe quel coup de la solution.
 D["pm-l-avant-poste-du-cavalier"] = (x, t) => {
   if (!(decisive(t) || gain(t))) return null;
-  const m1 = x.mvs[0];
-  if (m1.piece !== "n") return null;
-  const post = (c, sq) => rel(sq, x.me) >= 4 && rel(sq, x.me) <= 6 && defendedByPawn(c, sq, x.me) && !pawnCanAttack(c, sq, x.them);
-  if (post(x.start, m1.from)) return { outpost: m1.from };
-  if (post(new Chess(x.fens[1]), m1.to)) return { outpost: m1.to };
+  for (let i = 0; i < x.mvs.length; i += 2) {
+    const m = x.mvs[i];
+    if (m.piece !== "n") continue;
+    if (isOutpost(new Chess(x.fens[i]), m.from, x.me)) return { outpost: m.from, preferred: masterGame(t) };
+    if (isOutpost(new Chess(x.fens[i + 1]), m.to, x.me)) return { outpost: m.to, preferred: masterGame(t) };
+  }
   return null;
 };
 D["pm-la-case-faible-dans-le-camp-adverse"] = (x, t) => {
@@ -467,12 +473,87 @@ D["pm-la-case-faible-dans-le-camp-adverse"] = (x, t) => {
   }
   return null;
 };
+/**
+ * Mauvais fou (Silman, « Reassess Your Chess » : fou gêné par ses propres pions
+ * fixés sur sa couleur). L'adversaire n'a qu'un fou, ≥ 4 de ses pions sont sur
+ * la couleur de ce fou dont ≥ 2 bloqués par un pion du solveur. Puis, au choix :
+ * le solveur capture ce fou, ou TOUS ses coups de pièce frappent l'autre couleur
+ * (celle que le fou ne défendra jamais) dans le camp adverse.
+ */
+function badBishopOf(c, color) {
+  const bs = pieces(c, color, "b");
+  if (bs.length !== 1) return null;
+  const b = bs[0].square, fwd = color === "w" ? 1 : -1;
+  const same = pawnsOf(c, color).filter((p) => isLight(p) === isLight(b));
+  const fixed = same.filter((p) => { const s = sqOf(fileOf(p), rankOf(p) + fwd); const q = s && c.get(s); return q && q.type === "p" && q.color === opp(color); });
+  return same.length >= 4 && fixed.length >= 2 ? { square: b, light: isLight(b), blockers: same.length } : null;
+}
 D["pm-le-mauvais-fou"] = (x, t) => {
   if (!(decisive(t) || gain(t))) return null;
-  for (const b of pieces(x.start, x.them, "b")) {
-    const blockers = pawnsOf(x.start, x.them).filter((p) => isLight(p) === isLight(b.square)).length;
-    if (blockers < 4) continue;
-    if (x.mvs.some((m, i) => i % 2 === 0 && m.captured === "b" && m.to === b.square)) return { badBishop: b.square, blockers };
+  const bad = badBishopOf(x.start, x.them);
+  if (!bad) return null;
+  if (x.mvs.some((m, i) => i % 2 === 0 && m.captured === "b" && m.to === bad.square)) return { badBishop: bad.square, blockers: bad.blockers, preferred: masterGame(t) };
+  const pieceMoves = x.solver.filter((m) => m.piece !== "p");
+  if (pieceMoves.length && pieceMoves.every((m) => isLight(m.to) !== bad.light && rel(m.to, x.me) >= 5)) return { badBishop: bad.square, otherColour: true, preferred: masterGame(t) };
+  return null;
+};
+/**
+ * Cavalier contre fou qui domine : seul déséquilibre de pièces mineures = un
+ * cavalier du solveur contre un fou adverse (mauvais au sens ci-dessus), pas de
+ * Dame ; le cavalier joue au moins un coup de la solution gagnante.
+ */
+D["pm-cavalier-contre-fou-qui-domine"] = (x, t) => {
+  if (!(decisive(t) || gain(t))) return null;
+  const n = (c, col) => pieces(c, col, "n").length, b = (c, col) => pieces(c, col, "b").length;
+  if (n(x.start, x.me) !== 1 || b(x.start, x.me) !== 0 || n(x.start, x.them) !== 0 || b(x.start, x.them) !== 1) return null;
+  if (pieces(x.start, null, "q").length) return null;
+  if (!badBishopOf(x.start, x.them)) return null;
+  return x.solver.some((m) => m.piece === "n") ? { preferred: masterGame(t) } : null;
+};
+/**
+ * Pions pendants (Flores Rios, « Chess Structures », ch. 2) : pions c et d d'un
+ * camp côte à côte sur la même rangée (c4-d4 / c5-d5), sans pion de ce camp sur
+ * les colonnes b et e. La solution pousse l'un d'eux (camp des pions pendants)
+ * ou en capture un (camp adverse).
+ */
+D["pm-les-pions-pendants"] = (x, t) => {
+  if (!(decisive(t) || gain(t))) return null;
+  for (const color of ["w", "b"]) {
+    const ps = pawnsOf(x.start, color), r = color === "w" ? "4" : "5";
+    if (!ps.includes("c" + r) || !ps.includes("d" + r) || ps.some((p) => "be".includes(p[0]))) continue;
+    if (ps.filter((p) => "cd".includes(p[0])).length !== 2) continue;
+    const pair = ["c" + r, "d" + r];
+    const push = color === x.me && x.solver.some((m) => m.piece === "p" && pair.includes(m.from));
+    const hit = color === x.them && x.solver.some((m) => m.captured === "p" && pair.includes(m.to));
+    if (push || hit) return { hanging: pair.join("-"), side: color, preferred: masterGame(t) };
+  }
+  return null;
+};
+/**
+ * Doubler les pions adverses : un coup du solveur capture une pièce, l'adversaire
+ * reprend avec un pion sur une colonne où il avait déjà un pion — la solution
+ * gagne quand même (le doublement fait partie du gain).
+ */
+D["pm-doubler-les-pions-adverses"] = (x, t) => {
+  if (!(decisive(t) || gain(t))) return null;
+  for (let i = 1; i < x.mvs.length; i += 2) {
+    const m = x.mvs[i], prev = x.mvs[i - 1];
+    if (m.piece !== "p" || !m.captured || m.to !== prev.to || prev.piece === "p") continue;
+    const before = new Chess(x.fens[i]);
+    if (pawnsOf(before, x.them).some((p) => p[0] === m.to[0])) return { doubled: m.to[0], preferred: masterGame(t) };
+  }
+  return null;
+};
+/** Pion passé protégé : le solveur en a un au départ (aucun pion adverse devant, sur sa colonne ou les voisines ; protégé par un pion) et la solution le fait avancer. */
+function isPassed(c, sq, color) {
+  const f = fileOf(sq), r = rankOf(sq);
+  return !pawnsOf(c, opp(color)).some((p) => Math.abs(fileOf(p) - f) <= 1 && (color === "w" ? rankOf(p) > r : rankOf(p) < r));
+}
+D["pm-le-pion-passe-protege"] = (x, t) => {
+  if (!(decisive(t) || gain(t))) return null;
+  for (const p of pawnsOf(x.start, x.me)) {
+    if (!isPassed(x.start, p, x.me) || !defendedByPawn(x.start, p, x.me) || rel(p, x.me) < 4) continue;
+    if (x.solver.some((m) => m.piece === "p" && m.from === p)) return { passed: p, preferred: masterGame(t) };
   }
   return null;
 };
@@ -500,6 +581,13 @@ D["pm-la-colonne-semi-ouverte"] = (x, t) => {
   if (m1.piece !== "r" || m1.from[0] !== m1.to[0] || !m1.captured) return null;
   const ps = pawnsOnFile(x.start, m1.from[0]);
   return !ps.some((p) => p.color === x.me) && ps.some((p) => p.color === x.them) ? { file: m1.from[0] } : null;
+};
+
+/** Tour à la 7e rangée : le 1er coup du solveur amène une Tour sur sa 7e (ou 8e) rangée relative, avec échec ou prise. */
+D["pm-la-tour-a-la-7e-rangee"] = (x, t) => {
+  if (!(decisive(t) || gain(t))) return null;
+  const m1 = x.mvs[0];
+  return m1.piece === "r" && rel(m1.to, x.me) >= 7 && (m1.captured || /[+#]/.test(m1.san)) ? { rank: rel(m1.to, x.me), preferred: masterGame(t) } : null;
 };
 
 // Structures de pions : structure EXACTE des colonnes c à f du cours Li-Pokamp (voir COURSE_LESSONS)

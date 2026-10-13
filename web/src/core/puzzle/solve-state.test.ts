@@ -4,6 +4,7 @@ import {
   hasFailedAttempt,
   initialSolveState,
   isAcceptedPlayerMove,
+  isEquivalentAlternative,
   isHoverArrowsEnabled,
   MAX_PUZZLE_ATTEMPTS,
   type PlyMark,
@@ -296,5 +297,39 @@ describe("isAcceptedPlayerMove", () => {
 
   it("avant le dernier pli, un autre coup est refusé même s'il fait mat", () => {
     expect(isAcceptedPlayerMove(solution, 0, "d1d8", true)).toBe(false);
+  });
+});
+
+describe("isEquivalentAlternative", () => {
+  const alternatives = [["d1g4", "d1f3"], [], []];
+
+  it("accepte un coup listé pour CE pli seulement", () => {
+    expect(isEquivalentAlternative(alternatives, 0, "d1g4")).toBe(true);
+    expect(isEquivalentAlternative(alternatives, 2, "d1g4")).toBe(false);
+    expect(isEquivalentAlternative(alternatives, 0, "a2a3")).toBe(false);
+  });
+
+  it("sans alternatives, rien n'est accepté", () => {
+    expect(isEquivalentAlternative(undefined, 0, "d1g4")).toBe(false);
+  });
+});
+
+describe("applyPuzzleEvent — coup équivalent", () => {
+  it("garde le coup joué et celui du maître, puis l'efface au coup suivant", () => {
+    const afterAlt = applyPuzzleEvent(initialSolveState(3), {
+      type: "PLAYER_MOVED",
+      move: move({ uci: "d1h5", san: "Qh5" }),
+      matchesSolution: true,
+      fenBefore: "start",
+      hint: "generic",
+      alternativeSan: "Qg4",
+    });
+    expect(afterAlt.phase).toBe("opponent-reply");
+    expect(afterAlt.lastAlternative).toEqual({ playedSan: "Qg4", masterSan: "Qh5" });
+
+    const solving = applyPuzzleEvent(afterAlt, { type: "OPPONENT_REPLY_PLAYED", move: move() });
+    expect(solving.lastAlternative).toEqual({ playedSan: "Qg4", masterSan: "Qh5" });
+    const done = applyPuzzleEvent(solving, { type: "PLAYER_MOVED", move: move(), matchesSolution: true, fenBefore: "", hint: "generic" });
+    expect(done.lastAlternative).toBeNull();
   });
 });
