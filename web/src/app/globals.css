@@ -46,6 +46,8 @@
   --eval-baseline: #b5b3a8;
   --eval-grid: #ded9cd;
   --eval-text: #6b6a63;
+  /** Liseré de la barre d'évaluation quand un mat est annoncé (« M3 ») — or, distinct du rouge `--quality-blunder` qui qualifie un coup. */
+  --eval-mate: #eab308;
 
   /**
    * Flèches de lignes moteur (Mode Exploration, voir lib/labels.ts#arrowsFromEngineLines).

@@ -1,55 +1,32 @@
 /**
  * Logique pure de la « Zone Stats » d'une ouverture (`opening-stats-zone.tsx`) :
- * diagnostic narratif, compteur d'endurance et déclencheur intelligent, à
- * partir de la performance du joueur sur CETTE ouverture.
+ * compteur d'endurance et bouton d'action intelligent, à partir des sessions
+ * « Sans Guide » du joueur (`firstMistakePly`, voir
+ * `core/curriculum/opening-endurance.ts`). Les seuils servent aussi à
+ * l'historique d'endurance (`opening-endurance-history.ts`) : un même coup
+ * est classé pareil sur les deux écrans.
  *
- * Isolé du rendu pour être testé sans DOM (`opening-stats.test.ts`) et pour ne
- * dépendre d'aucun écran existant (`openings-screen.tsx`, `opening-explorer.tsx`).
+ * Isolé du rendu pour être testé sans DOM (`opening-stats.test.ts`). N'importe
+ * PAS `opening-endurance-history.ts`, qui importe déjà ce module.
  *
  * ## Ply contre coup
  *
- * `OpeningPerformance.avgMistakePly` est un DEMI-coup (ply 1 = 1.e4, ply 2 =
- * 1...e5). Les seuils produit (« gaffe avant le coup 6 », « après le coup 12 »)
- * sont des numéros de COUP : on convertit avec `plyToMoveNumber`
- * (ply 11 et 12 = coup 6). Sans cette conversion, un joueur qui gaffe au
- * coup 6 serait classé comme s'il tenait jusqu'au coup 12.
+ * `firstMistakePly` est un DEMI-coup (ply 1 = 1.e4, ply 2 = 1...e5). Les
+ * seuils produit (« gaffe avant le coup 6 », « après le coup 12 ») sont des
+ * numéros de COUP : on convertit avec `plyToMoveNumber` (ply 11 et 12 =
+ * coup 6). Sans cette conversion, un joueur qui gaffe au coup 6 serait classé
+ * comme s'il tenait jusqu'au coup 12.
  */
 import { MAIN_LINE_VARIATION_KEY } from "@/core/curriculum/opening-variation-key";
-import type { OpeningPerformance } from "@/core/analysis/types";
 
-/**
- * Données attendues par `OpeningStatsZone`, pour UNE ouverture du catalogue.
- * Construite côté serveur à partir de `OpeningPerformance` (voir
- * `toUserOpeningStats`) : le composant ne lit jamais la base lui-même.
- */
-export interface UserOpeningStats {
-  /** Id du catalogue `OPENINGS` (`openings.ts`), ex. « slav-defense » — sert aussi de slug de route. */
-  openingId: string;
-  /** Nom affiché, ex. « Défense Slave ». */
-  openingName: string;
-  /** Camp avec lequel le joueur a joué cette ouverture (`OpeningPerformance.playerSide`) — oriente le drill. */
-  playerSide: "w" | "b";
-  /** Parties importées classées dans cette ouverture. */
-  gamesPlayed: number;
-  /** Taux de victoire en % (0-100). */
-  winRate: number;
-  /** Précision moyenne en % (0-100), `null` si aucun coup analysé. */
-  accuracy: number | null;
-  /**
-   * Ply moyen de la première gaffe/imprécision en phase d'ouverture, sur les
-   * seules parties qui en comptent une — `null` si aucune. Limite connue : les
-   * parties jouées proprement ne tirent PAS la moyenne vers le haut.
-   */
-  avgMistakePly: number | null;
-}
-
-/** Sous ce nombre de parties, aucun diagnostic n'est affirmé (même seuil que le bandeau « Ouverture en difficulté »). */
-export const MIN_GAMES_FOR_DIAGNOSTIC = 3;
 /** Gaffe moyenne AVANT ce coup : endurance fragile (rouge). */
 export const FRAGILE_BEFORE_MOVE = 6;
 /** Gaffe moyenne APRÈS ce coup : endurance solide (vert). */
 export const SOLID_AFTER_MOVE = 12;
+/** Coup auquel la jauge d'endurance est pleine. */
+export const GAUGE_FULL_AT_MOVE = 20;
 
+/** `intact` : aucune gaffe sur toutes les sessions. */
 export type EnduranceTier = "fragile" | "moyen" | "solide" | "intact";
 
 export interface EnduranceReading {
@@ -58,22 +35,14 @@ export interface EnduranceReading {
   moveNumber: number | null;
   /** Libellé court de la puce, ex. « Coup 5 ». */
   label: string;
-  /** Remplissage de la jauge, 0-1 (coup 20 et plus = jauge pleine). */
+  /** Remplissage de la jauge, 0-1 (coup `GAUGE_FULL_AT_MOVE` et plus = jauge pleine). */
   ratio: number;
-}
-
-export interface SmartTrigger {
-  kind: "memorisation" | "survie";
-  label: string;
-  href: string;
 }
 
 /** Ply (demi-coup, 1 = premier coup blanc) vers numéro de coup. */
 export function plyToMoveNumber(ply: number): number {
   return Math.ceil(ply / 2);
 }
-
-const GAUGE_FULL_AT_MOVE = 20;
 
 export function readEndurance(avgMistakePly: number | null): EnduranceReading {
   if (avgMistakePly === null) return { tier: "intact", moveNumber: null, label: "Aucune gaffe", ratio: 1 };
@@ -83,68 +52,64 @@ export function readEndurance(avgMistakePly: number | null): EnduranceReading {
   return { tier, moveNumber, label: `Coup ${moveNumber}`, ratio: Math.min(moveNumber / GAUGE_FULL_AT_MOVE, 1) };
 }
 
-/** Une phrase de profil (style) + une phrase d'endurance, ex. « Agressif et efficace, mais tu t'essouffles au coup 12. » */
-export function buildDiagnostic(stats: UserOpeningStats): string {
-  if (stats.gamesPlayed < MIN_GAMES_FOR_DIAGNOSTIC) {
-    return `Seulement ${stats.gamesPlayed} partie${stats.gamesPlayed > 1 ? "s" : ""} avec ${stats.openingName} : joue encore un peu avant qu'on tire des conclusions.`;
-  }
-  const profile =
-    stats.winRate >= 55
-      ? "Tu gagnes souvent avec cette ouverture"
-      : stats.winRate >= 40
-        ? "Tes résultats sont équilibrés"
-        : "Cette ouverture te coûte des points";
-  const precision =
-    stats.accuracy === null
-      ? ""
-      : stats.accuracy >= 80
-        ? ", avec un jeu précis"
-        : stats.accuracy >= 65
-          ? ", avec une précision correcte"
-          : ", mais ta précision reste basse";
-  const endurance = readEndurance(stats.avgMistakePly);
-  const tail =
-    endurance.tier === "intact"
-      ? " Aucune gaffe en phase d'ouverture : tu connais tes lignes."
-      : endurance.tier === "fragile"
-        ? ` Le problème arrive tôt : ta première gaffe tombe en moyenne au coup ${endurance.moveNumber}, encore en pleine théorie.`
-        : endurance.tier === "moyen"
-          ? ` Tu tiens la théorie, puis tu t'essouffles vers le coup ${endurance.moveNumber}.`
-          : ` Tu tiens longtemps : ta première gaffe n'arrive qu'au coup ${endurance.moveNumber}, au début du milieu de jeu.`;
-  return `${profile}${precision}.${tail}`;
+/** Valeur de `?mode=` qui démarre le drill directement en Manche 2 (indices désactivés). */
+export const SANS_GUIDE_MODE = "sans-guide";
+
+export interface SmartTrigger {
+  /** `reflexes` : gaffe avant le coup 6 · `consolidation` : coups 6-12 · `survie` : après le coup 12 ou aucune gaffe. */
+  kind: "reflexes" | "consolidation" | "survie";
+  label: string;
+  /** Une phrase sous le bouton : ce qu'il lance, et pourquoi. */
+  hint: string;
+  href: string;
 }
 
 /**
- * Bouton d'action : mémorisation (drill de la ligne principale) si la gaffe
- * arrive avant le coup 12, simulateur de survie sinon. Le simulateur = le
- * cours commenté (`/ouvertures/<id>/cours`, dont les chapitres « Aléatoire
- * Surprise » se jouent après la théorie) ; une ouverture sans cours retombe
- * sur le drill, avec un libellé honnête.
+ * Bouton d'action, selon le palier d'endurance de l'ouverture :
+ *  - fragile → drill de la ligne principale démarré en Manche 2 (`?mode=sans-guide`),
+ *    pour forcer la mémorisation brute des premiers coups ;
+ *  - moyen → drill normal (Manche 1 guidée puis Manche 2) ;
+ *  - solide / intact → le cours commenté (`/ouvertures/<id>/cours`, dont les
+ *    chapitres « Aléatoire Surprise » se jouent après la théorie). Une
+ *    ouverture sans cours retombe sur la ligne principale en Sans Guide, avec
+ *    un libellé honnête.
  */
-export function resolveTrigger(stats: UserOpeningStats, hasCourse: boolean): SmartTrigger {
-  const drillHref = `/ouvertures/${stats.openingId}?drill=${MAIN_LINE_VARIATION_KEY}&side=${
-    stats.playerSide === "b" ? "black" : "white"
-  }`;
-  const tier = readEndurance(stats.avgMistakePly).tier;
-  if (tier === "fragile" || tier === "moyen") {
-    return { kind: "memorisation", label: "Renforcer la mémorisation de l'ouverture", href: drillHref };
+export function resolveTrigger(input: {
+  openingId: string;
+  playerSide: "white" | "black";
+  tier: EnduranceTier;
+  hasCourse: boolean;
+}): SmartTrigger {
+  const drillHref = `/ouvertures/${input.openingId}?drill=${MAIN_LINE_VARIATION_KEY}&side=${input.playerSide}`;
+  const sansGuideHref = `${drillHref}&mode=${SANS_GUIDE_MODE}`;
+  if (input.tier === "fragile") {
+    return {
+      kind: "reflexes",
+      label: "Verrouiller les réflexes (Mode Sans Guide - Début)",
+      hint: "Ligne principale sans indice dès le premier coup, jusqu'au sans-faute.",
+      href: sansGuideHref,
+    };
   }
-  if (!hasCourse) return { kind: "survie", label: "Rejouer la ligne principale jusqu'au bout", href: drillHref };
-  return { kind: "survie", label: "Lancer le simulateur de survie (Coup 12+)", href: `/ouvertures/${stats.openingId}/cours` };
-}
-
-/** Adaptateur serveur : `OpeningPerformance` (groupe ECO) vers `UserOpeningStats` (ouverture du catalogue). */
-export function toUserOpeningStats(
-  performance: OpeningPerformance,
-  opening: { id: string; name: string },
-): UserOpeningStats {
+  if (input.tier === "moyen") {
+    return {
+      kind: "consolidation",
+      label: "Consolider la transition (Ligne principale)",
+      hint: "Une manche guidée pour revoir la suite, puis une manche sans indice.",
+      href: drillHref,
+    };
+  }
+  if (!input.hasCourse) {
+    return {
+      kind: "survie",
+      label: "Rejouer la ligne principale jusqu'au bout",
+      hint: "Pas encore de cours commenté pour cette ouverture : on garde la ligne principale, sans indice.",
+      href: sansGuideHref,
+    };
+  }
   return {
-    openingId: opening.id,
-    openingName: opening.name,
-    playerSide: performance.playerSide,
-    gamesPlayed: performance.gamesPlayed,
-    winRate: performance.winRate,
-    accuracy: performance.accuracy,
-    avgMistakePly: performance.avgMistakePly,
+    kind: "survie",
+    label: "Lancer le simulateur de survie (Milieu de jeu)",
+    hint: "Variantes surprises et lignes de club prolongées au-delà de la théorie.",
+    href: `/ouvertures/${input.openingId}/cours`,
   };
 }

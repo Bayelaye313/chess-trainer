@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { EnduranceTier } from "./opening-stats";
 import {
   ROLLING_WINDOW,
@@ -11,8 +12,9 @@ import {
 /**
  * Historique d'endurance « Sans Guide » : le joueur repousse-t-il sa première
  * gaffe de plus en plus tard ? Trois blocs, AUCUNE donnée tabulaire : une
- * carte de statut, une chronologie narrative en liste, une grille de cartes
- * par ouverture. Empilé sur mobile, multi-colonnes à partir de `md`.
+ * carte de statut, une chronologie narrative en liste, un classement en
+ * cartes par ouverture (la plus fragile d'abord, voir `compareOpenings`).
+ * Empilé sur mobile, multi-colonnes à partir de `md`.
  *
  * Composant autonome, sans état ni hook ni accès base : il reçoit
  * `sessions` (dans n'importe quel ordre) et `now`, injecté pour que les
@@ -106,19 +108,42 @@ export function OpeningEnduranceHistory({
 
         {/* Comparateur d'ouvertures */}
         <section aria-labelledby="endurance-compare-title" className="flex flex-col gap-3 lg:col-span-2">
-          <h2 id="endurance-compare-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
-            Comparateur d&apos;ouvertures
-          </h2>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <div>
+            <h2 id="endurance-compare-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+              Classement de mes ouvertures
+            </h2>
+            <p className="mt-1 text-xs text-foreground-muted">
+              De la plus fragile à la plus robuste. Robustesse : part moyenne de la ligne jouée sans faute.
+            </p>
+          </div>
+          <ol className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
             {comparisons.map((row) => {
               const rowTone = TIER_TONE[row.tier];
               return (
                 <li key={row.openingId} className={`flex flex-col gap-2 rounded-lg border p-4 ${rowTone.card}`}>
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-foreground">{row.openingName}</p>
+                    <div className="flex min-w-0 items-baseline gap-2">
+                      <span className="font-mono text-sm font-bold text-foreground-muted">#{row.rank}</span>
+                      <Link href={`/ouvertures/${row.openingId}`} className="font-semibold text-foreground hover:underline">
+                        {row.openingName}
+                      </Link>
+                    </div>
                     <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${rowTone.badge}`}>
                       {row.verdict}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted"
+                      role="meter"
+                      aria-label={`Robustesse de ${row.openingName}`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={row.robustness}
+                    >
+                      <div className={`h-full rounded-full ${rowTone.dot}`} style={{ width: `${row.robustness}%` }} />
+                    </div>
+                    <span className={`font-mono text-sm font-semibold ${rowTone.text}`}>{row.robustness}/100</span>
                   </div>
                   <p className="text-sm text-foreground-muted">
                     {row.avgMistakeMove === null
@@ -131,11 +156,12 @@ export function OpeningEnduranceHistory({
                       {row.sessions} session{row.sessions > 1 ? "s" : ""}
                     </li>
                     <li>{row.avgAccuracy} % de précision</li>
+                    {row.provisional && <li>rang provisoire</li>}
                   </ul>
                 </li>
               );
             })}
-          </ul>
+          </ol>
         </section>
       </div>
     </div>

@@ -34,6 +34,7 @@ export function OpeningExplorer({
   variations,
   drillVariationKey,
   sideOverride,
+  startInSansGuide = false,
   practicedVariationKeys,
   deviations,
   variationAccuracies,
@@ -51,6 +52,8 @@ export function OpeningExplorer({
    * (`opening.side`), comportement historique inchangé.
    */
   sideOverride?: "white" | "black";
+  /** `?mode=sans-guide` (Zone Stats) — le drill démarre en Manche 2, voir `useOpeningDrill`. */
+  startInSansGuide?: boolean;
   /** Clés des variantes déjà pratiquées au moins une fois — sert le Test Final (Étape 3 du Mode Entraînement). */
   practicedVariationKeys: readonly string[];
   /** Écarts de répertoire récurrents détectés dans les parties importées — voir `server/queries/opening-mistakes.ts`. */
@@ -168,6 +171,7 @@ export function OpeningExplorer({
         autoStart={autoStartSelection}
         inReviewQueue={drillVariationKey != null}
         playerSide={sideOverride}
+        startInSansGuide={startInSansGuide}
         onExit={() => router.push("/ouvertures")}
       />
       <OpeningSparring

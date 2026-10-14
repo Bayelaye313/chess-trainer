@@ -167,7 +167,16 @@ export interface OpeningEnduranceComparison {
   tier: EnduranceTier;
   /** « Mur de briques », « Risque d'amnésie »... */
   verdict: string;
+  /** Score de robustesse 0-100, voir `sessionSurvival`. Clé du classement. */
+  robustness: number;
+  /** Rang dans le classement global, 1 = la plus fragile. */
+  rank: number;
+  /** Moins de `MIN_SESSIONS_FOR_RANKING` sessions : rang affiché comme provisoire. */
+  provisional: boolean;
 }
+
+/** Sous ce nombre de sessions, le rang d'une ouverture est signalé comme provisoire. */
+export const MIN_SESSIONS_FOR_RANKING = 3;
 
 const VERDICT: Record<EnduranceTier, string> = {
   fragile: "Risque d'amnésie",
@@ -176,12 +185,28 @@ const VERDICT: Record<EnduranceTier, string> = {
   intact: "Mur de briques",
 };
 
-/** Une carte par ouverture, la plus fragile d'abord (c'est là qu'il faut travailler). */
+/**
+ * Part de la ligne jouée sans faute dans une session, 0-1 : 1 pour une
+ * session propre, sinon plies propres / plies de la ligne. Relative à la
+ * longueur de la ligne, contrairement au palier (numéro de coup absolu) : une
+ * gaffe au coup 7 d'une ligne de 8 coups pèse moins qu'au coup 7 d'une ligne
+ * de 20.
+ */
+export function sessionSurvival(session: OpeningSessionHistory): number {
+  if (session.firstMistakePly === null) return 1;
+  return Math.min(Math.max(cleanPlyOf(session) / Math.max(session.lastPly, 1), 0), 1);
+}
+
+/**
+ * Classement global, une carte par ouverture, la plus fragile d'abord (c'est
+ * là qu'il faut travailler) : score de robustesse croissant, puis coup moyen
+ * de la gaffe, puis nom.
+ */
 export function compareOpenings(sessions: readonly OpeningSessionHistory[]): OpeningEnduranceComparison[] {
   const groups = new Map<string, OpeningSessionHistory[]>();
   for (const s of sessions) groups.set(s.openingId, [...(groups.get(s.openingId) ?? []), s]);
 
-  const rows = [...groups.values()].map((group): OpeningEnduranceComparison => {
+  const rows = [...groups.values()].map((group): Omit<OpeningEnduranceComparison, "rank"> => {
     const mistakes = group.flatMap((s) => (s.firstMistakePly === null ? [] : [s.firstMistakePly]));
     const avgMistakePly = mistakes.length === 0 ? null : mistakes.reduce((a, b) => a + b, 0) / mistakes.length;
     const tier = readEndurance(avgMistakePly === null ? null : Math.round(avgMistakePly)).tier;
@@ -194,10 +219,17 @@ export function compareOpenings(sessions: readonly OpeningSessionHistory[]): Ope
       avgAccuracy: Math.round(group.reduce((sum, s) => sum + s.accuracy, 0) / group.length),
       tier,
       verdict: VERDICT[tier],
+      robustness: Math.round((group.reduce((sum, s) => sum + sessionSurvival(s), 0) / group.length) * 100),
+      provisional: group.length < MIN_SESSIONS_FOR_RANKING,
     };
   });
-  const order = (r: OpeningEnduranceComparison) => r.avgMistakeMove ?? Number.POSITIVE_INFINITY;
-  return rows.sort((a, b) => order(a) - order(b) || a.openingName.localeCompare(b.openingName));
+  const mistakeOrder = (r: { avgMistakeMove: number | null }) => r.avgMistakeMove ?? Number.POSITIVE_INFINITY;
+  return rows
+    .sort(
+      (a, b) =>
+        a.robustness - b.robustness || mistakeOrder(a) - mistakeOrder(b) || a.openingName.localeCompare(b.openingName),
+    )
+    .map((row, index) => ({ ...row, rank: index + 1 }));
 }
 
 function capitalize(text: string): string {

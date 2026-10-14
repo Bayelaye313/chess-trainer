@@ -4,6 +4,7 @@ import {
   buildTimeline,
   cleanPlyOf,
   compareOpenings,
+  sessionSurvival,
   relativeDay,
   type OpeningSessionHistory,
 } from "./opening-endurance-history";
@@ -72,6 +73,23 @@ describe("opening-endurance-history", () => {
       ["Caro-Kann", "Mur de briques", 14],
     ]);
     expect(rows[1].bestCleanMove).toBe(16);
+    // Est-Indienne : 8 plies propres sur 40. Caro-Kann : (26/40 + 1) / 2.
+    expect(rows.map((r) => [r.rank, r.robustness, r.provisional])).toEqual([
+      [1, 20, true],
+      [2, 83, true],
+    ]);
+  });
+
+  it("classement : la robustesse relative à la ligne prime sur le coup absolu", () => {
+    const rows = compareOpenings([
+      // Gaffe au coup 7 d'une ligne de 8 coups : presque toute la ligne tenue.
+      session("a", 1, { openingId: "short", openingName: "Courte", firstMistakePly: 13, lastPly: 16 }),
+      // Gaffe au coup 10 d'une ligne de 20 coups : moitié de la ligne.
+      session("b", 1, { openingId: "long", openingName: "Longue", firstMistakePly: 19, lastPly: 40 }),
+    ]);
+    expect(rows.map((r) => r.openingName)).toEqual(["Longue", "Courte"]);
+    expect(sessionSurvival(session("c", 0, { firstMistakePly: null }))).toBe(1);
+    expect(sessionSurvival(session("d", 0, { firstMistakePly: 1 }))).toBe(0);
   });
 
   it("dates relatives", () => {

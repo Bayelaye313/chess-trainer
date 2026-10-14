@@ -11,8 +11,7 @@
  * seule cette pastille a réellement changé.
  */
 import { memo } from "react";
-import { winPercent } from "@/core/analysis/win-percent";
-import { formatEvaluation } from "@/lib/labels";
+import { evalBarFill, formatEvalBarLabel } from "./eval-bar-scale";
 
 export interface EvalScore {
   /** Centipions, POV Blancs. `null` quand un mat est annoncé. */
@@ -42,11 +41,14 @@ export const EvaluationBar = memo(function EvaluationBar({
 }) {
   // `score` null = rien de fiable à montrer (chargement en cours en mode
   // Exploration, ou coup dont l'analyse a échoué) : barre neutre plutôt
-  // qu'une valeur inventée. `winPercent` fait déjà tout le lissage — jamais
-  // d'échelle linéaire brute de centipions (voir sa propre docstring).
-  const whitePercent = checkmatedBy ? (checkmatedBy === "w" ? 100 : 0) : score ? winPercent(score.cp, score.mate) : 50;
+  // qu'une valeur inventée. `evalBarFill` compresse l'échelle (voir
+  // eval-bar-scale.ts) — jamais d'échelle linéaire brute de centipions.
+  const whitePercent = checkmatedBy ? (checkmatedBy === "w" ? 100 : 0) : score ? evalBarFill(score.cp, score.mate) : 50;
   const whiteLeads = whitePercent >= 50;
-  const label = checkmatedBy ? "#" : score ? formatEvaluation(score.cp, score.mate) : "—";
+  const label = checkmatedBy ? "#" : score ? formatEvalBarLabel(score.cp, score.mate) : "—";
+  // Mat annoncé ou déjà sur l'échiquier : liseré or, pour qu'un « M3 » ne se
+  // lise pas comme un simple +9.
+  const mateShown = checkmatedBy !== null || (score !== null && score.mate !== null);
 
   return (
     <div
@@ -54,10 +56,11 @@ export const EvaluationBar = memo(function EvaluationBar({
       style={{ background: "var(--eval-black-fill)" }}
       role="img"
       aria-label={`Évaluation de la position : ${label}`}
+      data-mate={mateShown || undefined}
     >
       {/* Ancrée en haut : sa hauteur suit l'avantage Blancs, jamais l'inverse. */}
       <div
-        className="absolute inset-x-0 top-0 transition-[height] duration-300 ease-in-out"
+        className="absolute inset-x-0 top-0 transition-[height] duration-300 ease-in-out motion-reduce:transition-none"
         style={{ height: `${whitePercent}%`, background: "var(--eval-white-fill)" }}
       />
       {/* Le score se pose dans le territoire du camp qui mène — jamais sur la
@@ -72,6 +75,14 @@ export const EvaluationBar = memo(function EvaluationBar({
       >
         {label}
       </span>
+      {/* Calque au-dessus du remplissage : une ombre interne posée sur la
+          barre elle-même serait masquée par la part blanche. */}
+      {mateShown && (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-sm"
+          style={{ boxShadow: "inset 0 0 0 2px var(--eval-mate)" }}
+        />
+      )}
     </div>
   );
 });

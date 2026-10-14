@@ -11,6 +11,7 @@ import { LA_TOUR_A_LA_7E_RANGEE } from "./course-trees/pm-la-tour-a-la-7e-rangee
 import { LA_COLONNE_SEMI_OUVERTE } from "./course-trees/pm-la-colonne-semi-ouverte";
 import { PROPHYLAXIE } from "./course-trees/pm-prophylaxie-anticiper-le-plan-adverse";
 import { L_AVANTAGE_D_ESPACE } from "./course-trees/pm-l-avantage-d-espace";
+import { LE_COMPLEXE_DE_CASES_FAIBLES } from "./course-trees/pm-le-complexe-de-cases-faibles";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -242,6 +243,7 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-la-tour-a-la-7e-rangee": LA_TOUR_A_LA_7E_RANGEE,
   "pm-prophylaxie-anticiper-le-plan-adverse": PROPHYLAXIE,
   "pm-l-avantage-d-espace": L_AVANTAGE_D_ESPACE,
+  "pm-le-complexe-de-cases-faibles": LE_COMPLEXE_DE_CASES_FAIBLES,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },

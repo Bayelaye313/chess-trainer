@@ -1,15 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildDiagnostic, plyToMoveNumber, readEndurance, resolveTrigger, type UserOpeningStats } from "./opening-stats";
+import { plyToMoveNumber, readEndurance, resolveTrigger } from "./opening-stats";
 
-const base: UserOpeningStats = {
-  openingId: "slav-defense",
-  openingName: "Défense Slave",
-  playerSide: "b",
-  gamesPlayed: 10,
-  winRate: 60,
-  accuracy: 82,
-  avgMistakePly: 24,
-};
+const base = { openingId: "slav-defense", playerSide: "black" as const, hasCourse: true };
 
 describe("opening-stats", () => {
   it("convertit le ply en numéro de coup", () => {
@@ -26,21 +18,28 @@ describe("opening-stats", () => {
     expect(readEndurance(null).tier).toBe("intact");
   });
 
-  it("propose la mémorisation quand la gaffe arrive tôt, côté du joueur", () => {
-    const trigger = resolveTrigger({ ...base, avgMistakePly: 8 }, true);
-    expect(trigger.kind).toBe("memorisation");
-    expect(trigger.href).toBe("/ouvertures/slav-defense?drill=main_line&side=black");
+  it("gaffe avant le coup 6 : verrouiller les réflexes en Sans Guide, côté du joueur", () => {
+    const trigger = resolveTrigger({ ...base, tier: "fragile" });
+    expect(trigger.kind).toBe("reflexes");
+    expect(trigger.label).toBe("Verrouiller les réflexes (Mode Sans Guide - Début)");
+    expect(trigger.href).toBe("/ouvertures/slav-defense?drill=main_line&side=black&mode=sans-guide");
   });
 
-  it("propose le simulateur de survie seulement si un cours existe", () => {
-    expect(resolveTrigger({ ...base, avgMistakePly: 30 }, true)).toMatchObject({ kind: "survie", href: "/ouvertures/slav-defense/cours" });
-    const fallback = resolveTrigger({ ...base, avgMistakePly: 30 }, false);
+  it("gaffe entre les coups 6 et 12 : drill normal, Manche 1 comprise", () => {
+    const trigger = resolveTrigger({ ...base, tier: "moyen" });
+    expect(trigger.kind).toBe("consolidation");
+    expect(trigger.href).not.toContain("mode=");
+  });
+
+  it("gaffe après le coup 12 : simulateur de survie seulement si un cours existe", () => {
+    expect(resolveTrigger({ ...base, tier: "solide" })).toMatchObject({
+      kind: "survie",
+      label: "Lancer le simulateur de survie (Milieu de jeu)",
+      href: "/ouvertures/slav-defense/cours",
+    });
+    expect(resolveTrigger({ ...base, tier: "intact" }).href).toBe("/ouvertures/slav-defense/cours");
+    const fallback = resolveTrigger({ ...base, tier: "solide", hasCourse: false });
     expect(fallback.href).toContain("?drill=");
     expect(fallback.label).not.toContain("simulateur");
-  });
-
-  it("n'affirme rien sous l'échantillon minimal", () => {
-    expect(buildDiagnostic({ ...base, gamesPlayed: 2 })).toContain("Seulement 2 parties");
-    expect(buildDiagnostic({ ...base, avgMistakePly: 23 })).toContain("coup 12");
   });
 });

@@ -108,6 +108,7 @@ export function OpeningDrill({
   inReviewQueue = false,
   hintBehavior,
   playerSide,
+  startInSansGuide = false,
   onExit,
 }: {
   opening: OpeningLine;
@@ -125,9 +126,11 @@ export function OpeningDrill({
   hintBehavior?: HintArrowBehavior;
   /** Camp forcé par `?side=` (Rapport → drill, Zone 4) — voir `useOpeningDrill`. Omis : `opening.side`. */
   playerSide?: "white" | "black";
+  /** `?mode=sans-guide` — ligne principale/variante démarrée en Manche 2, voir `useOpeningDrill`. */
+  startInSansGuide?: boolean;
   onExit: () => void;
 }) {
-  const drill = useOpeningDrill({ opening, plies, hintBehavior, playerSide });
+  const drill = useOpeningDrill({ opening, plies, hintBehavior, playerSide, startInSansGuide });
   const router = useRouter();
 
   // Bouton « Show hints for this move! » — révèle le texte d'aide de
@@ -212,16 +215,20 @@ export function OpeningDrill({
       autoStart.kind === "trap-poison"
     )
       return;
-    const key =
+    const selectionKey =
       autoStart.kind === "main-line"
         ? variationKeyFor({ kind: "main-line" })
         : autoStart.kind === "variation"
           ? variationKeyFor({ kind: "variation", eco: autoStart.variation.eco, name: autoStart.variation.name })
           : `mistake:${autoStart.round.startFen}:${autoStart.round.script.join(",")}`;
+    // Le mode fait partie de la clé : passer de `?drill=main_line` à
+    // `?drill=main_line&mode=sans-guide` (bouton de la Zone Stats, même page)
+    // relance bien la ligne en Manche 2.
+    const key = `${selectionKey}|${startInSansGuide ? "sans-guide" : "guide"}`;
     if (autoStartedKeyRef.current === key) return;
     autoStartedKeyRef.current = key;
     drill.start(autoStart);
-  }, [autoStart, drill]);
+  }, [autoStart, drill, startInSansGuide]);
 
   // Nombre d'éléments restants dans la file (sessionStorage, voir
   // `review-queue.ts`) — lu directement au rendu, jamais dans un effet : le

@@ -57,6 +57,26 @@ for i in 0 1 2; do INPUT=out/waves-check-in.json SHARD=$i/3 node --import tsx sc
 node scripts/academy-mining/waves.mjs build out out/c data/import/academy/lot5-positionnel-verifie.override.json
 ```
 
+### Lot 6 : chapitres sans détecteur (2026-10-13)
+
+Les chapitres pm 12-30 et les 25 modules Jesper Hall ont reçu chacun un détecteur
+(bloc « Lot 6 » de `mine-lichess-puzzles.mjs`). Deux pièges :
+
+- un puzzle Lichess commence juste APRÈS le coup adverse, souvent une prise pas
+  encore reprise : le bilan matériel se lit avec `settled(x)`, pas sur `x.start` ;
+- Lichess ne tire presque jamais un puzzle d'une position déjà gagnée : « transformer »
+  et « simplifier » se lisent sur la ligne (liquidation, échanges), pas sur l'avance.
+
+Au-delà de `CAP` candidats par thème, seules les parties entre titrés entrent encore.
+`waves.mjs select` accepte plusieurs fichiers de candidats (`a.json,b.json`) et ne
+donne jamais le même puzzle à deux chapitres (passer les thèmes rares en premier).
+Si un chapitre n'atteint pas 15 uniques, `build` complète avec des puzzles « limite »
+(décision utilisateur du 2026-10-13). `pm-la-forteresse-defensive` est resté hors lot :
+Lichess n'a presque aucune vraie forteresse (les « equality » sont des fourchettes).
+
+Sauvegarder la base avec l'API SQLite (`db.backup(...)`), pas avec `cp` : la base est
+en mode WAL et une copie brute peut manquer les dernières écritures.
+
 ### Coups équivalents acceptés par le solveur
 
 Les puzzles qui restent ambigus (en attendant leur remplacement) acceptent les coups

@@ -251,6 +251,7 @@ export function useOpeningDrill({
   plies,
   hintBehavior = "until_played_twice",
   playerSide,
+  startInSansGuide = false,
 }: {
   opening: OpeningLine;
   /** Ligne de référence annotée — sert de script au mode « Ligne principale ». */
@@ -267,6 +268,12 @@ export function useOpeningDrill({
    * camp déclaré (voir plus bas).
    */
   playerSide?: "white" | "black";
+  /**
+   * `?mode=sans-guide` (bouton « Verrouiller les réflexes » de la Zone Stats) :
+   * la ligne principale/variante démarre directement en Manche 2, indice
+   * désactivé dès le premier coup. Sans effet sur les autres sélections.
+   */
+  startInSansGuide?: boolean;
 }) {
   const [status, setStatus] = useState<DrillStatus>("select");
   const [selection, setSelection] = useState<DrillSelection | null>(null);
@@ -949,8 +956,9 @@ export function useOpeningDrill({
     setTrapPunishment(null);
     setRoundTransitionNotice(null);
     // Chaque nouveau départ (y compris "Recommencer") repart de la Manche 1 —
-    // indices ré-autorisés, voir `LearningRound`/`completeRound`.
-    setLearningRound(1);
+    // indices ré-autorisés, voir `LearningRound`/`completeRound` — sauf en
+    // mode Sans Guide, qui saute la Manche 1 des lignes à apprendre.
+    setLearningRound(startInSansGuide && (sel.kind === "main-line" || sel.kind === "variation") ? 2 : 1);
     setDiverged(false);
     setFen(boardRef.current.fen());
     // "trap-poison" sans lead-in (cas défensif, ne devrait jamais survenir en
@@ -958,7 +966,7 @@ export function useOpeningDrill({
     // termine directement plutôt que de rendre la main à un joueur qui n'a
     // structurellement aucun coup interactif à jouer dans ce mode.
     setStatus(hasLeadIn ? "autoplaying" : sel.kind === "trap-poison" ? "finished" : "playing");
-  }, []);
+  }, [startInSansGuide]);
 
   const stop = useCallback(() => {
     setStatus("select");

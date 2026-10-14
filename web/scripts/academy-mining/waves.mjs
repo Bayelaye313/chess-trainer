@@ -30,17 +30,21 @@ const ratingOf = (ref) => Number(ref?.match(/Elo (\d+)/)?.[1] ?? ref?.match(/\((
 if (cmd === "select") {
   const [candPath, auditDir, outDir] = args;
   const themes = process.env.THEMES.split(",");
-  const { out } = JSON.parse(readFileSync(candPath, "utf8"));
+  // Plusieurs fichiers du mineur possibles : « a.json,b.json ».
+  const out = Object.assign({}, ...candPath.split(",").map((f) => JSON.parse(readFileSync(f, "utf8")).out));
   const cls = new Map(JSON.parse(readFileSync(join(auditDir, "classified.json"), "utf8")).map((r) => [r.id, r.cls]));
   const used = new Set(db.prepare("select source_ref from curriculum_puzzles where source_ref like 'Lichess #%'").all().map((r) => r.source_ref.match(/#(\w+)/)[1]));
-  const sel = {}, checkIn = [], report = [];
+  const sel = {}, checkIn = [], report = [], taken = new Set();
   for (const theme of themes) {
     const rows = db.prepare("select id, fen, solution_san, source_ref from curriculum_puzzles where theme_id = ? order by order_index").all(theme);
-    const kept = rows.filter((r) => cls.get(r.id) === "unique").map((r) => ({ fen: r.fen, moves: JSON.parse(r.solution_san), sourceRef: r.source_ref, rating: ratingOf(r.source_ref) }));
+    const toEntry = (r) => ({ fen: r.fen, moves: JSON.parse(r.solution_san), sourceRef: r.source_ref, rating: ratingOf(r.source_ref) });
+    const kept = rows.filter((r) => cls.get(r.id) === "unique").map(toEntry);
+    // Puzzles « limite » (5 à 10 points d'écart) : réserve si le chapitre n'atteint pas TARGET en uniques.
+    const keptLimite = rows.filter((r) => cls.get(r.id) === "limite").map(toEntry);
     const need = Math.max(0, TARGET - kept.length);
     const seenG = new Set(), seenF = new Set();
     const pool = (out[theme] ?? [])
-      .filter((p) => !used.has(p.id) && p.popularity >= 80 && p.nbPlays >= 150)
+      .filter((p) => !used.has(p.id) && !taken.has(p.id) && p.popularity >= 80 && p.nbPlays >= 150)
       .sort((a, b) => Number(Boolean(b.info?.preferred)) - Number(Boolean(a.info?.preferred)) || b.popularity - a.popularity)
       .filter((p) => {
         const g = gameKey(p.gameUrl), f = p.startFen.split(" ").slice(0, 4).join(" ");
@@ -53,7 +57,8 @@ if (cmd === "select") {
     const masters = pool.filter((p) => p.info?.preferred);
     const picked = [...spread(masters, Math.min(want, masters.length))];
     if (picked.length < want) picked.push(...spread(pool.filter((p) => !p.info?.preferred), want - picked.length));
-    sel[theme] = { kept, need, candidates: picked };
+    for (const p of picked) taken.add(p.id); // un puzzle ne sert qu'à un chapitre
+    sel[theme] = { kept, keptLimite, need, candidates: picked };
     for (const p of picked) checkIn.push({ key: `${theme}/${p.id}`, theme, fen: p.startFen, solutionSan: p.solutionSan });
     report.push({ theme, inDb: rows.length, keptUnique: kept.length, need, pool: pool.length, masters: masters.length, picked: picked.length });
   }
@@ -65,8 +70,9 @@ if (cmd === "select") {
   const sel = JSON.parse(readFileSync(join(outDir, "waves-sel.json"), "utf8"));
   const verdict = new Map(readRows(checkDir).map((r) => [r.id, classifyRow(r)]));
   const entries = [], report = [];
-  for (const [theme, { kept, need, candidates }] of Object.entries(sel)) {
+  for (const [theme, { kept, keptLimite = [], need, candidates }] of Object.entries(sel)) {
     const ok = candidates.filter((p) => verdict.get(`${theme}/${p.id}`) === "unique");
+    const okLimite = candidates.filter((p) => verdict.get(`${theme}/${p.id}`) === "limite");
     // Garder la répartition d'Elo : on échantillonne parmi les candidats validés.
     const s = ok.sort((a, b) => a.rating - b.rating);
     const chosen = need >= s.length ? s : Array.from({ length: need }, (_, i) => s[Math.floor(((i + 0.5) * s.length) / need)]);
@@ -74,9 +80,13 @@ if (cmd === "select") {
       fen: p.startFen, moves: p.solutionSan, rating: p.rating,
       sourceRef: `Lichess #${p.id} · Elo ${p.rating}${p.info?.preferred ? " · partie entre joueurs titrés" : ""} · ${p.gameUrl}`,
     }));
-    const wave = [...kept, ...fresh].sort((a, b) => a.rating - b.rating);
+    // Décision utilisateur (2026-10-13) : si les uniques ne suffisent pas, compléter
+    // avec des puzzles « limite » — candidats Lichess d'abord, puis ceux déjà en base.
+    const short = Math.max(0, TARGET - kept.length - fresh.length);
+    const limite = [...okLimite.map((p) => ({ fen: p.startFen, moves: p.solutionSan, rating: p.rating, sourceRef: `Lichess #${p.id} · Elo ${p.rating}${p.info?.preferred ? " · partie entre joueurs titrés" : ""} · ${p.gameUrl}` })), ...keptLimite].slice(0, short);
+    const wave = [...kept, ...fresh, ...limite].sort((a, b) => a.rating - b.rating);
     for (const e of wave) entries.push({ themeId: theme, fen: e.fen, moves: e.moves, sourceRef: e.sourceRef, rating: e.rating, sacrifice: false });
-    report.push({ theme, kept: kept.length, need, checked: candidates.length, unique: ok.length, added: fresh.length, final: wave.length });
+    report.push({ theme, kept: kept.length, need, checked: candidates.length, unique: ok.length, added: fresh.length, limite: limite.length, final: wave.length });
   }
   writeFileSync(overridePath, JSON.stringify(entries, null, 1) + "\n");
   console.table(report);
