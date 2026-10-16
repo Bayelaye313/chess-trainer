@@ -80,8 +80,6 @@ const CURATED_FAMILY_HUB: Readonly<Record<string, string>> = {
   "ruy-lopez": "Ruy Lopez",
   "italian-game": "Italian Game",
   "scotch-game": "Scotch Game",
-  "vienna-gambit": "Vienna Game",
-  "kings-gambit": "King's Gambit",
   "sicilian-najdorf": "Sicilian Defense",
   "caro-kann": "Caro-Kann Defense",
   "french-defense": "French Defense",
@@ -96,6 +94,49 @@ const CURATED_FAMILY_HUB: Readonly<Record<string, string>> = {
   "english-opening": "English Opening",
   "grunfeld": "Grünfeld Defense",
   "dutch-defense": "Dutch Defense",
+};
+
+/**
+ * Purge du catalogue (2026-10-16) : les SEULES familles lichess-org affichées
+ * comme cartes — liste explicite, plus aucune carte générée pour les ~110
+ * autres familles. Leurs lignes RESTENT en base (`imported_opening_lines`) :
+ * `getImportedChildren` continue de les exploiter pour les suites théoriques
+ * de l'explorateur (transpositions comprises), et les familles sœurs ou
+ * rattachées (`familyBelongsToHub`) restent fusionnées dans la carte qui les
+ * absorbe. Un id `lichess-*` hors de cette liste n'a plus de page
+ * (`getImportedFamilyDetail` renvoie `null`).
+ */
+const DISPLAYED_LICHESS_FAMILIES: ReadonlySet<string> = new Set([
+  "Catalan Opening",
+  "Trompowsky Attack",
+  "Petrov's Defense",
+  "Modern Defense",
+  "Alekhine Defense",
+  "Tarrasch Defense",
+  "Semi-Slav Defense",
+  "Bogo-Indian Defense",
+  "Benoni Defense",
+  "Benko Gambit",
+]);
+
+/**
+ * Familles lichess-org rattachées comme lignes internes d'une AUTRE famille
+ * dont le nom n'est pas un préfixe du leur (sinon `familyBelongsToHub` les
+ * capte déjà, ex. "Benko Gambit Accepted"/"Declined" sous "Benko Gambit").
+ */
+const ABSORBED_FAMILIES: Readonly<Record<string, string>> = {
+  "Pterodactyl Defense": "Modern Defense",
+  "Neo-Grünfeld Defense": "Grünfeld Defense",
+};
+
+/**
+ * Position de référence imposée quand celle que choisit `familyReferenceMoves`
+ * ne correspond pas au répertoire visé : "Modern Defense" porte plusieurs
+ * lignes nues, dont une par 1.d4 g6 2.c4 qui passait en premier — la carte
+ * vise la Moderne contre 1.e4 (ligne nue lichess-org 1.e4 g6 2.d4 Bg7).
+ */
+const FAMILY_REFERENCE_OVERRIDE: Readonly<Record<string, readonly string[]>> = {
+  "Modern Defense": ["e4", "g6", "d4", "Bg7"],
 };
 
 interface RawLine {
@@ -313,6 +354,7 @@ function loadFamilyGroups(): Map<string, FamilyGroup> {
  */
 function familyBelongsToHub(familyName: string, hubName: string): boolean {
   if (familyName === hubName) return true;
+  if (ABSORBED_FAMILIES[familyName] === hubName) return true;
   if (!familyName.startsWith(hubName)) return false;
   const boundary = familyName.charAt(hubName.length);
   return boundary !== "" && !/[a-z0-9]/i.test(boundary);
@@ -355,8 +397,10 @@ export function listOpeningFamilies(): OpeningFamilySummary[] {
   // dynamique — sinon son contenu resterait dupliqué (déjà dans le chapitre
   // curaté ET dans une carte à part, sans nom français ni contenu pédagogique).
   const hubNames = Object.values(CURATED_FAMILY_HUB);
+  const groups = Array.from(loadFamilyGroups().values());
   const summaries: OpeningFamilySummary[] = [];
-  for (const group of loadFamilyGroups().values()) {
+  for (const group of groups) {
+    if (!DISPLAYED_LICHESS_FAMILIES.has(group.name)) continue;
     if (hubNames.some((hub) => familyBelongsToHub(group.name, hub))) continue;
     // BUG CORRIGÉ (Zukertort et consorts, voir le docstring de
     // `familyReferenceMoves`) : `rootMoves` DOIT être la position de

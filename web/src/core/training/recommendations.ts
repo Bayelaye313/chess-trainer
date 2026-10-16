@@ -28,6 +28,35 @@ export function deduplicateCandidates(candidates: readonly RecommendationCandida
   );
 }
 
+/**
+ * Regroupement d'AFFICHAGE : deux puzzles distincts mais à preuve identique
+ * (même motif, même deck, même retard) donnaient deux cartes strictement
+ * identiques. Comme toute carte puzzle lance la même séance continue, on
+ * n'en garde qu'une, avec le nombre de puzzles qu'elle couvre. Les autres
+ * types restent une carte par cible.
+ */
+export function groupRecommendationCards<T extends { entityType: TrainingRecommendationType; reasonCode: string }>(
+  items: readonly T[],
+): Array<{ item: T; count: number }> {
+  const groups: Array<{ item: T; count: number }> = [];
+  const byReason = new Map<string, { item: T; count: number }>();
+  for (const item of items) {
+    if (item.entityType !== "puzzle") {
+      groups.push({ item, count: 1 });
+      continue;
+    }
+    const existing = byReason.get(item.reasonCode);
+    if (existing) {
+      existing.count += 1;
+      continue;
+    }
+    const group = { item, count: 1 };
+    byReason.set(item.reasonCode, group);
+    groups.push(group);
+  }
+  return groups;
+}
+
 export function recommendationId(candidate: RecommendationCandidate): string {
   return `${candidate.entityType}:${candidate.entityId}:${candidate.reasonCode}`;
 }

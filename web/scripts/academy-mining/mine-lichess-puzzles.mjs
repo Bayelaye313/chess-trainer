@@ -963,6 +963,13 @@ D["jh-module-24-le-zugzwang-positionnel"] = (x, t) => (/zugzwang/.test(t) && (de
 /** Synthèse : partie entre titrés, milieu de partie, 1er coup calme, gain sans mat. */
 D["jh-module-25-synthese-parties-commentees"] = (x, t) => (/masterVsMaster|superGM/.test(t) && isMiddlegame(t) && gain(t) && quiet(x.mvs[0]) ? P(t) : null);
 
+// ── Lot 7 (2026-10-16) : mat du triangle ─────────────────────────────────────
+// Le tag Lichess ne garantit pas la figure : le mat final doit être reconnu
+// « triangle » par `core/chess/mate-patterns.ts` (lancer avec `node --import tsx`).
+let describeMatePatterns = null;
+try { ({ describeMatePatterns } = await import("../../src/core/chess/mate-patterns.ts")); } catch {}
+if (describeMatePatterns) D["cm-mat-du-triangle"] = (x, t) => (x.mate && describeMatePatterns(x.final.fen()).includes("triangle") ? P(t) : null);
+
 // Filtre optionnel : ONLY=th1,th2  MINPOP / MINPLAYS (défaut 75 / 100)
 const ONLY = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 if (ONLY) for (const k of Object.keys(D)) if (!ONLY.has(k)) delete D[k];

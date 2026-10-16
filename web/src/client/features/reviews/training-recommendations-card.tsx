@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { groupRecommendationCards } from "@/core/training/recommendations";
 import type { TrainingPreferences } from "@/core/training/preferences";
 import type { TrainingRecommendationDto } from "@/server/queries/training";
 import type { DailySessionState } from "@/server/queries/daily-plan";
@@ -48,16 +50,27 @@ function recommendationHref(recommendation: TrainingRecommendationDto): string {
  * un score moteur — l'info-bulle le dit explicitement (règle CLAUDE.md :
  * jamais un statut sans libellé expliqué).
  */
-function RecommendationCardBody({ recommendation }: { recommendation: TrainingRecommendationDto }) {
+function RecommendationCardBody({
+  recommendation,
+  count,
+}: {
+  recommendation: TrainingRecommendationDto;
+  count: number;
+}) {
   const proof = formatTrainingProof(recommendation);
   return (
     <>
-      <span className="block text-sm font-medium text-foreground">
-        {formatTrainingHeadline(recommendation.reasonCode)}
+      <span className="flex items-start justify-between gap-2 text-sm font-medium text-foreground">
+        <span>{formatTrainingHeadline(recommendation.reasonCode)}</span>
+        {count > 1 && (
+          <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 text-[11px] text-foreground-muted">
+            ×{count}
+          </span>
+        )}
       </span>
       {proof !== null && <span className="mt-1 block text-xs text-foreground-muted">{proof}</span>}
       <span
-        className="mt-1 block text-xs text-foreground-muted"
+        className="mt-auto block pt-1 text-xs text-foreground-muted"
         title="Priorité locale : échéance, fréquence et ampleur de tes propres erreurs — pas un score moteur."
       >
         Impact {Math.round(recommendation.priority)}
@@ -75,10 +88,22 @@ export function TrainingRecommendationsCard({
   preferences: TrainingPreferences;
   sessionState: DailySessionState | null;
 }) {
-  const [puzzleSessionActive, setPuzzleSessionActive] = useState(false);
+  const router = useRouter();
+  /** `null` : grille d'actions ; sinon l'id du puzzle de la carte cliquée. */
+  const [puzzleSession, setPuzzleSession] = useState<string | null>(null);
+  const cards = groupRecommendationCards(recommendations);
 
-  if (puzzleSessionActive) {
-    return <RecommendedPuzzleSession onExit={() => setPuzzleSessionActive(false)} />;
+  if (puzzleSession !== null) {
+    return (
+      <RecommendedPuzzleSession
+        initialPuzzleId={puzzleSession}
+        onExit={() => {
+          setPuzzleSession(null);
+          // Cartes fermées + complétion du Plan du jour : relues côté serveur.
+          router.refresh();
+        }}
+      />
+    );
   }
 
   return (
@@ -100,24 +125,26 @@ export function TrainingRecommendationsCard({
           Rien de dû pour ces objectifs. Joue une partie, importe un historique, ou élargis le plan ci-dessous.
         </p>
       ) : (
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          {recommendations.map((recommendation) =>
+        // auto-fill : 1 à 4 cartes remplissent toujours la ligne, sans carte
+        // orpheline sur une seconde rangée.
+        <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-2">
+          {cards.map(({ item: recommendation, count }) =>
             recommendation.entityType === "puzzle" ? (
               <button
                 key={recommendation.id}
                 type="button"
-                onClick={() => setPuzzleSessionActive(true)}
-                className="rounded-md border border-border px-3 py-3 text-left transition-colors hover:bg-surface-muted"
+                onClick={() => setPuzzleSession(recommendation.entityId)}
+                className="flex flex-col rounded-md border border-border px-3 py-3 text-left transition-colors hover:bg-surface-muted"
               >
-                <RecommendationCardBody recommendation={recommendation} />
+                <RecommendationCardBody recommendation={recommendation} count={count} />
               </button>
             ) : (
               <Link
                 key={recommendation.id}
                 href={recommendationHref(recommendation)}
-                className="rounded-md border border-border px-3 py-3 transition-colors hover:bg-surface-muted"
+                className="flex flex-col rounded-md border border-border px-3 py-3 transition-colors hover:bg-surface-muted"
               >
-                <RecommendationCardBody recommendation={recommendation} />
+                <RecommendationCardBody recommendation={recommendation} count={count} />
               </Link>
             ),
           )}

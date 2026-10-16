@@ -21,7 +21,7 @@
  */
 import { Chess, type PieceSymbol } from "chess.js";
 import { newlyHangingPieces } from "../chess/attacks";
-import { exposesKingToCheck } from "../chess/coach-hints";
+import { newKingThreat, type KingThreat } from "../chess/coach-hints";
 import { parsePosition, type ParsedPosition } from "../chess/structures";
 import type { Motif } from "../chess/types";
 import type { AnalysedPly, TimelinePly } from "./timeline";
@@ -110,6 +110,46 @@ function missedTacticMessage(a: AnalysedPly, ply: number): CoachMessage | null {
   const motif = a.motifs[0];
   const bestHint = a.bestSan ? ` ${a.bestSan} l'exploitait.` : "";
   return { tag: "missed_tactic", motif, text: `Tu as raté une opportunité de ${MOTIF_NAME[motif]} au coup ${ply}.${bestHint}` };
+}
+
+/** Ce que le coup joué a fait pour rendre l'échec possible, en une phrase — vide si rien de lisible. */
+function causeSentence(threat: KingThreat, san: string): string {
+  const cause = threat.cause;
+  if (!cause) return "";
+  if (cause.kind === "king_move") return ` Avec ${san}, ton roi s'est placé sur une case où il devient attaquable.`;
+  if (cause.kind === "moved_piece") return ` C'est la pièce que tu viens de jouer en ${cause.square} qui tombe.`;
+  if (cause.kind === "pawn_shield") {
+    return ` En avançant ton pion ${cause.square}, tu as affaibli l'abri de ton roi.`;
+  }
+  return ` En quittant ${cause.square}, ta pièce a ouvert une ligne vers ton roi.`;
+}
+
+/**
+ * Sécurité du roi, au cas par cas : l'échec EXACT que le coup vient d'offrir
+ * et ce qu'il coûte (mat, matériel, fourchette) — jamais la phrase générique
+ * « ton roi est exposé », qui tombait sur presque toutes les positions où
+ * l'adversaire avait un échec légal, même sans conséquence.
+ */
+function kingSafetyMessage(entry: TimelinePly): CoachMessage | null {
+  const after = tryReplay(entry.fenBefore, entry.uci);
+  if (!after) return null;
+  const threat = newKingThreat(new Chess(entry.fenBefore), after, entry.side);
+  if (!threat) return null;
+  const cause = causeSentence(threat, entry.san);
+  if (threat.kind === "mate") {
+    return { tag: "king_safety", text: `Après ${entry.san}, l'adversaire a un mat immédiat : ${threat.checkSan}.${cause}` };
+  }
+  const target = threat.target!;
+  if (threat.kind === "wins_material") {
+    return {
+      tag: "king_safety",
+      text: `Après ${entry.san}, l'adversaire joue ${threat.checkSan} : il prend ${PIECE_NAME[target.piece]} en ${target.square} en donnant échec.${cause}`,
+    };
+  }
+  return {
+    tag: "king_safety",
+    text: `Après ${entry.san}, l'adversaire joue ${threat.checkSan} : échec au roi ET attaque sur ${PIECE_NAME[target.piece]} en ${target.square} — tu dois parer l'échec et perds la pièce.${cause}`,
+  };
 }
 
 function isFileOpenAt(position: ParsedPosition, file: number): boolean {
@@ -295,10 +335,8 @@ export function buildCoachMessage(entry: TimelinePly, deviation: DeviationHint |
     const hanging = hangingPieceMessage(entry);
     if (hanging) return hanging;
 
-    const after = tryReplay(entry.fenBefore, entry.uci);
-    if (after && exposesKingToCheck(after)) {
-      return { tag: "king_safety", text: "Ce coup expose ton roi à une attaque immédiate — la sécurité du roi passait avant le reste ici." };
-    }
+    const kingSafety = kingSafetyMessage(entry);
+    if (kingSafety) return kingSafety;
 
     const tactic = missedTacticMessage(a, entry.ply);
     if (tactic) return tactic;

@@ -1,0 +1,160 @@
+{
+  "exportedAt": "2026-10-16",
+  "reason": "Purge du catalogue Ouvertures : lignes liées à des ouvertures retirées, conservées en base mais masquées de l'interface.",
+  "removedOpeningIds": [
+    "vienna-gambit",
+    "kings-gambit",
+    "lichess-zukertort-defense",
+    "lichess-zaire-defense",
+    "lichess-zukertort-opening"
+  ],
+  "opening_progress": [
+    {
+      "user_id": "local",
+      "opening_id": "kings-gambit",
+      "variation_key": "main_line",
+      "variation_label": "Ligne principale",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788777748,
+      "last_practiced_at": 1788518548
+    },
+    {
+      "user_id": "local",
+      "opening_id": "kings-gambit",
+      "variation_key": "C33|King's Gambit Accepted",
+      "variation_label": "King's Gambit Accepted",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788777760,
+      "last_practiced_at": 1788518560
+    },
+    {
+      "user_id": "local",
+      "opening_id": "kings-gambit",
+      "variation_key": "C30|King's Gambit Declined: Classical Variation",
+      "variation_label": "King's Gambit Declined: Classical Variation",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788777776,
+      "last_practiced_at": 1788518576
+    },
+    {
+      "user_id": "local",
+      "opening_id": "kings-gambit",
+      "variation_key": "C31|King's Gambit Declined: Falkbeer Countergambit",
+      "variation_label": "King's Gambit Declined: Falkbeer Countergambit",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788777797,
+      "last_practiced_at": 1788518597
+    },
+    {
+      "user_id": "local",
+      "opening_id": "kings-gambit",
+      "variation_key": "C30|King's Gambit Declined: Mafia Defense",
+      "variation_label": "King's Gambit Declined: Mafia Defense",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788779516,
+      "last_practiced_at": 1788520316
+    },
+    {
+      "user_id": "local",
+      "opening_id": "kings-gambit",
+      "variation_key": "C30|Mafia Defense",
+      "variation_label": "Mafia Defense",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788779534,
+      "last_practiced_at": 1788520334
+    },
+    {
+      "user_id": "local",
+      "opening_id": "lichess-zaire-defense",
+      "variation_key": "main_line",
+      "variation_label": "Ligne principale",
+      "attempts_count": 2,
+      "streak": 2,
+      "last_accuracy": 100,
+      "next_review_date": 1789228367,
+      "last_practiced_at": 1788623567
+    },
+    {
+      "user_id": "local",
+      "opening_id": "lichess-zukertort-defense",
+      "variation_key": "A04|Kingside Variation",
+      "variation_label": "Kingside Variation",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788737182,
+      "last_practiced_at": 1788477982
+    },
+    {
+      "user_id": "local",
+      "opening_id": "lichess-zukertort-defense",
+      "variation_key": "main_line",
+      "variation_label": "Ligne principale",
+      "attempts_count": 6,
+      "streak": 2,
+      "last_accuracy": 100,
+      "next_review_date": 1789228422,
+      "last_practiced_at": 1788623622
+    },
+    {
+      "user_id": "local",
+      "opening_id": "lichess-zukertort-opening",
+      "variation_key": "main_line",
+      "variation_label": "Ligne principale",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788882793,
+      "last_practiced_at": 1788623593
+    },
+    {
+      "user_id": "local",
+      "opening_id": "vienna-gambit",
+      "variation_key": "C29|Vienna Game: Vienna Gambit, Steinitz Variation",
+      "variation_label": "Vienna Game: Vienna Gambit, Steinitz Variation",
+      "attempts_count": 1,
+      "streak": 1,
+      "last_accuracy": 100,
+      "next_review_date": 1788527621,
+      "last_practiced_at": 1788268421
+    }
+  ],
+  "sparring_sessions": [
+    {
+      "id": "1d293c7f-73c9-4073-990d-5933c01b2118",
+      "user_id": "local",
+      "opening_id": "lichess-zukertort-defense",
+      "variation_key": "main_line",
+      "policy": "book",
+      "target_elo": 1500,
+      "started_at": 1788631628,
+      "finished_at": null,
+      "result": null,
+      "theory_exit_ply": null
+    }
+  ],
+  "sparring_moves": [
+    {
+      "id": 1,
+      "session_id": "1d293c7f-73c9-4073-990d-5933c01b2118",
+      "ply": 1,
+      "fen_before": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "uci": "e2e4",
+      "by_player": 0,
+      "policy_score": null,
+      "think_ms": null
+    }
+  ]
+}

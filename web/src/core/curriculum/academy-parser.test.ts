@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Chess } from "chess.js";
 import { parsePgnGames } from "./traps-parser";
-import { buildAcademyPuzzleFromGame, buildAcademyPuzzleFromJsonEntry, resolveThemeId } from "./academy-parser";
+import { buildAcademyPuzzleFromGame, buildAcademyPuzzleFromJsonEntry, resolveThemeId, sanitizeCastlingRights } from "./academy-parser";
 
 const ANASTASIA_PGN = `[Event "Mat d'Anastasia"]
 [Module "Checkmate Patterns"]
@@ -145,5 +145,26 @@ describe("buildAcademyPuzzleFromJsonEntry", () => {
       { idPrefix: "test.json" },
     );
     expect(puzzle).toBeNull();
+  });
+});
+
+describe("sanitizeCastlingRights", () => {
+  it("retire les droits de roque dont le roi ou la tour a quitté sa case", () => {
+    expect(sanitizeCastlingRights("4k2r/ppr1p3/4np2/3R1N1p/5Qp1/6P1/q3PP1P/2R3K1 w KQkq - 1 2")).toBe(
+      "4k2r/ppr1p3/4np2/3R1N1p/5Qp1/6P1/q3PP1P/2R3K1 w k - 1 2",
+    );
+    expect(sanitizeCastlingRights("6k1/8/8/8/8/8/8/6K1 b KQkq - 0 1")).toBe("6k1/8/8/8/8/8/8/6K1 b - - 0 1");
+  });
+
+  it("laisse intacte une FEN dont les droits sont possibles", () => {
+    const start = new Chess().fen();
+    expect(sanitizeCastlingRights(start)).toBe(start);
+  });
+
+  it("s'applique aux exercices importés sans changer leur id", () => {
+    const entry = { themeId: "cm-mat-de-l-escalier", fen: "6k1/3p2p1/3r1B2/1PR3R1/6P1/r4b2/8/6K1 w KQkq - 0 2", moves: ["Rxg7+", "Kf8", "Rc8#"] };
+    const puzzle = buildAcademyPuzzleFromJsonEntry(entry, { idPrefix: "test.json:0" });
+    expect(puzzle?.fen).toBe("6k1/3p2p1/3r1B2/1PR3R1/6P1/r4b2/8/6K1 w - - 0 2");
+    expect(puzzle?.id).toBe(buildAcademyPuzzleFromJsonEntry({ ...entry }, { idPrefix: "test.json:0" })?.id);
   });
 });

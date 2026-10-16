@@ -102,6 +102,41 @@ describe("buildCoachMessage", () => {
     };
     const message = buildCoachMessage(entry, null);
     expect(message?.tag).toBe("king_safety");
+    // Précis : l'échec exact et ce que le coup a cassé, jamais la phrase générique.
+    expect(message?.text).toBe(
+      "Après g4, l'adversaire a un mat immédiat : Qh4#. En avançant ton pion g2, tu as affaibli l'abri de ton roi.",
+    );
+  });
+
+  it("ne parle pas de sécurité du roi quand l'échec offert ne coûte rien", () => {
+    // Roi rentré e2-e1 : Qe8+/Qe4+ deviennent légaux mais ne matent, ne
+    // prennent ni ne fourchent rien — l'ancien Coach criait « roi exposé ».
+    const entry: TimelinePly = {
+      ply: 1,
+      side: "w",
+      san: "Ke1",
+      uci: "e2e1",
+      fenBefore: "q3k3/8/8/8/8/8/4K3/8 w - - 0 1",
+      fenAfter: "q3k3/8/8/8/8/8/8/4K3 b - - 1 1",
+      analysis: ply({ ply: 1, quality: "inaccuracy", bestSan: "Kd3" }),
+    };
+    const message = buildCoachMessage(entry, null);
+    expect(message?.tag).toBe("inaccuracy");
+  });
+
+  it("nomme la pièce perdue sur une fourchette avec échec", () => {
+    const entry: TimelinePly = {
+      ply: 1,
+      side: "w",
+      san: "Kc1",
+      uci: "d1c1",
+      fenBefore: "4k3/8/8/8/3n4/8/8/R2K4 w - - 0 1",
+      fenAfter: "4k3/8/8/8/3n4/8/8/R1K5 b - - 1 1",
+      analysis: ply({ ply: 1, quality: "blunder", bestSan: "Ke2" }),
+    };
+    expect(buildCoachMessage(entry, null)?.text).toBe(
+      "Après Kc1, l'adversaire joue Nb3+ : échec au roi ET attaque sur ta tour en a1 — tu dois parer l'échec et perds la pièce. Avec Kc1, ton roi s'est placé sur une case où il devient attaquable.",
+    );
   });
 
   it("retombe sur un message générique quand aucune heuristique ne matche", () => {

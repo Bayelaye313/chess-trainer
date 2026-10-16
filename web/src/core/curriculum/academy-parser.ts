@@ -109,6 +109,35 @@ export interface BuildAcademyPuzzleOptions {
 
 const DEFAULT_START_FEN = new Chess().fen();
 
+/**
+ * Retire de la FEN les droits de roque impossibles (roi ou tour hors de sa
+ * case d'origine). Les `tactics-*.json` portent souvent `KQkq` sur des
+ * positions de milieu de partie : chess.js l'accepte, mais Stockfish plante
+ * dessus et la FEN affichée/exportée est fausse.
+ */
+export function sanitizeCastlingRights(fen: string): string {
+  const fields = fen.split(" ");
+  if (fields.length < 3 || fields[2] === "-") return fen;
+  let board: Chess;
+  try {
+    board = new Chess(`${fields[0]} w - - 0 1`, { skipValidation: true });
+  } catch {
+    return fen;
+  }
+  const has = (square: "e1" | "h1" | "a1" | "e8" | "h8" | "a8", color: "w" | "b", type: "k" | "r") => {
+    const piece = board.get(square);
+    return piece?.color === color && piece.type === type;
+  };
+  const allowed: Record<string, boolean> = {
+    K: has("e1", "w", "k") && has("h1", "w", "r"),
+    Q: has("e1", "w", "k") && has("a1", "w", "r"),
+    k: has("e8", "b", "k") && has("h8", "b", "r"),
+    q: has("e8", "b", "k") && has("a8", "b", "r"),
+  };
+  fields[2] = [...fields[2]].filter((right) => allowed[right]).join("") || "-";
+  return fields.join(" ");
+}
+
 function slugify(text: string): string {
   return text
     .normalize("NFD")
@@ -176,7 +205,7 @@ export function buildAcademyPuzzleFromGame(game: RawPgnGame, options: BuildAcade
   const themeId = resolveThemeId({ themeId: tags.ThemeId, module: tags.Module ?? tags.Site, theme: tags.Theme ?? tags.Event });
   if (!themeId) return null;
 
-  const fen = tags.FEN ?? DEFAULT_START_FEN;
+  const fen = sanitizeCastlingRights(tags.FEN ?? DEFAULT_START_FEN);
   const replayed = replaySolution(fen, game.mainline);
   if (!replayed) return null;
 
@@ -214,7 +243,7 @@ export function buildAcademyPuzzleFromJsonEntry(entry: AcademyJsonEntry, options
   if (!themeId) return null;
   if (!Array.isArray(entry.moves)) return null;
 
-  const fen = entry.fen ?? DEFAULT_START_FEN;
+  const fen = sanitizeCastlingRights(entry.fen ?? DEFAULT_START_FEN);
   const replayed = replaySolution(fen, entry.moves);
   if (!replayed) return null;
 

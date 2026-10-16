@@ -16,7 +16,7 @@ import { and, asc, eq, inArray, lte, type SQL } from "drizzle-orm";
 import { db } from "@/server/db";
 import { moves, puzzles, reviews } from "@/server/db/schema";
 import { DECKS, type DeckId } from "@/core/chess/decks";
-import { ensureDailySet } from "@/server/queries/spaced-repetition";
+import { getDailyProgress } from "@/server/queries/spaced-repetition";
 import type { Motif } from "@/core/chess/types";
 
 export interface DeckOverview {
@@ -42,13 +42,13 @@ export interface DeckOverview {
  * que du `GROUP BY` ci-dessus, qui l'ignore totalement.
  */
 export async function listDeckOverviews(now: Date = new Date()): Promise<DeckOverview[]> {
-  const [rows, dailyIds] = await Promise.all([
+  const [rows, daily] = await Promise.all([
     db
       .select({ deck: puzzles.deck, state: reviews.state })
       .from(reviews)
       .innerJoin(puzzles, eq(reviews.puzzleId, puzzles.id))
       .where(lte(reviews.due, now)),
-    ensureDailySet(now),
+    getDailyProgress(now),
   ]);
 
   const counts = new Map<DeckId, { due: number; new: number }>();
@@ -59,13 +59,17 @@ export async function listDeckOverviews(now: Date = new Date()): Promise<DeckOve
     counts.set(row.deck, bucket);
   }
 
-  const dailyRows = dailyIds.length > 0 ? await db.select({ state: reviews.state }).from(reviews).where(inArray(reviews.puzzleId, dailyIds)) : [];
-  const daily = { due: 0, new: 0 };
+  // Seulement ce qui RESTE à faire aujourd'hui (voir `getDailyProgress`).
+  const dailyRows =
+    daily.remainingIds.length > 0
+      ? await db.select({ state: reviews.state }).from(reviews).where(inArray(reviews.puzzleId, daily.remainingIds))
+      : [];
+  const dailyCounts = { due: 0, new: 0 };
   for (const row of dailyRows) {
-    if (row.state === 0) daily.new += 1;
-    else daily.due += 1;
+    if (row.state === 0) dailyCounts.new += 1;
+    else dailyCounts.due += 1;
   }
-  counts.set("daily", daily);
+  counts.set("daily", dailyCounts);
 
   return DECKS.map((deck) => ({
     ...deck,
@@ -126,7 +130,8 @@ async function findSetupMove(
  *
  * `deckId === "daily"` est un cas à part : ce deck n'existe jamais dans
  * `puzzles.deck` (voir `ensureDailySet`) — la restriction se fait donc par
- * `puzzleId IN (sélection figée du jour)` plutôt que par égalité de deck, et
+ * `puzzleId IN (sélection du jour pas encore notée aujourd'hui)` (voir
+ * `getDailyProgress`) plutôt que par égalité de deck, et
  * SANS le filtre `due <= now` : la sélection du jour fait elle-même office de
  * « à faire aujourd'hui », qu'une carte choisie pour son échec récent ait ou
  * non déjà un `due` strictement passé.
@@ -150,11 +155,19 @@ function nextPuzzleRow(where: SQL) {
     .limit(1);
 }
 
+/** Un puzzle précis — la carte cliquée de la Séance du jour ouvre CE puzzle d'abord. */
+export async function getPuzzleById(puzzleId: string): Promise<DeckPuzzle | null> {
+  const [row] = await nextPuzzleRow(eq(puzzles.id, puzzleId));
+  if (!row) return null;
+  const { moveId, gameId, ...puzzle } = row;
+  return { ...puzzle, setupMove: await findSetupMove(moveId, gameId) };
+}
+
 export async function getNextDuePuzzle(deckId?: DeckId, now: Date = new Date()): Promise<DeckPuzzle | null> {
   let row;
   if (deckId === "daily") {
-    const dailyIds = await ensureDailySet(now);
-    [row] = dailyIds.length === 0 ? [] : await nextPuzzleRow(inArray(puzzles.id, dailyIds));
+    const { remainingIds } = await getDailyProgress(now);
+    [row] = remainingIds.length === 0 ? [] : await nextPuzzleRow(inArray(puzzles.id, remainingIds));
   } else {
     [row] = await nextPuzzleRow(deckId ? and(eq(puzzles.deck, deckId), lte(reviews.due, now))! : lte(reviews.due, now));
   }

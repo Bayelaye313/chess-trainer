@@ -6,6 +6,10 @@
  *   limite  : 5 à 10 points ; ambigue : < 5 points (plusieurs bonnes réponses) ;
  *   fausse  : Stockfish préfère nettement un autre coup ; erreur : illisible.
  * Un dernier coup qui mate compte comme unique même s'il existe d'autres mats.
+ *   toleree : thème de force brute (`BRUTE_FORCE_THEME_IDS`) où la solution est un
+ *             mat forcé au plus court et l'autre coup un mat aussi rapide ou plus
+ *             lent — l'ordre des coups transpose sans perte d'évaluation, ce
+ *             n'est pas une seconde idée (Roi+Dame contre Roi, mats écrasants).
  *
  *   node scripts/academy-mining/classify-uniqueness.mjs <dossier> [--detail <motif de thème>]
  *
@@ -17,9 +21,12 @@ import { pathToFileURL } from "node:url";
 
 const cp = (s) => (!s ? null : s.kind === "mate" ? (s.v > 0 ? 10000 - s.v : -10000 - s.v) : s.v);
 const wp = (c) => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * Math.max(-2000, Math.min(2000, c)))) - 1);
-const RANK = { unique: 0, limite: 1, ambigue: 2, fausse: 3, erreur: 4 };
+const RANK = { unique: 0, toleree: 1, limite: 2, ambigue: 3, fausse: 4, erreur: 5 };
 
-function plyClass(p, isLast) {
+/** Voir « toleree » ci-dessus — la solution y est forcément gagnante par mat, jamais une simple avance matérielle. */
+export const BRUTE_FORCE_THEME_IDS = new Set(["cm-mat-roi-et-dame-contre-roi", "eg-mats-de-force-ecrasante"]);
+
+function plyClass(p, isLast, bruteForce) {
   const best = cp(p.best), sol = cp(p.sol);
   if (best == null || sol == null) return "erreur";
   if (p.legal === 1) return "unique";
@@ -32,6 +39,7 @@ function plyClass(p, isLast) {
   const gap = wp(sol) - wp(other);
   const onlyMate = p.sol.kind === "mate" && p.sol.v > 0 && otherLine.kind !== "mate";
   if (gap >= 10 || onlyMate) return "unique";
+  if (bruteForce && p.sol.kind === "mate" && p.sol.v > 0 && sol >= best) return "toleree";
   return gap >= 5 ? "limite" : "ambigue";
 }
 
@@ -39,7 +47,8 @@ function plyClass(p, isLast) {
 export function classifyRow(r) {
   if (r.error || !r.plies.length) return "erreur";
   let worst = "unique";
-  for (const p of r.plies) { const k = plyClass(p, p.i === r.sans.length - 1); if (RANK[k] > RANK[worst]) worst = k; }
+  const bruteForce = BRUTE_FORCE_THEME_IDS.has(r.theme);
+  for (const p of r.plies) { const k = plyClass(p, p.i === r.sans.length - 1, bruteForce); if (RANK[k] > RANK[worst]) worst = k; }
   return worst;
 }
 
@@ -53,7 +62,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const detail = process.argv[3] === "--detail" ? process.argv[4] : null;
   const rows = readRows(dir);
   const byTheme = new Map();
-  const tot = { unique: 0, limite: 0, ambigue: 0, fausse: 0, erreur: 0 };
+  const tot = { unique: 0, toleree: 0, limite: 0, ambigue: 0, fausse: 0, erreur: 0 };
   for (const r of rows) {
     r.cls = classifyRow(r);
     tot[r.cls]++;
@@ -61,9 +70,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     byTheme.get(r.theme).push(r);
   }
   for (const [t, list] of byTheme) {
-    const c = { unique: 0, limite: 0, ambigue: 0, fausse: 0, erreur: 0 };
+    const c = { unique: 0, toleree: 0, limite: 0, ambigue: 0, fausse: 0, erreur: 0 };
     for (const r of list) c[r.cls]++;
-    console.log(`${t.padEnd(58)} n=${String(list.length).padStart(3)}  unique ${String(c.unique).padStart(3)}  limite ${c.limite}  ambiguë ${String(c.ambigue).padStart(3)}  fausse ${c.fausse}${c.erreur ? "  erreur " + c.erreur : ""}`);
+    console.log(`${t.padEnd(58)} n=${String(list.length).padStart(3)}  unique ${String(c.unique).padStart(3)}${c.toleree ? `  tolérée ${c.toleree}` : ""}  limite ${c.limite}  ambiguë ${String(c.ambigue).padStart(3)}  fausse ${c.fausse}${c.erreur ? "  erreur " + c.erreur : ""}`);
     if (detail && t.includes(detail)) for (const r of list.sort((a, b) => a.idx - b.idx))
       console.log(`   #${r.idx} ${r.cls.padEnd(7)} ${r.sans.join(" ")} | ${r.plies.map((p) => `${p.san}: best ${p.best?.move} ${cp(p.best)} 2e ${p.second?.move} ${cp(p.second)} sol ${cp(p.sol)}`).join(" ; ")} | ${r.ref.slice(0, 50)}`);
   }

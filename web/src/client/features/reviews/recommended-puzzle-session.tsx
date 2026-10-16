@@ -14,26 +14,41 @@
  * jamais naviguer.
  */
 import { useEffect, useState } from "react";
-import { getNextPuzzle, submitPuzzleAnswer } from "@/server/actions/practice";
+import { getNextPuzzle, getPuzzle, submitPuzzleAnswer } from "@/server/actions/practice";
 import type { DeckPuzzle } from "@/server/queries/reviews";
 import type { ReviewGrade } from "@/server/srs/fsrs";
 import { PuzzleBoard } from "../board/puzzle-board";
 
 type SessionState = { status: "loading" } | { status: "empty" } | { status: "puzzle"; puzzle: DeckPuzzle };
 
-export function RecommendedPuzzleSession({ onExit }: { onExit: () => void }) {
+/**
+ * `initialPuzzleId` : le puzzle de la carte cliquée, servi en premier (sinon
+ * deux cartes différentes ouvraient le même « plus en retard »). `onExit`
+ * doit rafraîchir la page : les cartes et la complétion du Plan du jour sont
+ * rendues côté serveur et ne voient les puzzles résolus qu'à ce moment-là.
+ */
+export function RecommendedPuzzleSession({
+  initialPuzzleId,
+  onExit,
+}: {
+  initialPuzzleId?: string;
+  onExit: () => void;
+}) {
   const [state, setState] = useState<SessionState>({ status: "loading" });
   const [solvedCount, setSolvedCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    getNextPuzzle().then((puzzle) => {
+    const first = initialPuzzleId
+      ? getPuzzle(initialPuzzleId).then((puzzle) => puzzle ?? getNextPuzzle())
+      : getNextPuzzle();
+    first.then((puzzle) => {
       if (!cancelled) setState(puzzle ? { status: "puzzle", puzzle } : { status: "empty" });
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialPuzzleId]);
 
   async function handleGraded(puzzle: DeckPuzzle, grade: ReviewGrade, playedUci: string | null, solvedMs: number) {
     await submitPuzzleAnswer({ puzzleId: puzzle.id, grade, playedUci, solvedMs });

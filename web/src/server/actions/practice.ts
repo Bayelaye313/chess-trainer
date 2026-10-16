@@ -10,7 +10,7 @@
 import type { DeckId } from "@/core/chess/decks";
 import type { GameResult } from "@/core/chess/types";
 import { listRepertoireDeviationGames, type DeviationGameSummary } from "@/server/queries/opening-mistakes";
-import { getNextDuePuzzle, listDeckOverviews, type DeckOverview, type DeckPuzzle } from "@/server/queries/reviews";
+import { getNextDuePuzzle, getPuzzleById, listDeckOverviews, type DeckOverview, type DeckPuzzle } from "@/server/queries/reviews";
 import {
   submitPuzzleAnswer as submitPuzzleAnswerQuery,
   type SubmitPuzzleAnswerInput,
@@ -27,6 +27,11 @@ export async function getDeckOverviews(): Promise<DeckOverview[]> {
  */
 export async function getNextPuzzle(deckId?: DeckId): Promise<DeckPuzzle | null> {
   return getNextDuePuzzle(deckId);
+}
+
+/** La carte cliquée de la Séance du jour — `RecommendedPuzzleSession` l'ouvre en premier. */
+export async function getPuzzle(puzzleId: string): Promise<DeckPuzzle | null> {
+  return getPuzzleById(puzzleId);
 }
 
 export async function submitPuzzleAnswer(input: SubmitPuzzleAnswerInput): Promise<boolean> {

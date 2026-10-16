@@ -14,6 +14,8 @@ import { L_AVANTAGE_D_ESPACE } from "./course-trees/pm-l-avantage-d-espace";
 import { LE_COMPLEXE_DE_CASES_FAIBLES } from "./course-trees/pm-le-complexe-de-cases-faibles";
 import { LA_SECURITE_DU_ROI } from "./course-trees/pm-la-securite-du-roi-en-milieu-de-partie";
 import { ACTIVITE_CONTRE_MATERIEL } from "./course-trees/pm-activite-des-pieces-contre-materiel";
+import { LA_PAIRE_DE_FOUS } from "./course-trees/pm-la-paire-de-fous";
+import { LA_CHAINE_DE_PIONS } from "./course-trees/pm-la-chaine-de-pions";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -248,6 +250,8 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-le-complexe-de-cases-faibles": LE_COMPLEXE_DE_CASES_FAIBLES,
   "pm-la-securite-du-roi-en-milieu-de-partie": LA_SECURITE_DU_ROI,
   "pm-activite-des-pieces-contre-materiel": ACTIVITE_CONTRE_MATERIEL,
+  "pm-la-paire-de-fous": LA_PAIRE_DE_FOUS,
+  "pm-la-chaine-de-pions": LA_CHAINE_DE_PIONS,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },

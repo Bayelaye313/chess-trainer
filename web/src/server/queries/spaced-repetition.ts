@@ -20,9 +20,19 @@ import { Chess } from "chess.js";
  * `extractPuzzlesFromGame` — une partie détectée en tâche de fond doit
  * alimenter les decks sans action supplémentaire de l'utilisateur.
  */
-import { and, asc, desc, eq, gt, inArray, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/server/db";
-import { dailySets, moves, puzzles, reviewLogs, reviews, trainingEvents, type MoveRow, type NewPuzzle } from "@/server/db/schema";
+import {
+  dailySets,
+  moves,
+  puzzles,
+  reviewLogs,
+  reviews,
+  trainingEvents,
+  trainingRecommendations,
+  type MoveRow,
+  type NewPuzzle,
+} from "@/server/db/schema";
 import { categorizeDeck, isPuzzleWorthy } from "@/core/chess/decks";
 import type { PositionAnalyser } from "@/core/analysis/types";
 import { IMPORT_ANALYSIS_DEPTH } from "@/server/import/constants";
@@ -126,6 +136,12 @@ function isoDay(now: Date): string {
   return now.toISOString().slice(0, 10);
 }
 
+/** Bornes du jour UTC de `isoDay` — début inclus, lendemain exclu. */
+function utcDayBounds(now: Date): { start: Date; end: Date } {
+  const start = new Date(`${isoDay(now)}T00:00:00.000Z`);
+  return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
+}
+
 /** Nombre de puzzles proposés chaque jour dans le deck "Puzzles du jour" — voir `ensureDailySet`. */
 const DAILY_SET_SIZE = 5;
 
@@ -153,10 +169,14 @@ export async function ensureDailySet(now: Date = new Date(), size = DAILY_SET_SI
   const [existing] = await db.select().from(dailySets).where(eq(dailySets.day, day)).limit(1);
   if (existing) return existing.puzzleIds;
 
+  // Seulement les cartes réellement dues d'ici la fin du jour : un puzzle
+  // réussi hier (échéance FSRS repoussée) ne revient pas le lendemain juste
+  // parce qu'il cumule le plus d'échecs historiques.
+  const { end } = utcDayBounds(now);
   const candidates = await db
     .select({ puzzleId: reviews.puzzleId })
     .from(reviews)
-    .where(or(gt(reviews.lapses, 0), eq(reviews.state, 0)))
+    .where(and(or(gt(reviews.lapses, 0), eq(reviews.state, 0)), lt(reviews.due, end)))
     .orderBy(desc(reviews.lapses), asc(reviews.due))
     .limit(size);
 
@@ -165,6 +185,37 @@ export async function ensureDailySet(now: Date = new Date(), size = DAILY_SET_SI
     await db.insert(dailySets).values({ day, puzzleIds, createdAt: now }).onConflictDoNothing();
   }
   return puzzleIds;
+}
+
+export interface DailyProgress {
+  /** Sélection figée du jour, dans son ordre. */
+  puzzleIds: string[];
+  /** Puzzles de la sélection déjà notés aujourd'hui (au moins un `review_logs`). */
+  doneIds: string[];
+  /** Ceux qui restent à faire — ce que sert le deck « Puzzles du jour ». */
+  remainingIds: string[];
+}
+
+/**
+ * Avancement du deck « Puzzles du jour » : un puzzle de la sélection noté
+ * aujourd'hui (quelle que soit la note) est FAIT et ne se représente plus
+ * avant demain — sans ce filtre, la file tournait en boucle sur les mêmes
+ * puzzles et son compteur ne baissait jamais.
+ */
+export async function getDailyProgress(now: Date = new Date()): Promise<DailyProgress> {
+  const puzzleIds = await ensureDailySet(now);
+  if (puzzleIds.length === 0) return { puzzleIds, doneIds: [], remainingIds: [] };
+  const { start } = utcDayBounds(now);
+  const logged = await db
+    .selectDistinct({ puzzleId: reviewLogs.puzzleId })
+    .from(reviewLogs)
+    .where(and(inArray(reviewLogs.puzzleId, puzzleIds), gte(reviewLogs.reviewedAt, start)));
+  const done = new Set(logged.map((row) => row.puzzleId));
+  return {
+    puzzleIds,
+    doneIds: puzzleIds.filter((id) => done.has(id)),
+    remainingIds: puzzleIds.filter((id) => !done.has(id)),
+  };
 }
 
 export interface ExtractionResult {
@@ -340,6 +391,36 @@ export async function submitPuzzleAnswer(
     seconds: input.solvedMs == null ? undefined : input.solvedMs / 1000,
     occurredAt: now,
   });
+  await completePuzzleRecommendation(input.puzzleId, now);
 
   return true;
+}
+
+/**
+ * Ferme UNE carte puzzle de la « Séance du jour » : celle de ce puzzle s'il en
+ * a une, sinon la plus prioritaire encore ouverte (la séance de l'accueil
+ * enchaîne les puzzles dus, pas forcément celui de la carte cliquée). Jamais
+ * toutes d'un coup : chaque puzzle résolu fait avancer la séance d'une carte.
+ */
+async function completePuzzleRecommendation(puzzleId: string, completedAt: Date): Promise<void> {
+  const open = and(
+    eq(trainingRecommendations.userId, LOCAL_USER_ID),
+    eq(trainingRecommendations.entityType, "puzzle"),
+    isNull(trainingRecommendations.completedAt),
+  );
+  const [exact] = await db
+    .select({ id: trainingRecommendations.id })
+    .from(trainingRecommendations)
+    .where(and(open, eq(trainingRecommendations.entityId, puzzleId)))
+    .limit(1);
+  const [target] = exact
+    ? [exact]
+    : await db
+        .select({ id: trainingRecommendations.id })
+        .from(trainingRecommendations)
+        .where(open)
+        .orderBy(desc(trainingRecommendations.priority))
+        .limit(1);
+  if (!target) return;
+  await db.update(trainingRecommendations).set({ completedAt }).where(eq(trainingRecommendations.id, target.id));
 }

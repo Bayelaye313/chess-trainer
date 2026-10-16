@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { normalizeTrainingPreferences } from "./preferences";
 import { encodeTrainingReason, parseTrainingReason } from "./reasons";
-import { deduplicateCandidates, recommendationId, selectSessionCandidates } from "./recommendations";
+import { deduplicateCandidates, groupRecommendationCards, recommendationId, selectSessionCandidates } from "./recommendations";
 import {
   aggregateMotifMisses,
   motifMissCandidates,
@@ -141,5 +141,25 @@ describe("training signals", () => {
     );
     expect(candidates.some((candidate) => candidate.reasonCode.startsWith("trap-refutation-forgotten"))).toBe(true);
     expect(candidates.some((candidate) => candidate.entityId === "najdorf-trap")).toBe(true);
+  });
+});
+
+describe("groupRecommendationCards", () => {
+  it("fusionne les cartes puzzle à preuve identique, jamais les autres types", () => {
+    const cards = groupRecommendationCards([
+      { id: "1", entityType: "puzzle" as const, reasonCode: "puzzle-due|hanging" },
+      { id: "2", entityType: "trap" as const, reasonCode: "trap|scotch" },
+      { id: "3", entityType: "puzzle" as const, reasonCode: "puzzle-due|hanging" },
+      { id: "4", entityType: "puzzle" as const, reasonCode: "puzzle-due|fork" },
+      { id: "5", entityType: "review" as const, reasonCode: "same" },
+      { id: "6", entityType: "review" as const, reasonCode: "same" },
+    ]);
+    expect(cards.map((card) => [card.item.id, card.count])).toEqual([
+      ["1", 2],
+      ["2", 1],
+      ["4", 1],
+      ["5", 1],
+      ["6", 1],
+    ]);
   });
 });
