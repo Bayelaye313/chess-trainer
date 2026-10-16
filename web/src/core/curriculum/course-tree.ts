@@ -16,6 +16,7 @@ import { LA_SECURITE_DU_ROI } from "./course-trees/pm-la-securite-du-roi-en-mili
 import { ACTIVITE_CONTRE_MATERIEL } from "./course-trees/pm-activite-des-pieces-contre-materiel";
 import { LA_PAIRE_DE_FOUS } from "./course-trees/pm-la-paire-de-fous";
 import { LA_CHAINE_DE_PIONS } from "./course-trees/pm-la-chaine-de-pions";
+import { LES_COUPS_DE_RUPTURE } from "./course-trees/pm-les-coups-de-rupture";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -252,6 +253,7 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-activite-des-pieces-contre-materiel": ACTIVITE_CONTRE_MATERIEL,
   "pm-la-paire-de-fous": LA_PAIRE_DE_FOUS,
   "pm-la-chaine-de-pions": LA_CHAINE_DE_PIONS,
+  "pm-les-coups-de-rupture": LES_COUPS_DE_RUPTURE,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },

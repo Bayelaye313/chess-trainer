@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1400, height: 1000 } });
+await p.goto("http://localhost:3001/ouvertures/ruy-lopez/cours", { waitUntil: "networkidle" });
+await p.locator('nav[aria-label="Chapitres"] button').nth(7).click();
+const next = p.getByRole("button", { name: "Coup suivant" });
+while (await next.isEnabled()) await next.click();
+console.log((await p.locator("body").innerText()).slice(0, 3000));
+const html = await p.locator("body").innerHTML();
+const i = html.indexOf("Bc5"); console.log("----\n", html.slice(i - 400, i + 100));
+await b.close();
