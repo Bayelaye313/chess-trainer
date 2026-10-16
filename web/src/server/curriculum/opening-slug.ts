@@ -24,6 +24,17 @@ function familyNameOf(openingName: string): string {
   return idx === -1 ? openingName.trim() : openingName.slice(0, idx).trim();
 }
 
+/**
+ * `true` si `openingId` a encore une page `/ouvertures/[slug]` (chapitre curaté
+ * ou carte lichess-org affichée). Purge du catalogue (2026-10-16) : la
+ * progression liée aux ouvertures retirées reste en base (export dans
+ * `backups/opening-purge-2026-10-16.json`) mais est filtrée par ce test avant
+ * tout affichage, pour ne jamais produire de lien vers une page inexistante.
+ */
+export function isCatalogOpeningId(openingId: string): boolean {
+  return OPENINGS.some((opening) => opening.id === openingId) || listOpeningFamilies().some((f) => f.id === openingId);
+}
+
 /** `null` si ni le catalogue curaté ni les familles dynamiques ne couvrent cette ouverture. */
 export function resolveOpeningSlug(eco: string | null, openingName: string | null): string | null {
   if (eco) {

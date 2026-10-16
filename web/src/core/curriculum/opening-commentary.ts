@@ -123,45 +123,6 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Reprends le pion avec la pièce déjà développée, en te centralisant.",
     },
   ],
-  "vienna-gambit": [
-    {
-      comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame.",
-      hint: "Avance ton pion central de deux cases.",
-    },
-    {
-      comment: "Les Noirs répondent symétriquement au centre.",
-      hint: "Réponds au centre par le pion symétrique.",
-    },
-    {
-      comment:
-        "Développe le cavalier avant le fou, gardant l'option f4 pour une attaque à l'ancienne sur le centre noir.",
-      hint: "Développe ton cavalier-dame vers le centre, en gardant la case du fou-roi libre.",
-    },
-    {
-      comment: "Les Noirs développent en attaquant directement le pion e4, la réponse la plus active.",
-      hint: "Développe ton cavalier-roi en attaquant le pion central adverse.",
-    },
-    {
-      comment:
-        "Relance immédiatement la lutte pour le centre avec un gambit de pion, dans l'esprit romantique du Gambit du Roi.",
-      hint: "Avance le pion du fou-roi pour contester le centre, quitte à sacrifier du matériel.",
-    },
-  ],
-  "kings-gambit": [
-    {
-      comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame.",
-      hint: "Avance ton pion central de deux cases.",
-    },
-    {
-      comment: "Les Noirs répondent symétriquement au centre.",
-      hint: "Réponds au centre par le pion symétrique.",
-    },
-    {
-      comment:
-        "Sacrifice de pion romantique pour ouvrir la colonne f et la diagonale a7-g1, préparant une attaque fulgurante sur le roi noir.",
-      hint: "Offre le pion du fou-roi pour ouvrir des lignes directes vers le roi adverse.",
-    },
-  ],
   "sicilian-najdorf": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame.",

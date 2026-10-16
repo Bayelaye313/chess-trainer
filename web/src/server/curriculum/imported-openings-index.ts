@@ -410,16 +410,19 @@ export function listOpeningFamilies(): OpeningFamilySummary[] {
     // script interactif de la Ligne principale par `getOpeningDetail`)
     // peuvent décrire deux positions différentes, l'une entièrement jouée
     // par l'adversaire du camp annoncé.
-    const rootMoves = familyReferenceMoves(group.lines, familyRootMoves(group.lines));
-    const deepestPly = Math.max(...group.lines.map((l) => l.moves.length));
+    const rootMoves = FAMILY_REFERENCE_OVERRIDE[group.name] ?? familyReferenceMoves(group.lines, familyRootMoves(group.lines));
+    // Compteurs sur TOUTES les lignes de la carte (familles sœurs et
+    // rattachées comprises, voir `getFamilyTree`), pas sur le seul groupe nu.
+    const cardLines = groups.filter((g) => familyBelongsToHub(g.name, group.name)).flatMap((g) => g.lines);
+    const deepestPly = Math.max(...cardLines.map((l) => l.moves.length));
     summaries.push({
       id: `lichess-${slugify(group.name)}`,
       name: group.name,
       eco: mostFrequent(group.lines.map((l) => l.eco)),
       side: sideForReferenceMoves(rootMoves),
-      description: `${group.lines.length} variante${group.lines.length > 1 ? "s" : ""} issue${group.lines.length > 1 ? "s" : ""} de la base Lichess (lichess-org/chess-openings), jusqu'à ${deepestPly} demi-coups de profondeur.`,
+      description: `${cardLines.length} variante${cardLines.length > 1 ? "s" : ""} issue${cardLines.length > 1 ? "s" : ""} de la base Lichess (lichess-org/chess-openings), jusqu'à ${deepestPly} demi-coups de profondeur.`,
       rootMoves,
-      variantCount: group.lines.length,
+      variantCount: cardLines.length,
     });
   }
   familyCatalogCache = summaries.sort((a, b) => b.variantCount - a.variantCount || a.name.localeCompare(b.name));

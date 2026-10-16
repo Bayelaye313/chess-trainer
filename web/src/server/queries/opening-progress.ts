@@ -18,6 +18,7 @@ import { LOCAL_USER_ID } from "@/server/queries/curriculum";
 import { starsForAccuracy, type MasteryStars } from "@/core/curriculum/opening-mastery";
 import { type TrackedDrillSelection, variationKeyFor } from "@/core/curriculum/opening-variation-key";
 import { scheduleOpeningReview } from "@/server/srs/opening-repetition";
+import { isCatalogOpeningId } from "@/server/curriculum/opening-slug";
 
 export interface RecordOpeningDrillInput {
   openingId: string;
@@ -132,7 +133,7 @@ export async function listOpeningReviewSummaries(
   const rows = await db.select().from(openingProgress).where(eq(openingProgress.userId, userId));
 
   const byOpening = new Map<string, OpeningProgress[]>();
-  for (const row of rows) {
+  for (const row of rows.filter((r) => isCatalogOpeningId(r.openingId))) {
     const list = byOpening.get(row.openingId) ?? [];
     list.push(row);
     byOpening.set(row.openingId, list);
@@ -218,7 +219,7 @@ export async function listOpeningMasterySummaries(userId: string = LOCAL_USER_ID
     .where(eq(openingProgress.userId, userId));
 
   const byOpening = new Map<string, number[]>();
-  for (const row of rows) {
+  for (const row of rows.filter((r) => isCatalogOpeningId(r.openingId))) {
     const list = byOpening.get(row.openingId) ?? [];
     list.push(row.lastAccuracy);
     byOpening.set(row.openingId, list);
@@ -248,6 +249,7 @@ export async function listDueReviews(userId: string = LOCAL_USER_ID, now: Date =
     .where(and(eq(openingProgress.userId, userId), lte(openingProgress.nextReviewDate, now)));
 
   return rows
+    .filter((row) => isCatalogOpeningId(row.openingId))
     .map((row) => ({
       openingId: row.openingId,
       variationKey: row.variationKey,

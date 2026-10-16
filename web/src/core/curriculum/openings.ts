@@ -739,50 +739,6 @@ export const OPENINGS: readonly OpeningLine[] = [
       5.e5 d5 6.Bb5 Ne4 7.Nxd4 Bd7 8.Bxc6 bxc6 9.O-O Bc5 10.f3 Ng5 11.Be3 Ne6 12.f4 Qe7 13.Nc3`,
   },
   {
-    id: "vienna-gambit",
-    name: "Gambit Viennois",
-    eco: "C29",
-    side: "white",
-    description: "Une Viennoise agressive : le pion f4 relance immédiatement la lutte pour le centre.",
-    moves: ["e4", "e5", "Nc3", "Nf6", "f4"],
-    pgn: `1.e4 e5 2.Nc3 Nf6
-      (2...Bc5 {Partie Viennoise : défense classique} 3.Bc4 Nf6 4.d3 d6 5.Na4 Bb6 6.Nxb6 axb6 7.f4 Nc6 8.Nf3 O-O 9.O-O Re8 10.Kh1 exf4 11.Bxf4 Nd4)
-      (2...Nc6 {Partie Viennoise symétrique} 3.f4 {Gambit Steinitz} exf4 4.Nf3 g5 5.h4 g4 6.Ng5 h6 7.Nxf7 Kxf7 8.d4 d5 9.Bxf4 dxe4 10.Qd2 Kg7 11.O-O-O Nf6)
-      3.f4 d5 {Réfutation du Gambit Viennois}
-      (3...exf4 {Gambit Viennois Accepté} 4.Nf3 g5 5.d4 g4 6.Bc4 gxf3 7.Qxf3 Nc6 8.Bxf4 d6 9.O-O-O Be6 10.Bxe6 fxe6 11.Nd5 Kd7 12.Rhe1)
-      4.fxe5 Nxe4 5.Nf3 Be7 6.d4 O-O 7.Bd3 Nxc3 8.bxc3 c5 9.O-O Nc6 10.Re1 cxd4 11.cxd4 Bg4`,
-  },
-  {
-    id: "kings-gambit",
-    name: "Gambit du Roi",
-    eco: "C30",
-    side: "white",
-    description: "Sacrifice de pion romantique pour un développement fulgurant et une attaque directe sur le roi noir.",
-    moves: ["e4", "e5", "f4"],
-    // BUG CORRIGÉ (audit du 2026-09-04, « le Gambit du Roi ne fait que 3-4
-    // coups ») : ce chapitre n'avait encore AUCUN arbre `pgn` authored — sa
-    // « ligne principale » de Mode Entraînement se limitait donc aux 3 demi-
-    // coups de `moves` ci-dessus, sans la moindre variante nommée. La VRAIE
-    // cause n'était pas ce fichier mais un bug de fusion dans
-    // `server/curriculum/imported-openings-index.ts` (voir `familyBelongsToHub`,
-    // désormais corrigé) qui laissait orphelines les 190 lignes lichess-org de
-    // "King's Gambit Accepted"/"King's Gambit Declined" — CE fichier reste
-    // néanmoins la bonne réparation en plus de l'autre : les ~20 chapitres déjà
-    // riches (Ruy Lopez, Écossaise, Najdorf...) doivent tous leur qualité à une
-    // ligne principale choisie à la main ici, la fusion Lichess ne faisant
-    // qu'AJOUTER des branches sans jamais réordonner le fil rouge pédagogique
-    // (voir `mergeTrees`) — sans cet arbre, la fusion aurait pioché une "ligne
-    // principale" arbitraire (ordre d'insertion en base, pas un choix éditorial).
-    // Les 3 branches ci-dessous reprennent des lignes RÉELLES de la base
-    // importée (`data/import/openings/lichess-c.pgn`, déjà validées coup par
-    // coup à l'import) plutôt que d'inventer une continuation de mémoire.
-    pgn: `1.e4 e5 2.f4 exf4 3.Nf3
-      (3.Bc4 {Gambit du Fou} Qh4+ 4.Kf1 g5 5.Nc3 Bg7 6.g3 fxg3 7.Qf3 Nf6 8.hxg3 Nc6 9.Nge2 d6 10.d4 O-O 11.Kg1 Bg4)
-      g5 4.h4
-      (4.Bc4 {Gambit Muzio} g4 5.O-O gxf3 6.Qxf3 Qf6 7.e5 Qxe5 8.d3 Bh6 9.Nc3 Ne7 10.Bd2 Nbc6 11.Rae1 d6 12.Nd5)
-      g4 5.Ne5 {Gambit Kieseritzky} Nf6 6.Bc4 d5 7.exd5 Bd6 8.d4 Nh5 9.Bxf4 Nxf4 10.Be2 Qf6 11.O-O Nc6`,
-  },
-  {
     id: "sicilian-najdorf",
     name: "Sicilienne Ouverte (Najdorf & Cie)",
     eco: "B20",

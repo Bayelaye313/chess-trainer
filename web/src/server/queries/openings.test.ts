@@ -240,7 +240,8 @@ describe("getOpeningDetail", () => {
       const dynamicIds = listOpenings()
         .map((s) => s.id)
         .filter((id) => id.startsWith("lichess-"));
-      expect(dynamicIds.length).toBeGreaterThan(50);
+      // Purge du catalogue (2026-10-16) : 10 familles lichess-org gardées.
+      expect(dynamicIds.length).toBe(10);
       for (const id of dynamicIds) {
         const detail = getOpeningDetail(id)!;
         const userIsWhite = detail.opening.side === "white";
@@ -305,21 +306,15 @@ describe("listOpeningVariations", () => {
    * garder comme manches insatisfaisantes.
    */
   describe("rallonge/filtre les variantes trop courtes (BUG CORRIGÉ, Zukertort)", () => {
-    it("rallonge une variante courte avec de vrais coups théoriques empruntés à une autre famille (Kingside Fianchetto, Zukertort Opening)", () => {
-      const detail = getOpeningDetail("lichess-zukertort-opening")!;
-      const kingsideFianchetto = detail.variations.find((v) => v.name === "Kingside Fianchetto");
-      // Ligne d'origine (lichess-org) : seulement "Nf3 g6", 2 demi-coups —
-      // rallongée ici via la théorie globale (transposition Est-Indienne/Réti).
-      expect(kingsideFianchetto).toBeDefined();
-      expect(kingsideFianchetto!.sanMoves.length).toBeGreaterThanOrEqual(8);
-      expect(kingsideFianchetto!.sanMoves.slice(0, 2)).toEqual(["Nf3", "g6"]);
-    });
-
-    it("écarte du sélecteur une variante qui n'a réellement aucune suite dans toute la base (Basman Defense, 1.Nf3 h6)", () => {
-      const detail = getOpeningDetail("lichess-zukertort-opening")!;
-      // Aucune des ~3810 lignes importées ne prolonge "Nf3 h6" — l'extension
-      // ne peut rien y faire, elle reste sous `MIN_VARIATION_PLIES_TO_DISPLAY`.
-      expect(detail.variations.some((v) => v.name === "Basman Defense")).toBe(false);
+    // Exemples Zukertort retirés avec ces familles (purge du 2026-10-16) :
+    // la Moderne porte le même cas, une ligne lichess-org de 4 demi-coups.
+    it("rallonge une variante courte avec de vrais coups théoriques de la base globale (Norwegian Defense, Moderne)", () => {
+      const detail = getOpeningDetail("lichess-modern-defense")!;
+      const norwegian = detail.variations.find((v) => v.name === "Norwegian Defense");
+      // Ligne d'origine (lichess-org) : "e4 g6 d4 Nf6", 4 demi-coups.
+      expect(norwegian).toBeDefined();
+      expect(norwegian!.sanMoves.length).toBeGreaterThanOrEqual(8);
+      expect(norwegian!.sanMoves.slice(0, 4)).toEqual(["e4", "g6", "d4", "Nf6"]);
     });
 
     it(
@@ -337,10 +332,5 @@ describe("listOpeningVariations", () => {
       },
       30_000,
     );
-
-    it("garde les 2 variantes de Zukertort Defense (4 demi-coups pile, au plancher mais pas en dessous)", () => {
-      const detail = getOpeningDetail("lichess-zukertort-defense")!;
-      expect(detail.variations.map((v) => v.name).sort()).toEqual(["Kingside Variation", "Sicilian Knight Variation"]);
-    });
   });
 });

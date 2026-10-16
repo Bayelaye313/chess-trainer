@@ -1,6 +1,6 @@
 import { Chess } from "chess.js";
 import { beforeAll, describe, expect, it } from "vitest";
-import { collectNodes, mainLine } from "@/core/chess/pgn-tree";
+import { collectNodes, mainLine, type VariationNode } from "@/core/chess/pgn-tree";
 import { findOpening, OPENINGS } from "@/core/curriculum/openings";
 import {
   getEnrichedTreeForCuratedOpening,
@@ -24,9 +24,30 @@ import { getOpeningTree } from "./opening-tree-index";
 describe("listOpeningFamilies", () => {
   const families = listOpeningFamilies();
 
-  it("expose largement plus de familles que l'ancien plafond statique (~20 entrées)", () => {
-    expect(families.length).toBeGreaterThan(100);
+  it("n'expose QUE les 10 familles lichess-org gardées par la purge du catalogue (2026-10-16)", () => {
+    expect(families.map((f) => f.name).sort()).toEqual(
+      [
+        "Alekhine Defense",
+        "Benko Gambit",
+        "Benoni Defense",
+        "Bogo-Indian Defense",
+        "Catalan Opening",
+        "Modern Defense",
+        "Petrov's Defense",
+        "Semi-Slav Defense",
+        "Tarrasch Defense",
+        "Trompowsky Attack",
+      ].sort(),
+    );
   });
+
+  it("une famille retirée n'a plus de page, mais ses lignes restent en base (suites théoriques globales)", () => {
+    for (const id of ["lichess-zukertort-defense", "lichess-torre-attack", "lichess-colle-system", "lichess-queen-s-pawn-game", "lichess-indian-defense"]) {
+      expect(getImportedFamilyDetail(id), id).toBeNull();
+    }
+    // 1.Nf3 (Zukertort) reste connu de la base globale, au départ comme ailleurs.
+    expect(getImportedChildren(new Chess().fen()).some((c) => c.san === "Nf3")).toBe(true);
+  }, 20_000);
 
   it("n'expose jamais une famille déjà représentée par un chapitre curaté (voir CURATED_FAMILY_HUB)", () => {
     // "Ruy Lopez" (famille) ne doit jamais apparaître comme carte séparée : le
@@ -51,49 +72,26 @@ describe("listOpeningFamilies", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("attribue le côté NOIR à une famille « Defense » dont le préfixe commun s'arrête par coïncidence sur un coup Blanc", () => {
-    // Bug utilisateur direct (« pas de flèches de guide ni de hints sur
-    // Zukertort ») : "Zukertort Defense" ne partage entre ses variantes
-    // ("Kingside Variation", "Sicilian Knight Variation") que le tout premier
-    // coup 1.Nf3 — un coup BLANC qui n'a rien à voir avec l'idée du chapitre.
-    // Avant la correction (`sideForFamily`), `side` valait "white" à tort :
-    // l'utilisateur jouait les Blancs dans un chapitre pensé pour s'entraîner
-    // à défendre en Noir, l'IA enchaînant seule les coups noirs distinctifs
-    // (la vraie matière du chapitre) — la manche se terminait en 1-2 coups.
-    const zukertortDefense = families.find((f) => f.name === "Zukertort Defense");
-    expect(zukertortDefense).toBeDefined();
-    expect(zukertortDefense!.side).toBe("black");
+  it("Moderne : ligne de référence contre 1.e4 (1.e4 g6 2.d4 Bg7), côté Noir", () => {
+    const modern = families.find((f) => f.name === "Modern Defense")!;
+    expect(modern.side).toBe("black");
+    expect(modern.rootMoves).toEqual(["e4", "g6", "d4", "Bg7"]);
   });
 
-  it("garde le côté BLANC d'une famille « Opening » qui EST elle-même une ligne cataloguée à la longueur du préfixe commun", () => {
-    // Contre-exemple qui borne la correction ci-dessus : "Zukertort Opening"
-    // partage aussi le préfixe ["Nf3"] entre ses variantes, MAIS une ligne
-    // "Zukertort Opening" existe aussi telle quelle (sans suffixe), longue
-    // d'exactement 1 coup — un vrai choix éditorial Blanc, pas un simple
-    // préfixe incident. `side` doit rester "white", jamais basculer à "black".
-    const zukertortOpening = families.find((f) => f.name === "Zukertort Opening");
-    expect(zukertortOpening).toBeDefined();
-    expect(zukertortOpening!.side).toBe("white");
-  });
-
-  /**
-   * BUG RÉEL RESTANT après le correctif ci-dessus (retour utilisateur direct,
-   * « il y a un réel bug sur Zukertort ») : `side` avait beau devenir correct
-   * pour "Zukertort Defense", `rootMoves` restait bloqué à `["Nf3"]` — un
-   * SEUL demi-coup, intégralement joué par les BLANCS. `getOpeningDetail`
-   * promeut directement `rootMoves` en script interactif de la Ligne
-   * principale (`opening.moves`) : ce script ne contenait donc STRUCTURELLEMENT
-   * aucun coup à jouer pour l'utilisateur (censé s'entraîner à jouer les
-   * Noirs) — l'IA jouait Nf3 seule, puis la manche se terminait aussitôt.
-   * `familyReferenceMoves` doit désormais étendre `rootMoves` d'un coup pour
-   * que sa longueur reste cohérente avec `side`.
-   */
-  it("étend `rootMoves` d'un coup quand le préfixe commun s'arrête sur un coup de l'adversaire (BUG CORRIGÉ, Zukertort Defense)", () => {
-    const zukertortDefense = families.find((f) => f.name === "Zukertort Defense");
-    expect(zukertortDefense).toBeDefined();
-    // Avant le correctif : `["Nf3"]`, un seul demi-coup Blanc — aucune place
-    // pour le moindre coup Noir dans ce qui devient le script interactif.
-    expect(zukertortDefense!.rootMoves.length).toBeGreaterThanOrEqual(2);
+  it("rattache les familles sœurs ou absorbées comme lignes internes de leur carte", () => {
+    const hasLine = (tree: VariationNode, moves: readonly string[]): boolean =>
+      moves.length === 0 || tree.children.some((child) => child.san === moves[0] && hasLine(child, moves.slice(1)));
+    // Benko Gambit Accepted / Declined sous "Benko Gambit" (8 + 10 + 6 lignes).
+    const benko = families.find((f) => f.name === "Benko Gambit")!;
+    expect(benko.variantCount).toBe(24);
+    expect(hasLine(getImportedFamilyDetail(benko.id)!.tree, ["d4", "Nf6", "c4", "c5", "d5", "b5", "Bg5"])).toBe(true);
+    // Semi-Slav Defense Accepted sous "Semi-Slav Defense".
+    expect(families.find((f) => f.name === "Semi-Slav Defense")!.variantCount).toBe(70);
+    // Pterodactyl Defense sous "Modern Defense".
+    const modern = families.find((f) => f.name === "Modern Defense")!;
+    expect(hasLine(getImportedFamilyDetail(modern.id)!.tree, ["Nf3", "c5", "c4", "g6", "d4", "Bg7", "e4", "Qa5+"])).toBe(true);
+    // Neo-Grünfeld Defense sous le chapitre curaté "grunfeld".
+    expect(hasLine(getEnrichedTreeForCuratedOpening(findOpening("grunfeld")!), ["d4", "Nf6", "c4", "g6", "f3", "d5"])).toBe(true);
   });
 
   /**
@@ -122,22 +120,11 @@ describe("listOpeningFamilies", () => {
  * jamais seulement la ligne nue.
  */
 describe("hubs curatés : aucune famille sœur orpheline (deep test du catalogue entier)", () => {
-  it("Gambit du Roi : ligne principale ET les 3 gambits nommés demandés sont bien atteignables, profondément", () => {
-    const kingsGambit = findOpening("kings-gambit")!;
-    const tree = getEnrichedTreeForCuratedOpening(kingsGambit);
-    const line = mainLine(tree);
-    // Avant le correctif : 3 demi-coups pile (`moves`), aucun embranchement.
-    expect(line.length).toBeGreaterThanOrEqual(16);
-
-    const namedComments = new Set<string>();
-    const collect = (node: { comment: string | null; children: readonly (typeof tree)[] }): void => {
-      if (node.comment) namedComments.add(node.comment);
-      for (const child of node.children) collect(child);
-    };
-    collect(tree);
-    for (const expected of ["Gambit du Fou", "Gambit Kieseritzky", "Gambit Muzio"]) {
-      expect(namedComments.has(expected), `variante attendue introuvable : "${expected}"`).toBe(true);
-    }
+  it("vienna-gambit et kings-gambit ont quitté le catalogue (purge du 2026-10-16)", () => {
+    expect(findOpening("vienna-gambit")).toBeNull();
+    expect(findOpening("kings-gambit")).toBeNull();
+    const familyNames = new Set(listOpeningFamilies().map((f) => f.name));
+    for (const name of ["King's Gambit", "Vienna Game"]) expect(familyNames.has(name), name).toBe(false);
   });
 
   it("Gambit Dame : la fusion absorbe désormais aussi « Queen's Gambit Accepted/Declined » (256 lignes, avant orphelines)", () => {
@@ -170,11 +157,10 @@ describe("hubs curatés : aucune famille sœur orpheline (deep test du catalogue
       // un chapitre qui perd tout son arbre) — PAS un désaccord esthétique sur
       // la profondeur pédagogique idéale de chaque chapitre. Les chapitres
       // listés ci-dessous n'ont simplement pas encore de `pgn` authored à la
-      // main (contrairement à `kings-gambit`, désormais réparé) : un futur
+      // main  : un futur
       // chantier de contenu, pas un bug de fusion — voir le rapport de
       // livraison du 2026-09-04.
       const KNOWN_SHALLOW_PENDING_CONTENT = new Set([
-        "vienna-gambit",
         "pirc-defense",
         "scandinavian",
         "london-system",

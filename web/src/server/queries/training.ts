@@ -26,6 +26,7 @@ import {
 import type { Motif } from "@/core/chess/types";
 import { findOpening } from "@/core/curriculum/openings";
 import { listOpeningFamilies } from "@/server/curriculum/imported-openings-index";
+import { isCatalogOpeningId } from "@/server/curriculum/opening-slug";
 import { db } from "@/server/db";
 import {
   games,
@@ -256,7 +257,9 @@ export async function listTrainingRecommendations(
       priority: scorePuzzleDue(daysOverdue(puzzle.due, now)),
       dueAt: puzzle.due,
     })),
-    ...dueOpenings.map((opening) => ({
+    // Purge du catalogue (2026-10-16) : la progression d'une ouverture retirée
+    // reste en base mais ne doit plus produire de carte vers une page absente.
+    ...dueOpenings.filter((opening) => isCatalogOpeningId(opening.openingId)).map((opening) => ({
       entityType: "opening" as const,
       entityId: `${opening.openingId}:${opening.variationKey}`,
       // Preuve locale : famille + variante dénormalisées + dernier score du
