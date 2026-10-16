@@ -1,0 +1,52 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Gambit Écossais (avec les Blancs) » : 1.e4 e5 2.Nf3
+ * Nc6 3.d4 exd4 4.Bc4 — onglet Ouvertures, format « un commentaire par
+ * coup » de l'Académie, lu par `CourseTreeViewer` (route
+ * `/ouvertures/scotch-gambit/cours`). Public visé : 1500-1800 Elo.
+ *
+ * ## Contenu (2026-10-11)
+ *
+ * 1. Fiche d'identité et 4...Nf6 (Deux Cavaliers) 5.e5 d5 6.Bb5, avec
+ *    5...Ng4, 5...Ne4 6.Qe2 et les pièges 6...f5? / 6...d5? (exf6 / exd6 en
+ *    passant, cavalier e4 cloué).
+ * 2. 4...Bc5 : 5.c3 (5...dxc3? 6.Bxf7+!) et l'Attaque Max Lange après
+ *    5.O-O Nf6 6.e5 (6...Ne4? 7.Re1). 5.O-O seul est réfuté par 5...d6.
+ * 3. 4...Bb4+ 5.c3 : 5...Bc5? 6.cxd4 et 6...Bc5? 7.Bxf7+! Qd5+.
+ * 4. 4...d6, la réponse passive.
+ * 5. 4...f6?, la faute qui affaiblit le roi.
+ * 6. 4...Qf6 et 4...Qe7, la dame sortie trop tôt.
+ *
+ * Indices progressifs : chaque faute noire porte trois balises `[%hint]`
+ * (1. principe violé, 2. faiblesse, 3. action de punition) et une balise
+ * `[%hintcsl]` (cases allumées à partir du 2e indice) — voir
+ * `ChessMoveNode.hints` et le bouton « Indice » de `CourseTreeViewer`.
+ *
+ * Sources : aucun livre de `docs/` ne traite 4.Bc4 (Emms, « Starting Out:
+ * The Scotch Game », et Lane, « The Scotch Game Explained », couvrent
+ * 4.Nxd4 ; « Winning with the Scotch » est un scan sans couche texte ; pas
+ * de Pavlovic sur le disque). Les lignes suivent la théorie établie du
+ * Gambit Écossais et sont TOUTES arbitrées par Stockfish 18 natif
+ * (profondeur 16). Toute la prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Voir `op-scotch-game.ts` : `evaluationScore` / `evaluationMate` (balise
+ * `[%eval]`), `showEvalBar`, `freeze` (balise `[%txt "…"]` sur CHAQUE
+ * commentaire), plus `hints` / `hintHighlights`.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/scotch-gambit.pgn` (et l'en-tête
+ * `scotch-gambit.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16 [pgn compilé]`.
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]` ni un `[%hint]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

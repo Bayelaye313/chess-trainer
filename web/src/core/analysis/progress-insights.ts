@@ -1,0 +1,289 @@
+/**
+ * Service d'agrégation pour l'onglet « Rapport » : à partir des coups déjà
+ * analysés d'un joueur (table `moves`, croisée avec `games` pour l'ECO et le
+ * résultat), calcule son profil de faiblesses sur 4 axes.
+ *
+ * Fonctions pures, sans accès base de données ni moteur — l'appelant (une
+ * requête serveur, à écrire à l'étape suivante) traduit les lignes SQL vers
+ * `PlayerGameRecord`/`PlayerMoveRecord` (voir `analysis/types.ts`), exactement
+ * comme `server/queries/games.ts` le fait déjà pour `AnalysedPly`.
+ */
+import { Chess } from "chess.js";
+import { hasHangingPiece } from "../chess/attacks";
+import { isReviewable, type GamePhase } from "../chess/types";
+import { computeAccuracy } from "./timeline";
+import type {
+  HangingPieceStats,
+  OpeningPerformance,
+  PhaseAccuracy,
+  PlayerGameRecord,
+  PlayerMoveRecord,
+  PlayerProgressInsights,
+  TacticalMotifStats,
+  TrackedTacticalMotif,
+} from "./types";
+
+const GAME_PHASES: readonly GamePhase[] = ["opening", "middlegame", "endgame"];
+const TRACKED_TACTICAL_MOTIFS: readonly TrackedTacticalMotif[] = ["fork", "pin"];
+
+/** Nom affiché quand aucune partie d'un groupe ECO n'a de nom d'ouverture connu. */
+export const UNKNOWN_OPENING_NAME = "Ouverture personnalisée / Non répertoriée";
+
+/**
+ * Axe 1 — Précision par phase de jeu.
+ *
+ * Ne recalcule jamais la phase elle-même (`gamePhase`, `chess/phase.ts`) :
+ * elle est déjà posée sur chaque coup à l'analyse (`evaluate-move.ts`), on se
+ * contente de regrouper par cette étiquette déjà connue.
+ */
+export function computePhaseAccuracy(moves: readonly PlayerMoveRecord[]): Record<GamePhase, PhaseAccuracy> {
+  const byPhase = new Map<GamePhase, PlayerMoveRecord[]>(GAME_PHASES.map((phase) => [phase, []]));
+  for (const move of moves) byPhase.get(move.phase)!.push(move);
+
+  const result = {} as Record<GamePhase, PhaseAccuracy>;
+  for (const phase of GAME_PHASES) {
+    const inPhase = byPhase.get(phase)!;
+    result[phase] = { phase, movesAnalysed: inPhase.length, accuracy: computeAccuracy(inPhase) };
+  }
+  return result;
+}
+
+/**
+ * Axe 2 — Fourchettes et clouages : trouvés vs manqués.
+ *
+ * S'appuie sur `motifs`/`motifFound`, déjà posés à l'analyse par
+ * `detectMotifs` (lui-même bâti sur `chess/attacks.ts` — `isPinned`,
+ * `isUndefended`) : un coup « trouvé » est un coup joué qui EST le meilleur
+ * coup quand celui-ci exploitait le motif ; « manqué » sinon. Ne recalcule pas
+ * la géométrie du motif ici — ce serait dupliquer `detectMotifs` pour rien,
+ * l'information est déjà sur chaque coup analysé.
+ *
+ * Limite assumée : `motifFound` est un seul booléen par coup, pas un par
+ * motif — un coup dont le meilleur choix cumulait fourchette ET clouage
+ * compte les deux comme trouvés ou les deux comme manqués ensemble (cas rare,
+ * `detectCaptureMotifs` n'en produit qu'un des deux à la fois, mais fourchette
+ * et clouage restent détectés indépendamment et peuvent en théorie coexister).
+ */
+export function computeTacticalMotifStats(
+  moves: readonly PlayerMoveRecord[],
+): Record<TrackedTacticalMotif, TacticalMotifStats> {
+  const result = {} as Record<TrackedTacticalMotif, TacticalMotifStats>;
+
+  for (const motif of TRACKED_TACTICAL_MOTIFS) {
+    let found = 0;
+    let missed = 0;
+    for (const move of moves) {
+      if (!move.motifs.includes(motif)) continue;
+      if (move.motifFound) found += 1;
+      else missed += 1;
+    }
+    const total = found + missed;
+    result[motif] = { motif, found, missed, successRate: total > 0 ? Math.round((found / total) * 100) : null };
+  }
+
+  return result;
+}
+
+/** Le joueur a-t-il gagné cette partie ? Nulle et partie sans résultat comptent comme non-victoire. */
+export function didPlayerWin(game: Pick<PlayerGameRecord, "result" | "playerColor">): boolean {
+  if (!game.result) return false;
+  return (
+    (game.result === "1-0" && game.playerColor === "w") ||
+    (game.result === "0-1" && game.playerColor === "b")
+  );
+}
+
+/**
+ * Nom affiché pour un groupe de parties partageant le même code ECO : le nom
+ * le plus fréquent parmi elles (`games.openingName`, déjà résolu à l'import —
+ * voir la docstring de `PlayerGameRecord.openingName`), à égalité le premier
+ * rencontré pour rester déterministe. `UNKNOWN_OPENING_NAME` si aucune partie
+ * du groupe n'a de nom.
+ */
+function representativeOpeningName(gamesForEco: readonly PlayerGameRecord[]): string {
+  const counts = new Map<string, number>();
+  for (const game of gamesForEco) {
+    if (!game.openingName) continue;
+    counts.set(game.openingName, (counts.get(game.openingName) ?? 0) + 1);
+  }
+
+  let bestName: string | null = null;
+  let bestCount = 0;
+  for (const [name, count] of counts) {
+    if (count > bestCount) {
+      bestName = name;
+      bestCount = count;
+    }
+  }
+
+  return bestName ?? UNKNOWN_OPENING_NAME;
+}
+
+/**
+ * Ply de la première gaffe/imprécision du joueur en phase d'ouverture, pour
+ * UNE partie — `null` si elle n'en compte aucune. Même sélection que
+ * `earliestOpeningMistakePerGame` (`server/queries/opening-mistakes.ts`),
+ * mais sur des `PlayerMoveRecord` déjà groupés par partie plutôt que sur des
+ * lignes SQL : pas de raison de dupliquer une requête DB pour ce seul besoin.
+ */
+function earliestOpeningMistakePly(moves: readonly PlayerMoveRecord[]): number | null {
+  const plies = moves
+    .filter((move) => move.byPlayer && move.phase === "opening" && isReviewable(move.quality))
+    .map((move) => move.ply);
+  return plies.length > 0 ? Math.min(...plies) : null;
+}
+
+/**
+ * Camp majoritaire du joueur dans un groupe ECO — majorité stricte des
+ * `playerColor`, à égalité le PREMIER rencontré (déterminisme, même contrat
+ * que `representativeOpeningName`). Alimente `OpeningPerformance.playerSide`
+ * (feuille de route Zone 4 : rotation du plateau depuis le Rapport).
+ */
+function majorityPlayerSide(gamesForEco: readonly PlayerGameRecord[]): "w" | "b" {
+  let whites = 0;
+  for (const game of gamesForEco) {
+    if (game.playerColor === "w") whites += 1;
+  }
+  if (whites > gamesForEco.length / 2) return "w";
+  if (whites < gamesForEco.length / 2) return "b";
+  return gamesForEco[0].playerColor;
+}
+
+/**
+ * Axe 3 — Performance par ouverture (code ECO).
+ *
+ * Parties sans ECO (pas encore catégorisées, voir `games.eco`) exclues plutôt
+ * que regroupées sous une clé « inconnue » qui fausserait la lecture — mieux
+ * vaut une ouverture absente du tableau qu'une entrée qui ne veut rien dire.
+ */
+export function computeOpeningPerformance(games: readonly PlayerGameRecord[]): OpeningPerformance[] {
+  const byEco = new Map<string, PlayerGameRecord[]>();
+  for (const game of games) {
+    if (!game.eco) continue;
+    const list = byEco.get(game.eco) ?? [];
+    list.push(game);
+    byEco.set(game.eco, list);
+  }
+
+  const performance: OpeningPerformance[] = [];
+  for (const [eco, gamesForEco] of byEco) {
+    const wins = gamesForEco.filter(didPlayerWin).length;
+    const playerMoves = gamesForEco.flatMap((game) => game.moves.filter((move) => move.byPlayer));
+    const mistakePlies = gamesForEco
+      .map((game) => earliestOpeningMistakePly(game.moves))
+      .filter((mistakePly): mistakePly is number => mistakePly !== null);
+    performance.push({
+      eco,
+      name: representativeOpeningName(gamesForEco),
+      gamesPlayed: gamesForEco.length,
+      wins,
+      winRate: Math.round((wins / gamesForEco.length) * 100),
+      accuracy: computeAccuracy(playerMoves),
+      avgMistakePly:
+        mistakePlies.length > 0
+          ? Math.round(mistakePlies.reduce((sum, mistakePly) => sum + mistakePly, 0) / mistakePlies.length)
+          : null,
+      playerSide: majorityPlayerSide(gamesForEco),
+    });
+  }
+
+  return performance.sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+}
+
+/**
+ * Échantillon minimal pour qu'une ouverture apparaisse dans le TABLEAU de
+ * l'onglet Rapport (`OpeningPerformanceCard`) — audit UX du 2026-09-02 : sous
+ * 5 parties réellement jouées, la ligne n'apporte rien qu'une pollution
+ * visuelle (un coup d'essai isolé n'est pas une statistique). Seuil
+ * volontairement DIFFÉRENT de `STRUGGLING_OPENING_MIN_GAMES` ci-dessous (3) :
+ * le bandeau d'alerte reste plus permissif, alerter tôt sur une faiblesse
+ * naissante vaut mieux qu'attendre 5 parties, alors que le tableau complet
+ * doit au contraire rester lisible.
+ */
+export const MIN_GAMES_IN_OPENING_TABLE = 5;
+
+/**
+ * Filtre `performance` pour l'affichage du tableau de l'onglet Rapport — pure,
+ * jamais appliquée à ce que consomme `findStrugglingOpening` (voir son propre
+ * seuil, plus permissif). `server/queries/progress.ts#getPlayerProgress`
+ * calcule `strugglingOpening` sur la liste COMPLÈTE avant d'appliquer ce
+ * filtre au champ `openingPerformance` qu'il renvoie à la page.
+ */
+export function filterOpeningPerformanceForDisplay(
+  performance: readonly OpeningPerformance[],
+  min: number = MIN_GAMES_IN_OPENING_TABLE,
+): OpeningPerformance[] {
+  return performance.filter((p) => p.gamesPlayed >= min);
+}
+
+/** Échantillon minimal avant d'accuser une ouverture — sous ce seuil, un mauvais score n'est qu'un accident statistique. */
+const STRUGGLING_OPENING_MIN_GAMES = 3;
+/** Taux de victoire (%) en-dessous duquel une ouverture est jugée « en difficulté ». */
+const STRUGGLING_OPENING_MAX_WIN_RATE = 40;
+
+/**
+ * La pire ouverture du joueur, pour le bandeau « ⚠️ Ouverture en difficulté »
+ * du Rapport — `null` si aucune n'a un échantillon suffisant ET un taux de
+ * victoire assez bas pour qualifier (jamais accuser une ouverture jouée une
+ * ou deux fois : une défaite isolée n'est pas une lacune systémique).
+ */
+export function findStrugglingOpening(
+  performance: readonly OpeningPerformance[],
+  minGames: number = STRUGGLING_OPENING_MIN_GAMES,
+  maxWinRate: number = STRUGGLING_OPENING_MAX_WIN_RATE,
+): OpeningPerformance | null {
+  const candidates = performance.filter((p) => p.gamesPlayed >= minGames && p.winRate <= maxWinRate);
+  if (candidates.length === 0) return null;
+  return [...candidates].sort((a, b) => a.winRate - b.winRate)[0];
+}
+
+/** Rejoue `uci` depuis `fenBefore` ; `null` si le coup stocké s'avère illégal (ne devrait pas arriver). */
+function tryApplyUci(fenBefore: string, uci: string): Chess | null {
+  const board = new Chess(fenBefore);
+  try {
+    board.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4, 5) || undefined });
+    return board;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Axe 4 — Pièces laissées en prise.
+ *
+ * Ne rejoue le coup que pour les gaffes du joueur (`quality === "blunder"`) :
+ * c'est le seul cas que demande cet axe, et rejouer chaque coup de chaque
+ * partie juste pour ce chiffre serait un coût inutile.
+ */
+export function computeHangingPieceStats(games: readonly PlayerGameRecord[]): HangingPieceStats {
+  let blunderCount = 0;
+  let totalBlunders = 0;
+
+  for (const game of games) {
+    for (const move of game.moves) {
+      if (!move.byPlayer || move.quality !== "blunder") continue;
+      totalBlunders += 1;
+
+      const after = tryApplyUci(move.fenBefore, move.uci);
+      if (after && hasHangingPiece(after, game.playerColor)) blunderCount += 1;
+    }
+  }
+
+  return { blunderCount, totalBlunders };
+}
+
+/**
+ * Profil de faiblesses complet d'un joueur, sur toutes ses parties analysées.
+ *
+ * Pure : aucun accès base de données ni moteur — voir l'en-tête du fichier.
+ */
+export function aggregatePlayerProgress(gamesData: readonly PlayerGameRecord[]): PlayerProgressInsights {
+  const playerMoves = gamesData.flatMap((game) => game.moves.filter((move) => move.byPlayer));
+
+  return {
+    phaseAccuracy: computePhaseAccuracy(playerMoves),
+    tacticalMotifs: computeTacticalMotifStats(playerMoves),
+    openingPerformance: computeOpeningPerformance(gamesData),
+    hangingPieces: computeHangingPieceStats(gamesData),
+  };
+}

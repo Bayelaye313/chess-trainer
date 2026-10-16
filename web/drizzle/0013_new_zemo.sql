@@ -1,0 +1,1 @@
+ALTER TABLE `moves` ADD `best_pv` text DEFAULT '[]' NOT NULL;

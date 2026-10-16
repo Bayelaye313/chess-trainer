@@ -1,0 +1,270 @@
+## Fiche d'identité et le piège du Fork Trick (4.Nc3?!)
+{ L'ITALIENNE DES QUATRE CAVALIERS, AVEC LES BLANCS (ECO C50).
+
+Le vrai enjeu : le fou c4 vise f7, le point faible du roque noir, et les Blancs veulent développer leurs quatre pièces mineures avant d'ouvrir le jeu. Le danger : l'ordre des coups. Si les Blancs jouent Nc3 alors que le pion e4 n'est défendu par rien, les Noirs disposent du Fork Trick : ...Nxe4! puis ...d5, la fourchette pion qui récupère la pièce.
+
+Les plans à connaître par coeur :
+- Plan blanc : Bc4, d3 (le pion d3 défend e4 AVANT Nc3), puis Nc3, O-O, h3 et un jeu de manoeuvre lent : c'est la Giuoco Pianissimo (chapitres 2, 3 et 7).
+- Plan noir : ...Bc5 ou ...Nf6, ...d6, ...O-O, et des coups de clouage comme ...Bg4 si les Blancs oublient h3 (chapitre 3).
+- Les gambits : Evans (chapitre 4) et Fegatello (chapitre 5) pour les Blancs ; ...Nd4 et la Défense Polerio (chapitre 6) côté noir.
+
+Honnêteté moteur : Stockfish 18 confirme que le Fork Trick ne PERD rien pour les Blancs. Il leur enlève simplement tout avantage d'ouverture : les Noirs égalisent sans effort (environ -0.1). C'est une erreur d'ordre de coups, pas une gaffe.
+
+Les structures types (relevées sur la position finale de chaque chapitre) :
+- Chapitre 1 : centre ouvert, pions doublés c6-c7 noirs contre la paire de fous noire.
+- Chapitres 2 et 3 : pions doublés e3-e4 blancs (plus b2-b3 au chapitre 2) et colonne f ouverte ; le pion e3 soutient la poussée d4.
+- Chapitres 4 et 5 : centre ouvert, roi noir sans abri, colonnes d et e pour les tours blanches.
+- Chapitre 6 : un pion de plus pour les Blancs (majorité à l'aile dame) contre deux fous noirs actifs.
+- Chapitre 7 : pion blanc avancé en e5 qui coupe l'échiquier, colonnes d et f ouvertes. }
+1. e4 { Le pion roi au centre : il libère le fou f1 et la dame. [%csl Ge4] }
+1... e5 { La réponse symétrique : les Noirs prennent leur part du centre. }
+2. Nf3 { Le cavalier attaque le pion e5 avec gain de temps. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'ITALIENNE : le fou sur la diagonale a2-g8, il vise f7, défendu seulement par le roi. [%csl Rf7] [%cal Gc4f7] }
+(3. Nc3 { L'ordre du cahier des charges : les Quatre Cavaliers purs. } 3... Nf6 { Le quatrième cavalier sort. } 4. Bc4 { Même position que dans la ligne principale après 4.Nc3 : le Fork Trick 4...Nxe4! est disponible. [%cal Gc4f7] })
+3... Nf6 { La Défense des Deux Cavaliers : le cavalier attaque e4 tout de suite. [%cal Gf6e4] }
+4. Nc3 { L'ERREUR D'ORDRE DE COUPS : le cavalier défend e4 en apparence, mais une tactique existe. Stockfish 18 : de +0.3 à environ -0.1. [%hint "Indice 1 : les Blancs développent un cavalier sans que le pion e4 soit vraiment protégé par un pion."] [%hint "Indice 2 : la case d5. Un pion noir en d5 attaquerait en même temps le fou c4 et un cavalier en e4."] [%hintcsl Rd5,Re4] [%hint "Indice 3 : 4...Nxe4! puis 5...d5 : la fourchette pion récupère la pièce."] }
+4... Nxe4 { LE FORK TRICK : les Noirs donnent provisoirement le cavalier. [%cal Gf6e4] }
+5. Nxe4 { Les Blancs reprennent la pièce. }
+5... d5 { La fourchette : le pion d5 attaque le fou c4 et le cavalier e4. Les Noirs vont récupérer leur pièce. [%csl Rc4,Re4] [%cal Gd5c4,Gd5e4] }
+6. Bd3 { Le meilleur : le fou recule et protège le cavalier e4. Après ...dxe4 Bxe4, les Blancs gardent l'égalité. [%cal Gd3e4] }
+(6. Bb5 { La faute naturelle : le fou cloue le cavalier c6, mais le cavalier e4 reste en prise. [%hint "Indice 1 : le fou s'occupe du cavalier c6 et oublie que le cavalier e4 est toujours attaqué."] [%hint "Indice 2 : la case g2. Si le cavalier blanc prend en e5, la dame noire peut viser g2 et le cavalier en même temps."] [%hintcsl Rg2,Re5] [%hint "Indice 3 : 6...dxe4 7.Nxe5 Qg5! : la dame attaque e5 et g2."] } 6... dxe4 { Les Noirs reprennent la pièce. } 7. Nxe5 { Les Blancs croient regagner un pion grâce au clouage. } 7... Qg5 { LA PUNITION : la dame attaque le cavalier e5, le fou b5 et le pion g2. [%cal Gg5e5,Gg5g2,Gg5b5] } 8. Nxc6 { Le cavalier prend avec menace. } 8... Qxb5 { La dame prend le fou. } 9. Nd4 { Le cavalier s'échappe avec gain de temps sur la dame. } 9... Qg5 { À RETENIR. PRO TIP : les Noirs ont une pièce contre deux pions, environ -2.2. Un clouage ne protège jamais une pièce qui reste en prise ailleurs. })
+(6. Bxd5 { L'autre faute : on rend le fou pour garder le cavalier. [%hint "Indice 1 : les Blancs échangent leur bon fou contre un simple pion."] [%hint "Indice 2 : la case d5 : après ...Qxd5, la dame noire attaque le cavalier e4 et domine le centre."] [%hintcsl Rd5,Re4] [%hint "Indice 3 : 6...Qxd5 : la dame reprend avec gain de temps."] } 6... Qxd5 { La dame reprend et attaque le cavalier e4. } 7. Nc3 { Le cavalier se sauve avec gain de temps. } 7... Qd6 { La dame recule. } 8. O-O { Le roi à l'abri. } 8... Bg4 { À RETENIR. PRO TIP : les Noirs ont la paire de fous et le centre, environ -1.4. Garder le fou c4, c'est garder sa pression sur f7. })
+6... dxe4 { Les Noirs récupèrent la pièce : le matériel est égal. }
+7. Bxe4 { Le fou reprend le pion. [%cal Gd3e4] }
+7... Bd6 { Les Noirs défendent e5 et préparent le roque. }
+8. d4 { Les Blancs ouvrent le centre pendant que les deux rois sont encore au centre. [%cal Gd4e5] }
+8... exd4 { Les Noirs prennent. }
+9. Bxc6+ { On échange le fou pour doubler les pions noirs. [%cal Ge4c6] }
+9... bxc6 { Pions doublés c6-c7, mais les Noirs gardent la paire de fous. [%csl Rc6,Rc7] }
+10. Qxd4 { La dame reprend le pion au centre. [%csl Gd4] }
+10... O-O { Le roi noir à l'abri. }
+11. Be3 { Le fou se développe et prépare le grand roque. [%cal Ge1c1] }
+11... Re8 { La tour prend la colonne e ouverte. [%cal Ge8e3] }
+12. O-O-O { Grand roque : la tour arrive en d1. [%cal Gd1d8] }
+12... Be6 { À RETENIR. PRO TIP : égalité, environ -0.1. Paire de fous noire contre pions doublés c6-c7 : personne n'a l'avantage. La leçon pour les Blancs : dans l'Italienne, jouer d3 AVANT Nc3, ou alors accepter cette égalité sans rien. }
+
+## La ligne saine : Giuoco Pianissimo (4.d3 avant 5.Nc3)
+{ LA GIUOCO PIANISSIMO, LE BON ORDRE DE COUPS.
+
+L'idée : le pion d3 protège e4 avec un pion. Le Fork Trick n'existe plus, et les Blancs peuvent sortir Nc3 en toute sécurité. On joue lentement : développement complet, roque, h3, et on cherche la poussée d4 ou f4 plus tard.
+
+Honnêteté moteur : la Pianissimo est une partie égale (environ 0.0 à +0.3). Stockfish 18 préfère même 6.Na4 ou 6.a3 à 6.Be3 (environ +0.2 contre -0.2) : avec 6.Be3, les Blancs acceptent des pions doublés en e3 après ...Bxe3 fxe3. C'est voulu : le pion e3 soutient d4 et la colonne f s'ouvre pour la tour f1. }
+1. e4 { Le pion roi. [%csl Ge4] }
+1... e5 { La réponse symétrique. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'Italienne : le fou vise f7. [%cal Gc4f7] }
+3... Bc5 { Le Giuoco Piano : le fou noir vise f2, le point faible blanc. [%cal Gc5f2] }
+(3... Nf6 { Les Deux Cavaliers : ici on ne joue PAS 4.Nc3?! (Fork Trick, chapitre 1). } 4. d3 { Le pion d3 protège d'abord e4. [%cal Gd3e4] } 4... Bc5 { Le fou sort. } 5. Nc3 { Même position que la ligne principale. [%csl Ge4] })
+4. d3 { LE COUP CLÉ DE L'ORDRE : le pion d3 protège e4 avec un pion, avant que le cavalier aille en c3. [%csl Ge4] [%cal Gd3e4] }
+4... Nf6 { Le cavalier attaque e4, mais e4 est déjà protégé. [%cal Gf6e4] }
+5. Nc3 { Maintenant Nc3 est sûr : c'est l'Italienne des Quatre Cavaliers. [%cal Gc3d5] }
+5... d6 { Le coup solide : les Noirs soutiennent e5 et ouvrent le fou c8. }
+(5... Nxe4 { Le Fork Trick à contretemps : il ne marche plus. [%hint "Indice 1 : les Noirs copient un truc tactique sans vérifier que la position a changé : notre pion d3 protège e4."] [%hint "Indice 2 : la case e4 : le pion d3 peut reprendre le cavalier, et sans cavalier blanc en e4 la fourchette ...d5 n'attaque plus rien."] [%hintcsl Ge4,Gd3] [%hint "Indice 3 : 6.dxe4! : on prend avec le pion, une pièce de plus."] } 6. dxe4 { LA RÉFUTATION LA PLUS SIMPLE : le pion reprend, la fourchette ...d5 n'existe plus. Une pièce de plus, environ +4.2. [%cal Gd3e4] } (6. Nxe4 { Plus compliqué : on laisse la fourchette arriver. } 6... d5 { La fourchette. } 7. Nxc5 { On prend le fou c5 avant de sauver le nôtre. [%cal Ge4c5] } 7... dxc4 { Les Noirs prennent le fou c4. } 8. O-O { À RETENIR. PRO TIP : une pièce de plus quand même, environ +2.9, mais 6.dxe4 était plus net. }) 6... d6 { Les Noirs n'ont rien pour la pièce. } 7. O-O { À RETENIR. PRO TIP : environ +4.1. C'est tout l'intérêt de 4.d3 : avec un pion en d3, le Fork Trick perd une pièce. })
+6. Be3 { Le fou défie le fou c5. Plus modeste que 6.Na4 selon le moteur, mais facile à jouer : si ...Bxe3 fxe3, la colonne f s'ouvre. [%cal Ge3c5] }
+6... Bb6 { Le fou évite l'échange et garde la diagonale a7-g1. [%cal Gb6g1] }
+7. O-O { Le roi à l'abri. [%csl Gg1] }
+7... O-O { Les Noirs roquent aussi : position symétrique. }
+8. h3 { LA PROPHYLAXIE : on enlève la case g4 au fou c8 et au cavalier f6 (voir chapitre 3). [%csl Gg4] [%cal Gh3g4] }
+8... Bxe3 { Les Noirs échangent les fous. }
+9. fxe3 { On reprend vers le centre : pions doublés e3-e4, mais le pion e3 contrôle d4 et la colonne f s'ouvre. [%csl Ge3,Gd4] [%cal Gf1f7] }
+9... Na5 { Le cavalier chasse le fou c4, le meilleur coup noir. [%cal Ga5c4] }
+10. Bb3 { Le fou recule et reste sur la diagonale de f7. [%cal Gb3f7] }
+10... Bd7 { Les Noirs développent le dernier fou. }
+11. Qd2 { La dame relie les tours et surveille la colonne f. [%cal Gd2f2] }
+11... Nxb3 { Les Noirs prennent la paire de fous en échange. }
+12. axb3 { On reprend vers le centre : la tour a1 prend la colonne a. [%cal Ga1a7] }
+12... a5 { Les Noirs fixent l'aile dame. }
+13. Ne2 { À RETENIR. PRO TIP : égalité, environ 0.0. Le cavalier va en g3, d'où il vise f5. Plan blanc : Ng3, d4 soutenu par e3, et la tour f1 sur la colonne f ouverte. Dans la Pianissimo, on gagne par les manoeuvres, pas par une tactique d'ouverture. [%cal Ge2g3,Gg3f5] }
+
+## La prophylaxie face au clouage : le coup h3
+{ LE CLOUAGE ...Bg4 ET LE COUP h3.
+
+Le scénario : les Blancs roquent sans avoir joué h3. Le fou noir vient en g4 et cloue le cavalier f3 contre la dame d1. Le cavalier f3 ne peut plus garder d4 ni h4.
+
+Honnêteté moteur : ...Bg4 en lui-même n'est pas une faute des Blancs (Stockfish 18 : environ +0.3 après 8.h3!). Le vrai danger, c'est le coup naturel qui ignore le clouage : 8.Bg5? Nd4! et les Blancs perdent environ 1.3 pion. La règle : soit on joue h3 avant, soit on pose immédiatement la question au fou par h3.
+
+Ce qu'il faut retenir :
+- h3 au bon moment chasse le fou ou l'oblige à s'échanger.
+- Après ...Bh5, la poussée g4 casse le clouage ; ici le sacrifice ...Nxg4 ne marche pas (environ +0.7 pour les Blancs). }
+1. e4 { Le pion roi. [%csl Ge4] }
+1... e5 { La réponse symétrique. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'Italienne. [%cal Gc4f7] }
+3... Bc5 { Le Giuoco Piano. }
+4. d3 { Le pion d3 protège e4. [%cal Gd3e4] }
+4... Nf6 { Le cavalier attaque e4. }
+5. Nc3 { Les Quatre Cavaliers, dans le bon ordre. }
+5... d6 { Les Noirs soutiennent e5 et ouvrent le fou c8 : la diagonale c8-g4 est libre. [%cal Gc8g4] }
+6. Be3 { Le fou défie le fou c5. [%cal Ge3c5] }
+(6. h3 { La prophylaxie immédiate : la case g4 est fermée avant même le roque. [%csl Gg4] } 6... Na5 { Les Noirs chassent le fou c4. } 7. Bb3 { Le fou recule. [%cal Gb3f7] } 7... a6 { Une case de retraite pour le fou c5. } 8. Ne2 { Le cavalier vise g3 et f5. [%cal Ge2g3] } 8... O-O { Le roi noir à l'abri. } 9. O-O { À RETENIR. PRO TIP : égalité, environ +0.1, et aucun clouage possible. h3 coûte un temps mais supprime tout le chapitre des ...Bg4. [%csl Gg4] })
+6... Bb6 { Le fou évite l'échange. }
+7. O-O { Les Blancs roquent SANS h3 : la case g4 reste disponible pour le fou noir. [%csl Rg4] }
+7... Bg4 { LE CLOUAGE : le cavalier f3 est cloué contre la dame d1. [%csl Rf3] [%cal Gg4f3,Gf3d1] }
+8. h3 { LA BONNE RÉPONSE : on pose la question au fou tout de suite. Il doit choisir : échanger en f3, reculer en e6 ou rester en h5 sous la menace de g4. [%cal Gh3g4] }
+(8. Bg5 { LA FAUTE : on copie le clouage noir sans s'occuper du sien. [%hint "Indice 1 : les Blancs jouent un coup de développement actif en laissant leur cavalier f3 cloué contre la dame."] [%hint "Indice 2 : la case d4. Un cavalier noir en d4 attaque f3 une deuxième fois ; s'il prend en f3, les pions blancs du roque se doublent."] [%hintcsl Rd4,Rf3] [%hint "Indice 3 : 8...Nd4! : la double pression sur f3 casse le roque blanc."] } 8... Nd4 { LA PUNITION : le cavalier attaque f3 une deuxième fois. [%cal Gd4f3,Gg4f3] } 9. Be3 { Le fou revient trop tard. } 9... Nxf3+ { Le cavalier prend avec échec. } 10. gxf3 { Le pion doit reprendre : le roque blanc est ouvert. [%csl Rf3,Rh2] } 10... Bh3 { Le fou attaque la tour f1. [%cal Gh3f1] } 11. Re1 { La tour s'écarte. } 11... Nh5 { Le cavalier vise f4. [%cal Gh5f4] } 12. Kh1 { Le roi se cache dans le coin. } 12... O-O { À RETENIR. PRO TIP : environ -1.0. Roque blanc éventré, case f4 pour le cavalier noir. Quand une de nos pièces est clouée, on la décloue AVANT de jouer ailleurs. })
+8... Bh5 { Le fou garde le clouage. Stockfish 18 préférait 8...Be6. [%cal Gh5d1] }
+(8... Be6 { Le meilleur selon le moteur : le fou défie notre fou c4. } 9. Nd5 { Le cavalier s'installe au centre. [%csl Gd5] } 9... Bxd5 { Les Noirs échangent. } 10. exd5 { À RETENIR. PRO TIP : environ +0.3. Le pion d5 gagne de l'espace et chasse le cavalier c6. [%csl Gd5] })
+9. g4 { On casse le clouage avec gain de temps : le fou doit reculer. [%cal Gg4h5] }
+9... Bg6 { Le fou recule sur la diagonale de e4. }
+(9... Nxg4 { Le sacrifice classique contre g4, mais ici il ne marche pas. [%hint "Indice 1 : les Noirs sacrifient une pièce contre un roque qui a assez de défenseurs."] [%hint "Indice 2 : la case g2 : le roi blanc y monte et la tour pourra venir en h1."] [%hintcsl Gg2,Gh1] [%hint "Indice 3 : 10.hxg4 Bxg4 11.Kg2! : le roi protège lui-même son roque."] } 10. hxg4 { On prend le cavalier. } 10... Bxg4 { Le fou reprend : deux pions pour la pièce. } 11. Kg2 { Le roi défend h1 et f3. } 11... Qd7 { La dame vise h3. [%cal Gd7h3] } 12. Rh1 { À RETENIR. PRO TIP : la tour prend la colonne h. Environ +0.7 : une pièce contre deux pions, le roi blanc tient. [%cal Gh1h8] })
+10. a4 { On prend de l'espace à l'aile dame et on prépare a5 contre le fou b6. [%cal Ga4a5] }
+10... Nd7 { Le cavalier vise c5 et b6. }
+11. Nd5 { Le cavalier s'installe au centre. [%csl Gd5] }
+11... Bxe3 { Les Noirs échangent les fous. }
+12. fxe3 { À RETENIR. PRO TIP : les Blancs ont l'espace et la colonne f, environ +0.3. h3 puis g4 ont transformé le clouage noir en avancée blanche à l'aile roi. [%csl Gd5,Ge3] [%cal Gf1f7] }
+
+## Le Gambit Evans (4.b4)
+{ LE GAMBIT EVANS.
+
+L'idée : les Blancs donnent le pion b4 pour dévier le fou c5. Ensuite c3 et d4 viennent avec gain de temps, le centre s'ouvre et le fou c4 frappe f7.
+
+Honnêteté moteur : Stockfish 18 ne croit pas à une pression insupportable. Avec la défense de Lasker 6...d6!, les Noirs ont environ -0.2 : l'Evans est un gambit correct, pas une réfutation. La ligne principale de ce chapitre est la Défense Compromise 6...exd4 7.O-O dxc3?!, où les Noirs prennent tout : là, la pression sur f7 et la colonne e devient réelle (environ +0.6 à +0.8). }
+1. e4 { Le pion roi. [%csl Ge4] }
+1... e5 { La réponse symétrique. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'Italienne. [%cal Gc4f7] }
+3... Bc5 { Le Giuoco Piano. }
+4. b4 { LE GAMBIT EVANS : le pion b4 attaque le fou c5. Si les Noirs le prennent, c3 et d4 viendront avec gain de temps. [%cal Gb4c5] }
+4... Bxb4 { Les Noirs acceptent le gambit. Le refus 4...Bb6 est aussi jouable. }
+5. c3 { Le pion chasse le fou et prépare d4. [%cal Gc3b4,Gc3d4] }
+5... Ba5 { Le fou recule et garde un oeil sur c3. [%cal Ga5c3] }
+6. d4 { Le centre s'ouvre : les Blancs ont trois pièces en jeu et le pion d4 frappe e5. [%cal Gd4e5] }
+6... exd4 { Les Noirs prennent. }
+(6... d6 { LA DÉFENSE DE LASKER, le meilleur selon le moteur : les Noirs tiennent e5. } 7. Qb3 { La dame vise f7 et b7. [%cal Gb3f7] } 7... Qd7 { La dame défend f7 par la diagonale. } 8. O-O { Le roi à l'abri. } 8... Bb6 { Le fou revient en défense. } 9. Bb5 { On cloue le cavalier c6. } 9... a6 { Les Noirs questionnent le fou. } 10. Ba4 { À RETENIR. PRO TIP : environ -0.3. Contre 6...d6, le gambit ne donne qu'une initiative ; il faut savoir que les Noirs tiennent. })
+7. O-O { Les Blancs roquent et laissent le pion c3 en prise : encore un pion pour le développement. [%csl Gg1] }
+7... dxc3 { LA DÉFENSE COMPROMISE : les Noirs prennent un pion de plus. }
+8. Qb3 { La dame frappe f7, défendu seulement par le roi. [%csl Rf7] [%cal Gb3f7] }
+8... Qf6 { La dame défend f7. [%cal Gf6f7] }
+9. e5 { Le pion chasse la dame avec gain de temps. [%cal Ge5f6] }
+9... Qg6 { La dame reste près de f7. }
+10. Nxc3 { On reprend le pion : trois pions de moins, mais toutes les pièces blanches jouent. }
+10... Nge7 { Le cavalier se développe vers f5. }
+11. Ba3 { Le fou vise e7 et f8 : le roque noir devient dangereux. [%cal Ga3e7,Ga3f8] }
+11... O-O { Les Noirs roquent quand même. Plus prudent : 11...Rb8. [%hint "Indice 1 : les Noirs roquent sans regarder les pièces blanches qui visent leur aile roi."] [%hint "Indice 2 : la colonne d et la case d7 : la tour a1 peut venir en d1, où aucune pièce noire ne la gêne."] [%hintcsl Gd1,Rd7] [%hint "Indice 3 : 12.Rad1 : la dernière pièce blanche entre en jeu."] }
+(11... Rb8 { Le meilleur : la tour quitte la diagonale du fou e4 futur et défend b7. } 12. Nd5 { Le cavalier vise e7 et c7. } 12... b5 { À RETENIR. PRO TIP : égalité, environ 0.0. Les Noirs rendent du matériel pour se libérer. })
+12. Rad1 { La tour prend la colonne d : toutes les pièces blanches sont en jeu contre trois pions. [%cal Gd1d7] }
+12... Bb6 { Le fou revient en défense. }
+13. Rfe1 { À RETENIR. PRO TIP : la tour soutient e5 sur la colonne e. Environ +0.6 : avec trois pions de moins, les Blancs ont la colonne d, la colonne e, le fou a3 et la dame sur f7. Dans l'Evans, chaque pion donné doit rapporter un temps de développement. [%cal Ge1e5,Gb3f7] }
+
+## L'Attaque Fegatello (Fried Liver) : 6.Nxf7!
+{ L'ATTAQUE FEGATELLO, LE FOIE FRIT.
+
+L'idée : après 5...Nxd5?!, le cavalier d5 n'est défendu que par la dame. Les Blancs sacrifient le cavalier en f7 pour attirer le roi noir au centre ; la dame vient en f3 avec échec et le cavalier d5 se retrouve cloué contre le roi e6.
+
+Honnêteté moteur : Stockfish 18 donne environ +0.9 après 6.Nxf7, et le coup le plus précis est même 6.d4! (Attaque Lolli, aussi environ +0.9). Avec une défense parfaite, la défense noire ne craque pas : elle souffre. Elle craque si les Noirs commettent UNE imprécision, et c'est ce que les variantes de ce chapitre montrent. }
+1. e4 { Le pion roi. [%csl Ge4] }
+1... e5 { La réponse symétrique. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'Italienne. [%cal Gc4f7] }
+3... Nf6 { La Défense des Deux Cavaliers. }
+4. Ng5 { Le cavalier et le fou attaquent f7 ensemble. [%csl Rf7] [%cal Gg5f7,Gc4f7] }
+4... d5 { Les Noirs bloquent la diagonale du fou c4. [%cal Gd5c4] }
+5. exd5 { On prend : le fou c4 reste sur sa diagonale. }
+5... Nxd5 { La reprise naturelle, mais imprécise : la Défense Polerio 5...Na5 (chapitre 6) est meilleure. [%csl Rd5] }
+6. Nxf7 { LE SACRIFICE D'ATTRACTION : le cavalier se donne pour faire sortir le roi noir. [%cal Gg5f7] }
+(6. d4 { L'Attaque Lolli, le meilleur coup selon le moteur : on ouvre le centre sans rien sacrifier. [%cal Gd4e5] } 6... Nxd4 { Les Noirs prennent. } 7. c3 { On chasse le cavalier. [%cal Gc3d4] } 7... b5 { Les Noirs chassent le fou. } 8. Bd3 { À RETENIR. PRO TIP : environ +0.9, sans sacrifice. Le Fegatello est plus spectaculaire, la Lolli plus sûre. })
+6... Kxf7 { Le roi accepte le cavalier. }
+7. Qf3+ { Échec : la dame attaque aussi le cavalier d5. [%cal Gf3f7,Gf3d5] }
+7... Ke6 { Le seul coup pour garder le cavalier d5 : le roi le défend lui-même. [%csl Re6,Rd5] }
+8. Nc3 { Troisième attaque sur le cavalier d5, cloué contre le roi e6. [%cal Gc3d5,Gc4d5,Gf3d5] }
+8... Ncb4 { Les Noirs défendent d5 une troisième fois et menacent ...Nxc2+. [%cal Gb4d5,Gb4c2] }
+9. O-O { Le roi se met à l'abri : ...Nxc2 ne gagnera plus qu'une tour, avec la colonne c ouverte. [%csl Gg1] }
+(9. a3 { La faute : on chasse le cavalier, mais il prend en c2 avec échec. [%hint "Indice 1 : les Blancs gaspillent un temps pendant que leur propre roi est encore au centre."] [%hint "Indice 2 : la case c2 : le cavalier b4 y fait échec au roi e1 et fourchette la tour a1."] [%hintcsl Rc2,Ra1] [%hint "Indice 3 : 9...Nxc2+ 10.Kd1 Nxa1 : les Noirs gagnent une tour."] } 9... Nxc2+ { Échec et fourchette. [%cal Gb4c2] } 10. Kd1 { Le roi doit bouger. } 10... Nxa1 { Le cavalier prend la tour. } 11. Nxd5 { Les Blancs reprennent une pièce. } 11... Qh4 { À RETENIR. PRO TIP : environ -0.8. Dans une attaque, on ne joue pas de coup lent tant que son propre roi est en danger. })
+9... c6 { Les Noirs renforcent d5 avec un pion. [%cal Gc6d5] }
+(9... Qf6 { La faute : les Noirs proposent l'échange des dames, mais d5 tombe. [%hint "Indice 1 : les Noirs cherchent à échanger les dames, mais leur roi en e6 reste la cible."] [%hint "Indice 2 : le cavalier d5 : attaqué par le fou c4, le cavalier c3 et la dame, défendu par le roi et le cavalier b4 seulement."] [%hintcsl Rd5,Re6] [%hint "Indice 3 : 10.Bxd5+ : on gagne le cavalier avec échec."] } 10. Bxd5+ { Le fou prend avec échec. [%cal Gc4d5] } 10... Kd7 { Le roi fuit. } 11. Qe4 { La dame vise e5 et b7. [%cal Ge4e5,Ge4b7] } 11... c6 { Les Noirs chassent le fou. } 12. Bb3 { À RETENIR. PRO TIP : environ +2.5 : la pièce sacrifiée est récupérée et le roi noir reste au centre. })
+10. d4 { LA POUSSÉE CENTRALE : on ouvre les colonnes vers le roi e6. [%cal Gd4e5] }
+10... Qf6 { Les Noirs proposent l'échange des dames pour casser l'attaque. }
+11. Qd1 { On refuse l'échange : sans dames, l'attaque disparaît. [%cal Gd1d5] }
+11... Ke7 { Le roi cherche à s'enfuir vers l'aile dame. }
+12. Re1 { La tour sur la colonne e : elle vise le roi et le pion e5. [%cal Ge1e5] }
+12... Qg6 { La dame défend e5 et vise g2. }
+13. Rxe5+ { On reprend le pion avec échec. [%cal Ge1e5] }
+13... Kd8 { Le roi va vers c7, à l'abri du pion c6. }
+(13... Kd7 { La faute : le roi se met sur la diagonale du fou. [%hint "Indice 1 : le roi noir se place sur une ligne ouverte au lieu de fuir derrière ses pions."] [%hint "Indice 2 : le cavalier d5 : le roi d7 le défend encore, mais un échange sur d5 ouvrira la diagonale c4-d5-e6."] [%hintcsl Rd5,Rd7] [%hint "Indice 3 : 14.Bxd5 : on échange le défenseur et le roi reste exposé."] } 14. Bxd5 { On prend le cavalier. } 14... Nxd5 { Le cavalier reprend. } 15. Nxd5 { On reprend encore. } 15... cxd5 { Le pion reprend. } 16. Bf4 { À RETENIR. PRO TIP : environ +2.9 : pion d4 fort, roi noir sur la colonne d, fou f4 actif. })
+14. Be2 { Le fou se replie : il laisse la case c4 et menace Bh5 contre la dame. [%cal Ge2h5] }
+14... Nf6 { Le cavalier défend h5 et la case d5. }
+15. Bg5 { Le fou cloue le cavalier f6. [%cal Gg5f6,Gf6d8] }
+15... h6 { Les Noirs questionnent le fou. }
+16. Bh4 { À RETENIR. PRO TIP : le clouage reste. Environ +0.9 : le roi noir est en d8, sans roque, les pièces blanches occupent les colonnes d et e. La cinématique à retenir : sacrifice en f7, Qf3+, Nc3 contre le cavalier cloué, puis d4 et Re1. [%cal Gh4f6,Ge5e8] }
+
+## Anti-panique : la Défense Polerio et le coup ...Nd4
+{ ANTI-PANIQUE : LES DÉVIATIONS AGRESSIVES DES NOIRS.
+
+Deux coups à ne pas craindre :
+1. La Défense Polerio 5...Na5! : les Noirs refusent de reprendre en d5 et sacrifient un pion pour le développement. Il faut connaître 6.Bb5+ et la suite : le moteur donne environ 0.0, partie équilibrée.
+2. Le coup 3...Nd4?! (piège de Blackburne-Shilling) : les Noirs abandonnent e5 et déplacent deux fois le même cavalier. Le bon réflexe 4.Nxd4! donne environ +1.2 ; le réflexe glouton 4.Nxe5? permet 4...Qg5! et le mat en f3. }
+1. e4 { Le pion roi. [%csl Ge4] }
+1... e5 { La réponse symétrique. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'Italienne. [%cal Gc4f7] }
+3... Nf6 { La Défense des Deux Cavaliers. }
+(3... Nd4 { LE PIÈGE DE BLACKBURNE-SHILLING : le cavalier rejoue et abandonne e5. [%hint "Indice 1 : les Noirs jouent deux fois le même cavalier et ne défendent plus leur pion e5."] [%hint "Indice 2 : le cavalier d4 : il est défendu par le seul pion e5, et l'échange lui fait perdre son centre."] [%hintcsl Rd4,Re5] [%hint "Indice 3 : 4.Nxd4! exd4 5.O-O : simple et fort. Surtout pas 4.Nxe5?"] } 4. Nxd4 { LE BON RÉFLEXE : on échange le cavalier actif. [%cal Gf3d4] } (4. Nxe5 { LA FAUTE GLOUTONNE : on prend le pion e5. [%hint "Indice 1 : les Blancs prennent un pion avec un cavalier qui n'est plus défendu par rien."] [%hint "Indice 2 : les cases e5 et g2 : une dame noire en g5 attaque les deux en même temps."] [%hintcsl Re5,Rg2] [%hint "Indice 3 : 4...Qg5! : double attaque, et le mat en f3 menace si les Blancs prennent en f7."] } 4... Qg5 { LA PUNITION : la dame attaque e5 et g2. [%cal Gg5e5,Gg5g2] } 5. Nxf7 { Le cavalier prend la tour en vue : c'est la suite perdante. } (5. O-O { Le moins mauvais : on roque et on rend le cavalier. } 5... Qxe5 { La dame prend le cavalier. } 6. c3 { On chasse le cavalier d4. } 6... Ne6 { Le cavalier recule. } 7. d4 { À RETENIR. PRO TIP : environ -0.6, une pièce contre deux pions. Un pion défendu par un cavalier qui a déjà bougé est souvent un piège. }) 5... Qxg2 { La dame prend g2 et attaque la tour h1. [%cal Gg5g2,Gg2h1] } 6. Rf1 { La tour s'écarte. } 6... Qxe4+ { Échec : le fou c4 doit s'interposer. } 7. Be2 { Seul coup. } 7... Nf3# { MAT : le cavalier f3 est protégé par la dame e4. RETENIR : avant de prendre un pion, chercher les doubles attaques adverses. }) 4... exd4 { Les Noirs reprennent : le pion d4 est isolé loin devant. [%csl Rd4] } 5. O-O { Le roi à l'abri. [%csl Gg1] } 5... c6 { Les Noirs préparent ...d5. } 6. Re1 { La tour sur la colonne e : elle soutient e4-e5. [%cal Ge1e5] } 6... d6 { Les Noirs bloquent e5. } 7. c3 { À RETENIR. PRO TIP : on attaque le pion d4 avancé. Environ +1.2 : avance de développement et pion d4 faible. Contre un cavalier qui rejoue, on échange et on développe. [%cal Gc3d4] })
+4. Ng5 { Le cavalier et le fou attaquent f7. [%csl Rf7] [%cal Gg5f7,Gc4f7] }
+4... d5 { Les Noirs ferment la diagonale du fou. }
+5. exd5 { On prend. }
+5... Na5 { LA DÉFENSE POLERIO : les Noirs ne reprennent pas en d5. Le cavalier chasse le fou c4 et les Noirs donnent un pion pour le développement. [%cal Ga5c4] }
+(5... Nxd5 { La reprise naturelle : elle permet l'Attaque Fegatello (chapitre 5). [%hint "Indice 1 : les Noirs reprennent le pion avec un cavalier qui ne sera défendu que par la dame."] [%hint "Indice 2 : la case f7 : seul le roi la défend, et le cavalier d5 sera cloué si le roi vient en e6."] [%hintcsl Rf7,Rd5] [%hint "Indice 3 : 6.Nxf7! Kxf7 7.Qf3+ : le Fegatello. 6.d4! est encore plus précis."] } 6. Nxf7 { Le sacrifice : voir le chapitre 5. [%cal Gg5f7] } 6... Kxf7 { Le roi accepte. } 7. Qf3+ { À RETENIR. PRO TIP : environ +0.8, et toute la suite du chapitre 5. [%cal Gf3d5] })
+6. Bb5+ { Le fou se place avec échec et garde le pion d5. [%cal Gb5e8] }
+6... c6 { Les Noirs s'interposent avec un pion. }
+7. dxc6 { On prend : un pion de plus provisoirement. }
+7... bxc6 { Les Noirs reprennent et chassent le fou. [%cal Gc6b5] }
+8. Be2 { Le fou rentre et couvre la colonne e. }
+8... h6 { Les Noirs chassent le cavalier g5. [%cal Gh6g5] }
+9. Nf3 { Le cavalier recule. }
+9... e4 { Le pion chasse encore le cavalier : les Noirs gagnent des temps pour le pion donné. [%cal Ge4f3] }
+10. Ne5 { Le cavalier va au centre. [%csl Ge5] }
+10... Bd6 { Les Noirs défient le cavalier e5. [%cal Gd6e5] }
+11. d4 { On soutient le cavalier e5. [%cal Gd4e5] }
+11... exd3 { Les Noirs prennent en passant pour ouvrir le jeu. }
+12. Nxd3 { Le cavalier reprend. }
+12... O-O { Les Noirs roquent. }
+13. g3 { À RETENIR. PRO TIP : on prépare Bf4 et le roque. Environ 0.0 : un pion de plus pour les Blancs, deux fous actifs pour les Noirs. Contre la Polerio, on garde le pion et on finit son développement, sans chercher à punir. [%cal Gc1f4] }
+
+## Aléatoire surprise : la Pianissimo après la théorie
+{ ALÉATOIRE SURPRISE, MÉTHODE PRO TIP.
+
+On reprend la Giuoco Pianissimo du chapitre 2. Après 8...Bxe3 9.fxe3, la théorie s'arrête et les Noirs, au lieu du précis 9...Na5, jouent des coups naturels de club. À chaque faute, l'échelle des 3 indices guide vers la bonne réponse :
+- indice 1 : le principe violé ;
+- indice 2 : la case faible ou le repère géométrique (cases allumées) ;
+- indice 3 : le levier ou l'action concrète.
+
+La méthode : 1. Qu'a changé le dernier coup adverse ? 2. Quelle case n'est plus contrôlée ? 3. Quelle poussée de pion ou quelle pièce en profite ? }
+1. e4 { Le pion roi. [%csl Ge4] }
+1... e5 { La réponse symétrique. }
+2. Nf3 { Le cavalier attaque e5. [%cal Gf3e5] }
+2... Nc6 { Le cavalier défend e5. }
+3. Bc4 { L'Italienne. [%cal Gc4f7] }
+3... Bc5 { Le Giuoco Piano. }
+4. d3 { Le pion d3 protège e4. [%cal Gd3e4] }
+4... Nf6 { Le cavalier attaque e4. }
+5. Nc3 { Les Quatre Cavaliers, dans le bon ordre. }
+5... d6 { Les Noirs soutiennent e5. }
+6. Be3 { Le fou défie le fou c5. [%cal Ge3c5] }
+6... Bb6 { Le fou évite l'échange. }
+7. O-O { Le roi à l'abri. }
+7... O-O { Les Noirs roquent. }
+8. h3 { La prophylaxie contre ...Bg4. [%csl Gg4] }
+8... Bxe3 { Les Noirs échangent les fous. }
+9. fxe3 { Fin de la théorie connue : pions e3-e4 et colonne f ouverte, environ 0.0. [%cal Gf1f7] }
+9... Qe7 { PREMIÈRE FAUTE POSITIONNELLE : un coup de dame sans plan. Le fou c4 reste tranquille et la poussée d4 devient gratuite. Environ +0.5. [%hint "Indice 1 : les Noirs ne contestent ni le fou c4 ni le centre : un coup d'attente sans plan."] [%hint "Indice 2 : la case d4 : le pion e3 la contrôle déjà, et plus aucun pion noir ne pourra tenir e5 après l'échange."] [%hintcsl Gd4,Ge3] [%hint "Indice 3 : 10.d4! : le levier central, le pion e3 reprendra en d4."] }
+(9... Na5 { Le coup précis, celui du chapitre 2 : le cavalier chasse le fou c4. } 10. Bb3 { À RETENIR. PRO TIP : égalité, environ -0.1, voir le chapitre 2. })
+10. d4 { LE LEVIER : le pion d4 attaque e5, et e3 reprendra au centre. [%cal Gd4e5] }
+10... exd4 { Les Noirs prennent. }
+11. exd4 { Le pion e3 reprend : le duo central e4-d4 est construit, la colonne f reste ouverte. [%csl Gd4,Ge4] [%cal Gf1f6] }
+11... a6 { DEUXIÈME FAUTE : un coup de pion lent au lieu de frapper le centre. Environ +1.3. [%hint "Indice 1 : face au duo central e4-d4, les Noirs jouent à l'aile dame au lieu de casser le centre tout de suite."] [%hint "Indice 2 : la case e5 : rien n'empêche plus la poussée e5, qui chassera le cavalier f6, le seul défenseur du roque noir."] [%hintcsl Re5,Rf6] [%hint "Indice 3 : 12.Qd2 puis e5 : on connecte les tours et on prépare la poussée. 12.a4 est aussi fort."] }
+(11... Nxe4 { La seule tentative active : les Noirs rendent la pièce ou un pion pour casser le centre. } 12. Nd5 { Le cavalier attaque la dame. [%cal Gd5e7] } 12... Qd8 { La dame recule. } 13. Qe1 { À RETENIR. PRO TIP : environ +0.1. Les Noirs ont un pion de plus, mais nos pièces sont actives. })
+12. Qd2 { La dame relie les tours et soutient d4. [%cal Gd2d4,Ga1f1] }
+12... b5 { Les Noirs chassent le fou c4. [%cal Gb5c4] }
+13. Bd3 { Le fou se replie et soutient e4. [%cal Gd3e4] }
+13... Nb4 { Le cavalier attaque le fou d3. [%cal Gb4d3] }
+14. e5 { LA POUSSÉE : le pion chasse le cavalier f6, défenseur du roque. [%cal Ge5f6] }
+14... dxe5 { Les Noirs prennent. }
+15. dxe5 { Le pion reprend : la colonne d s'ouvre pour nos tours. [%csl Ge5] }
+15... Nd7 { Le cavalier recule. }
+16. Be4 { À RETENIR. PRO TIP : le fou vise h7 et a8. Environ +1.8 : pion e5 qui coupe l'échiquier, colonnes d et f ouvertes, roque noir sans cavalier f6. Deux coups lents (9...Qe7, 11...a6) ont suffi : dans la Pianissimo, celui qui joue d4 le premier prend le centre. [%csl Ge5] [%cal Ge4h7,Ge4a8] }

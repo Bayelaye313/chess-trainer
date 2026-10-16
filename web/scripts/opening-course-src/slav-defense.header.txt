@@ -1,0 +1,57 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Défense Slave (avec les Noirs) » : 1.d4 d5 2.c4 c6 —
+ * onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu
+ * par `CourseTreeViewer` (route `/ouvertures/slav-defense/cours`). Public
+ * visé : 1500-1800 Elo.
+ *
+ * ## Contenu (2026-10-12)
+ *
+ * 1. Fiche d'identité et tronc commun 3.Nf3 Nf6 4.Nc3 dxc4 (Slave Tchèque)
+ *    5.a4 Bf5 ; 4...e6 (Semi-Slave, fou c8 enfermé), 4...Bf5? 5.cxd5 cxd5
+ *    6.Qb3, 5.e3 b5, et le sacrifice 6.Ne5 e6 7.f3 Bb4 8.e4 Bxe4.
+ * 2. Ligne principale 6.e3 e6 7.Bxc4 Bb4 8.O-O O-O 9.Qe2 Nbd7 10.e4 Bg6
+ *    11.Bd3 Bh5 12.e5 Nd5 jusqu'au coup 14, puis un milieu de jeu de club
+ *    (15.h4? Bxh4, 21.g4? f5) ; 9.e4? Nxe4 et 9.Nh4 Bg6.
+ * 3. Variante d'Échange 3.cxd5 cxd5 jusqu'à la finale symétrique (0.00),
+ *    avec 7.Qb3 Na5.
+ * 4. Anti-panique : 3.e3 Bf5 (coup correct, environ +0.3, avec 4.cxd5 cxd5
+ *    5.Qb3 Qd7 et 4.Qb3 Qc7), 3.e4 dxe4, 3.Nf3 Nf6 4.e4? et le gambit
+ *    4.Nc3 dxc4 5.e4 b5.
+ * 5. Aléatoire surprise : 8.Nd2? (le cavalier rejoue) puni par 8...c5 puis
+ *    le pion isolé d4 (7 coups après la faute).
+ *
+ * Indices progressifs : chaque faute blanche porte trois balises `[%hint]`
+ * (1. principe violé, 2. faiblesse, 3. action de punition) et une balise
+ * `[%hintcsl]` (cases allumées à partir du 2e indice).
+ *
+ * Sources : Glenn Flear, « The Slav for the Tournament Player » (Batsford
+ * 1988, `docs/`, couche texte) pour la ligne hollandaise 8.O-O O-O 9.Qe2 ;
+ * « The Slav Move by Move » (Lakdawala) et « The Complete Semi-Slav » sont
+ * des scans sans couche texte. Toutes les lignes sont arbitrées par
+ * Stockfish 18 natif (profondeur 16) ; le moteur a corrigé deux idées
+ * reçues : 3.e3 n'est pas une faute (+0.26), et 4...dxc4 (+0.5) est un peu
+ * moins précis que 4...e6 (+0.35), ce que le cours dit honnêtement. Toute la
+ * prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Voir `op-scotch-game.ts` : `evaluationScore` / `evaluationMate` (balise
+ * `[%eval]`), `showEvalBar`, `freeze` (balise `[%txt "…"]` sur CHAQUE
+ * commentaire), plus `hints` / `hintHighlights`.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/slav-defense.pgn` (et l'en-tête
+ * `slav-defense.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16 [pgn compilé]`.
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]` ni un `[%hint]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

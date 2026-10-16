@@ -1,0 +1,313 @@
+import { Chess } from "chess.js";
+import { beforeAll, describe, expect, it } from "vitest";
+import { collectNodes, mainLine, type VariationNode } from "@/core/chess/pgn-tree";
+import { findOpening, OPENINGS } from "@/core/curriculum/openings";
+import {
+  getEnrichedTreeForCuratedOpening,
+  getImportedChildren,
+  getImportedFamilyDetail,
+  listOpeningFamilies,
+} from "./imported-openings-index";
+import { getOpeningTree } from "./opening-tree-index";
+
+/**
+ * Ces tests interrogent la VRAIE base (`data/chess-trainer.db`, voir
+ * `server/db/index.ts`) au travers des ~3810 lignes lichess-org importées
+ * hors-ligne (`data/import/openings/lichess-{a..e}.pgn`, voir
+ * `scripts/seed-from-pgn.ts`) — comme le reste de `server/queries/openings.ts`
+ * (`getOpeningDetail`, `listOpenings`), ce module n'a pas de sens à tester
+ * contre une base vide : sans import préalable (`npm run db:seed-pgn`), ces
+ * assertions échoueraient légitimement, exactement comme un test contre la
+ * base ECO embarquée échouerait sans le paquet `chess-openings`.
+ */
+
+describe("listOpeningFamilies", () => {
+  const families = listOpeningFamilies();
+
+  it("n'expose QUE les 10 familles lichess-org gardées par la purge du catalogue (2026-10-16)", () => {
+    expect(families.map((f) => f.name).sort()).toEqual(
+      [
+        "Alekhine Defense",
+        "Benko Gambit",
+        "Benoni Defense",
+        "Bogo-Indian Defense",
+        "Catalan Opening",
+        "Modern Defense",
+        "Petrov's Defense",
+        "Semi-Slav Defense",
+        "Tarrasch Defense",
+        "Trompowsky Attack",
+      ].sort(),
+    );
+  });
+
+  it("une famille retirée n'a plus de page, mais ses lignes restent en base (suites théoriques globales)", () => {
+    for (const id of ["lichess-zukertort-defense", "lichess-torre-attack", "lichess-colle-system", "lichess-queen-s-pawn-game", "lichess-indian-defense"]) {
+      expect(getImportedFamilyDetail(id), id).toBeNull();
+    }
+    // 1.Nf3 (Zukertort) reste connu de la base globale, au départ comme ailleurs.
+    expect(getImportedChildren(new Chess().fen()).some((c) => c.san === "Nf3")).toBe(true);
+  }, 20_000);
+
+  it("n'expose jamais une famille déjà représentée par un chapitre curaté (voir CURATED_FAMILY_HUB)", () => {
+    // "Ruy Lopez" (famille) ne doit jamais apparaître comme carte séparée : le
+    // chapitre curaté "ruy-lopez" en est le hub désigné.
+    expect(families.some((f) => f.name === "Ruy Lopez")).toBe(false);
+    // "Scotch Game" reste un hub d'EXCLUSION même une fois le merge désactivé
+    // pour `scotch-game` (voir `SKIP_DB_ENRICHMENT`) — sans quoi la famille
+    // réapparaîtrait comme sa propre carte dynamique, dupliquant ce chapitre.
+    expect(families.some((f) => f.name === "Scotch Game")).toBe(false);
+  });
+
+  it("chaque famille a une ligne de référence non vide et un id stable préfixé `lichess-`", () => {
+    for (const family of families) {
+      expect(family.id.startsWith("lichess-")).toBe(true);
+      expect(family.rootMoves.length).toBeGreaterThan(0);
+      expect(family.variantCount).toBeGreaterThan(0);
+    }
+  });
+
+  it("un id ne se répète jamais", () => {
+    const ids = families.map((f) => f.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("Moderne : ligne de référence contre 1.e4 (1.e4 g6 2.d4 Bg7), côté Noir", () => {
+    const modern = families.find((f) => f.name === "Modern Defense")!;
+    expect(modern.side).toBe("black");
+    expect(modern.rootMoves).toEqual(["e4", "g6", "d4", "Bg7"]);
+  });
+
+  it("rattache les familles sœurs ou absorbées comme lignes internes de leur carte", () => {
+    const hasLine = (tree: VariationNode, moves: readonly string[]): boolean =>
+      moves.length === 0 || tree.children.some((child) => child.san === moves[0] && hasLine(child, moves.slice(1)));
+    // Benko Gambit Accepted / Declined sous "Benko Gambit" (8 + 10 + 6 lignes).
+    const benko = families.find((f) => f.name === "Benko Gambit")!;
+    expect(benko.variantCount).toBe(24);
+    expect(hasLine(getImportedFamilyDetail(benko.id)!.tree, ["d4", "Nf6", "c4", "c5", "d5", "b5", "Bg5"])).toBe(true);
+    // Semi-Slav Defense Accepted sous "Semi-Slav Defense".
+    expect(families.find((f) => f.name === "Semi-Slav Defense")!.variantCount).toBe(70);
+    // Pterodactyl Defense sous "Modern Defense".
+    const modern = families.find((f) => f.name === "Modern Defense")!;
+    expect(hasLine(getImportedFamilyDetail(modern.id)!.tree, ["Nf3", "c5", "c4", "g6", "d4", "Bg7", "e4", "Qa5+"])).toBe(true);
+    // Neo-Grünfeld Defense sous le chapitre curaté "grunfeld".
+    expect(hasLine(getEnrichedTreeForCuratedOpening(findOpening("grunfeld")!), ["d4", "Nf6", "c4", "g6", "f3", "d5"])).toBe(true);
+  });
+
+  /**
+   * Invariant général dont la violation, pour N'IMPORTE QUELLE famille
+   * dynamique (pas seulement Zukertort), produirait exactement le même bug :
+   * `rootMoves` devient tel quel le script interactif de la Ligne principale
+   * (`getOpeningDetail`) — son dernier demi-coup doit donc TOUJOURS appartenir
+   * au camp `side`, sans quoi ce script se termine entièrement sur un coup de
+   * l'adversaire et le joueur ne joue jamais rien.
+   */
+  it("deep test : pour CHAQUE famille dynamique, le dernier demi-coup de `rootMoves` appartient bien au camp `side`", () => {
+    for (const family of families) {
+      const lastPlyIsWhite = family.rootMoves.length % 2 === 1;
+      const expectedSide = lastPlyIsWhite ? "white" : "black";
+      expect(family.side, `${family.name}: rootMoves=${JSON.stringify(family.rootMoves)}`).toBe(expectedSide);
+    }
+  });
+});
+
+/**
+ * Filet anti-régression pour le bug corrigé le 2026-09-04 (voir
+ * `familyBelongsToHub`) — pas seulement le Gambit du Roi (repli sur `moves`
+ * SEUL, 3 demi-coups, aucune variante nommée) mais TOUT hub dont la famille
+ * lichess-org se scinde en plusieurs noms de haut niveau (« X Accepted »/« X
+ * Declined », « X, with ... ») : la fusion doit absorber CES DEUX à la fois,
+ * jamais seulement la ligne nue.
+ */
+describe("hubs curatés : aucune famille sœur orpheline (deep test du catalogue entier)", () => {
+  it("vienna-gambit et kings-gambit ont quitté le catalogue (purge du 2026-10-16)", () => {
+    expect(findOpening("vienna-gambit")).toBeNull();
+    expect(findOpening("kings-gambit")).toBeNull();
+    const familyNames = new Set(listOpeningFamilies().map((f) => f.name));
+    for (const name of ["King's Gambit", "Vienna Game"]) expect(familyNames.has(name), name).toBe(false);
+  });
+
+  it("Gambit Dame : la fusion absorbe désormais aussi « Queen's Gambit Accepted/Declined » (256 lignes, avant orphelines)", () => {
+    const queensGambit = findOpening("queens-gambit")!;
+    const tree = getEnrichedTreeForCuratedOpening(queensGambit);
+    expect(mainLine(tree).length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("aucune famille sœur d'un hub ne s'affiche plus comme carte dynamique dupliquée", () => {
+    // Ex-orphelines connues et vérifiées avant le correctif (voir l'audit du
+    // 2026-09-04) — chacune doit désormais être absorbée par son hub curaté,
+    // jamais listée séparément.
+    const familyNames = new Set(listOpeningFamilies().map((f) => f.name));
+    for (const orphan of [
+      "King's Gambit Accepted",
+      "King's Gambit Declined",
+      "Queen's Gambit Accepted",
+      "London System, with Be2",
+      "London System, with Bd3",
+    ]) {
+      expect(familyNames.has(orphan), orphan).toBe(false);
+    }
+  });
+
+  it(
+    "deep test : chaque chapitre curaté du catalogue reste au moins raisonnablement profond (aucune régression silencieuse vers une poignée de coups)",
+    () => {
+      // Seuil bas et délibérément permissif (4 demi-coups) : ce test garde
+      // seulement contre une VRAIE régression (un hub qui redevient orphelin,
+      // un chapitre qui perd tout son arbre) — PAS un désaccord esthétique sur
+      // la profondeur pédagogique idéale de chaque chapitre. Les chapitres
+      // listés ci-dessous n'ont simplement pas encore de `pgn` authored à la
+      // main  : un futur
+      // chantier de contenu, pas un bug de fusion — voir le rapport de
+      // livraison du 2026-09-04.
+      const KNOWN_SHALLOW_PENDING_CONTENT = new Set([
+        "pirc-defense",
+        "scandinavian",
+        "london-system",
+        "english-opening",
+        "grunfeld",
+        "dutch-defense",
+      ]);
+      for (const opening of OPENINGS) {
+        const tree = getEnrichedTreeForCuratedOpening(opening);
+        const depth = mainLine(tree).length;
+        const minDepth = KNOWN_SHALLOW_PENDING_CONTENT.has(opening.id) ? 4 : 12;
+        expect(depth, `${opening.id}: ligne principale trop courte (${depth} demi-coups)`).toBeGreaterThanOrEqual(
+          minDepth,
+        );
+      }
+    },
+    20_000,
+  );
+});
+
+/**
+ * BUG CORRIGÉ (audit DOM du 2026-09-13, « affiche 15/49 chapitres au lieu du
+ * catalogue propre des variantes ») — voir le docstring de
+ * `SKIP_DB_ENRICHMENT` dans `imported-openings-index.ts` : `scotch-game` ne
+ * doit plus jamais absorber la famille lichess-org "Scotch Game" en plus de
+ * son propre arbre `pgn` authored, déjà verbatim et plus profond.
+ */
+describe("scotch-game : plus aucun merge automatique avec la base Lichess (doublons/orphelins éliminés)", () => {
+  it("l'arbre enrichi est structurellement identique à l'arbre authored — aucun nœud de la base Lichess ajouté", () => {
+    const scotchGame = findOpening("scotch-game")!;
+    const authoredNodeCount = collectNodes(getOpeningTree(scotchGame)).length;
+    const enrichedNodeCount = collectNodes(getEnrichedTreeForCuratedOpening(scotchGame)).length;
+    expect(enrichedNodeCount).toBe(authoredNodeCount);
+  });
+
+  it("reste malgré tout profond et richement nommé (les 4 blocs authored, jamais perdus)", () => {
+    const scotchGame = findOpening("scotch-game")!;
+    const tree = getEnrichedTreeForCuratedOpening(scotchGame);
+    expect(mainLine(tree).length).toBeGreaterThanOrEqual(20);
+    const namedComments = new Set<string>();
+    const collect = (node: { comment: string | null; children: readonly (typeof tree)[] }): void => {
+      if (node.comment) namedComments.add(node.comment);
+      for (const child of node.children) collect(child);
+    };
+    collect(tree);
+    for (const expected of ["Gambit Göring", "Gambit Écossais", "Variante Classique", "Variante Schmidt"]) {
+      expect(namedComments.has(expected), `variante attendue introuvable : "${expected}"`).toBe(true);
+    }
+  });
+});
+
+describe("getImportedChildren", () => {
+  // Le premier appel construit l'index FEN → coups sur les ~3810 lignes importées
+  // (plusieurs secondes à froid) : coût de mise en place, pas comportement testé —
+  // on le paie ici, avec un délai à sa mesure, plutôt que dans le premier `it`.
+  beforeAll(() => {
+    getImportedChildren("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  }, 60_000);
+
+  it("renvoie [] pour une position hors de toute ligne importée", () => {
+    const deepMiddlegame = "r2qk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1BN2/PPP2PPP/R2QK2R w KQkq - 4 9";
+    expect(getImportedChildren(deepMiddlegame)).toEqual([]);
+  });
+
+  it("connaît une position profonde d'une famille DYNAMIQUE (BUG CORRIGÉ, Défense Benoni) — pas seulement son tout premier coup", () => {
+    // Régression directe : avant ce module, seule `getCuratedChildren` (les
+    // ~20 chapitres curatés, jamais la Défense Benoni) et la base ECO
+    // générique embarquée validaient un coup en cours de partie — la Défense
+    // Benoni tombait à 0 coup connu dès le 7ᵉ demi-coup d'une ligne longue de
+    // 19 (voir `listBookContinuations`, qui consomme cette fonction).
+    const chess = new Chess();
+    for (const san of ["d4", "Nf6", "c4", "c5", "d5", "e6", "Nc3"]) chess.move(san);
+    const children = getImportedChildren(chess.fen());
+    expect(children.some((c) => c.san === "exd5")).toBe(true);
+  });
+
+  it("fusionne les enfants de plusieurs lignes qui transposent vers la MÊME position (voir son docstring)", () => {
+    // Une position partagée par deux familles différentes doit renvoyer
+    // l'union de leurs coups suivants respectifs, jamais seulement ceux
+    // d'une seule d'entre elles.
+    const chess = new Chess();
+    for (const san of ["d4", "Nf6", "c4"]) chess.move(san);
+    const sans = getImportedChildren(chess.fen()).map((c) => c.san);
+    expect(new Set(sans).size).toBe(sans.length); // jamais de doublon UCI.
+    expect(sans.length).toBeGreaterThan(3); // plusieurs familles distinctes convergent ici.
+  });
+});
+
+describe("getImportedFamilyDetail", () => {
+  it("renvoie `null` pour un id inconnu", () => {
+    expect(getImportedFamilyDetail("lichess-does-not-exist")).toBeNull();
+  });
+
+  it("construit un arbre couvrant TOUTES les variantes de la famille (une profondeur bien supérieure à 4-5 coups)", () => {
+    const family = listOpeningFamilies()[0]; // triée par richesse décroissante, voir le docstring de `listOpeningFamilies`.
+    const detail = getImportedFamilyDetail(family.id)!;
+    expect(detail).not.toBeNull();
+    // Au moins une variante nommée quelque part au-delà de la racine.
+    const hasNamedNode = (node: ReturnType<typeof mainLine>[number] | typeof detail.tree): boolean =>
+      node.comment !== null || node.children.some(hasNamedNode);
+    expect(hasNamedNode(detail.tree)).toBe(true);
+  });
+});
+
+describe("getEnrichedTreeForCuratedOpening", () => {
+  it("prolonge un chapitre curaté avec les branches de la base Lichess, sans jamais recouvrir ses noms existants", () => {
+    const ruyLopez = findOpening("ruy-lopez")!;
+    const curatedTree = getOpeningTree(ruyLopez);
+    const enrichedTree = getEnrichedTreeForCuratedOpening(ruyLopez);
+
+    // La ligne principale AUTHORÉE (premier embranchement, choix éditorial)
+    // reste identique — voir le docstring de `getOpeningDetail` (dynamic
+    // branch) : seule une famille dynamique sans chapitre curaté perd cette
+    // garantie.
+    expect(mainLine(enrichedTree).map((n) => n.san).slice(0, ruyLopez.moves.length)).toEqual(
+      mainLine(curatedTree)
+        .map((n) => n.san)
+        .slice(0, ruyLopez.moves.length),
+    );
+
+    // La Défense Berlinoise (nommée à la main dans `core/curriculum/openings.ts`)
+    // garde son nom français, jamais recouvert par un nom lichess-org.
+    const bb5 = mainLine(enrichedTree).find((n) => n.san === "Bb5")!;
+    const berlin = bb5.children.find((n) => n.san === "Nf6")!;
+    expect(berlin.comment).toMatch(/Berlinoise/);
+  });
+
+  it("ne mute jamais l'arbre partagé de `getOpeningTree` (utilisé par la détection d'écarts de répertoire)", () => {
+    const ruyLopez = findOpening("ruy-lopez")!;
+    const before = JSON.stringify(getOpeningTree(ruyLopez));
+    getEnrichedTreeForCuratedOpening(ruyLopez);
+    const after = JSON.stringify(getOpeningTree(ruyLopez));
+    expect(after).toBe(before);
+  });
+
+  it(
+    "n'échoue jamais, pour chaque chapitre curaté du catalogue",
+    () => {
+      // Construit ~19 arbres de famille réels (jusqu'à 391 lignes pour la
+      // Sicilienne) — plus lent que le reste de la suite, d'où le timeout
+      // explicite, mais un aller simple : chaque arbre est ensuite mémoïsé
+      // (`enrichedCuratedTreeCache`/`familyTreeCache`), comme en usage réel où
+      // un chapitre donné n'est construit qu'une fois par process serveur.
+      for (const opening of OPENINGS) {
+        expect(() => getEnrichedTreeForCuratedOpening(opening)).not.toThrow();
+      }
+    },
+    20_000,
+  );
+});

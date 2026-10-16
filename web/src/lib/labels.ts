@@ -1,0 +1,487 @@
+/**
+ * Traduction des clés du domaine vers l'interface.
+ *
+ * Le domaine (src/core) ne connaît que des clés anglaises stables, qui
+ * finissent en base et dans les URL. Tout le français est ici : changer un
+ * libellé ne touche jamais aux données.
+ */
+import type { EngineLine } from "@/core/analysis/types";
+import type { KeyMomentKind, TimelinePly } from "@/core/analysis/timeline";
+import { DECKS } from "@/core/chess/decks";
+import type { Termination } from "@/core/chess/termination";
+import type { GamePhase, GameResult, Motif, MoveQuality, WrongMoveHint } from "@/core/chess/types";
+import type { TrainingGoal } from "@/core/training/preferences";
+import { parseTrainingReason } from "@/core/training/reasons";
+import type { CurriculumLevel } from "@/server/db/schema/curriculum";
+import type { GameSource } from "@/server/db/schema";
+
+export const QUALITY_LABEL: Record<MoveQuality, string> = {
+  brilliant: "Brillant",
+  critical: "Critique",
+  best: "Meilleur coup",
+  okay: "Correct",
+  inaccuracy: "Imprécision",
+  blunder: "Gaffe",
+  book: "Théorique",
+};
+
+/** Explication complète, pour l'info-bulle des badges — le statut seul ne dit pas tout. */
+export const QUALITY_DESCRIPTION: Record<MoveQuality, string> = {
+  brilliant: "Ingénieux — un sacrifice qui reste objectivement gagnant ou tenable.",
+  critical: "Le seul coup valable dans cette position.",
+  best: "Le meilleur coup selon le moteur.",
+  okay: "Correct, sans être le meilleur choix.",
+  inaccuracy: "Une imprécision, sans gravité immédiate.",
+  blunder: "Une gaffe qui change l'issue de la partie.",
+  book: "Position hors évaluation (théorie ou fin de partie).",
+};
+
+/** Classe Tailwind de couleur de texte, adossée aux jetons de globals.css. */
+export const QUALITY_TEXT_CLASS: Record<MoveQuality, string> = {
+  brilliant: "text-brilliant",
+  critical: "text-critical",
+  best: "text-best",
+  okay: "text-okay",
+  inaccuracy: "text-inaccuracy",
+  blunder: "text-blunder",
+  book: "text-book",
+};
+
+/**
+ * Fond plein assorti (Tailwind génère ces classes depuis `--color-*` de
+ * globals.css) — pour les badges d'icône, volontairement saturés plutôt que
+ * teintés à faible opacité : un badge illisible ne sert à rien.
+ */
+export const QUALITY_BG_CLASS: Record<MoveQuality, string> = {
+  brilliant: "bg-brilliant",
+  critical: "bg-critical",
+  best: "bg-best",
+  okay: "bg-okay",
+  inaccuracy: "bg-inaccuracy",
+  blunder: "bg-blunder",
+  book: "bg-book",
+};
+
+/**
+ * Encre du glyphe sur fond plein — calculée une fois pour un contraste correct
+ * (ratio WCAG) sur chacune des 7 couleurs : le blunder rouge est le seul assez
+ * sombre pour appeler du texte clair, tous les autres appellent du texte foncé.
+ * Fixe, comme les couleurs de qualité elles-mêmes (pas de variante par thème).
+ */
+export const QUALITY_BADGE_INK_CLASS: Record<MoveQuality, string> = {
+  brilliant: "text-[#12211f]",
+  critical: "text-[#12211f]",
+  best: "text-[#12211f]",
+  okay: "text-[#12211f]",
+  inaccuracy: "text-[#12211f]",
+  blunder: "text-white",
+  book: "text-[#12211f]",
+};
+
+/** Classe de bordure assortie — liseré de repérage sur les lignes du journal des coups. */
+export const QUALITY_BORDER_CLASS: Record<MoveQuality, string> = {
+  brilliant: "border-brilliant",
+  critical: "border-critical",
+  best: "border-best",
+  okay: "border-okay",
+  inaccuracy: "border-inaccuracy",
+  blunder: "border-blunder",
+  book: "border-book",
+};
+
+/**
+ * Glyphe façon annotation d'échiquier — reconnaissable d'un coup d'œil,
+ * indépendant de la langue de l'interface. `okay` n'a pas d'équivalent texte
+ * lisible à cette taille : `QualityBadge` y substitue une icône (pouce levé).
+ */
+export const QUALITY_SYMBOL: Record<MoveQuality, string> = {
+  brilliant: "!!",
+  critical: "!",
+  best: "★",
+  okay: "✓",
+  book: "📖",
+  inaccuracy: "?!",
+  blunder: "??",
+};
+
+/**
+ * Indice affiché sous l'échiquier d'un puzzle après un coup hors-solution
+ * (`PuzzleBoard`, voir `core/chess/coach-hints.ts#classifyWrongMove`) — le
+ * « Coach Voice » de CLAUDE.md : qualifier l'erreur plutôt que de se limiter
+ * au compte d'essais restants.
+ */
+export const WRONG_MOVE_HINT_LABEL: Record<WrongMoveHint, string> = {
+  hangs_piece: "Tu laisses une pièce en prise.",
+  exposes_king: "Attention à la sécurité de ton roi.",
+  generic: "Ce n'est pas le coup à jouer ici.",
+};
+
+export const MOTIF_LABEL: Record<Motif, string> = {
+  fork: "Fourchette",
+  pin: "Clouage",
+  skewer: "Enfilade",
+  discovered_attack: "Attaque à la découverte",
+  back_rank_mate: "Mat du couloir",
+  hanging_piece: "Pièce en prise",
+};
+
+export const PHASE_LABEL: Record<GamePhase, string> = {
+  opening: "Ouverture",
+  middlegame: "Milieu de partie",
+  endgame: "Finale",
+};
+
+/** Liste lisible de motifs, chaîne vide s'il n'y en a aucun. */
+export function formatMotifs(motifs: readonly Motif[]): string {
+  return motifs.map((motif) => MOTIF_LABEL[motif]).join(", ");
+}
+
+/** Évaluation en notation joueur : "+1.24", "-0.30", "M3". */
+export function formatEvaluation(cp: number | null, mate: number | null): string {
+  if (mate !== null) return `${mate > 0 ? "M" : "-M"}${Math.abs(mate)}`;
+  if (cp === null) return "—";
+  const pawns = cp / 100;
+  return `${pawns >= 0 ? "+" : ""}${pawns.toFixed(2)}`;
+}
+
+/**
+ * Couleur de surbrillance de case pour un coup du joueur, dérivée du jeton
+ * `--quality-*` correspondant (voir globals.css) — une seule source pour la
+ * couleur, que ce soit dans le journal des coups ou sur l'échiquier.
+ */
+export function qualitySquareColor(quality: MoveQuality): string {
+  return `color-mix(in srgb, var(--quality-${quality}) 55%, transparent)`;
+}
+
+/** Surbrillance neutre pour un coup de l'adversaire, jamais qualifié. */
+export const OPPONENT_MOVE_SQUARE_COLOR =
+  "color-mix(in srgb, var(--foreground-muted) 35%, transparent)";
+
+/**
+ * Anneau de surbrillance automatique du roi en échec/mat (`PuzzleBoard`, voir
+ * `core/chess/check.ts#kingInCheckSquare`) — retour utilisateur : sur
+ * certains puzzles le roi du joueur est déjà en échec au chargement, et rien
+ * ne le signalait avant qu'il ne cherche à comprendre pourquoi ses coups
+ * semblaient illégaux. Jeton `--quality-blunder` (danger), pas un fond plein
+ * comme `qualitySquareColor` : un ANNEAU (box-shadow) pour rester lisible
+ * même superposé à une autre surbrillance de case.
+ */
+export const CHECK_SQUARE_RING_COLOR = "var(--quality-blunder)";
+
+/**
+ * Couleurs des flèches de lignes moteur (Mode Exploration), dégradées par
+ * rang — dense pour le meilleur coup, de plus en plus discrète au-delà. Jetons
+ * dédiés (`--engine-arrow-*`, voir globals.css) : une flèche qualifie une ligne
+ * CANDIDATE du moteur, jamais un coup déjà joué — sémantique différente des
+ * jetons `--quality-*` utilisés par `qualitySquareColor`, même si certaines
+ * teintes se ressemblent. L'ordre fixe aussi combien de lignes `arrowsFromEngineLines`
+ * matérialise au maximum, voir `ENGINE_ARROW_LINE_COUNT`.
+ */
+const ENGINE_ARROW_COLORS = [
+  "color-mix(in srgb, var(--engine-arrow-best) 90%, transparent)",
+  "color-mix(in srgb, var(--engine-arrow-second) 55%, transparent)",
+  "color-mix(in srgb, var(--engine-arrow-alt) 28%, transparent)",
+];
+
+/**
+ * Nombre de lignes MultiPV à demander au moteur pour alimenter les flèches
+ * (`AnalysisLimit.lines`) — toujours égal au nombre de teintes définies :
+ * demander plus ne servirait à rien (rien pour les colorer), demander moins
+ * priverait `arrowsFromEngineLines` de sa dernière teinte.
+ */
+export const ENGINE_ARROW_LINE_COUNT = ENGINE_ARROW_COLORS.length;
+
+/**
+ * Convertit les lignes candidates du moteur (`EngineLine[]`, meilleure d'abord)
+ * en flèches directionnelles pour `react-chessboard` (`options.arrows`) — un
+ * type structurellement compatible avec `Arrow`, sans importer la librairie
+ * dans ce module qui reste framework-agnostique.
+ */
+export function arrowsFromEngineLines(
+  lines: readonly EngineLine[],
+): { startSquare: string; endSquare: string; color: string }[] {
+  return lines.slice(0, ENGINE_ARROW_COLORS.length).map((line, index) => ({
+    startSquare: line.uci.slice(0, 2),
+    endSquare: line.uci.slice(2, 4),
+    color: ENGINE_ARROW_COLORS[index],
+  }));
+}
+
+/** Couleur de la flèche « coup joué » — voir `--engine-arrow-played`, globals.css. */
+const PLAYED_ARROW_COLOR = "color-mix(in srgb, var(--engine-arrow-played) 85%, transparent)";
+
+/**
+ * Flèches « double-flux » de la Revue de partie (cahier des charges §11) —
+ * affichées en permanence, pas seulement en Mode Exploration : le meilleur
+ * coup du moteur (`analysis.bestUci`, déjà calculé à l'import pour LES DEUX
+ * camps — voir le docstring de `TimelinePly`) et, s'il diffère, le coup
+ * réellement joué (`entry.uci`), pour comparer d'un coup d'œil le choix du
+ * joueur à la vérité moteur. Aucune flèche sans analyse disponible (coup non
+ * analysé), et une seule flèche si le coup joué EST le meilleur coup —
+ * superposer deux flèches identiques n'apporterait rien.
+ */
+export function playedVsBestArrows(
+  entry: TimelinePly,
+): { startSquare: string; endSquare: string; color: string }[] {
+  const best = entry.analysis?.bestUci;
+  if (!best) return [];
+
+  const arrows = [
+    { startSquare: best.slice(0, 2), endSquare: best.slice(2, 4), color: ENGINE_ARROW_COLORS[0] },
+  ];
+  if (entry.uci !== best) {
+    arrows.push({ startSquare: entry.uci.slice(0, 2), endSquare: entry.uci.slice(2, 4), color: PLAYED_ARROW_COLOR });
+  }
+  return arrows;
+}
+
+/**
+ * Flèche de révélation de la solution (`PuzzleBoard`, une fois les 3 essais
+ * épuisés) : vert plein, sans dégradé — délibérément plus dense que
+ * `ENGINE_ARROW_COLORS[0]` (90% d'opacité), pour qu'elle se distingue d'une
+ * flèche de ligne CANDIDATE : celle-ci trace un coup CONNU, pas une
+ * suggestion du moteur.
+ */
+export const REVEAL_ARROW_COLOR = "var(--engine-arrow-best)";
+
+export function describeGameResult(result: GameResult): string {
+  if (result === "1-0") return "les Blancs gagnent";
+  if (result === "0-1") return "les Noirs gagnent";
+  return "nulle";
+}
+
+export type GameOutcomeForPlayer = "win" | "loss" | "draw" | "unknown";
+
+/** Issue d'une partie du point de vue du joueur — pour les badges du flux "Parties récentes". */
+export function gameOutcomeForPlayer(
+  result: GameResult | null,
+  playerColor: "w" | "b",
+): GameOutcomeForPlayer {
+  if (!result) return "unknown";
+  if (result === "1/2-1/2") return "draw";
+  const playerWon = (result === "1-0" && playerColor === "w") || (result === "0-1" && playerColor === "b");
+  return playerWon ? "win" : "loss";
+}
+
+export const GAME_OUTCOME_LABEL: Record<GameOutcomeForPlayer, string> = {
+  win: "Victoire",
+  loss: "Défaite",
+  draw: "Nulle",
+  unknown: "—",
+};
+
+/** Fond plein assorti, pour le badge d'issue de partie du flux "Parties récentes". */
+export const GAME_OUTCOME_BADGE_CLASS: Record<GameOutcomeForPlayer, string> = {
+  win: "bg-best/15 text-best border border-best/30",
+  loss: "bg-blunder/15 text-blunder border border-blunder/30",
+  draw: "bg-surface-muted text-foreground-muted border border-border",
+  unknown: "bg-surface-muted text-foreground-muted border border-border",
+};
+
+/**
+ * Couleur de précision, échelle commune au flux "Parties récentes" et à
+ * l'onglet Rapport (`ProgressOverview`) — une seule source, sur les jetons
+ * de qualité réellement définis dans globals.css.
+ */
+export function accuracyTextClass(accuracy: number | null): string {
+  if (accuracy === null) return "text-foreground-muted";
+  if (accuracy >= 90) return "text-brilliant";
+  if (accuracy >= 75) return "text-best";
+  if (accuracy >= 55) return "text-inaccuracy";
+  return "text-blunder";
+}
+
+/** Couleur de remplissage assortie, pour les barres de progression. */
+export function accuracyBarClass(accuracy: number | null): string {
+  if (accuracy === null) return "bg-border";
+  if (accuracy >= 90) return "bg-brilliant";
+  if (accuracy >= 75) return "bg-best";
+  if (accuracy >= 55) return "bg-inaccuracy";
+  return "bg-blunder";
+}
+
+export const TERMINATION_LABEL: Record<Termination, string> = {
+  checkmate: "échec et mat",
+  stalemate: "pat",
+  insufficient_material: "matériel insuffisant",
+  threefold_repetition: "répétition",
+  fifty_move_rule: "règle des 50 coups",
+  resignation: "abandon",
+};
+
+export const IMPORT_SOURCE_LABEL: Record<Exclude<GameSource, "local">, string> = {
+  chesscom: "Chess.com",
+  lichess: "Lichess",
+};
+
+export const CURRICULUM_LEVEL_LABEL: Record<CurriculumLevel, string> = {
+  beginner: "Débutant",
+  intermediate: "Intermédiaire",
+  advanced: "Avancé",
+};
+
+/** Vert → ambre → rouge, même dégradé de lisibilité que `accuracyTextClass` — pas les mêmes seuils, le même sens de lecture. */
+export const CURRICULUM_LEVEL_TEXT_CLASS: Record<CurriculumLevel, string> = {
+  beginner: "text-best",
+  intermediate: "text-inaccuracy",
+  advanced: "text-blunder",
+};
+
+export const CURRICULUM_LEVEL_BORDER_CLASS: Record<CurriculumLevel, string> = {
+  beginner: "border-best/30",
+  intermediate: "border-inaccuracy/30",
+  advanced: "border-blunder/30",
+};
+
+export const KEY_MOMENT_LABEL: Record<KeyMomentKind, string> = {
+  brilliant: "Coup brillant",
+  critical: "Coup critique",
+  blunder: "Gaffe",
+  inaccuracy: "Imprécision",
+  missed_mate: "Mat manqué",
+  missed_tactic: "Tactique manquée",
+};
+
+/** Couleur associée à un moment clé — réutilise les jetons de qualité déjà en place. */
+export const KEY_MOMENT_TEXT_CLASS: Record<KeyMomentKind, string> = {
+  brilliant: "text-brilliant",
+  critical: "text-critical",
+  blunder: "text-blunder",
+  inaccuracy: "text-inaccuracy",
+  missed_mate: "text-blunder",
+  missed_tactic: "text-inaccuracy",
+};
+
+/** Glyphe associé à un moment clé, même convention que `QUALITY_SYMBOL`. */
+export const KEY_MOMENT_SYMBOL: Record<KeyMomentKind, string> = {
+  brilliant: "!!",
+  critical: "!",
+  blunder: "??",
+  inaccuracy: "?!",
+  missed_mate: "#",
+  missed_tactic: "?!",
+};
+
+export const TRAINING_GOAL_LABEL: Record<TrainingGoal, string> = {
+  tactics: "Tactique",
+  openings: "Ouvertures",
+  traps: "Pièges",
+  review: "Revue",
+};
+
+/** Phrase vérifiable affichée sur une carte de séance — jamais un rang SQL nu. */
+export function formatTrainingHeadline(reasonCode: string): string {
+  const { code, evidence } = parseTrainingReason(reasonCode);
+  const motif = evidence.motif && evidence.motif in MOTIF_LABEL ? MOTIF_LABEL[evidence.motif] : null;
+  const opening = evidence.openingName;
+  switch (code) {
+    case "puzzle-due":
+      return evidence.daysOverdue && evidence.daysOverdue > 0
+        ? `Puzzle en retard de ${evidence.daysOverdue} j`
+        : "Puzzle à réviser aujourd'hui";
+    case "motif-missed":
+      return motif
+        ? `Motif ${motif} manqué ${evidence.missCount ?? 0} fois`
+        : "Motif tactique manqué";
+    case "opening-due":
+      return "Variante d'ouverture à revoir";
+    case "theory-exit":
+      return evidence.theoryExitPly
+        ? `Sortie de théorie au coup ${Math.ceil(evidence.theoryExitPly / 2)}${opening ? ` (${opening})` : ""}`
+        : opening
+          ? `Sortie de théorie (${opening})`
+          : "Sortie de théorie à analyser";
+    case "game-error":
+      if ((evidence.avgCpLoss ?? 0) >= 1500) return "Erreur décisive (mat ou perte lourde)";
+      return evidence.avgCpLoss
+        ? `Erreur de partie (−${Math.round(evidence.avgCpLoss)} cp)`
+        : "Erreur de partie à analyser";
+    case "trap-due":
+      return evidence.trapName ? `Piège à entretenir : ${evidence.trapName}` : "Piège à entretenir";
+    case "trap-refutation-forgotten":
+      return evidence.trapName
+        ? `Réfutation oubliée : ${evidence.trapName}`
+        : "Piège vu, réfutation oubliée";
+    case "trap-family-played":
+      return evidence.trapFamily ? `Piège de ton répertoire (${evidence.trapFamily})` : "Piège de ton répertoire";
+    default:
+      return "Entraînement recommandé";
+  }
+}
+
+/** Titre FR de chaque deck (`core/chess/decks.ts`) — preuve de provenance d'un `puzzle-due`. */
+const DECK_TITLE: Record<string, string> = Object.fromEntries(DECKS.map((deck) => [deck.id, deck.title]));
+
+/** Numéro de coup (1 = premier coup) depuis une `entityId` `gameId:ply` — `null` si absente ou illisible. */
+function moveNumberFromEntityId(entityId: string): number | null {
+  const separator = entityId.lastIndexOf(":");
+  if (separator === -1) return null;
+  const ply = Number(entityId.slice(separator + 1));
+  return Number.isFinite(ply) && ply > 0 ? Math.ceil(ply / 2) : null;
+}
+
+/** Filtre les parties vides puis joint par « · » — `null` si rien ne reste. */
+function joinProof(parts: readonly (string | null)[]): string | null {
+  const kept = parts.filter((part): part is string => part != null && part !== "");
+  return kept.length > 0 ? kept.join(" · ") : null;
+}
+
+/**
+ * Ligne de preuve locale sous le titre d'une carte de « Séance du jour » — la
+ * contrepartie directe de la promesse affichée par `TrainingRecommendationsCard`
+ * (« chaque carte cite une preuve locale… pas un score moteur opaque »). Tout
+ * ce qui est rendu ici est vérifiable en SQLite : le motif et le deck du puzzle
+ * dû, la famille/variante du répertoire et son dernier score, le coup sorti de
+ * théorie, l'ECO du piège — la preuve voyage déjà dans `reason_code`
+ * (`core/training/reasons.ts`), on la rend simplement.
+ *
+ * `null` : aucune preuve encodée (raison inconnue ou champ absent), la carte
+ * n'affiche que son titre — jamais de texte inventé.
+ */
+export function formatTrainingProof(recommendation: { entityId: string; reasonCode: string }): string | null {
+  const { code, evidence } = parseTrainingReason(recommendation.reasonCode);
+  const motif = evidence.motif && evidence.motif in MOTIF_LABEL ? MOTIF_LABEL[evidence.motif] : null;
+  const deck = evidence.deck ? DECK_TITLE[evidence.deck] ?? null : null;
+  const family = evidence.trapFamily ?? null;
+  const eco = evidence.eco ? `ECO ${evidence.eco}` : null;
+  const cp = evidence.avgCpLoss != null && evidence.avgCpLoss > 0 ? `−${Math.round(evidence.avgCpLoss)} cp` : null;
+  const overdue = evidence.daysOverdue != null && evidence.daysOverdue > 0 ? `${evidence.daysOverdue} j` : null;
+
+  switch (code) {
+    case "puzzle-due":
+      // Motif absent pour un puzzle importé : le deck seul reste une preuve de
+      // provenance (« ça vient de mes erreurs rangées »).
+      return joinProof([motif, deck ? `deck ${deck}` : null]);
+    case "motif-missed":
+      return cp ? `${cp} de perte moyenne` : null;
+    case "opening-due":
+      return joinProof([
+        evidence.openingName ?? null,
+        evidence.variation ?? null,
+        overdue ? `${overdue} de retard` : null,
+        evidence.accuracy != null && evidence.accuracy > 0 ? `${evidence.accuracy} % au dernier passage` : null,
+      ]);
+    case "theory-exit":
+      return cp ? `${cp} sur le coup` : null;
+    case "game-error": {
+      // Le cp est déjà dans le titre (ou signalé « mat ou perte lourde ») :
+      // la preuve localise le coup fautif dans la partie, pas de doublon.
+      const moveNumber = moveNumberFromEntityId(recommendation.entityId);
+      return joinProof([moveNumber !== null ? `Coup ${moveNumber}` : null, evidence.openingName ?? null]);
+    }
+    case "trap-due":
+      return joinProof([family, eco, overdue ? `${overdue} sans révision` : null]);
+    case "trap-refutation-forgotten":
+      return joinProof([
+        family,
+        eco,
+        evidence.hintsUsed != null && evidence.hintsUsed > 0
+          ? `${evidence.hintsUsed} indice${evidence.hintsUsed > 1 ? "s" : ""} utilisé${evidence.hintsUsed > 1 ? "s" : ""}`
+          : "réponse ratée à la dernière séance",
+      ]);
+    case "trap-family-played":
+      return joinProof([eco, evidence.gameCount ? `${evidence.gameCount} parties jouées` : null]);
+    default:
+      return null;
+  }
+}

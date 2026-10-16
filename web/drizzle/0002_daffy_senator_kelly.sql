@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `puzzles_move_idx` ON `puzzles` (`move_id`);

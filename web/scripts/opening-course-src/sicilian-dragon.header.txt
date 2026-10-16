@@ -1,0 +1,60 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Sicilienne Dragon (avec les Noirs) » : 1.e4 c5 2.Nf3
+ * d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6 — onglet Ouvertures, format « un
+ * commentaire par coup » de l'Académie, lu par `CourseTreeViewer` (route
+ * `/ouvertures/sicilian-dragon/cours`). Public visé : 1500-1800 Elo, qui
+ * cherche une alternative ultra-agressive à la Caro-Kann.
+ *
+ * ## Contenu (2026-10-14)
+ *
+ * 1. Fiche d'identité et Attaque Yougoslave 6.Be3 Bg7 7.f3 O-O 8.Qd2 Nc6
+ *    9.Bc4 Bd7 10.O-O-O Rc8 11.Bb3 Ne5 12.h4 h5 (Soltis) 13.Bg5 Rc5 14.Kb1
+ *    Re8 15.g4 hxg4 16.f4 Nc4 17.Qe2 (environ 0.00), avec 12.Kb1 et la
+ *    ligne moderne 9.O-O-O d5.
+ * 2. Classique 6.Be2 Bg7 7.O-O Nc6 8.Be3 O-O 9.Qd2 d5! jusqu'au coup 14
+ *    (pion d5 sacrifiable contre l'activité), avec 9.Nb3 Be6 10.f4 Qc8
+ *    (le levier ...d5 retardé) et 9.f4 Qb6.
+ * 3. Fausse variante d'échange 9.Nxc6?! bxc6 (environ -0.3) : 10...Be6!
+ *    et non 10...d5? 11.Bh6 (environ +0.6), 10.e5? Nd5! et 10.Bc4 Qa5.
+ * 4. Anti-panique : 8.g4?! Nc6 9.h4? d5! (environ -1.7 après 10.exd5),
+ *    7.h4?! Nc6 8.h5 Nxh5 9.Rxh5? gxh5 et 7.Qd2?! Ng4.
+ * 5. Aléatoire surprise : après la Soltis, 17.f4?!, 18.Qc1? et le faux
+ *    sacrifice 20.Nf5? exf5 (environ -4).
+ *
+ * Indices progressifs : chaque faute blanche porte trois balises `[%hint]`
+ * (1. principe violé, 2. case faible, 3. action de punition) et une balise
+ * `[%hintcsl]` (cases allumées à partir du 2e indice).
+ *
+ * Sources : les PDF Sicilienne de `docs/` ne couvrent pas le Dragon côté
+ * noir avec une couche texte exploitable ; les lignes suivent la théorie
+ * établie du Dragon (Soltis, Ne5 de la ligne 9.Bc4, 9.O-O-O d5) et sont
+ * TOUTES arbitrées par Stockfish 18 natif (profondeur 16). Le moteur a
+ * nuancé le cahier des charges : 11...Ne5 reste jouable mais 11...Nxd4 est
+ * un peu plus précis (+0.6 contre +0.8) ; après 9.Nxc6 bxc6 10.O-O-O, la
+ * poussée immédiate 10...d5? est une erreur (11.Bh6, +0.6) : le levier
+ * ...d5 se prépare par 10...Be6 et ...Qa5 ; le « piège » 7.Qd2 Ng4 8.Bg5 h6
+ * 9.Bh4 g5 10.Bg3 Bxd4? perd (+1.6). Toute la prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Voir `op-scotch-game.ts` : `evaluationScore` / `evaluationMate` (balise
+ * `[%eval]`), `showEvalBar`, `freeze` (balise `[%txt "…"]` sur CHAQUE
+ * commentaire), plus `hints` / `hintHighlights`.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/sicilian-dragon.source.pgn` (et l'en-tête
+ * `sicilian-dragon.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16 [pgn compilé]`
+ * (PGN compilé : `scripts/opening-course-src/sicilian-dragon.pgn`).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]` ni un `[%hint]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

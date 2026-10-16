@@ -1,0 +1,329 @@
+@import "tailwindcss";
+
+/**
+ * Thème "Jeu Virtuel / E-Sport" — sombre immersif unique (façon chessrank.org),
+ * pas de bascule clair/sombre : un seul jeu de jetons. Les couleurs de qualité
+ * de coup restent des jetons de premier niveau, INCHANGÉES par ce thème —
+ * elles apparaissent sur l'échiquier, dans le journal des coups, dans les
+ * graphes d'évaluation et dans les statistiques, et sont déjà benchmarkées sur
+ * ce que Lichess/Chess.com utilisent réellement pour ces mêmes statuts (voir
+ * CLAUDE.md, section "Chess Review Rules & Nuances").
+ */
+:root {
+  --background: #020617;
+  --surface: #0f172a;
+  --surface-muted: #1e293b;
+  --border: #334155;
+  --foreground: #f1f5f9;
+  --foreground-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-foreground: #04121f;
+
+  /**
+   * Benchmarkées sur ce que Lichess/Chess.com utilisent réellement pour ces
+   * mêmes statuts (teal/bleu/vert/jaune/rouge, plus saturés que la première
+   * version de cette palette) — plus visibles à petite taille dans les badges
+   * du journal des coups. Indépendantes du thème (clair ou sombre).
+   */
+  --quality-brilliant: #1baaa6;
+  --quality-critical: #5b8faf;
+  --quality-best: #98bc49;
+  --quality-okay: #97af8b;
+  --quality-inaccuracy: #f4bf44;
+  --quality-blunder: #c93230;
+  --quality-book: #a88764;
+
+  /**
+   * Graphe d'évaluation : encode la couleur au trait (Blancs/Noirs), pas le
+   * thème de l'appli — comme un échiquier, dont les cases claires/foncées ne
+   * s'inversent pas en mode sombre. Fixe, à dessein.
+   */
+  --eval-panel: #faf9f6;
+  --eval-white-fill: #f2f0e8;
+  --eval-black-fill: #2b2a25;
+  --eval-line: #4a4940;
+  --eval-line-halo: #faf9f6;
+  --eval-baseline: #b5b3a8;
+  --eval-grid: #ded9cd;
+  --eval-text: #6b6a63;
+  /** Liseré de la barre d'évaluation quand un mat est annoncé (« M3 ») — or, distinct du rouge `--quality-blunder` qui qualifie un coup. */
+  --eval-mate: #eab308;
+
+  /**
+   * Flèches de lignes moteur (Mode Exploration, voir lib/labels.ts#arrowsFromEngineLines).
+   * Distinctes des jetons --quality-* : une flèche qualifie une ligne CANDIDATE
+   * du moteur (que jouer d'ici), pas un coup déjà joué — même quand une couleur
+   * se rapproche visuellement d'un jeton de qualité, la sémantique diffère.
+   */
+  --engine-arrow-best: #22c55e;
+  --engine-arrow-second: #38bdf8;
+  --engine-arrow-alt: #f4bf44;
+  /**
+   * Coup réellement joué, en Revue de partie hors Exploration — voir
+   * `lib/labels.ts#playedVsBestArrows`. Distincte de `--engine-arrow-best`
+   * (la vérité du moteur) : les deux flèches doivent rester visuellement
+   * différenciables quand elles coexistent sur l'échiquier.
+   */
+  --engine-arrow-played: #f97316;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-brilliant: var(--quality-brilliant);
+  --color-critical: var(--quality-critical);
+  --color-best: var(--quality-best);
+  --color-okay: var(--quality-okay);
+  --color-inaccuracy: var(--quality-inaccuracy);
+  --color-blunder: var(--quality-blunder);
+  --color-book: var(--quality-book);
+  --color-eval-panel: var(--eval-panel);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/**
+ * Surface « papier » des textes de cours de l'Académie (annotations, arbre de
+ * notation) : fond clair chaud et texte sombre, pour une lecture prolongée sans
+ * fatigue sur un thème entièrement sombre. Redéfinit localement les jetons :
+ * grâce à `@theme inline`, `text-foreground`, `bg-surface-muted`, etc. suivent
+ * sans toucher aux composants. Seuls les deux jetons de qualité utilisés comme
+ * TEXTE dans ces volets sont assombris ici, pour rester lisibles sur clair.
+ */
+.paper-surface {
+  --foreground: #1f2328;
+  --foreground-muted: #5b5a54;
+  --surface-muted: #ebe8df;
+  --border: #d9d5ca;
+  --accent: #0b6aa2;
+  --accent-foreground: #ffffff;
+  --quality-best: #4d7c0f;
+  --quality-inaccuracy: #a15c07;
+  background: var(--eval-panel);
+  color: var(--foreground);
+}
+
+/**
+ * Transitions fluides en CSS pur (pas de Framer Motion : son installation est
+ * bloquée par le réseau de cet environnement — voir la note dans
+ * `components/ui/nav.tsx`). Deux animations d'entrée réutilisées partout où
+ * le plan de refonte demandait du mouvement : le toast de synchro et les
+ * cartes d'aperçu de l'accueil.
+ */
+@keyframes fade-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up-in {
+  animation: fade-up-in 0.3s ease-out both;
+}
+
+.animate-slide-up-in {
+  animation: slide-up-in 0.2s ease-out both;
+}
+
+/**
+ * Retour visuel d'erreur du Mode Entraînement (méthode Listudy stricte, voir
+ * `use-opening-drill.ts` : jamais de message texte sur un coup refusé) — un
+ * tremblement bref + un halo rouge autour de l'échiquier, voir
+ * `opening-drill.tsx#errorPulse`.
+ */
+@keyframes shake-error {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.animate-shake-error {
+  animation: shake-error 0.35s ease-in-out both;
+}
+
+/**
+ * HUD d'alerte piège d'`OpeningCoachingPanel` (cahier des charges du
+ * 2026-09-12, coaching temps réel du Mode Entraînement) — un flash de bordure
+ * écarlate discret sur l'encart d'alerte, EN PLUS du tremblement générique du
+ * plateau (`.animate-shake-error`, toujours déclenché en parallèle) : jamais
+ * un remplacement, juste un signal supplémentaire pour un coup refusé qui
+ * correspond en plus à un piège DOCUMENTÉ (`core/curriculum/opening-trap-alert.ts`).
+ * Utilise `--quality-blunder` (déjà la teinte "erreur" de tout le thème,
+ * voir CLAUDE.md) plutôt qu'une nouvelle couleur dédiée.
+ */
+@keyframes trap-alert-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--quality-blunder) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--quality-blunder) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--quality-blunder) 0%, transparent);
+  }
+}
+
+.animate-trap-alert {
+  animation: trap-alert-flash 1.4s ease-out both;
+}
+
+/**
+ * Micro-animation du coup adverse — feuille de route Zone 2 : la bibliothèque
+ * `react-chessboard` pose `transition: transform <durée>ms` en style INLINE
+ * sur la pièce en mouvement, sans timing-function (donc `ease` par défaut du
+ * shorthand). La règle ci-dessous écrase le longhand en `!important` — seul
+ * levier propre pour forcer l'interpolation `ease-in-out` demandée (150-200 ms,
+ * piloté côté React par `animationDurationInMs : OPPONENT_MOVE_ANIMATION_MS`,
+ * `client/features/board/move-animation.ts`) sans forker le composant.
+ * Le sélecteur ne cible QUE les pièces réellement en transition (la propriété
+ * inline n'existe que pendant l'animation) — jamais une pièce immobile ni le
+ * clone en cours de glisser-déposer.
+ */
+[id*="-piece-"][style*="transition"] {
+  transition-timing-function: ease-in-out !important;
+}
+
+/**
+ * Extension "Accords d'Élite" / "Mission Briefing" (cahier des charges du
+ * 2026-09-09) — jetons PUREMENT ADDITIFS pour `CourseCurriculum` et
+ * `MissionBriefing` (voir `client/features/learn/theme-config.ts`). Aucun
+ * jeton existant modifié : les couleurs de qualité de coup et
+ * `CURRICULUM_LEVEL_*` (`lib/labels.ts`) restent l'unique sémantique
+ * "facile/dur" et "correct/erreur" de l'app — les jetons `--tier-*`
+ * ci-dessous ne servent qu'au liseré décoratif des paliers Bronze/Argent/Or.
+ */
+:root {
+  --tier-bronze: #c2793a;
+  --tier-silver: #b6c2d1;
+  --tier-gold: #eab308;
+
+  /** Voile de l'overlay Mission Briefing — plus sombre que `--background` pur pour laisser deviner le contenu derrière. */
+  --mission-overlay: rgb(2 6 23 / 92%);
+}
+
+@theme inline {
+  --color-tier-bronze: var(--tier-bronze);
+  --color-tier-silver: var(--tier-silver);
+  --color-tier-gold: var(--tier-gold);
+  --color-mission-overlay: var(--mission-overlay);
+}
+
+/**
+ * Pas de keyframes CSS pour l'entrée du Mission Briefing / la Mission
+ * Checklist ici : ces animations sont pilotées par `motion` côté composant
+ * (`theme-config.ts`, `BRIEFING_*`/`CHECKLIST_*`) — voir le cahier des
+ * charges du 2026-09-09, "bibliothèques UI modernes avec animations". Les
+ * jetons de couleur ci-dessus restent en CSS car ce sont des VALEURS, pas des
+ * animations — `motion` les consomme via `var(--tier-*)`/classes Tailwind
+ * comme tout le reste du thème.
+ */
+
+/**
+ * Bulle du Coach Virtuel (`client/features/learn/course-coach-bubble.tsx`,
+ * messages de `core/curriculum/coach-feedbacks.ts`). Jeton additif : le
+ * violet du « mode surprise » (réfutation trouvée du premier coup), associé
+ * au cyan existant `--quality-brilliant` pour la lueur. Les autres teintes
+ * réutilisent les jetons de qualité (best / inaccuracy / blunder).
+ *
+ * Animations déclarées dans `@theme` (Tailwind v4, pas de tailwind.config.js) :
+ * elles génèrent les utilitaires `animate-coach-bubble-in`, `animate-coach-word`
+ * et `animate-coach-caret`, compatibles avec `motion-reduce:animate-none`.
+ *  - bubble-in : la bulle émerge du bas (fondu + glissé + léger zoom) ;
+ *  - word : révélation par MOT (pas lettre à lettre), délai posé en inline ;
+ *  - caret : curseur qui clignote deux fois en fin de phrase puis s'efface.
+ */
+:root {
+  --coach-surprise: #a78bfa;
+}
+
+@theme inline {
+  --color-coach-surprise: var(--coach-surprise);
+}
+
+@theme {
+  --animate-coach-bubble-in: coach-bubble-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-coach-word: coach-word 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-coach-caret: coach-caret 1.1s ease-in-out both;
+
+  @keyframes coach-bubble-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes coach-word {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+      filter: blur(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes coach-caret {
+    0% {
+      opacity: 0;
+    }
+    15%,
+    55% {
+      opacity: 1;
+    }
+    35%,
+    75% {
+      opacity: 0.15;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
