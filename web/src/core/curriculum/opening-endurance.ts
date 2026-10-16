@@ -21,6 +21,13 @@ export interface OpeningSessionHistory {
   openingId: string;
   /** Nom affiché, ex. « Alapine ». */
   openingName: string;
+  /**
+   * Ligne jouée, format `opening-variation-key.ts` : « main_line » ou
+   * `${eco}|${name}` pour une variante nommée (une déviation de l'adversaire
+   * par rapport à la ligne principale). Sert à l'« Instinct de Punition » du
+   * radar de performance (`opening-performance-radar.ts`).
+   */
+  variationKey: string;
   /** Date de fin de session, ISO 8601. */
   playedAt: string;
   /** Ply absolu de la PREMIÈRE erreur, `null` si la ligne a été jouée sans faute. */

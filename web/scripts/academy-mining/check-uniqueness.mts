@@ -11,7 +11,7 @@
  * INPUT=<fichier.json> : à la place, une liste `[{ key, theme, fen, solutionSan }]`
  * (candidats pas encore importés, ex. sortie de `select-waves.mjs`).
  */
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
@@ -38,7 +38,11 @@ const rows = process.env.INPUT
       .all(...CATS)
       .filter((r: any) => !ONLY || ONLY.has(r.theme_id));
 const [shard, shards] = (process.env.SHARD ?? "0/1").split("/").map(Number);
-const mine = rows.filter((_: unknown, i: number) => i % shards === shard);
+// Reprise : les puzzles déjà écrits dans <out.jsonl> (run interrompu) sont sautés.
+const already = new Set(
+  existsSync(outPath) ? readFileSync(outPath, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l).id) : [],
+);
+const mine = rows.filter((r: any, i: number) => i % shards === shard && !already.has(r.id));
 
 const proc = spawn(BIN, [], { stdio: ["pipe", "pipe", "inherit"] });
 const rl = createInterface({ input: proc.stdout });

@@ -40,19 +40,20 @@ export async function recordEnduranceSession(
   if (!metrics) return null;
 
   const id = crypto.randomUUID();
+  const variationKey = variationKeyFor(input.selection);
   await db.insert(openingEnduranceSessions).values({
     id,
     userId,
     openingId: input.openingId,
     openingName: input.openingName,
-    variationKey: variationKeyFor(input.selection),
+    variationKey,
     variationLabel: input.variationLabel,
     firstMistakePly: metrics.firstMistakePly,
     lastPly: metrics.lastPly,
     accuracy: metrics.accuracy,
     playedAt: now,
   });
-  return { sessionId: id, openingId: input.openingId, openingName: input.openingName, playedAt: now.toISOString(), ...metrics };
+  return { sessionId: id, openingId: input.openingId, openingName: input.openingName, variationKey, playedAt: now.toISOString(), ...metrics };
 }
 
 /**
@@ -70,6 +71,7 @@ export async function listEnduranceSessions(userId: string = LOCAL_USER_ID): Pro
     sessionId: row.id,
     openingId: row.openingId,
     openingName: row.openingName,
+    variationKey: row.variationKey,
     playedAt: row.playedAt.toISOString(),
     firstMistakePly: row.firstMistakePly,
     lastPly: row.lastPly,

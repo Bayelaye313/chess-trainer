@@ -16,6 +16,7 @@ function session(id: string, daysAgo: number, overrides: Partial<OpeningSessionH
     sessionId: id,
     openingId: "sicilian-alapin",
     openingName: "Alapine",
+    variationKey: "main_line",
     playedAt: new Date(now.getTime() - daysAgo * 86_400_000).toISOString(),
     firstMistakePly: 20,
     lastPly: 40,

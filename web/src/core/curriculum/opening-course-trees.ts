@@ -6,6 +6,7 @@ import { OP_RUY_LOPEZ } from "./course-trees/op-ruy-lopez";
 import { OP_SCOTCH_GAMBIT } from "./course-trees/op-scotch-gambit";
 import { OP_SCOTCH_GAME } from "./course-trees/op-scotch-game";
 import { OP_SICILIAN_ALAPIN } from "./course-trees/op-sicilian-alapin";
+import { OP_SICILIAN_DRAGON } from "./course-trees/op-sicilian-dragon";
 import { OP_SLAV_DEFENSE } from "./course-trees/op-slav-defense";
 
 /**
@@ -26,6 +27,7 @@ export const OPENING_COURSE_TREES: Record<string, CourseTree> = {
   "slav-defense": OP_SLAV_DEFENSE,
   "kings-indian": OP_KINGS_INDIAN,
   "sicilian-alapin": OP_SICILIAN_ALAPIN,
+  "sicilian-dragon": OP_SICILIAN_DRAGON,
   "italian-game": OP_ITALIAN_GAME,
 };
 

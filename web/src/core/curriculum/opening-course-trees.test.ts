@@ -49,7 +49,7 @@ describe("OPENING_COURSE_TREES", () => {
     }
   });
 
-  it.each(["scotch-game", "caro-kann", "scotch-gambit", "italian-game"])("%s : chaque coup porte une évaluation pour la barre et chaque commentaire gèle le jeu ([%%txt])", (openingId) => {
+  it.each(["scotch-game", "caro-kann", "scotch-gambit", "italian-game", "sicilian-dragon"])("%s : chaque coup porte une évaluation pour la barre et chaque commentaire gèle le jeu ([%%txt])", (openingId) => {
     for (const chapter of OPENING_COURSE_TREES[openingId].chapters) {
       for (const node of collectNodes(chapter.root)) {
         if (node.san === null) continue;

@@ -807,6 +807,20 @@ export const OPENINGS: readonly OpeningLine[] = [
       {Sicilienne : Najdorf, Attaque Anglaise} e5 7.Nb3 Be6 8.f3 Be7 9.Qd2 O-O 10.O-O-O b5 11.g4 b4 12.Nd5 Bxd5 13.exd5 a5`,
   },
   {
+    id: "sicilian-dragon",
+    name: "Sicilienne : Variante du Dragon",
+    eco: "B70",
+    side: "black",
+    description:
+      "5...g6 : le fou g7 en fianchetto vise la grande diagonale et la colonne c ouverte porte la contre-attaque noire. Course au mat garantie contre l'Attaque Yougoslave.",
+    moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6"],
+    pgn: `1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6 6.Be3
+      (6.Be2 {Variante Classique} Bg7 7.O-O Nc6 8.Be3 O-O 9.Qd2 d5 10.exd5 Nxd5 11.Nxc6 bxc6 12.Rfd1 Qc7)
+      Bg7 7.f3 O-O 8.Qd2 Nc6 9.Bc4
+      (9.O-O-O {Ligne 9.O-O-O} d5 10.exd5 Nxd5 11.Nxc6 bxc6 12.Bd4 Bxd4 13.Qxd4 Qb6)
+      {Attaque Yougoslave} Bd7 10.O-O-O Rc8 11.Bb3 Ne5 12.h4 h5 13.Bg5 Rc5 14.Kb1 Re8 15.g4 hxg4 16.f4 Nc4`,
+  },
+  {
     id: "sicilian-alapin",
     name: "Anti-Sicilienne : Alapine",
     eco: "B22",
