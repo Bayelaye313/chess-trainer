@@ -12,6 +12,8 @@
  *   MINPOP / MINPLAYS     préfiltre qualité Lichess (défaut 75 / 100)
  *   MAXROWS=n             essai rapide sur les n premières lignes
  *   PREFILTER_GRUNFELD=1  préfiltre texte (pions d4+e4 blancs) pour accélérer
+ *   PREFILTER_TAGS=<regex> préfiltre sur la colonne Themes (ex. equality), avant tout rejeu
+ *   PREFILTER_MAXPIECES=n  préfiltre : au plus n pièces (rois et pions compris) dans la FEN de départ
  *                         une passe dédiée à `ps-la-structure-grunfeld`
  */
 import { openSync, readSync, closeSync, fstatSync, writeFileSync } from "node:fs";
@@ -974,6 +976,8 @@ if (describeMatePatterns) D["cm-mat-du-triangle"] = (x, t) => (x.mate && describ
 const ONLY = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 if (ONLY) for (const k of Object.keys(D)) if (!ONLY.has(k)) delete D[k];
 const MINPOP = Number(process.env.MINPOP ?? 75), MINPLAYS = Number(process.env.MINPLAYS ?? 100);
+const PREFILTER_TAGS = process.env.PREFILTER_TAGS ? new RegExp(process.env.PREFILTER_TAGS) : null;
+const PREFILTER_MAXPIECES = Number(process.env.PREFILTER_MAXPIECES ?? 0);
 const MAXROWS = Number(process.env.MAXROWS ?? 0); // essai rapide : ne rejouer que les MAXROWS premières lignes
 const detectorErrors = new Set();
 // ── Passe unique ─────────────────────────────────────────────────────────────
@@ -990,6 +994,8 @@ await eachLine(csvPath, (line) => {
   if (+popularity < MINPOP || +nbPlays < MINPLAYS) return;
   if (MAXROWS && n > MAXROWS) return;
   if (process.env.PREFILTER_GRUNFELD) { const rows = fen.split(" ")[0].split("/"); const r4 = rows[4].replace(/\d/g, (d) => ".".repeat(+d)); if (r4[3] !== "P" || r4[4] !== "P") return; } // préfiltre texte Grünfeld, avant tout rejeu
+  if (PREFILTER_TAGS && !PREFILTER_TAGS.test(themes)) return;
+  if (PREFILTER_MAXPIECES && fen.split(" ")[0].replace(/[^a-zA-Z]/g, "").length > PREFILTER_MAXPIECES) return;
   const uci = movesStr.split(" ");
   if (uci.length < 3) return; // au moins 2 plis de solution
   let x;

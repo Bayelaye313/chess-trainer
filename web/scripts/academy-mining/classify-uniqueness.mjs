@@ -43,6 +43,12 @@ function plyClass(p, isLast, bruteForce) {
   return gap >= 5 ? "limite" : "ambigue";
 }
 
+/** Classe de chaque coup du solveur, dans l'ordre (pour tronquer une ligne à son préfixe sûr). */
+export function classifyPlies(r) {
+  const bruteForce = BRUTE_FORCE_THEME_IDS.has(r.theme);
+  return r.plies.map((p) => ({ i: p.i, cls: plyClass(p, p.i === r.sans.length - 1, bruteForce) }));
+}
+
 /** Classe d'un puzzle = celle de son pire coup du solveur. */
 export function classifyRow(r) {
   if (r.error || !r.plies.length) return "erreur";
