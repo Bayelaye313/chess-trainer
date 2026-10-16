@@ -39,7 +39,9 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
  * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
  * du moteur, pas de la main ; `scripts/_tmp-check-evals.mts` signale les coups
- * blancs recommandés qui feraient chuter l'évaluation.
+ * blancs recommandés qui feraient chuter l'évaluation. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-ruy-lopez` doit sortir 0 écart (un
+ * chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud de l'arbre).
  * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
  * Unicode), pas de guillemet droit dans un `[%txt]`.
  */

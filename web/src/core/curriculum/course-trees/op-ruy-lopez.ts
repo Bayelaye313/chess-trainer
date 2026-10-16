@@ -39,7 +39,9 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
  * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
  * du moteur, pas de la main ; `scripts/_tmp-check-evals.mts` signale les coups
- * blancs recommandés qui feraient chuter l'évaluation.
+ * blancs recommandés qui feraient chuter l'évaluation. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-ruy-lopez` doit sortir 0 écart (un
+ * chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud de l'arbre).
  * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
  * Unicode), pas de guillemet droit dans un `[%txt]`.
  */
@@ -71,7 +73,7 @@ Les structures types (relevées sur la position finale de chaque branche) :
 2... Nc6 { [%txt "Le cavalier défend e5."] [%eval 0.24] }
 3. Bb5 { [%txt "On attaque le défenseur de e5. Contrairement à 3.Bc4, le fou ne vise pas f7 : il exerce une pression de long terme sur le cavalier c6."] [%eval 0.28] [%cal Gb5c6,Gc6e5] }
 3... a6 { [%txt "Les Noirs questionnent le fou tout de suite. (3...Nf6 : chapitre « Berlinoise ».)"] [%eval 0.37] }
-4. Ba4 { [%txt "On garde le fou et la pression. 4.Bxc6, l'Espagnole d'échange, est jouable mais moins ambitieux (+0.11 contre +0.38)."] [%eval 0.38] [%cal Ga4c6] }
+4. Ba4 { [%txt "On garde le fou et la pression. 4.Bxc6, l'Espagnole d'échange, est bon aussi, mais moins ambitieux."] [%eval 0.38] [%cal Ga4c6] }
 4... Nf6 { [%txt "Les Noirs contre-attaquent e4."] [%eval 0.37] [%cal Rf6e4] }
 5. O-O { [%txt "On ne défend pas e4, et c'est voulu. Si 5...Nxe4, alors 6.d4 récupère le pion avec un jeu actif (chapitre « Ouverte »). Le roque met d'abord le roi à l'abri et prépare Re1.
 
@@ -199,7 +201,7 @@ PRO TIP : environ +1.9. Le pion f5 et la dame g5 pèsent sur le roque, et le cav
     ),
     chapter(
       "Branche B : l'Anti-Marshall (7...O-O 8.h3)",
-      `{ [%txt "Avec 7...O-O, les Noirs préparent 8.c3 d5, l'attaque Marshall : un sacrifice de pion très théorique. Le moteur préfère un peu 8.c3 (+0.43 contre +0.32), mais il faudrait alors connaître toute la Marshall. Pour un répertoire 1500-1800, 8.h3 est le meilleur rapport entre théorie et résultat."] [%eval 0.37] }
+      `{ [%txt "Avec 7...O-O, les Noirs préparent 8.c3 d5, l'attaque Marshall : un sacrifice de pion très théorique. 8.c3 reste le choix principal, 8.h3 est une alternative jouable : avec 8.c3, il faudrait connaître toute la Marshall. Pour un répertoire 1500-1800, 8.h3 est le meilleur rapport entre théorie et résultat."] [%eval 0.37] }
 1. e4 { [%txt "On occupe le centre."] [%eval 0.33] }
 1... e5 { [%txt "Symétrie."] [%eval 0.31] }
 2. Nf3 { [%txt "On attaque e5."] [%eval 0.28] }
@@ -218,7 +220,7 @@ PRO TIP : environ +1.9. Le pion f5 et la dame g5 pèsent sur le roque, et le cav
 8... Bb7 { [%txt "Le fou noir vise e4 sur la grande diagonale."] [%eval 0.26] [%cal Rb7e4] }
 9. d3 { [%txt "On défend e4 solidement : on choisit une structure fermée."] [%eval 0.27] [%cal Gd3e4] }
 9... d6 { [%txt "Les Noirs soutiennent e5. (9...d5 est le coup le plus actif, et reste équilibré.)"] [%eval 0.42] }
-10. a3 { [%txt "On garde la case b4 et on prépare Nc3 ou Ba2 : c'est le coup précis. 10.c3 est jouable, mais moins précis (+0.19).
+10. a3 { [%txt "On garde la case b4 et on prépare Nc3 ou Ba2 : c'est le coup précis. 10.c3 est jouable, mais moins précis.
 
 À RETENIR.
 
@@ -240,7 +242,7 @@ PRO TIP : la feuille de route après la théorie.
 4... Nf6 { [%txt "Contre-attaque sur e4."] [%eval 0.37] }
 5. O-O { [%txt "e4 est laissé en prise, exprès."] [%eval 0.42] }
 5... Nxe4 { [%txt "Les Noirs prennent le pion."] [%eval 0.44] }
-6. d4 { [%txt "On ouvre le centre pendant que le roi noir est en e8. Plus direct que 6.Re1 (+0.25), également jouable."] [%eval 0.36] [%cal Gd4e5] }
+6. d4 { [%txt "On ouvre le centre pendant que le roi noir est en e8. Plus direct que 6.Re1, également jouable."] [%eval 0.36] [%cal Gd4e5] }
 6... b5 { [%txt "Obligatoire : il faut chasser le fou avant que dxe5 ne vienne avec gain de temps."] [%eval 0.32] [%cal Rb5a4] }
 7. Bb3 { [%txt "Le fou recule en visant d5 et f7."] [%eval 0.32] }
 (7. Re1 { [%txt "Plausible mais inexact : l'évaluation bascule de +0.32 à -0.31…"] [%hint "la tour attaque le cavalier e4, mais le fou a4 est toujours attaqué et le pion f2 n'est plus défendu que par le roi."] [%hint "la case f2. Un cavalier noir y prend un pion et attaque la dame d1."] [%hint "7...Nxf2 : le cavalier prend f2 et vise la dame, et le fou a4 reste en prise."] [%hintcsl Rf2,Rd1] [%eval -0.31] }
@@ -265,7 +267,7 @@ PRO TIP : la feuille de route après la théorie.
     ),
     chapter(
       "Branche D : la Berlinoise, système 4.d3",
-      `{ [%txt "La Berlinoise (3...Nf6) est une défense très solide. On évite sa finale théorique (4.O-O Nxe4 5.d4) avec le système simple 4.d3, une alternative solide, un peu moins précise que 4.O-O (+0.19 contre +0.35) : on vise une partie de manœuvres « à l'italienne »."] [%eval 0.37] }
+      `{ [%txt "La Berlinoise (3...Nf6) est une défense très solide. On évite sa finale théorique (4.O-O Nxe4 5.d4) avec le système simple 4.d3, une alternative solide : 4.O-O reste le coup principal, légèrement plus précis que 4.d3, mais on vise ici une partie de manœuvres « à l'italienne »."] [%eval 0.37] }
 1. e4 { [%txt "On occupe le centre."] [%eval 0.33] }
 1... e5 { [%txt "Symétrie."] [%eval 0.31] }
 2. Nf3 { [%txt "On attaque e5."] [%eval 0.28] }
@@ -380,7 +382,7 @@ PRO TIP : environ +1.3. Le fou a7 est enterré, les pions a5 et d5 bloquent tout
     6... Nxd4 { [%txt "Le cavalier échange…"] [%eval 0.08] }
     7. Nxd4 { [%txt "…on reprend…"] [%eval 0.07] }
     7... exd4 { [%txt "…et le pion reprend."] [%eval 0.04] }
-    8. Qxd4 { [%txt "La faute : -2.75. Il fallait jouer 8.c3, qui sacrifie un pion pour l'activité (+0.12)."] [%hint "la dame reprend au centre, où un pion noir peut la chasser avec gain de temps."] [%hint "le fou b3. Après ...c5 puis ...c4, il n'aura plus aucune case de repli."] [%hint "8...c5, puis ...Be6 et ...c4 : le fou b3 est pris au piège de l'arche de Noé."] [%hintcsl Rb3,Rc4] [%eval -2.75] }
+    8. Qxd4 { [%txt "La faute : -2.75. Il fallait jouer 8.c3, qui sacrifie un pion pour l'activité, avec une évaluation proche de l'égalité."] [%hint "la dame reprend au centre, où un pion noir peut la chasser avec gain de temps."] [%hint "le fou b3. Après ...c5 puis ...c4, il n'aura plus aucune case de repli."] [%hint "8...c5, puis ...Be6 et ...c4 : le fou b3 est pris au piège de l'arche de Noé."] [%hintcsl Rb3,Rc4] [%eval -2.75] }
     8... c5 { [%txt "Le pion attaque la dame…"] [%eval -2.74] }
     9. Qd5 { [%txt "…qui menace a8…"] [%eval -2.77] }
     9... Be6 { [%txt "…mais le fou intercepte."] [%eval -2.91] }
@@ -392,7 +394,7 @@ PRO TIP : environ +1.3. Le fou a7 est enterré, les pions a5 et d5 bloquent tout
   6. Bc2 { [%txt "Le repli sûr (+0.50) : le fou échappe à l'encerclement ...c5-c4."] [%eval 0.50] }
   (6. d4 { [%txt "Une grosse erreur…"] [%hint "le pion b5 attaque le fou a4 depuis le coup précédent, et les Blancs ne s'en occupent pas."] [%hint "la case a4. Aucune pièce blanche n'y défend le fou."] [%hint "6...bxa4 : les Noirs gagnent une pièce."] [%hintcsl Ra4] [%eval -3.70] }
     6... bxa4 { [%txt "…le fou a4 était encore attaqué : -3.50."] [%eval -3.50] }))
-4. Nxd4 { [%txt "On accepte l'échange. Surtout pas 4.Nxe5, qui serait une erreur (-2.75) : 4...Qg5 attaquerait à la fois le cavalier e5 et le pion g2."] [%eval 0.64] [%csl Rg2,Re5] }
+4. Nxd4 { [%txt "On accepte l'échange. Surtout pas 4.Nxe5, qui serait une erreur : 4...Qg5 attaquerait à la fois le cavalier e5 et le pion g2."] [%eval 0.64] [%csl Rg2,Re5] }
 4... exd4 { [%txt "Le pion reprend et arrive en d4, trop avancé."] [%eval 0.62] }
 5. O-O { [%txt "Le roi d'abord (+0.63).
 

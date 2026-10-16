@@ -16,7 +16,7 @@ Les structures types (relevées sur la position finale de chaque branche) :
 2... Nc6 { Le cavalier défend e5. }
 3. Bb5 { On attaque le défenseur de e5. Contrairement à 3.Bc4, le fou ne vise pas f7 : il exerce une pression de long terme sur le cavalier c6. [%cal Gb5c6,Gc6e5] }
 3... a6 { Les Noirs questionnent le fou tout de suite. (3...Nf6 : chapitre « Berlinoise ».) }
-4. Ba4 { On garde le fou et la pression. 4.Bxc6, l'Espagnole d'échange, est jouable mais moins ambitieux (+0.11 contre +0.38). [%cal Ga4c6] }
+4. Ba4 { On garde le fou et la pression. 4.Bxc6, l'Espagnole d'échange, est bon aussi, mais moins ambitieux. [%cal Ga4c6] }
 4... Nf6 { Les Noirs contre-attaquent e4. [%cal Rf6e4] }
 5. O-O { On ne défend pas e4, et c'est voulu. Si 5...Nxe4, alors 6.d4 récupère le pion avec un jeu actif (chapitre « Ouverte »). Le roque met d'abord le roi à l'abri et prépare Re1.
 
@@ -120,7 +120,7 @@ PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quelle case 
 22. exf5 { À RETENIR. PRO TIP : environ +1.9. Le pion f5 et la dame g5 pèsent sur le roque, et le cavalier e5 est intouchable (22...dxe5? 23.f6 et le mat sur g7 ne se pare plus). Les Noirs devront jouer ...h6 avant de récupérer le fou c2. La leçon : en Espagnole, la case f5 se gagne quand le fou c8 s'en va ; installe un cavalier dessus, puis amène le fou et la dame contre g7. [%csl Gf5,Ge5] [%cal Gf5f6,Gg5g7] } *
 
 ## Branche B : l'Anti-Marshall (7...O-O 8.h3)
-{ Avec 7...O-O, les Noirs préparent 8.c3 d5, l'attaque Marshall : un sacrifice de pion très théorique. Le moteur préfère un peu 8.c3 (+0.43 contre +0.32), mais il faudrait alors connaître toute la Marshall. Pour un répertoire 1500-1800, 8.h3 est le meilleur rapport entre théorie et résultat. }
+{ Avec 7...O-O, les Noirs préparent 8.c3 d5, l'attaque Marshall : un sacrifice de pion très théorique. 8.c3 reste le choix principal, 8.h3 est une alternative jouable : avec 8.c3, il faudrait connaître toute la Marshall. Pour un répertoire 1500-1800, 8.h3 est le meilleur rapport entre théorie et résultat. }
 1. e4 { On occupe le centre. }
 1... e5 { Symétrie. }
 2. Nf3 { On attaque e5. }
@@ -139,7 +139,7 @@ PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quelle case 
 8... Bb7 { Le fou noir vise e4 sur la grande diagonale. [%cal Rb7e4] }
 9. d3 { On défend e4 solidement : on choisit une structure fermée. [%cal Gd3e4] }
 9... d6 { Les Noirs soutiennent e5. (9...d5 est le coup le plus actif, et reste équilibré.) }
-10. a3 { On garde la case b4 et on prépare Nc3 ou Ba2 : c'est le coup précis. 10.c3 est jouable, mais moins précis (+0.19).
+10. a3 { On garde la case b4 et on prépare Nc3 ou Ba2 : c'est le coup précis. 10.c3 est jouable, mais moins précis.
 
 À RETENIR. PRO TIP : la feuille de route après la théorie.
 1. Nbd2 (ou Nc3), puis Ba2 et Nh2-g4 vers l'aile roi.
@@ -158,7 +158,7 @@ PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quelle case 
 4... Nf6 { Contre-attaque sur e4. }
 5. O-O { e4 est laissé en prise, exprès. }
 5... Nxe4 { Les Noirs prennent le pion. }
-6. d4 { On ouvre le centre pendant que le roi noir est en e8. Plus direct que 6.Re1 (+0.25), également jouable. [%cal Gd4e5] }
+6. d4 { On ouvre le centre pendant que le roi noir est en e8. Plus direct que 6.Re1, également jouable. [%cal Gd4e5] }
 6... b5 { Obligatoire : il faut chasser le fou avant que dxe5 ne vienne avec gain de temps. [%cal Rb5a4] }
 7. Bb3 { Le fou recule en visant d5 et f7. }
 (7. Re1 { Plausible mais inexact : l'évaluation bascule de +0.32 à -0.31… [%hint "la tour attaque le cavalier e4, mais le fou a4 est toujours attaqué et le pion f2 n'est plus défendu que par le roi."] [%hint "la case f2. Un cavalier noir y prend un pion et attaque la dame d1."] [%hintcsl Rf2,Rd1] [%hint "7...Nxf2 : le cavalier prend f2 et vise la dame, et le fou a4 reste en prise."] } 7... Nxf2 { …le cavalier prend f2 et vise la dame d1 : -0.42. [%csl Rf2] })
@@ -179,7 +179,7 @@ PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quelle case 
 3. Pousser f4-f5 avec la majorité de l'aile roi. [%cal Gb3c5,Gb3d4] } *
 
 ## Branche D : la Berlinoise, système 4.d3
-{ La Berlinoise (3...Nf6) est une défense très solide. On évite sa finale théorique (4.O-O Nxe4 5.d4) avec le système simple 4.d3, une alternative solide, un peu moins précise que 4.O-O (+0.19 contre +0.35) : on vise une partie de manœuvres « à l'italienne ». }
+{ La Berlinoise (3...Nf6) est une défense très solide. On évite sa finale théorique (4.O-O Nxe4 5.d4) avec le système simple 4.d3, une alternative solide : 4.O-O reste le coup principal, légèrement plus précis que 4.d3, mais on vise ici une partie de manœuvres « à l'italienne ». }
 1. e4 { On occupe le centre. }
 1... e5 { Symétrie. }
 2. Nf3 { On attaque e5. }
@@ -270,8 +270,8 @@ PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quel levier 
 3... Nd4 { La défense Bird : le même cavalier joue deux fois et propose l'échange d'une pièce développée. [%csl Rd4] [%hint "les Noirs jouent deux fois le même cavalier au lieu de développer une nouvelle pièce."] [%hint "le cavalier d4 n'est défendu que par le pion e5 ; après l'échange, ce pion arrive en d4, trop avancé. Attention à la case g2 si notre cavalier part en e5."] [%hintcsl Rd4,Re5] [%hint "4.Nxd4 exd4 5.O-O : on échange, puis on roque. Surtout pas 4.Nxe5, à cause de 4...Qg5."] }
 (3... Bc5 { La défense classique : le fou se développe avant que e5 soit solide. [%hint "le fou sort sur une case qu'un pion blanc pourra attaquer avec gain de temps."] [%hint "la case d4. Soutenue par un pion en c3, la poussée chassera le fou c5."] [%hintcsl Gd4,Rc5] [%hint "4.c3 : on prépare d4."] } 4. c3 { On prépare d4 avec gain de temps sur le fou (+0.55). [%cal Gc3d4,Gd4c5] })
 (3... d6 { La défense Steinitz : passive, le fou f8 est enfermé. [%hint "un coup passif qui enferme le fou f8 et laisse le cavalier c6 cloué contre le roi e8."] [%hint "la case e5. Le cavalier c6 cloué la défend mal, et un pion en d4 la frappe tout de suite."] [%hintcsl Re5,Rc6] [%hint "4.d4 : on attaque e5 sans attendre."] } 4. d4 { Le clouage sur c6 empêche les Noirs de bien tenir e5 (+0.61). [%cal Gd4e5,Gb5c6] })
-(3... a6 { La suite normale… } 4. Ba4 { …on garde le fou. } 4... d6 { Les Noirs préparent le piège de l'arche de Noé. } 5. c3 { Le bon coup (+0.43) : on prépare d4 et on garde la case c2 pour le fou. } (5. d4 { Plausible, mais c'est ici que le piège commence. } 5... b5 { On chasse le fou. } 6. Bb3 { Le fou recule. } 6... Nxd4 { Le cavalier échange… } 7. Nxd4 { …on reprend… } 7... exd4 { …et le pion reprend. } 8. Qxd4 { La faute : -2.75. Il fallait jouer 8.c3, qui sacrifie un pion pour l'activité (+0.12). [%hint "la dame reprend au centre, où un pion noir peut la chasser avec gain de temps."] [%hint "le fou b3. Après ...c5 puis ...c4, il n'aura plus aucune case de repli."] [%hintcsl Rb3,Rc4] [%hint "8...c5, puis ...Be6 et ...c4 : le fou b3 est pris au piège de l'arche de Noé."] } 8... c5 { Le pion attaque la dame… } 9. Qd5 { …qui menace a8… } 9... Be6 { …mais le fou intercepte. } 10. Qc6+ { La dame donne un échec… } 10... Bd7 { …le fou s'interpose encore… } 11. Qd5 { …la dame revient… } 11... c4 { …et le fou b3 est pris au piège : il n'a plus aucune case. [%csl Rb3][%cal Rc4b3] }) 5... b5 { Les Noirs chassent le fou. } 6. Bc2 { Le repli sûr (+0.50) : le fou échappe à l'encerclement ...c5-c4. } (6. d4 { Une grosse erreur… [%hint "le pion b5 attaque le fou a4 depuis le coup précédent, et les Blancs ne s'en occupent pas."] [%hint "la case a4. Aucune pièce blanche n'y défend le fou."] [%hintcsl Ra4] [%hint "6...bxa4 : les Noirs gagnent une pièce."] } 6... bxa4 { …le fou a4 était encore attaqué : -3.50. }))
-4. Nxd4 { On accepte l'échange. Surtout pas 4.Nxe5, qui serait une erreur (-2.75) : 4...Qg5 attaquerait à la fois le cavalier e5 et le pion g2. [%csl Rg2,Re5] }
+(3... a6 { La suite normale… } 4. Ba4 { …on garde le fou. } 4... d6 { Les Noirs préparent le piège de l'arche de Noé. } 5. c3 { Le bon coup (+0.43) : on prépare d4 et on garde la case c2 pour le fou. } (5. d4 { Plausible, mais c'est ici que le piège commence. } 5... b5 { On chasse le fou. } 6. Bb3 { Le fou recule. } 6... Nxd4 { Le cavalier échange… } 7. Nxd4 { …on reprend… } 7... exd4 { …et le pion reprend. } 8. Qxd4 { La faute : -2.75. Il fallait jouer 8.c3, qui sacrifie un pion pour l'activité, avec une évaluation proche de l'égalité. [%hint "la dame reprend au centre, où un pion noir peut la chasser avec gain de temps."] [%hint "le fou b3. Après ...c5 puis ...c4, il n'aura plus aucune case de repli."] [%hintcsl Rb3,Rc4] [%hint "8...c5, puis ...Be6 et ...c4 : le fou b3 est pris au piège de l'arche de Noé."] } 8... c5 { Le pion attaque la dame… } 9. Qd5 { …qui menace a8… } 9... Be6 { …mais le fou intercepte. } 10. Qc6+ { La dame donne un échec… } 10... Bd7 { …le fou s'interpose encore… } 11. Qd5 { …la dame revient… } 11... c4 { …et le fou b3 est pris au piège : il n'a plus aucune case. [%csl Rb3][%cal Rc4b3] }) 5... b5 { Les Noirs chassent le fou. } 6. Bc2 { Le repli sûr (+0.50) : le fou échappe à l'encerclement ...c5-c4. } (6. d4 { Une grosse erreur… [%hint "le pion b5 attaque le fou a4 depuis le coup précédent, et les Blancs ne s'en occupent pas."] [%hint "la case a4. Aucune pièce blanche n'y défend le fou."] [%hintcsl Ra4] [%hint "6...bxa4 : les Noirs gagnent une pièce."] } 6... bxa4 { …le fou a4 était encore attaqué : -3.50. }))
+4. Nxd4 { On accepte l'échange. Surtout pas 4.Nxe5, qui serait une erreur : 4...Qg5 attaquerait à la fois le cavalier e5 et le pion g2. [%csl Rg2,Re5] }
 4... exd4 { Le pion reprend et arrive en d4, trop avancé. }
 5. O-O { Le roi d'abord (+0.63).
 
