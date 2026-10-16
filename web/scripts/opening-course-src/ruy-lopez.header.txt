@@ -1,0 +1,51 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Partie Espagnole / Ruy Lopez (avec les Blancs) » —
+ * onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/ruy-lopez/cours`).
+ *
+ * ## Contenu (v2 du 2026-10-16, format Écossaise v2)
+ *
+ * 1. Fiche d'identité et tronc commun.
+ * 2. Branche A : la Fermée, système Chigorine.
+ * 3. Aléatoire surprise 1 : après la Chigorine, l'adversaire dérive.
+ * 4. Branche B : l'Anti-Marshall (7...O-O 8.h3).
+ * 5. Branche C : l'Ouverte (5...Nxe4).
+ * 6. Branche D : la Berlinoise, système 4.d3.
+ * 7. Aléatoire surprise 2 : après la Berlinoise 4.d3, l'adversaire dérive.
+ * 8. Anti-panique : punir les déviations.
+ *
+ * Les branches théoriques s'arrêtent au plus tard au demi-coup 27 ; seuls les
+ * chapitres « Aléatoire surprise » vont au-delà (séquences où l'adversaire
+ * joue « mou », avec la méthode pour le punir en PRO TIP).
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les nœuds où il faut trouver la punition.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/ruy-lopez.pgn` (et l'en-tête
+ * `ruy-lopez.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main ; `scripts/_tmp-check-evals.mts` signale les coups
+ * blancs recommandés qui feraient chuter l'évaluation.
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
