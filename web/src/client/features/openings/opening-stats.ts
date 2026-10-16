@@ -52,6 +52,14 @@ export function readEndurance(avgMistakePly: number | null): EnduranceReading {
   return { tier, moveNumber, label: `Coup ${moveNumber}`, ratio: Math.min(moveNumber / GAUGE_FULL_AT_MOVE, 1) };
 }
 
+/**
+ * Ancre de l'échiquier du drill sur `/ouvertures/[slug]` (posée par
+ * `OpeningExplorer`). Les boutons de la Zone Stats pointent vers la page où
+ * l'on se trouve déjà, avec le drill de la ligne principale déjà démarré :
+ * sans ancre, un clic ne changeait rien de visible.
+ */
+export const DRILL_ANCHOR_ID = "drill";
+
 /** Valeur de `?mode=` qui démarre le drill directement en Manche 2 (indices désactivés). */
 export const SANS_GUIDE_MODE = "sans-guide";
 
@@ -80,8 +88,9 @@ export function resolveTrigger(input: {
   tier: EnduranceTier;
   hasCourse: boolean;
 }): SmartTrigger {
-  const drillHref = `/ouvertures/${input.openingId}?drill=${MAIN_LINE_VARIATION_KEY}&side=${input.playerSide}`;
-  const sansGuideHref = `${drillHref}&mode=${SANS_GUIDE_MODE}`;
+  const query = `?drill=${MAIN_LINE_VARIATION_KEY}&side=${input.playerSide}`;
+  const drillHref = `/ouvertures/${input.openingId}${query}#${DRILL_ANCHOR_ID}`;
+  const sansGuideHref = `/ouvertures/${input.openingId}${query}&mode=${SANS_GUIDE_MODE}#${DRILL_ANCHOR_ID}`;
   if (input.tier === "fragile") {
     return {
       kind: "reflexes",

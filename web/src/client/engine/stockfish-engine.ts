@@ -97,9 +97,18 @@ export class StockfishEngine implements ChessEngine {
   /**
    * Écoute les lignes du moteur jusqu'à ce que `handle` renvoie une valeur.
    * `handle` est appelé pour chaque ligne, y compris celles qu'il ignore.
+   *
+   * À appeler APRÈS le `send()` de la commande, jamais avant : le worker ne
+   * répond que dans une tâche ultérieure, donc aucune ligne n'est manquée, et
+   * un `send()` qui lève (moteur libéré ou planté) ne laisse aucune promesse
+   * orpheline. Dans l'ordre inverse, React Strict Mode (double montage de
+   * `EngineProvider` en dev) libérait le moteur avant la poignée de main : la
+   * promesse `uciok` jamais attendue expirait 45 s plus tard en rejet non géré
+   * (« Le moteur n'a pas répondu à temps. ») sur n'importe quelle page.
    */
   private collect<T>(handle: (line: string) => T | undefined): Promise<T> {
     if (this.crashed) return Promise.reject(this.crashed);
+    if (this.disposed) return Promise.reject(new Error("Moteur déjà libéré."));
 
     return new Promise<T>((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -138,16 +147,14 @@ export class StockfishEngine implements ChessEngine {
   }
 
   private async handshake(): Promise<void> {
-    const uciok = this.collect((line) => (line === "uciok" ? true : undefined));
     this.send("uci");
-    await uciok;
+    await this.collect((line) => (line === "uciok" ? true : undefined));
     await this.awaitReady();
   }
 
   private async awaitReady(): Promise<void> {
-    const readyok = this.collect((line) => (line === "readyok" ? true : undefined));
     this.send("isready");
-    await readyok;
+    await this.collect((line) => (line === "readyok" ? true : undefined));
   }
 
   ready(): Promise<void> {
@@ -226,7 +233,7 @@ export class StockfishEngine implements ChessEngine {
     // dérivé de `lines[1]`) se matérialise au moment de `bestmove`, trié par rang.
     const linesByRank = new Map<number, EngineLine>();
 
-    const done = this.collect<PositionEvaluation>((line) => {
+    const handleLine = (line: string): PositionEvaluation | undefined => {
       const info = parseInfoLine(line);
       if (info) {
         const rank = info.multipv ?? 1;
@@ -273,7 +280,7 @@ export class StockfishEngine implements ChessEngine {
         lines,
         secondBest: lines[1] ? { cp: lines[1].cp, mate: lines[1].mate } : null,
       };
-    });
+    };
 
     // Au-delà des 2 lignes maintenues en permanence (`configuredMultiPv`), une
     // recherche peut demander plus de profondeur MultiPV (Mode Exploration, voir
@@ -288,7 +295,7 @@ export class StockfishEngine implements ChessEngine {
       if (needsMultiPvBump) this.send(`setoption name MultiPV value ${requestedLines}`);
       this.send(`position fen ${fen}`);
       this.send(goCommand(limit));
-      return await done;
+      return await this.collect(handleLine);
     } finally {
       if (needsMultiPvBump) {
         try {

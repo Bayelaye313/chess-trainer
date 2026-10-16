@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BOT_PROFILES, type BotProfile, type BotProfileId } from "@/core/chess/bot-profiles";
+import type { BotStartLine } from "@/core/training/daily-plan";
 
 /**
  * Avatar + descriptif humain par profil — présentation pure, volontairement
@@ -84,14 +85,18 @@ function BotCard({
 export function SetupPanel({
   engineReady,
   loading,
+  startLines = [],
   onStart,
 }: {
   engineReady: boolean;
   loading: boolean;
+  startLines?: readonly BotStartLine[];
   onStart: (color: "w" | "b", profileId: BotProfileId) => void;
 }) {
   const [color, setColor] = useState<"w" | "b">("w");
   const [profileId, setProfileId] = useState<BotProfileId>("club");
+  const side = color === "w" ? "white" : "black";
+  const linesForColor = startLines.filter((line) => line.side === side);
 
   return (
     <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
@@ -133,6 +138,22 @@ export function SetupPanel({
           {loading ? "Préparation…" : "Commencer"}
         </button>
       </div>
+
+      {startLines.length > 0 && (
+        <div className="mt-4 rounded-md border border-best/30 bg-best/10 px-3 py-2 text-xs text-foreground">
+          <p className="font-medium text-best">Session active — le bot testera ton répertoire</p>
+          {linesForColor.length > 0 ? (
+            <p className="mt-1 text-foreground-muted">
+              Avec les {color === "w" ? "Blancs" : "Noirs"}, départ tiré parmi :{" "}
+              {[...new Set(linesForColor.map((line) => line.label))].join(", ")}.
+            </p>
+          ) : (
+            <p className="mt-1 text-foreground-muted">
+              Aucune ligne de ton répertoire avec les {color === "w" ? "Blancs" : "Noirs"} : départ classique.
+            </p>
+          )}
+        </div>
+      )}
 
       {!engineReady && (
         <p className="mt-3 text-sm text-foreground-muted">Chargement du moteur…</p>

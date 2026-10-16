@@ -154,7 +154,7 @@ function punitionPillar(sessions: readonly OpeningSessionHistory[]): Pillar {
     label: "Instinct de Punition",
     score,
     level: levelOf(score),
-    detail: `${clean} sur ${plural(firsts.length, "variante adverse")} jouée${
+    detail: `${clean} variante${clean > 1 ? "s" : ""} adverse${clean > 1 ? "s" : ""} sur ${firsts.length} jouée${
       clean > 1 ? "s" : ""
     } sans faute dès la première rencontre.`,
     sampleSize: firsts.length,

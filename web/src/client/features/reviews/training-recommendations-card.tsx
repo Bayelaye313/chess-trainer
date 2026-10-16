@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { TrainingPreferences } from "@/core/training/preferences";
 import type { TrainingRecommendationDto } from "@/server/queries/training";
+import type { DailySessionState } from "@/server/queries/daily-plan";
 import { formatTrainingHeadline, formatTrainingProof } from "@/lib/labels";
 import { RecommendedPuzzleSession } from "./recommended-puzzle-session";
 import { TrainingPlanSettings } from "./training-plan-settings";
@@ -68,9 +69,11 @@ function RecommendationCardBody({ recommendation }: { recommendation: TrainingRe
 export function TrainingRecommendationsCard({
   recommendations,
   preferences,
+  sessionState,
 }: {
   recommendations: TrainingRecommendationDto[];
   preferences: TrainingPreferences;
+  sessionState: DailySessionState | null;
 }) {
   const [puzzleSessionActive, setPuzzleSessionActive] = useState(false);
 
@@ -120,7 +123,7 @@ export function TrainingRecommendationsCard({
           )}
         </div>
       )}
-      <TrainingPlanSettings preferences={preferences} />
+      <TrainingPlanSettings preferences={preferences} sessionState={sessionState} />
     </section>
   );
 }

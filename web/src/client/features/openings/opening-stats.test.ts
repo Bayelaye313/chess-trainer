@@ -22,7 +22,7 @@ describe("opening-stats", () => {
     const trigger = resolveTrigger({ ...base, tier: "fragile" });
     expect(trigger.kind).toBe("reflexes");
     expect(trigger.label).toBe("Verrouiller les réflexes (Mode Sans Guide - Début)");
-    expect(trigger.href).toBe("/ouvertures/slav-defense?drill=main_line&side=black&mode=sans-guide");
+    expect(trigger.href).toBe("/ouvertures/slav-defense?drill=main_line&side=black&mode=sans-guide#drill");
   });
 
   it("gaffe entre les coups 6 et 12 : drill normal, Manche 1 comprise", () => {

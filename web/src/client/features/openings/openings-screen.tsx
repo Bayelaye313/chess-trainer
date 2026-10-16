@@ -23,6 +23,8 @@ import type { OpeningSide } from "@/core/curriculum/openings";
 import type { OpeningMasterySummary, OpeningReviewStatus } from "@/server/queries/opening-progress";
 import type { OpeningSummary } from "@/server/queries/openings";
 import { OpeningCard } from "./opening-card";
+import type { OpeningSessionHistory } from "./opening-endurance-history";
+import { OpeningPerformanceRadar } from "./opening-performance-radar-view";
 import { type ReviewQueueItem, saveReviewQueue } from "./review-queue";
 
 type ColorFilter = OpeningSide | "both";
@@ -38,12 +40,15 @@ export function OpeningsScreen({
   reviewStatuses,
   dueReviews,
   masterySummaries,
+  enduranceSessions,
 }: {
   openings: OpeningSummary[];
   reviewStatuses: { openingId: string; status: OpeningReviewStatus }[];
   dueReviews: ReviewQueueItem[];
   /** Étoiles par ouverture — barre de « Progression Totale » du répertoire et badge de chaque carte, voir `listOpeningMasterySummaries`. */
   masterySummaries: OpeningMasterySummary[];
+  /** Sessions « Sans Guide », toutes ouvertures — alimentent le radar de performance, voir `listEnduranceSessions`. */
+  enduranceSessions: OpeningSessionHistory[];
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -127,6 +132,8 @@ export function OpeningsScreen({
           </div>
         </div>
       )}
+
+      <OpeningPerformanceRadar sessions={enduranceSessions} />
 
       {/* Accès à l'historique d'endurance « Sans Guide » (toutes ouvertures). */}
       <Link

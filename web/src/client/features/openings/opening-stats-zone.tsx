@@ -47,10 +47,11 @@ export function OpeningStatsZone({
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-foreground-muted">Endurance Sans Guide</p>
           <p className="mt-1 text-sm text-foreground">
-            Aucune session sur {openingName} : termine une Manche 2 pour mesurer ta première gaffe.
+            Aucune session sur {openingName} pour l&apos;instant. Le drill de la ligne principale est juste en
+            dessous : joue la Manche 1 guidée, puis la Manche 2 sans indice, qui mesure ta première gaffe.
           </p>
         </div>
-        <CallToAction href={trigger.href} label="Lancer une première session" className={NEUTRAL_BUTTON} />
+        <CallToAction href={trigger.href} label="Aller au drill" className={NEUTRAL_BUTTON} />
       </section>
     );
   }

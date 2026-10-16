@@ -10,6 +10,7 @@ import { listDeckOverviews } from "@/server/queries/reviews";
 import { getReportSummary } from "@/server/queries/progress";
 import { listTrainingRecommendations } from "@/server/queries/training";
 import { getTrainingPreferences } from "@/server/queries/settings";
+import { getDailySessionState, listBotStartLines } from "@/server/queries/daily-plan";
 
 // Tableau de bord principal : parties récentes, decks dus et synthèse du
 // rapport évoluent en continu (synchro en tâche de fond) — jamais de rendu
@@ -24,13 +25,17 @@ export default async function HomePage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const [{ games, hasMore }, decks, reportSummary, recommendations, preferences] = await Promise.all([
+  const [{ games, hasMore }, decks, reportSummary, recommendations, preferences, sessionState] = await Promise.all([
     listGamesSummary(page),
     listDeckOverviews(),
     getReportSummary(),
     listTrainingRecommendations(),
     getTrainingPreferences(),
+    getDailySessionState(),
   ]);
+  // Plan du jour appliqué → lignes que le bot imposera à la prochaine partie
+  // (vide hors session ou sans « Ouvertures »/« Pièges »).
+  const botStartLines = listBotStartLines(sessionState?.session ?? null);
 
   const dueTotal = decks.reduce((sum, deck) => sum + deck.dueCount + deck.newCount, 0);
 
@@ -42,13 +47,17 @@ export default async function HomePage({
         garde un œil sur ta progression.
       </EsportHeader>
 
-      <PlayScreen />
+      <PlayScreen startLines={botStartLines} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <LinkedAccounts />
         <MistakesShortcutCard dueTotal={dueTotal} />
         <ReportSummaryCard summary={reportSummary} />
-        <TrainingRecommendationsCard recommendations={recommendations} preferences={preferences} />
+        <TrainingRecommendationsCard
+          recommendations={recommendations}
+          preferences={preferences}
+          sessionState={sessionState}
+        />
       </div>
 
       <section>

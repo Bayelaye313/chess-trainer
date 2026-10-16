@@ -12,6 +12,7 @@ import type { AnnotatedPly, OpeningVariation } from "@/server/queries/openings";
 import type { DrillRound } from "./build-final-test";
 import { OpeningDrill } from "./opening-drill";
 import { OpeningSparring } from "./opening-sparring";
+import { DRILL_ANCHOR_ID } from "./opening-stats";
 import { SIDE_LABEL, SideDot } from "./side-dot";
 import { StudyProgressBar } from "./study-progress-bar";
 import type { DrillSelection } from "./use-opening-drill";
@@ -162,6 +163,8 @@ export function OpeningExplorer({
         </div>
       )}
 
+      {/* Cible des boutons de la Zone Stats (`DRILL_ANCHOR_ID`) ; la marge évite que l'en-tête fixe masque le haut du drill. */}
+      <div id={DRILL_ANCHOR_ID} className="scroll-mt-20">
       <OpeningDrill
         opening={opening}
         plies={plies}
@@ -174,6 +177,7 @@ export function OpeningExplorer({
         startInSansGuide={startInSansGuide}
         onExit={() => router.push("/ouvertures")}
       />
+      </div>
       <OpeningSparring
         openingId={opening.id}
         openingName={opening.name}

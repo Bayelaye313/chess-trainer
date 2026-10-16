@@ -85,9 +85,25 @@ async function analyse(fen: string, searchmoves?: string): Promise<{ l1: S; l2: 
   return { l1: lines.get(1) ?? null, l2: lines.get(2) ?? null };
 }
 
+/** Retire les droits de roque impossibles (roi/tour hors case) : Stockfish plante dessus. */
+function sanitizeCastling(fen: string): string {
+  const f = fen.split(" ");
+  const board = new Chess(`${f[0]} w - - 0 1`);
+  const at = (sq: string, p: string) => {
+    const x = board.get(sq as any);
+    return !!x && (x.color === "w" ? x.type.toUpperCase() : x.type) === p;
+  };
+  const ok: Record<string, boolean> = {
+    K: at("e1", "K") && at("h1", "R"), Q: at("e1", "K") && at("a1", "R"),
+    k: at("e8", "k") && at("h8", "r"), q: at("e8", "k") && at("a8", "r"),
+  };
+  f[2] = [...(f[2] ?? "-")].filter((ch) => ok[ch]).join("") || "-";
+  return f.join(" ");
+}
+
 for (const r of mine as any[]) {
   const sans: string[] = JSON.parse(r.solution_san);
-  const c = new Chess(r.fen);
+  const c = new Chess(sanitizeCastling(r.fen));
   const plies: unknown[] = [];
   let error: string | null = null;
   for (let i = 0; i < sans.length; i++) {

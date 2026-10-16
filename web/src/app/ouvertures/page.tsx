@@ -1,13 +1,15 @@
 import { EsportCanvas } from "@/components/ui/esport-page";
 import { OpeningsScreen } from "@/client/features/openings/openings-screen";
 import { listDueReviews, listOpeningMasterySummaries, listOpeningReviewSummaries } from "@/server/queries/opening-progress";
+import { listEnduranceSessions } from "@/server/queries/opening-endurance";
 import { listOpenings } from "@/server/queries/openings";
 
 export default async function OuverturesPage() {
-  const [reviewSummaries, dueReviews, masterySummaries] = await Promise.all([
+  const [reviewSummaries, dueReviews, masterySummaries, enduranceSessions] = await Promise.all([
     listOpeningReviewSummaries(),
     listDueReviews(),
     listOpeningMasterySummaries(),
+    listEnduranceSessions(),
   ]);
   return (
     <EsportCanvas>
@@ -25,6 +27,8 @@ export default async function OuverturesPage() {
         variationLabel,
       }))}
       masterySummaries={masterySummaries}
+      // `playedAt` déjà en ISO : la liste traverse telle quelle la frontière RSC.
+      enduranceSessions={enduranceSessions}
     />
     </EsportCanvas>
   );

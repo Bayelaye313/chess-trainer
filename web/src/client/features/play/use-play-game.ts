@@ -24,6 +24,7 @@ import { buildCoachMessage, type CoachMessage } from "@/core/analysis/coach-narr
 import { gameOutcome, type GameOutcome } from "@/core/chess/termination";
 import { getBotProfile, pickMoveLimit, type BotProfile, type BotProfileId } from "@/core/chess/bot-profiles";
 import type { Motif, MoveQuality } from "@/core/chess/types";
+import type { BotStartLine } from "@/core/training/daily-plan";
 import { useEngine } from "@/client/engine/engine-context";
 import { lastMoveSquareStyles, qualityRingColor } from "@/client/features/board/board-theme";
 import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
@@ -118,6 +119,8 @@ export function usePlayGame() {
   const playerQualitiesRef = useRef<MoveQuality[]>([]);
   /** Incrémenté à chaque nouvelle partie/abandon — voir le docstring du module. */
   const gameEpochRef = useRef(0);
+  /** Demi-coups imposés par la ligne du Plan du jour — jamais annulables par `handleTakeback`. */
+  const bookPliesRef = useRef(0);
   /** Minutageur de la surbrillance adverse différée (Zone 2, micro-animations) — nettoyé au démontage et à chaque nouvelle partie. */
   const highlightTimerRef = useRef<number | null>(null);
 
@@ -138,6 +141,9 @@ export function usePlayGame() {
   // callbacks internes (`finalize`, `commitPlayerMove`) continuent de lire la
   // ref, jamais soumise aux fermetures obsolètes d'un `useCallback`.
   const [botProfile, setBotProfile] = useState<BotProfile>(() => getBotProfile("club"));
+  /** Ligne du Plan du jour sur laquelle la partie en cours a démarré (`null` : position initiale). */
+  const [startLine, setStartLine] = useState<BotStartLine | null>(null);
+  const [bookPlies, setBookPlies] = useState(0);
 
   const appendFeed = useCallback((entry: FeedEntry) => {
     setFeed((prev) => [...prev, entry]);
@@ -216,8 +222,15 @@ export function usePlayGame() {
     [],
   );
 
+  /**
+   * `line` (Plan du jour, voir `pickBotStartLine`) : ses coups SAN sont
+   * rejoués depuis la position initiale AVANT de rendre la main — la partie
+   * garde ainsi un historique et un PGN complets (`initialFen` reste la
+   * position de départ standard), les coups imposés apparaissent dans le
+   * journal comme coups de théorie (`book`) et ne sont jamais évalués.
+   */
   const startNewGame = useCallback(
-    async (color: "w" | "b", profileId: BotProfileId) => {
+    async (color: "w" | "b", profileId: BotProfileId, line: BotStartLine | null = null) => {
       if (!engine) return;
       const epoch = ++gameEpochRef.current;
       const profile = getBotProfile(profileId);
@@ -227,7 +240,6 @@ export function usePlayGame() {
 
       setError(null);
       setOutcome(null);
-      setFeed([]);
       if (highlightTimerRef.current !== null) {
         window.clearTimeout(highlightTimerRef.current);
         highlightTimerRef.current = null;
@@ -240,6 +252,26 @@ export function usePlayGame() {
 
       const chess = chessRef.current;
       chess.reset();
+      const initialFen = chess.fen();
+      const bookFeed: FeedEntry[] = [];
+      if (line) {
+        try {
+          for (const san of line.moves) {
+            const move = chess.move(san);
+            bookFeed.push({ by: move.color === color ? "player" : "ai", san: move.san, quality: "book" });
+          }
+        } catch {
+          // Ligne illégale (donnée corrompue) : on retombe sur un départ classique
+          // plutôt que de lancer une partie sur une position incohérente.
+          chess.reset();
+          bookFeed.length = 0;
+        }
+      }
+      const appliedLine = bookFeed.length > 0 ? line : null;
+      bookPliesRef.current = bookFeed.length;
+      setBookPlies(bookFeed.length);
+      setStartLine(appliedLine);
+      setFeed(bookFeed);
       setFen(chess.fen());
       setStatus("loading");
 
@@ -247,7 +279,7 @@ export function usePlayGame() {
         const { gameId } = await createGame({
           playerColor: color,
           engineElo: profile.nominalElo,
-          initialFen: chess.fen(),
+          initialFen,
           opponentName: profile.label,
         });
         if (gameEpochRef.current !== epoch) return;
@@ -256,7 +288,9 @@ export function usePlayGame() {
         await engine.newGame();
         engineModeRef.current = null;
 
-        if (color === "b") {
+        // Le bot a le trait : couleur Noirs depuis la position initiale, ou
+        // ligne imposée qui s'arrête sur un coup du joueur.
+        if (chess.turn() !== color) {
           setStatus("thinking");
           await ensureEngineMode(engineModeFor(profile));
           const aiUci = await engine.play(chess.fen(), pickMoveLimit(profile));
@@ -415,7 +449,7 @@ export function usePlayGame() {
   const handleTakeback = useCallback(() => {
     const chess = chessRef.current;
     const gameId = gameIdRef.current;
-    if (status !== "playing" || !gameId || chess.history().length < 2) return;
+    if (status !== "playing" || !gameId || chess.history().length < bookPliesRef.current + 2) return;
 
     // Le coup du joueur enregistré en base est celui juste avant la réplique
     // du bot qu'on annule aussi — voir `recordPlayerMove` dans `commitPlayerMove`,
@@ -469,6 +503,8 @@ export function usePlayGame() {
     accuracy,
     performanceElo,
     botProfile,
+    startLine,
+    bookPlies,
     squareStyles,
     startNewGame,
     onPieceDrop,
