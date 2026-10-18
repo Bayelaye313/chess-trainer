@@ -14,6 +14,7 @@ vi.mock("@/server/db", async () => {
 const { applyDailyPlan, clearDailySession, getDailySessionState, listBotStartLines } = await import("./daily-plan");
 const { getTrainingPreferences } = await import("./settings");
 const { recordTrainingEvent } = await import("./training");
+const { OFF_REPERTOIRE_COURSE_IDS } = await import("@/core/curriculum/opening-course-ids");
 
 const APPLIED = new Date("2026-10-16T08:00:00Z");
 
@@ -49,7 +50,10 @@ describe("daily-plan queries", () => {
     expect(listBotStartLines(null)).toEqual([]);
     const { state } = await applyDailyPlan({ goals: ["openings", "traps"], dailyLimit: 3 }, APPLIED);
     const lines = listBotStartLines(state.session);
-    expect(lines.map((line) => line.sourceId)).toEqual(expect.arrayContaining(["scotch-game", "caro-kann", "slav-defense"]));
+    const sourceIds = lines.map((line) => line.sourceId);
+    expect(sourceIds).toEqual(expect.arrayContaining(["scotch-game", "ruy-lopez", "kings-indian"]));
+    // Les cours hors répertoire restent sur leur fiche, mais le plan du jour ne les impose pas.
+    for (const offRepertoire of OFF_REPERTOIRE_COURSE_IDS) expect(sourceIds).not.toContain(offRepertoire);
     expect(lines.some((line) => line.kind === "trap")).toBe(true);
     const { state: tacticsOnly } = await applyDailyPlan({ goals: ["tactics"], dailyLimit: 3 }, APPLIED);
     expect(listBotStartLines(tacticsOnly.session)).toEqual([]);

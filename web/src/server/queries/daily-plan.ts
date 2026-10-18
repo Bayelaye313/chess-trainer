@@ -19,6 +19,7 @@ import {
 } from "@/core/training/daily-plan";
 import type { TrainingPreferences } from "@/core/training/preferences";
 import { OPENINGS } from "@/core/curriculum/openings";
+import { OFF_REPERTOIRE_COURSE_IDS } from "@/core/curriculum/opening-course-ids";
 import { OPENING_COURSE_TREES } from "@/core/curriculum/opening-course-trees";
 import { OPENING_TRAPS } from "@/core/curriculum/traps";
 import { db } from "@/server/db";
@@ -81,10 +82,12 @@ export async function clearDailySession(): Promise<void> {
 /**
  * Lignes que le bot imposera pour la session — le répertoire est
  * `OPENINGS` restreint aux ouvertures dotées d'un cours `op-*.ts`
- * (`OPENING_COURSE_TREES`), les pièges le socle statique vérifié à la main.
+ * (`OPENING_COURSE_TREES`), hors cours sans lien avec les parties de
+ * l'utilisateur (`OFF_REPERTOIRE_COURSE_IDS`) ; les pièges le socle statique
+ * vérifié à la main.
  */
 export function listBotStartLines(session: DailySession | null): BotStartLine[] {
   if (!session) return [];
-  const repertoire = OPENINGS.filter((opening) => opening.id in OPENING_COURSE_TREES);
+  const repertoire = OPENINGS.filter((opening) => opening.id in OPENING_COURSE_TREES && !OFF_REPERTOIRE_COURSE_IDS.has(opening.id));
   return buildBotStartLines(session.goals, repertoire, OPENING_TRAPS);
 }
