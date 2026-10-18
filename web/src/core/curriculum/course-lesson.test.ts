@@ -6,7 +6,8 @@ import { COURSE_LESSONS } from "./course-lesson";
 const THEME_IDS = new Set(CURRICULUM_THEMES.map((theme) => theme.id));
 const SQUARE = /^[a-h][1-8]$/;
 
-describe("COURSE_LESSONS", () => {
+// Rejouer tous les moveSan de tous les cours dépasse 5 s quand toute la suite tourne en parallèle.
+describe("COURSE_LESSONS", { timeout: 60_000 }, () => {
   it("ne cible que des thèmes qui existent réellement dans le catalogue", () => {
     for (const themeId of Object.keys(COURSE_LESSONS)) {
       expect(THEME_IDS.has(themeId)).toBe(true);
