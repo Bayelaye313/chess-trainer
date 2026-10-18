@@ -44,6 +44,18 @@ export const puzzles = sqliteTable(
     /** Difficulté estimée, sur l'échelle ELO des puzzles Lichess. */
     rating: integer("rating"),
 
+    /**
+     * Commentaire du coach sur l'erreur de la partie, au format de nos cours
+     * (, lu par ) — écrit
+     * par l'audit Stockfish (). Absent tant
+     * que le puzzle n'a pas été audité.
+     */
+    coachComment: text("coach_comment"),
+    /** Coups équivalents acceptés par pli (mats forcés équivalents seulement) — voir . */
+    alternatives: text("alternatives", { mode: "json" }).$type<string[][]>(),
+    /** Dernier passage de l'audit Stockfish (profondeur 16) —  : jamais audité. */
+    auditedAt: integer("audited_at", { mode: "timestamp" }),
+
     source: text("source").$type<PuzzleSource>().notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
@@ -61,3 +73,20 @@ export const puzzles = sqliteTable(
 
 export type Puzzle = typeof puzzles.$inferSelect;
 export type NewPuzzle = typeof puzzles.$inferInsert;
+
+/**
+ * Pierres tombales des puzzles de parties purgés par l'audit Stockfish : le
+ * coup d'origine ne redevient JAMAIS un puzzle à la prochaine extraction
+ * (, ).
+ * Pas de clé étrangère : la trace doit survivre à la suppression du coup.
+ */
+export const puzzlePurges = sqliteTable("puzzle_purges", {
+  moveId: integer("move_id").primaryKey(),
+  gameId: text("game_id"),
+  fenBefore: text("fen_before").notNull(),
+  /** Motif du verdict : , … */
+  reason: text("reason").notNull(),
+  purgedAt: integer("purged_at", { mode: "timestamp" }).notNull(),
+});
+
+export type PuzzlePurge = typeof puzzlePurges.$inferSelect;

@@ -3,15 +3,32 @@ import { EsportCanvas } from "@/components/ui/esport-page";
 import { OpeningCourse } from "@/client/features/openings/opening-course";
 import { OPENING_COURSE_IDS } from "@/core/curriculum/opening-course-ids";
 import { findOpening } from "@/core/curriculum/openings";
+import { listCoursePositionNotes } from "@/server/queries/course-games";
 
-/** Cours commenté coup par coup d'une ouverture (`opening-course-trees.ts`), lu dans le même lecteur que l'Académie. */
-export default async function OpeningCoursePage({ params }: { params: Promise<{ slug: string }> }) {
+// Les écarts « Dans tes parties » suivent les imports : lus à chaque requête.
+export const dynamic = "force-dynamic";
+
+/**
+ * Cours commenté coup par coup d'une ouverture (`opening-course-trees.ts`), lu dans le même lecteur que l'Académie.
+ * `?chapitre=&noeud=` (liens du Rapport › ouverture) : ouvre le lecteur sur cette position.
+ */
+export default async function OpeningCoursePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ chapitre?: string; noeud?: string }>;
+}) {
   const { slug } = await params;
+  const { chapitre, noeud } = await searchParams;
   const opening = findOpening(slug);
   if (!opening || !OPENING_COURSE_IDS.has(slug)) notFound();
+  const chapterIndex = Number(chapitre);
+  const initialFocus = noeud && Number.isInteger(chapterIndex) && chapterIndex >= 0 ? { chapterIndex, nodeId: noeud } : undefined;
+  const positionNotes = await listCoursePositionNotes(opening.id);
   return (
     <EsportCanvas detail>
-      <OpeningCourse openingId={opening.id} openingName={opening.name} />
+      <OpeningCourse openingId={opening.id} openingName={opening.name} initialFocus={initialFocus} positionNotes={positionNotes} />
     </EsportCanvas>
   );
 }

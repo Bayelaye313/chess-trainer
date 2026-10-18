@@ -58,6 +58,7 @@ export function GameReviewScreen({
   initialPly = null,
   previousGameId = null,
   nextGameId = null,
+  navigationQuery = "",
 }: {
   game: Game;
   timeline: TimelinePly[];
@@ -68,6 +69,8 @@ export function GameReviewScreen({
   /** Partie analysée plus récente/plus ancienne que celle-ci — voir `getAdjacentGameIds`, `server/queries/games.ts`. */
   previousGameId?: string | null;
   nextGameId?: string | null;
+  /** Suffixe (`?course=…`) recopié sur ◀ ▶ : la navigation reste dans la liste d'où vient la partie (Rapport › ouverture). */
+  navigationQuery?: string;
 }) {
   const { engine } = useEngine();
   const [currentPly, setCurrentPly] = useState(initialPly ?? 0);
@@ -295,12 +298,12 @@ export function GameReviewScreen({
         </div>
         <div className="flex shrink-0 items-center gap-3">
           {previousGameId && (
-            <Link href={`/analyse/${previousGameId}`} className="text-sm text-accent hover:underline">
+            <Link href={`/analyse/${previousGameId}${navigationQuery}`} className="text-sm text-accent hover:underline">
               ◀ Partie précédente
             </Link>
           )}
           {nextGameId && (
-            <Link href={`/analyse/${nextGameId}`} className="text-sm text-accent hover:underline">
+            <Link href={`/analyse/${nextGameId}${navigationQuery}`} className="text-sm text-accent hover:underline">
               Partie suivante ▶
             </Link>
           )}

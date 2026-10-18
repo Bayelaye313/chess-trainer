@@ -311,7 +311,7 @@ export function buildCoachMessage(entry: TimelinePly, deviation: DeviationHint |
   if (deviation && deviation.ply === entry.ply) {
     return {
       tag: "deviation",
-      text: `Tu as dévié de ta théorie au coup ${deviation.ply}. Le coup de ton catalogue était ${deviation.expectedSan} (${deviation.openingName}).`,
+      text: `Tu as dévié de ta théorie au coup ${Math.ceil(deviation.ply / 2)}${deviation.ply % 2 === 1 ? "." : "..."}${entry.san}. Le coup de ton catalogue était ${deviation.expectedSan} (${deviation.openingName}).`,
     };
   }
 

@@ -52,9 +52,10 @@ import { findNode, pathTo, plyOffsetOf, type ChessMoveNode } from "@/core/chess/
 import { buildCoachFeedback } from "@/core/curriculum/coach-feedback";
 import { pickCoachMessage, resolveCoachSlot } from "@/core/curriculum/coach-feedbacks";
 import type { CourseTree } from "@/core/curriculum/course-tree";
+import { moveNumberLabel, positionKey, type CoursePositionNote } from "@/core/curriculum/course-game-match";
 import { useEngine } from "@/client/engine/engine-context";
 import { EvaluationBar, type EvalScore } from "@/client/features/board/evaluation-bar";
-import { REVEAL_ARROW_COLOR } from "@/lib/labels";
+import { QUALITY_LABEL, QUALITY_TEXT_CLASS, REVEAL_ARROW_COLOR } from "@/lib/labels";
 import { CoachFeedbackPanel } from "./coach-feedback-panel";
 import { CourseCoachBubble } from "./course-coach-bubble";
 import {
@@ -119,8 +120,33 @@ function sideLabel(color: "w" | "b"): string {
   return color === "w" ? "Blancs" : "Noirs";
 }
 
-export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onComplete?: () => void }) {
-  const [state, dispatch] = useReducer(courseTreeNavReducer, tree.chapters[0].root.id, initialCourseTreeNav);
+/** Position d'ouverture du lecteur (`?chapitre=&noeud=` du cours d'ouverture) — ignorée si le nœud n'existe pas dans ce chapitre. */
+export interface CourseTreeFocus {
+  chapterIndex: number;
+  nodeId: string;
+}
+
+function initialNavFor(tree: CourseTree, focus: CourseTreeFocus | undefined) {
+  const chapter = focus ? tree.chapters[focus.chapterIndex] : undefined;
+  if (focus && chapter && findNode(chapter.root, focus.nodeId)) {
+    return { ...initialCourseTreeNav(chapter.root.id), chapterIndex: focus.chapterIndex, currentId: focus.nodeId };
+  }
+  return initialCourseTreeNav(tree.chapters[0].root.id);
+}
+
+export function CourseTreeViewer({
+  tree,
+  onComplete,
+  initialFocus,
+  positionNotes = [],
+}: {
+  tree: CourseTree;
+  onComplete?: () => void;
+  initialFocus?: CourseTreeFocus;
+  /** Tes sorties du cours dans tes parties (`listCoursePositionNotes`) — encart « Dans tes parties » sur la position concernée. */
+  positionNotes?: readonly CoursePositionNote[];
+}) {
+  const [state, dispatch] = useReducer(courseTreeNavReducer, initialFocus, (focus) => initialNavFor(tree, focus));
   const chapter = tree.chapters[state.chapterIndex];
   const root = chapter.root;
   const playerColor = turnOfFen(root.fen);
@@ -215,6 +241,19 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
     },
     [cancelReply, tree],
   );
+  /** Saute à une position notée (chapitre + nœud), en lecture : c'est là que l'encart « Dans tes parties » s'affiche. */
+  const goToNote = useCallback(
+    (note: CoursePositionNote) => {
+      cancelReply();
+      if (state.mode !== "read") dispatch({ type: "mode", mode: "read", rootId: root.id });
+      if (note.chapterIndex !== state.chapterIndex) dispatch({ type: "chapter", index: note.chapterIndex, rootId: tree.chapters[note.chapterIndex].root.id });
+      dispatch({ type: "select", id: note.nodeId });
+    },
+    [cancelReply, state.mode, state.chapterIndex, root.id, tree],
+  );
+  const currentKey = positionKey(currentNode.fen);
+  const notesHere = positionNotes.filter((note) => note.positionKey === currentKey);
+
   const setMode = useCallback(
     (mode: "read" | "play") => {
       cancelReply();
@@ -472,11 +511,80 @@ export function CourseTreeViewer({ tree, onComplete }: { tree: CourseTree; onCom
           ) : (
             <MoveTreeViewer root={root} currentId={currentNode.id} onSelect={select} />
           )}
+          {!playing && notesHere.length > 0 && <PositionNotesBox notes={notesHere} />}
           {coachMessage && <CourseCoachBubble message={coachMessage} />}
           <CoachFeedbackPanel feedback={feedback} chapterTitle={chapter.title} prompt={prompt} hideEngine={playing} />
+          {positionNotes.length > 0 && <PositionNotesIndex notes={positionNotes} chapters={tree.chapters} onSelect={goToNote} />}
         </div>
       </div>
     </div>
+  );
+}
+
+/** « Dans tes parties » : ce que tu as joué à CETTE position du cours, au lieu du coup prévu. */
+function PositionNotesBox({ notes }: { notes: readonly CoursePositionNote[] }) {
+  return (
+    <div className="rounded-lg border border-inaccuracy/40 bg-inaccuracy/10 px-4 py-3 text-sm">
+      <p className="font-medium text-foreground">📌 Dans tes parties, ici :</p>
+      <ul className="mt-1 space-y-1">
+        {notes.map((note) => (
+          <li key={note.playedSan}>
+            tu as joué{" "}
+            <span className="font-mono font-semibold">
+              {moveNumberLabel(note.ply)}
+              {note.playedSan}
+            </span>{" "}
+            {note.count > 1 ? `${note.count} fois` : "une fois"} ({QUALITY_LABEL[note.quality].toLowerCase()}) au lieu de{" "}
+            <span className="font-mono">{note.expectedSan.join(" ou ")}</span> —{" "}
+            {note.gameIds.map((gameId, index) => (
+              <a key={gameId} href={`/analyse/${gameId}?course=${note.openingId}&reviewPly=${note.ply}`} className="text-accent hover:underline">
+                {index > 0 ? ", " : ""}partie {index + 1}
+              </a>
+            ))}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Toutes tes sorties du cours, de la plus répétée à la plus rare — un clic ouvre la position dans le lecteur. */
+function PositionNotesIndex({
+  notes,
+  chapters,
+  onSelect,
+}: {
+  notes: readonly CoursePositionNote[];
+  chapters: CourseTree["chapters"];
+  onSelect: (note: CoursePositionNote) => void;
+}) {
+  return (
+    <details className="rounded-md border border-border" open={notes.some((note) => note.count >= 2)}>
+      <summary className="cursor-pointer px-3 py-2 text-[13px] font-semibold text-foreground">
+        Tes écarts au cours dans tes parties ({notes.length})
+      </summary>
+      <ol className="border-t border-border">
+        {notes.map((note) => (
+          <li key={`${note.positionKey}|${note.playedSan}`}>
+            <button
+              type="button"
+              onClick={() => onSelect(note)}
+              className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-foreground-muted hover:bg-surface-muted hover:text-foreground"
+            >
+              <span className="min-w-0 truncate">
+                <span className="font-mono text-foreground">
+                  {moveNumberLabel(note.ply)}
+                  {note.playedSan}
+                </span>{" "}
+                au lieu de <span className="font-mono">{note.expectedSan.join(" ou ")}</span>
+                <span className="text-[11px]"> · {chapters[note.chapterIndex]?.title}</span>
+              </span>
+              <span className={`shrink-0 font-mono text-[11px] ${QUALITY_TEXT_CLASS[note.quality]}`}>{note.count}×</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }
 

@@ -201,6 +201,15 @@ function parseAnnotatedComment(raw: string): {
   return { text: comment, tip, arrows, highlights, evalCp, evalMate, evalBar, freeze, hints, hintHighlights };
 }
 
+/**
+ * Même lecture, pour un commentaire isolé hors arbre de cours — le
+ * commentaire du coach stocké sur un puzzle de partie
+ * (`puzzles.coach_comment`, voir `core/puzzle/game-puzzle-audit.ts`).
+ */
+export function parseCoachComment(raw: string): ReturnType<typeof parseAnnotatedComment> {
+  return parseAnnotatedComment(raw);
+}
+
 /** Liste `Rf7,Gg2` d'une balise de cases (`[%csl]`, `[%hintcsl]`) — les entrées mal formées sont ignorées. */
 function parseSquareList(list: string): CourseHighlight[] {
   const out: CourseHighlight[] = [];

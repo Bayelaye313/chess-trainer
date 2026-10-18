@@ -1,0 +1,69 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Sicilienne Najdorf (avec les Noirs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/sicilian-najdorf/cours`). Public
+ * visé : 1500-1800 Elo, répertoire contre 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4
+ * Nf6 5.Nc3 a6.
+ *
+ * ## Contenu (v2 du 2026-10-18, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et l'Attaque Anglaise 6.Be3.
+ * 2. Aléatoire surprise 1 : après l'Attaque Anglaise, la case f4.
+ * 3. Branche B : 6.Bg5 et le Pion empoisonné (7...Qb6).
+ * 4. Aléatoire surprise 2 : après le Pion empoisonné, le clouage en c3.
+ * 5. Branche C : 6.Be2, la Classique.
+ * 6. Branche D : 6.Bc4, l'Attaque Sozin-Fischer.
+ * 7. Branche E : 6.f4, la Variante Amsterdam.
+ * 8. Anti-panique : 6.h3 (système Adams), 6.f3, 6.g3, 6.a4 et 6.Nd5?.
+ *
+ * Le Dragon (5...g6) a son propre cours (`op-sicilian-dragon.ts`) : ce cours
+ * reste dans la structure 5...a6. Les branches théoriques s'arrêtent au plus
+ * tard au demi-coup 27 ; seuls les chapitres « Aléatoire surprise » vont
+ * au-delà (séquences où les Blancs jouent « mou », prolongées au moteur avec
+ * le camp blanc comme camp mou, et la méthode pour les punir en PRO TIP).
+ *
+ * Convention côté Noirs (comme `op-caro-kann.ts` et `op-sicilian-dragon.ts`) :
+ * l'élève joue les Noirs ; les fautes sont des coups BLANCS (variantes ou
+ * coups de la ligne des chapitres surprise) qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, et le coup noir suivant est la punition. Les
+ * « variantes piégées » sont des coups noirs tentants mais perdants. Les
+ * évaluations restent au point de vue des Blancs (négatif = avantage noir).
+ *
+ * Sources : théorie établie de la Najdorf, TOUTES les lignes arbitrées par
+ * Stockfish 18 natif (profondeur 16). Écarts assumés avec la théorie usuelle :
+ * 12...Nh5 plutôt que 12...b4 dans l'Attaque Anglaise (choix du moteur) ;
+ * 12...Qc7 gardé dans la Classique bien que 12...Ng4 soit un peu plus précis.
+ * Toute la prose est originale.
+ *
+ * ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/sicilian-najdorf.pgn` (et l'en-tête
+ * `sicilian-najdorf.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-sicilian-najdorf` doit sortir 0 écart
+ * (un chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

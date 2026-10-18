@@ -1,6 +1,8 @@
 import { EsportCanvas, EsportHeader } from "@/components/ui/esport-page";
 import { ProgressOverview } from "@/client/features/games/progress-overview";
+import { CourseGamesCard } from "@/client/features/reports/course-games-card";
 import { QualitySummaryTable } from "@/client/features/reports/quality-summary-table";
+import { getCourseGamesOverview } from "@/server/queries/course-games";
 import { getMoveQualityTally, getPlayerProgress } from "@/server/queries/progress";
 
 // Sans searchParams ni autre API dynamique, Next.js prérendrait cette page une
@@ -9,7 +11,11 @@ import { getMoveQualityTally, getPlayerProgress } from "@/server/queries/progres
 export const dynamic = "force-dynamic";
 
 export default async function RapportPage() {
-  const [overview, qualityTally] = await Promise.all([getPlayerProgress(), getMoveQualityTally()]);
+  const [overview, qualityTally, courseGames] = await Promise.all([
+    getPlayerProgress(),
+    getMoveQualityTally(),
+    getCourseGamesOverview(),
+  ]);
 
   return (
     <EsportCanvas>
@@ -20,6 +26,8 @@ export default async function RapportPage() {
       </EsportHeader>
 
       <ProgressOverview overview={overview} />
+
+      <CourseGamesCard rows={courseGames} />
 
       <QualitySummaryTable tally={qualityTally} />
     </div>

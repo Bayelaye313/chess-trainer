@@ -35,7 +35,7 @@ describe("buildCoachMessage", () => {
     const deviation: DeviationHint = { ply: 3, expectedSan: "Nf3", openingName: "Partie italienne" };
     const message = buildCoachMessage(timeline[2], deviation);
     expect(message?.tag).toBe("deviation");
-    expect(message?.text).toContain("coup 3");
+    expect(message?.text).toContain("coup 2.Qh5");
     expect(message?.text).toContain("Nf3");
     expect(message?.text).toContain("Partie italienne");
   });

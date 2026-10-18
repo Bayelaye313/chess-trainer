@@ -1,3 +1,4 @@
+// Vérif UI : chaque nœud à indices du cours Italienne affiche ses indices sans préfixe « Indice N : » doublé.
 import { chromium } from "playwright";
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1400, height: 1000 } });
 const errors = []; p.on("pageerror", (e) => errors.push(e.message));
@@ -9,11 +10,12 @@ for (let i = 0; i < n; i++) {
   const moves = p.locator("button.font-mono"); const m = await moves.count();
   for (let j = 0; j < m; j++) {
     await moves.nth(j).click();
-    const btn = p.getByRole("button", { name: /^Indice 1\/\d$/ });
-    if (!(await btn.isVisible())) continue;
-    for (let k = 1; k <= 3; k++) { const bk = p.getByRole("button", { name: new RegExp(`^Indice ${k}/\d$`) }); if (await bk.isVisible()) await bk.click(); }
-    const items = await p.locator("li", { hasText: /^Indice \d :/ }).allInnerTexts();
-    checked++; if (items.some((t) => /^Indice \d : Indice/.test(t))) doubled++;
+    if (!(await p.getByRole("button", { name: /^Indice 1\/\d$/ }).isVisible())) continue;
+    for (let k = 0; k < 3; k++) { const bk = p.getByRole("button", { name: /^Indice \d\/\d$/ }); if (await bk.isVisible()) await bk.click(); }
+    const body = await p.locator("body").innerText();
+    const items = body.match(/Indice \d : [^\n]*/g) ?? [];
+    checked++; total += items.length;
+    if (items.some((t) => /^Indice \d : Indice/.test(t))) doubled++;
     if (checked === 1) console.log("exemple :", items[0]);
   }
 }

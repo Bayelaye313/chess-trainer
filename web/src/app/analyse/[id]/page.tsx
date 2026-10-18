@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { EsportCanvas } from "@/components/ui/esport-page";
 import { GameReviewScreen, type GameDeviation } from "@/client/features/games/game-review-screen";
+import { getCourseGameContext } from "@/server/queries/course-games";
 import { getAdjacentGameIds, getGameDetail } from "@/server/queries/games";
 import { getGameOpeningDeviation } from "@/server/queries/opening-mistakes";
 import { getOpeningDetail } from "@/server/queries/openings";
@@ -17,11 +18,14 @@ export default async function GameDetailPage({
    * quel : le coup théorique attendu est recalculé côté serveur depuis le
    * catalogue (`getOpeningDetail`), jamais fait confiance à des paramètres
    * d'URL qui pourraient être périmés ou trafiqués.
+   * `?course=<id>` : lien depuis « Rapport › ouverture » — la déviation vient
+   * du cours commenté de cette ouverture (`getCourseGameContext`, recalculée
+   * ici) et ◀ ▶ parcourent les seules parties de cette ouverture.
    */
-  searchParams: Promise<{ openingId?: string; ply?: string; reviewPly?: string }>;
+  searchParams: Promise<{ openingId?: string; ply?: string; reviewPly?: string; course?: string }>;
 }) {
   const { id } = await params;
-  const { openingId, ply, reviewPly } = await searchParams;
+  const { openingId, ply, reviewPly, course } = await searchParams;
   const detail = await getGameDetail(id);
   if (!detail) notFound();
 
@@ -31,11 +35,15 @@ export default async function GameDetailPage({
   // pour que TOUTE partie ouverte affiche sa déviation, pas seulement celles
   // déjà cataloguées dans le journal — voir le docstring du Coach
   // (`buildCoachMessage`, `coach-narrative.ts`).
-  const deviation = resolveDeviation(openingId, ply) ?? (await getGameOpeningDeviation(id));
+  const courseContext = course ? await getCourseGameContext(course, id) : null;
+  const courseDeviation = courseContext?.deviation ? { ...courseContext.deviation, openingName: courseContext.openingName } : null;
+  // Le cours fait foi quand la partie en relève : sans déviation au cours, pas de bulle tirée d'une autre source.
+  const deviation = courseContext ? courseDeviation : (resolveDeviation(openingId, ply) ?? (await getGameOpeningDeviation(id)));
   // Voisines chronologiques, pour la navigation ◀ Précédente / Suivante ▶ —
   // permet de passer d'une partie analysée à une autre sans repasser par
-  // l'accueil (cahier des charges, action « Erreurs de partie »).
-  const adjacent = await getAdjacentGameIds(id);
+  // l'accueil (cahier des charges, action « Erreurs de partie »). Depuis le
+  // Rapport d'une ouverture : les voisines dans cette ouverture seulement.
+  const adjacent = courseContext ?? (await getAdjacentGameIds(id));
 
   return (
     <EsportCanvas detail>
@@ -48,6 +56,7 @@ export default async function GameDetailPage({
       initialPly={parseReviewPly(reviewPly, detail.timeline.length)}
       previousGameId={adjacent.previousGameId}
       nextGameId={adjacent.nextGameId}
+      navigationQuery={courseContext ? `?course=${encodeURIComponent(course!)}` : ""}
     />
     </EsportCanvas>
   );
