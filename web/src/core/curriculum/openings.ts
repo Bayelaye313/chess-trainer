@@ -941,6 +941,23 @@ export const OPENINGS: readonly OpeningLine[] = [
       7.Qc2 Bf5 8.Qc1 e6 9.Nbd2 Be7 10.Be2 O-O 11.O-O Rac8 12.Ne5 Nxe5 13.Bxe5`,
   },
   {
+    id: "anti-london-black",
+    name: "Anti-Londres (setup Est-Indien)",
+    eco: "A48",
+    side: "black",
+    description:
+      "1...Nf6 puis ...g6, ...Bg7, ...O-O et ...d6 contre le Londres, le Londres accéléré, la Colle, la Trompowsky et la Torre : un seul schéma, des plans ...e5, ...c5 ou ...Nh5 selon le système blanc.",
+    moves: ["d4", "Nf6", "Bf4", "g6"],
+    pgn: `1.d4 Nf6 2.Bf4
+      (2.Nf3 {Système Londres} g6 3.Bf4
+        (3.Bg5 {Attaque Torre} Bg7 4.Nbd2 O-O 5.e3 d6 6.Be2 h6 7.Bh4 Nc6 8.O-O Qe8 9.h3 e5 10.c3 a5)
+        Bg7 4.e3 O-O 5.Be2 d6 6.O-O Nh5 7.Bg5 h6 8.Bh4 g5 9.Ne1 Nf4 10.exf4 gxh4)
+      (2.e3 {Système Colle} g6 3.Nf3 Bg7 4.Bd3 O-O 5.O-O d6 6.c3 Nbd7 7.Nbd2 e5 8.e4 Re8 9.Re1 c6 10.a4 d5)
+      (2.Bg5 {Attaque Trompowsky} g6 3.Nd2 Bg7 4.c3 O-O 5.e4 c5 6.d5 d6 7.f4 a6 8.a4 Nbd7)
+      (2.Nc3 {Attaque Jobava} d5 3.Bf4 c5 4.e3 Bg4 5.Be2 Bxe2 6.Qxe2 Nbd7)
+      g6 3.e3 Bg7 4.Nf3 O-O 5.Be2 d6 6.h3 Nbd7 7.O-O b6 8.Nbd2 Bb7 9.a4 a6 10.c3 Re8 11.Qc2 e5 12.Bh2 Qe7`,
+  },
+  {
     id: "english-opening",
     name: "Partie Anglaise",
     eco: "A10",

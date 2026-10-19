@@ -1,0 +1,71 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Anti-Londres, setup Est-Indien (avec les Noirs) » —
+ * onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/anti-london-black/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1...Nf6 + ...g6/...Bg7/...O-O/...d6 contre
+ * les systèmes lents à base de 1.d4 (fiche curatée `anti-london-black`, A48).
+ *
+ * ## Contenu (v2 du 2026-10-19, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et le Londres accéléré (2.Bf4).
+ * 2. Aléatoire surprise 1 : après le Londres accéléré, la chaîne d5-e4.
+ * 3. Branche B : le Londres avec 2.Nf3 et le plan ...Nh5.
+ * 4. Branche C : le système Colle (2.e3).
+ * 5. Aléatoire surprise 2 : après la Colle, la colonne e ouverte.
+ * 6. Branche D : la Trompowsky (2.Bg5), 2...g6.
+ * 7. Branche E : l'Attaque Torre (2.Nf3 g6 3.Bg5).
+ * 8. Anti-panique : 2.Nc3 (Jobava et Veresov), 2...d5.
+ *
+ * Choix des chapitres d'après les parties de l'utilisateur (26 parties contre
+ * ces systèmes, 12,5 points) : Londres accéléré 2.Bf4 (8), Colle 2.e3 (6),
+ * Londres 2.Nf3, Jobava/Veresov 2.Nc3 (4), Trompowsky (1 défaite), Torre.
+ * Complété par la théorie que Stockfish soutient : contre le Londres sans h3,
+ * ...Nh5 est le meilleur coup du moteur ; contre 2.Nc3, le setup ...g6
+ * autorise 3.e4 (+0.69 environ), d'où 2...d5. Les branches théoriques
+ * s'arrêtent au plus tard au demi-coup 27 ; les chapitres « Aléatoire
+ * surprise » prolongent de 8 coups environ avec les Blancs comme camp « mou »
+ * (`_tmp-drift-w.mts` : `_tmp-drift.mts` ne fait jouer « mou » que les Noirs).
+ *
+ * Convention côté Noirs (comme `op-caro-kann.ts`) : l'élève joue les Noirs ;
+ * les fautes sont des coups BLANCS qui portent les 3 indices `[%hint]` +
+ * `[%hintcsl]`, le coup noir suivant est la punition. Les « variantes
+ * piégées » sont des coups noirs tentants mais perdants. Les évaluations
+ * restent au point de vue des Blancs (négatif = avantage noir).
+ *
+ * Sources : théorie établie des systèmes 1.d4 sans c4, TOUTES les lignes
+ * arbitrées par Stockfish 18 natif (profondeur 16). Contre le Londres
+ * accéléré, le moteur préfère le double fianchetto (...b6, ...Bb7) avant
+ * ...e5 : le cours le suit. Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/anti-london-black.pgn` (et l'en-tête
+ * `anti-london-black.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-anti-london-black` doit sortir 0 écart
+ * (un chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

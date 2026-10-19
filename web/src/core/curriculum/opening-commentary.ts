@@ -421,6 +421,25 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Développe ton fou-dame à l'extérieur de ta chaîne de pions avant de la refermer.",
     },
   ],
+  "anti-london-black": [
+    {
+      comment: "Les Blancs occupent le centre avec le pion dame.",
+      hint: "Avance ton pion dame de deux cases.",
+    },
+    {
+      comment: "Développe en contrôlant e4, sans fixer la structure : le même coup sert contre tous les systèmes blancs à base de d4.",
+      hint: "Développe ton cavalier-roi vers le centre, sans toucher aux pions centraux.",
+    },
+    {
+      comment: "Les Blancs sortent le fou-dame avant e3 : le Londres accéléré, qui vise c7 et e5.",
+      hint: "Sors ton fou-dame à l'extérieur de la future chaîne e3-d4.",
+    },
+    {
+      comment:
+        "Prépare le fianchetto : le fou g7 visera d4 et b2, et le pion d6 puis ...e5 frapperont le fou f4. Un seul schéma contre tous les systèmes lents.",
+      hint: "Prépare le fianchetto de ton fou-roi par un coup de pion sur l'aile roi.",
+    },
+  ],
   "english-opening": [
     {
       comment:
