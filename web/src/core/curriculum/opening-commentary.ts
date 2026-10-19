@@ -95,6 +95,33 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Contre-attaque le pion e4 avec ton second cavalier.",
     },
   ],
+  "italian-game-black": [
+    {
+      comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "Symétrie : le pion e5 conteste le centre.",
+      hint: "Réponds par la poussée symétrique de ton pion roi.",
+    },
+    {
+      comment: "Le cavalier se développe en attaquant e5.",
+      hint: "Développe ton cavalier-roi en attaquant le pion central adverse.",
+    },
+    {
+      comment: "Le cavalier défend e5 en se développant vers le centre.",
+      hint: "Défends ton pion central avec un cavalier.",
+    },
+    {
+      comment: "L'Italienne : le fou vise f7, le point faible du roque noir.",
+      hint: "Place ton fou-roi sur la diagonale qui vise f7.",
+    },
+    {
+      comment:
+        "Les Deux Cavaliers : on contre-attaque e4 au lieu de protéger f7. Contre 4.Ng5, la réponse est ...d5 puis ...Na5, un pion contre l'initiative.",
+      hint: "Contre-attaque le pion e4 avec ton second cavalier.",
+    },
+  ],
   "italian-game": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame dès le premier coup.",

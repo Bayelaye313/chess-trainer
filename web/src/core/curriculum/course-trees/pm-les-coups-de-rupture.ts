@@ -23,8 +23,20 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * ...f5 contre e4 (4) ; Smyslov – Rudakovsky : préparer f4-f5 (5), la rupture
  * f6 contre le roque (6) ; Evans – Opsahl : le levier b4-b5 de l'attaque de
  * minorité (7) ; la Benoni : rupture e5 et sacrifice de pion f5 (8) ;
- * Pillsbury – Gunsberg : cinq percées en finale, de f5 à d5 (9) ; tactique
- * finale : la rupture ...fxg3 contre le roque (10).
+ * Pillsbury – Gunsberg : cinq percées en finale, de f5 à d5 (9) ;
+ * Tarrasch – Pillsbury : f4-f5 contre la colonne f (10) ; Marshall – Burn :
+ * ...c5-c4 et la rupture e4 trop pressée (11) ; Rubinstein – Spielmann : le
+ * levier ...f5-f4 (12) ; Bernstein – Capablanca : ...c5 et le pion passé (13) ;
+ * tactique finale : la rupture ...fxg3 contre le roque (14).
+ *
+ * Les chapitres 10 à 13 (ajoutés le 2026-10-18) viennent de chessgames.com :
+ * Tarrasch – Pillsbury, Vienne 1898, départage du 29 juillet (gid 1109164) ;
+ * Marshall – Burn, Ostende 1907 (gid 1036028) ; Rubinstein – Spielmann,
+ * Saint-Sébastien 1912 (gid 1119753) ; Bernstein – Capablanca, Moscou 1914
+ * (gid 1261680 — l'utilisateur avait demandé « Capablanca – Bernstein » : c'est
+ * la partie célèbre, Capablanca a les Noirs). Dans chacun, le coup fautif de la
+ * partie est en variante (16...Rh8, 16.e4, 18.Nd3, 27.Nxc3) ; dans ces
+ * variantes déjà perdues, les écarts suivants sont seulement signalés.
  *
  * Toutes les lignes ont été rejouées avec chess.js et chaque coup sondé avec
  * Stockfish 18 (profondeur 18, 3 candidats par coup), suites du moteur
@@ -429,6 +441,193 @@ PRO TIP : deux pions passés liés sur la 6e rangée valent souvent une tour. Un
 40. h7 { Le pion h va à dame au coup suivant. Les Noirs ont abandonné.
 
 Bilan : cinq coups de rupture, de f5 à d5, ont transformé une finale calme en une victoire. [%cal Gh7h8] }`,
+    ),
+    chapter(
+      "Tarrasch – Pillsbury (1898) : la rupture f4-f5 ouvre la colonne f",
+      "r2q1rk1/ppp5/3pppp1/4p3/4P3/2PP4/P1P2PPP/R2Q1RK1 w - - 0 14",
+      `{ Siegbert Tarrasch – Harry Pillsbury, Vienne 1898, partie de départage du 29 juillet. Il ne reste que les dames et les tours.
+
+Regarde les pions. Les Noirs ont deux pions doublés en e6 et e5, et leur roi s'abrite derrière f6 et g6. La colonne h est déjà ouverte de leur côté. Les Blancs ont un pion f2 qui n'a rien devant lui.
+
+Le plan blanc est un levier en deux temps : f2-f4 au contact de e5, puis f4-f5 au contact de e6 et g6. Le but est d'ouvrir la colonne f, où la tour f1 attend déjà, face au pion f6.
+
+PRO TIP : avant de pousser un pion de rupture, regarde quelle tour est déjà derrière lui. Une rupture qui ouvre une colonne pour une tour déjà placée gagne un temps précieux. }
+14. f4 { PREMIER CONTACT. Le pion f4 touche le pion e5. Si les Noirs prennent en f4, la tour f1 récupère le pion et la colonne s'ouvre. Stockfish préfère 14.Qg4, qui vise d'abord le pion e6, l'écart est faible (environ 0,3 pion). [%cal Rf4e5][%cal Gf1f6] }
+14... Kg7 { Le roi vient protéger les pions f6 et g6. 14...exf4 ou 14...f5 étaient un peu plus précis (environ 0,3 pion). [%csl Gf6,Gg6] }
+15. f5 { LA RUPTURE. Le pion f5 touche e6 et g6 à la fois. Les Blancs menacent fxe6 ou fxg6, et dans les deux cas la colonne f s'ouvre. Le meilleur coup. [%cal Rf5e6,Rf5g6] }
+15... exf5 { Les Noirs prennent : laisser faire coûtait le pion e6. Le meilleur coup. }
+16. exf5 { Le pion reprend. Le nouveau pion f5 touche toujours g6. Le meilleur coup. [%cal Rf5g6] }
+16... g5 { LA BONNE DÉFENSE. Le pion g ne prend pas en f5 : il passe à côté. Le pion f5 ne touche plus aucun pion noir, et la colonne f reste bouchée par f5 et f6. Le meilleur coup. [%csl Gf5,Gf6] }
+(16... Rh8 { LA FAUTE DE LA PARTIE. La tour quitte f8 pour la colonne h ouverte. Mais elle laisse le pion f5 prendre en g6, et la colonne f va s'ouvrir. Environ 0,8 pion de moins que 16...g5. [%cal Gf8h8] }
+17. fxg6 { Le pion prend en g6. La colonne f est ouverte : la tour f1 attaque le pion f6, que seuls le roi et la dame défendent. Le meilleur coup. [%cal Gf1f6] }
+17... Rh6 { La tour attaque le pion g6, qui n'est pas protégé. Presque aussi bon que 17...Qe7. [%cal Gh6g6] }
+18. Rb1 { La tour a1 entre en jeu par la colonne b, ouverte depuis la prise bxc3. Elle attaque le pion b7. Presque aussi bon que 18.Rf5. [%cal Gb1b7] }
+18... b6 { Le pion b avance pour ne plus être attaqué. Le meilleur coup. }
+19. Rb4 { La tour monte en 4e rangée : de là, elle peut glisser vers l'aile roi. 19.Qf3 était un peu plus précis, l'écart est faible. [%cal Gb4g4] }
+19... Qd7 { LA DEUXIÈME FAUTE. La dame quitte d8. Elle ne protège plus le pion f6, ni la tour a8. Environ 1,2 pion de moins que 19...Qe7. [%csl Rf6,Ra8] }
+20. Rxf6 { LE SACRIFICE. La tour prend le pion f6. Si le roi la prend, la dame donne échec en f3 et prend la tour a8. C'est la colonne f, ouverte par la rupture, qui rend ce coup possible. Le meilleur coup. [%cal Gf1f6] }
+20... Kxf6 { Le roi prend la tour. Refuser ne valait pas mieux : 20...Kg8 perdait encore plus. }
+21. Qf3+ { LA FOURCHETTE. La dame donne échec au roi f6 et, sur la grande diagonale vidée par les échanges, elle attaque la tour a8. Le meilleur coup. [%cal Rf3f6,Rf3a8] }
+21... Kg7 { Le roi revient en g7. Le meilleur coup. }
+22. Qxa8 { La dame prend la tour. Les Blancs ont maintenant deux pions de plus (environ +2,3), et Tarrasch a gagné la partie.
+
+Bilan : deux poussées de pion ont ouvert la colonne f. Une seule faute de défense a suffi pour que la tour blanche y entre. [%csl Gg6] })
+17. Rb1 { La tour entre par la colonne b, contre le pion b7. Le meilleur coup. [%cal Gb1b7] }
+17... b6 { Le pion b avance, hors de portée de la tour. Le meilleur coup. }
+18. h4 { UN NOUVEAU LEVIER. La colonne f est fermée, alors les Blancs cherchent une autre ligne : le pion h4 touche le pion g5. Presque aussi bon que 18.Rb4. [%cal Rh4g5] }
+18... gxh4 { Le pion g prend en h4 : les Noirs ont un pion de plus pour l'instant. Le meilleur coup. }
+19. Kf2 { Le roi libère la première rangée : la tour pourra venir en h1 pour reprendre le pion h4. Presque aussi bon que 19.Rb4. La position est à peu près égale (environ +0,1).
+
+Bilan : la rupture f4-f5 était juste. Elle ne gagne que si l'adversaire laisse la colonne f s'ouvrir. Contre la bonne défense ...g5, il faut trouver un deuxième levier, ici h2-h4. [%cal Gf1h1] }`,
+    ),
+    chapter(
+      "Marshall – Burn (1907) : la rupture ...c5, puis la rupture e4 trop pressée",
+      "r2q1rk1/pbpnbppp/1p3n2/3p2B1/3P4/2NBPN2/PP3PPP/R2Q1RK1 w - - 0 10",
+      `{ Frank Marshall – Amos Burn, Ostende 1907. Un Gambit dame refusé : après l'échange en d5, les Noirs ont un pion d5, les Blancs un pion d4.
+
+Les Noirs ont un levier tout prêt : ...c7-c5, au contact de d4. Burn va le jouer, puis pousser ...c4. Ce coup ferme le centre, mais il donne aux Noirs trois pions contre deux à l'aile dame. Cette majorité pourra avancer.
+
+Marshall répond par la rupture centrale e3-e4, contre d5. L'idée est bonne, mais le moment est mauvais : ce chapitre montre ce qui arrive quand on rompt avant que ses pièces soient prêtes.
+
+PRO TIP : une rupture ouvre des lignes pour LES DEUX camps. Avant de la jouer, compte qui profitera le plus des colonnes et des diagonales qui vont s'ouvrir. }
+10. Rc1 { La tour se place sur la colonne c, où un futur pion c5 viendra. Presque aussi bon que 10.Qc2. [%cal Gc1c7] }
+10... c5 { LA RUPTURE. Le pion c5 touche le pion d4. Les Noirs prennent leur part du centre et ouvrent la colonne c. Presque aussi bon que 10...Ne4. [%cal Rc5d4] }
+11. Qe2 { La dame se développe. 11.Bf5 ou 11.Qc2 étaient un peu plus précis, l'écart est faible (environ 0,25 pion). }
+11... Ne4 { Le cavalier s'installe en e4. Il attaque le cavalier c3, le fou g5 et le pion f2. Le meilleur coup. [%cal Ge4c3,Ge4g5] }
+12. Bf4 { Le fou évite l'échange. 12.Bxe7 était un peu plus précis, l'écart est faible (environ 0,2 pion). }
+12... Nxc3 { Le cavalier e4 s'échange contre le cavalier c3. Le meilleur coup. }
+13. Rxc3 { La tour reprend et fait face au pion c5. 13.bxc3 était plus solide (environ 0,45 pion) : un pion en c3 aurait renforcé le pion d4. [%cal Gc3c5] }
+13... c4 { LA POUSSÉE. Le pion avance et chasse le fou d3. Le centre se ferme, mais les Noirs ont maintenant trois pions contre deux à l'aile dame (a7, b6 et c4 contre a2 et b2). Le plan : ...b5-b4. Le meilleur coup. [%cal Gc4d3][%cal Gb6b5,Gb5b4] }
+14. Bf5 { Le fou se place en f5, face au roque noir. Presque aussi bon que 14.Bb1. [%cal Gf5h7] }
+14... Nf6 { Le cavalier revient en f6 pour défendre le roi. 14...b5 était un peu plus précis, l'écart est faible. }
+15. Ne5 { Le cavalier s'installe en e5, au centre. Il vise les pions c4 et f7. Le meilleur coup. [%cal Ge5c4,Ge5f7] }
+15... b5 { La majorité noire avance : b5 prépare ...b4. Le meilleur coup. [%cal Gb5b4] }
+16. Rcc1 { La tour recule. Elle garde la colonne c et la première rangée. Le meilleur coup. }
+(16. e4 { LA FAUTE DE LA PARTIE. Le pion e4 touche d5 : c'est la rupture centrale. Mais elle arrive trop tôt. Le fou b7 et les pièces noires vont profiter du centre ouvert. Environ 0,8 pion de moins que 16.Rcc1. [%cal Re4d5] }
+16... g6 { Le pion chasse le fou f5. Le meilleur coup. [%cal Gg6f5] }
+17. Bh6 { Le fou attaque la tour f8. 17.Rg3 était plus précis (environ 0,5 pion). [%cal Gh6f8] }
+17... Re8 { La tour s'écarte. Presque aussi bon que 17...dxe4. }
+18. exd5 { Les Blancs prennent : le centre est ouvert. 18.Rg3 était meilleur (environ 0,8 pion). }
+18... Qxd5 { La dame reprend. Avec le fou b7, elle forme une batterie contre g2, et elle attaque aussi le pion d4 et le cavalier e5. Le meilleur coup. [%cal Gd5g2,Gd5d4,Gd5e5] }
+19. Rg3 { La tour défend le pion g2 et attaque le pion g6. Le meilleur coup. [%cal Gg3g6] }
+19... Bd6 { Le fou attaque le cavalier e5. Presque aussi bon que 19...Bc5. [%cal Gd6e5] }
+20. Qc2 { Une nouvelle faute : la dame protège le fou f5, mais 20.Rd1 tenait mieux (environ 1,2 pion de plus). }
+20... Bxe5 { Le fou prend le cavalier e5. Presque aussi bon que 20...Nh5. }
+21. dxe5 { Le pion reprend et attaque le cavalier f6. Le meilleur coup. [%cal Ge5f6] }
+21... Nh5 { Le cavalier s'échappe en attaquant la tour g3. Le meilleur coup. [%cal Gh5g3] }
+22. Rg4 { La tour reste sur la colonne g. 22.Rd1 tenait beaucoup mieux (environ 1,8 pion). }
+22... Rxe5 { La tour prend le pion e5 et attaque le fou f5. Les Noirs ont un pion de plus et gagnent (environ -3,9). Burn a remporté la partie.
+
+Bilan : la rupture e4, jouée avant que les pièces blanches soient prêtes, a surtout ouvert des lignes pour les pièces noires. [%cal Ge5f5] })
+16... a5 { Le pion a vient soutenir la future poussée ...b4. Le meilleur coup. [%cal Ga5b4] }
+17. b3 { LE LEVIER BLANC. Le pion b3 touche le pion c4. Les Blancs veulent ouvrir une ligne contre la chaîne noire. Presque aussi bon que 17.h4. [%cal Rb3c4] }
+17... a4 { LE CONTRE-LEVIER. Le pion a4 touche b3. Si les Blancs prennent en c4, ...bxc4 garde le pion c ; s'ils laissent faire, ...axb3 ouvre la colonne a. Le meilleur coup. [%cal Ra4b3] }
+18. h3 { Le pion donne de l'air au roi blanc. Presque aussi bon que 18.Rfd1. Les Noirs sont un peu mieux (environ -0,4).
+
+Bilan : la rupture ...c5 puis la poussée ...c4 ont donné aux Noirs une majorité qui avance. Chaque camp a ses leviers à l'aile dame, et ils se jouent pion contre pion. [%csl Ga4,Gb5,Gc4] }`,
+    ),
+    chapter(
+      "Rubinstein – Spielmann (1912) : le levier ...f5-f4 contre le roque",
+      "5rk1/pprb2pp/3ppq2/5p2/2P1n3/PQ3NP1/1P2PPBP/R2R2K1 w - - 2 16",
+      `{ Akiba Rubinstein – Rudolf Spielmann, Saint-Sébastien 1912. Une Défense hollandaise : les Noirs ont un pion en f5 dès l'ouverture.
+
+Ce pion est un levier tout prêt. Poussé en f4, il vient au contact du pion g3. S'il prend en g3, la colonne f s'ouvre droit sur le pion f2, que seul le roi blanc protège. Derrière lui attendent déjà la dame f6 et la tour f8.
+
+Pour l'instant, le cavalier f3 bouche la colonne f. Tout le chapitre tourne autour de cette question : la colonne f va-t-elle s'ouvrir ?
+
+PRO TIP : un levier contre le roque est le plus fort quand tes pièces lourdes sont DÉJÀ derrière le pion. Place la dame et la tour sur la colonne avant de pousser. }
+16. Ne1 { Le cavalier recule pour aller en d3. Mais il quitte la case f3, d'où il bouchait la colonne f. 16.Nd4 était plus précis (environ 0,4 pion). [%cal Ge1d3] }
+16... Nc5 { Le cavalier attaque la dame b3. Le meilleur coup. [%cal Gc5b3] }
+17. Qb4 { La dame se déplace et attaque le cavalier c5, protégé par le pion d6. Presque aussi bon que 17.Qe3. }
+17... f4 { LA RUPTURE. Le pion f4 touche g3. Si les Noirs prennent en g3, la colonne f s'ouvre et f2 devient la cible de la dame et de la tour. Le meilleur coup. [%cal Rf4g3][%cal Gf6f2] }
+18. Nf3 { LA BONNE DÉFENSE. Le cavalier revient en f3 et bouche à nouveau la colonne f. Le meilleur coup. Les Noirs sont un peu mieux (environ -0,4). [%csl Gf3] }
+(18. Nd3 { LA FAUTE DE LA PARTIE. Le cavalier attaque le cavalier c5 et le pion f4, mais la colonne f reste ouverte. Environ 0,8 pion de moins que 18.Nf3. [%cal Gd3c5,Gd3f4] }
+18... fxg3 { Le pion prend en g3. Il attaque f2 et h2. Le meilleur coup. [%cal Rg3f2,Rg3h2] }
+19. fxg3 { Le pion f reprend : la colonne f est ouverte jusqu'à la première rangée. C'est la seule défense correcte : les autres coups perdaient bien plus. [%cal Gf6f1] }
+19... Nxd3 { Le cavalier échange le cavalier d3. 19...Bc6, qui vise d'abord le fou g2, était plus fort (environ 0,7 pion). }
+20. Rxd3 { La tour reprend. 20.Qxd6 était un peu plus précis, l'écart est faible. }
+20... Qf2+ { La dame entre en f2 par la colonne ouverte, avec échec. Le meilleur coup. [%cal Gf2g1] }
+21. Kh1 { Le roi n'a qu'une case : h1. }
+21... Bc6 { Le fou vise le fou g2 sur la grande diagonale. 21...Qxe2, qui prenait un pion, était plus fort (environ 0,6 pion). [%cal Gc6g2] }
+22. e4 { Le pion ferme la grande diagonale. Le meilleur coup : 22.Bxc6 perdait (environ -3,8). }
+22... Rcf7 { La deuxième tour rejoint la colonne f : dame et tours sont alignées contre la première rangée. Le meilleur coup. [%cal Gf7f1] }
+23. Re1 { La tour protège la première rangée et le pion e4. Le meilleur coup. }
+23... a5 { Le pion attaque la dame b4. Presque aussi bon que 23...h5. [%cal Ga5b4] }
+24. Qc3 { La dame recule. Elle attaque le pion a5 et vise g7 sur la grande diagonale. Le meilleur coup. [%cal Gc3a5,Gc3g7] }
+24... Qc5 { La dame recule et vise le pion c4. Presque aussi bon que 24...a4. [%cal Gc5c4] }
+25. b4 { Le pion attaque la dame. Le meilleur coup. [%cal Rb4c5] }
+25... Bxe4 { LE COUP DE SPIELMANN. Le fou prend e4 et laisse la dame en prise. Si 26.bxc5, alors 26...Rf1+ 27.Rxf1 Rxf1 mat : le fou g2 est cloué par le fou e4 et ne peut pas reprendre en f1. Selon Stockfish, la position reste égale. [%cal Ge4g2,Gf7f1] }
+26. Rxe4 { LA FAUTE DÉCISIVE. La tour prend le fou, mais elle quitte la première rangée. 26.Bxe4 gardait l'égalité. [%cal Re1e4] }
+26... Rf1+ { La tour entre en f1 avec échec. Le meilleur coup. }
+27. Bxf1 { Forcé : le fou prend la tour. }
+27... Rxf1+ { La deuxième tour reprend avec échec. Le meilleur coup. }
+28. Kg2 { Le seul coup légal. Le roi attaque la tour f1. }
+28... Qf2+ { La dame protège la tour et chasse le roi. Le meilleur coup. }
+29. Kh3 { Le seul coup légal : le roi monte en h3, encore plus exposé. }
+29... Rh1 { La tour attaque le pion h2, devant le roi blanc. Les Noirs ont une attaque gagnante (plus de 5 pions selon Stockfish), et Spielmann a gagné la partie.
+
+Bilan : la rupture ...f4 a ouvert la colonne f. Une seule faute blanche, et les pièces lourdes noires sont entrées sur la première rangée. [%cal Gh1h2] })
+18... e5 { Le pion soutient f4. Si les Blancs prennent en f4, les Noirs reprennent avec le pion e et gardent le contact. Le meilleur coup. [%cal Ge5f4] }
+19. Qc3 { La dame attaque le pion e5. Le meilleur coup. [%cal Gc3e5] }
+19... Ba4 { Le fou attaque la tour d1. Le meilleur coup. [%cal Ga4d1] }
+20. Rf1 { La tour quitte d1 et vient défendre f2. Le meilleur coup. Les Noirs gardent une légère initiative (environ -0,25).
+
+Bilan : contre un levier qui menace d'ouvrir une colonne, la meilleure défense est souvent de garder une pièce DANS la colonne. Ici, c'est le cavalier f3. [%cal Gf1f2] }`,
+    ),
+    chapter(
+      "Bernstein – Capablanca (1914) : la rupture ...c5 et le pion passé",
+      "r2q1rk1/p1pnbppp/Qp3n2/3p2B1/3P4/2N1PN2/PP3PPP/2R1K2R b K - 0 11",
+      `{ Ossip Bernstein – José Raúl Capablanca, Moscou 1914. Un Gambit dame refusé : après 8.cxd5 exd5 9.Qa4 Bb7 10.Ba6 Bxa6 11.Qxa6, les fous de cases blanches ont disparu.
+
+Le levier noir, c'est ...c7-c5 contre le pion d4. Il va créer une structure célèbre : les PIONS PENDANTS c5 et d5, deux pions côte à côte sans voisin.
+
+Suis le pion c dans ce chapitre. Il rompt en c5, avance en c4, puis les Blancs l'attaquent avec leur propre levier b3. Après les échanges, il devient un pion passé en c3.
+
+PRO TIP : quand l'adversaire attaque ta chaîne avec un levier, regarde ce qui reste après les échanges. Un pion qui n'a plus aucun pion adverse devant lui, ni sur sa colonne ni sur les colonnes voisines, est PASSÉ : c'est souvent lui qui décide. }
+11... c5 { LA RUPTURE. Le pion c5 touche le pion d4. Les Noirs libèrent leur jeu et prennent la colonne c. Presque aussi bon que 11...c6. [%cal Rc5d4] }
+12. Bxf6 { Le fou échange le cavalier f6, un défenseur du pion d5. 12.O-O était un peu plus précis (environ 0,35 pion). }
+12... Nxf6 { Le cavalier d7 reprend. Le meilleur coup. }
+13. dxc5 { Le pion prend en c5. Les Noirs vont avoir deux pions côte à côte en c5 et d5 : les pions pendants. Presque aussi bon que 13.b3. }
+13... bxc5 { Le pion b reprend. Les pions c5 et d5 tiennent le centre. Ils sont mobiles, mais aucun pion noir ne peut plus les protéger par derrière. Le meilleur coup. [%csl Gc5,Gd5] }
+14. O-O { Les Blancs roquent enfin : leur roi était resté en e1. Le meilleur coup. }
+14... Qb6 { La dame propose l'échange des dames et vise le pion b2. 14...Rb8 était un peu plus précis (environ 0,35 pion). [%cal Gb6a6,Gb6b2] }
+15. Qe2 { La dame évite l'échange et revient près du roi. 15.Qxb6 était un peu plus précis (environ 0,35 pion). }
+15... c4 { Le pion c avance. Il gagne de l'espace et vise b3 et d3. En échange, la case d4 n'est plus contrôlée par aucun pion noir. Presque aussi bon que 15...Rfd8. [%csl Gc4][%csl Rd4] }
+16. Rfd1 { La tour vient en face du pion d5. Le meilleur coup. [%cal Gd1d5] }
+16... Rfd8 { La tour défend le pion d5. Le meilleur coup. }
+17. Nd4 { Le cavalier s'installe en d4, juste devant le pion d5. Aucun pion noir ne peut l'en chasser. Presque aussi bon que 17.e4. [%csl Gd4] }
+17... Bb4 { Le fou attaque le cavalier c3. Le meilleur coup. [%cal Gb4c3] }
+18. b3 { LE LEVIER BLANC. Le pion b3 touche le pion c4. Les Blancs veulent dissoudre la pointe de la structure noire. Presque aussi bon que 18.Qc2. [%cal Rb3c4] }
+18... Rac8 { La tour a8 vient soutenir le pion c4 par la colonne c. Le meilleur coup. [%cal Gc8c4] }
+19. bxc4 { Les Blancs prennent. Mais après ...dxc4, il n'y aura plus aucun pion blanc sur les colonnes b, c et d : le pion c4 sera passé. 19.h3, qui gardait la tension, était un peu plus précis (environ 0,2 pion). }
+19... dxc4 { Le pion d reprend. Le pion c4 est maintenant PASSÉ. Le meilleur coup. [%csl Gc4][%cal Gc4c1] }
+20. Rc2 { La tour se place devant le pion passé. Le meilleur coup. }
+20... Bxc3 { Le fou prend le cavalier c3, la pièce qui pouvait bloquer le pion c. Le meilleur coup. }
+21. Rxc3 { La tour reprend. C'est la seule bonne reprise : 21.Nf3 ou 21.Nf5 perdaient (environ -4,8). }
+21... Nd5 { Le cavalier attaque la tour c3 et le pion e3. Le meilleur coup. [%cal Gd5c3,Gd5e3] }
+22. Rc2 { La tour recule. Le meilleur coup. }
+22... c3 { Le pion passé avance en c3, dans le camp blanc. Le cavalier d5 le protège. Presque aussi bon que 22...Qa6. [%cal Gd5c3] }
+23. Rdc1 { La deuxième tour double sur la colonne c, derrière la première : deux tours contre un pion. Le meilleur coup. [%cal Gc1c2] }
+23... Rc5 { La tour se place en c5 : elle pourra doubler sur la colonne c. Presque aussi bon que 23...Qf6. }
+24. Nb3 { Le cavalier attaque la tour c5. Presque aussi bon que 24.g3. [%cal Gb3c5] }
+24... Rc6 { La tour recule. Presque aussi bon que 24...Rc7. }
+25. Nd4 { Le cavalier revient en d4 et attaque la tour c6. Le meilleur coup. [%cal Gd4c6] }
+25... Rc7 { La tour recule encore. Presque aussi bon que 25...Rc5. }
+26. Nb5 { Le cavalier attaque la tour c7, le pion a7 et le pion c3. Une imprécision : 26.g3 était meilleur (environ 0,45 pion). [%cal Gb5c7,Gb5a7,Gb5c3] }
+26... Rc5 { La tour attaque le cavalier b5. Le meilleur coup. [%cal Gc5b5] }
+27. Nd4 { Le cavalier revient en d4, d'où il surveille les cases devant le pion. Le meilleur coup. [%csl Gd4] }
+(27. Nxc3 { LA FAUTE DE LA PARTIE. Le cavalier prend le pion c3, qui semblait tomber. Mais la première rangée blanche est faible : le roi n'a pas de case de fuite. Environ 4 pions de moins que 27.Nd4. [%csl Rg1] }
+27... Nxc3 { Le cavalier d5 reprend en c3. Le pion passé a disparu, mais le piège est tendu. Le meilleur coup. }
+28. Rxc3 { La tour reprend. 28.Qe1 était plus tenace, mais tout perd déjà (environ -4,2). }
+28... Rxc3 { La tour échange. Le meilleur coup. }
+29. Rxc3 { La dernière tour reprend. Les Blancs croient avoir gagné un pion. }
+29... Qb2 { LA DÉVIATION. La dame attaque à la fois la tour c3 et la dame e2. Si 30.Qxb2, alors 30...Rd1 mat : la dame e2 doit garder la case d1. Les Blancs ont abandonné (environ -6).
+
+Bilan : le pion passé, né de la rupture ...c5, a attiré les pièces blanches. Il n'en restait plus pour garder la première rangée. [%cal Rb2c3,Rb2e2][%cal Gd8d1] })
+27... Qc7 { La dame se place derrière la tour, sur la colonne c. Presque aussi bon que 27...g6. [%cal Gc7c3] }
+28. a3 { Le pion prend la case b4 aux pièces noires. Le meilleur coup. Les Noirs sont un peu mieux (environ -0,3).
+
+Bilan : la rupture ...c5, puis le levier blanc b3, ont fait du pion c un pion passé. Bien soutenu en c3, il fixe deux tours blanches. [%csl Gc3] }`,
     ),
     chapter(
       "Tactique finale : la rupture ...fxg3 fait sauter le bouclier",

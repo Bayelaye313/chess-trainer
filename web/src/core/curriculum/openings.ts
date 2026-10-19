@@ -712,6 +712,26 @@ export const OPENINGS: readonly OpeningLine[] = [
       Nf6 5.d3 d6 6.O-O O-O 7.Re1 a6 8.Bb3 Ba7 9.h3 h6 10.Nbd2 Re8 11.Bc2 d5 12.Qe2 dxe4`,
   },
   {
+    id: "italian-game-black",
+    name: "Défense des Deux Cavaliers",
+    eco: "C55",
+    side: "black",
+    description:
+      "3...Nf6 contre l'Italienne : contre 4.Ng5, ...d5 et ...Na5 ; contre le Pianissimo 4.d3, ...Bc5 et le levier ...d5 ; contre 4.d4, ...exd4 et ...Nxe4.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6"],
+    pgn: `1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5
+      (4.d3 {Pianissimo} Bc5 5.c3
+        (5.O-O d6 6.c3 a6 7.Re1 Ba7 8.a4 Ng4 9.Rf1 O-O)
+        O-O 6.Nbd2 d5 7.exd5 Nxd5 8.a4 Nb6 9.Ba2 Bf5)
+      (4.d4 {Gambit Écossais par transposition} exd4 5.O-O
+        (5.e5 d5 6.Bb5 Ne4 7.Nxd4 Bd7 8.Bxc6 bxc6 9.O-O Bc5)
+        Nxe4 6.Re1 d5 7.Bxd5 Qxd5 8.Nc3 Qh5 9.Nxe4 Be6 10.Bg5 Bd6)
+      (4.Nc3 {Quatre Cavaliers italiens} Nxe4 5.Nxe4 d5 6.Bd3 dxe4 7.Bxe4 Bd6 8.d4 exd4)
+      d5 5.exd5 Na5 6.Bb5+
+      (6.d3 {Variante Morphy} h6 7.Nf3 e4 8.Nd4 Bc5 9.Be3 exd3 10.cxd3 Nxd5)
+      c6 7.dxc6 bxc6 8.Be2 h6 9.Nf3 e4 10.Ne5 Bc5 11.O-O O-O 12.Kh1 Bd6`,
+  },
+  {
     id: "scotch-game",
     name: "Partie Écossaise",
     eco: "C45",

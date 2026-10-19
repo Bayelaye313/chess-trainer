@@ -1,0 +1,71 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Défense des Deux Cavaliers (avec les Noirs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/italian-game-black/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 (fiche
+ * curatée `italian-game-black`, C55).
+ *
+ * ## Contenu (v2 du 2026-10-19, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et 4.Ng5 d5 5.exd5 Na5 6.Bb5+.
+ * 2. Aléatoire surprise 1 : après 4.Ng5, la batterie contre h2.
+ * 3. Branche B : 6.d3, la Variante Morphy.
+ * 4. Branche C : le Pianissimo 4.d3 Bc5 5.c3.
+ * 5. Aléatoire surprise 2 : après le Pianissimo, le roi blanc au centre.
+ * 6. Branche D : le Pianissimo avec roque, 4.d3 Bc5 5.O-O.
+ * 7. Branche E : 4.d4 (5.O-O Nxe4 6.Re1 d5, et 5.e5 d5).
+ * 8. Anti-panique : 4.Nc3 (4...Nxe4 5.Nxe4 d5) et 4.O-O.
+ *
+ * Choix des chapitres d'après les parties de l'utilisateur (28 Italiennes
+ * avec les Noirs, 22 points) : 4.Ng5 joué souvent et bien maîtrisé (8.Qf3,
+ * jouée contre lui, est gardée en variante « imprécision ») ; les défaites
+ * viennent du Pianissimo 4.d3, d'où deux chapitres et une surprise. Le cours
+ * suit le moteur : levier ...d5 contre 5.c3, ...a6/...Ba7/...Ng4 contre
+ * 5.O-O. Les branches théoriques s'arrêtent au plus tard au demi-coup 27 ;
+ * les chapitres « Aléatoire surprise » prolongent de 8 coups environ avec les
+ * Blancs comme camp « mou » (`_tmp-drift-w.mts` : `_tmp-drift.mts` ne fait
+ * jouer « mou » que les Noirs).
+ *
+ * Convention côté Noirs (comme `op-caro-kann.ts`) : l'élève joue les Noirs ;
+ * les fautes sont des coups BLANCS qui portent les 3 indices `[%hint]` +
+ * `[%hintcsl]`, le coup noir suivant est la punition. Les « variantes
+ * piégées » sont des coups noirs tentants mais perdants (dont le Fegatello
+ * 5...Nxd5?). Les évaluations restent au point de vue des Blancs.
+ *
+ * Sources : théorie établie des Deux Cavaliers, TOUTES les lignes arbitrées
+ * par Stockfish 18 natif (profondeur 16) ; quelques coups blancs de la ligne
+ * principale sont des choix du moteur peu usuels en club (12.Kh1 au
+ * chapitre 1, 8.Nd4 dans la Morphy). Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/italian-game-black.pgn` (et l'en-tête
+ * `italian-game-black.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-italian-game-black` doit sortir 0 écart
+ * (un chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
