@@ -68,6 +68,33 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Développe ton fou-roi vers l'aile dame pour clouer le défenseur du pion e5.",
     },
   ],
+  "berlin-black": [
+    {
+      comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "Symétrie : le pion e5 conteste le centre et ouvre la diagonale du fou f8.",
+      hint: "Réponds par la poussée symétrique de ton pion roi.",
+    },
+    {
+      comment: "Le cavalier se développe en attaquant e5.",
+      hint: "Développe ton cavalier-roi en attaquant le pion central adverse.",
+    },
+    {
+      comment: "Le cavalier défend e5 en se développant vers le centre.",
+      hint: "Défends ton pion central avec un cavalier.",
+    },
+    {
+      comment: "L'Espagnole : le fou attaque le défenseur de e5.",
+      hint: "Attaque la pièce qui défend le pion e5.",
+    },
+    {
+      comment:
+        "La Berlinoise : au lieu de chasser le fou, on contre-attaque e4. Si 4.O-O, ...Nxe4 prend le pion et mène à la solide finale berlinoise.",
+      hint: "Contre-attaque le pion e4 avec ton second cavalier.",
+    },
+  ],
   "italian-game": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame dès le premier coup.",

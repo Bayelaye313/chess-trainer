@@ -1,0 +1,71 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Défense Berlinoise (avec les Noirs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/berlin-black/cours`). Public visé :
+ * 1500-1800 Elo, répertoire 1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 (fiche curatée
+ * `berlin-black`, C65).
+ *
+ * ## Contenu (v2 du 2026-10-19, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et la finale berlinoise (4.O-O Nxe4 5.d4).
+ * 2. Branche B : 4.O-O Nxe4 5.Re1.
+ * 3. Aléatoire surprise 1 : après 5.Re1, le pion de plus qui grandit.
+ * 4. Branche C : l'anti-Berlinoise 4.d3.
+ * 5. Aléatoire surprise 2 : après 4.d3, la dame qui s'invite.
+ * 6. Branche D : 4.Nc3, les Quatre Cavaliers espagnols (4...Nd4).
+ * 7. Branche E : l'échange 4.Bxc6.
+ * 8. Anti-panique : 4.Qe2 et 4.d4.
+ *
+ * Choix des chapitres d'après les parties de l'utilisateur (26 Espagnoles avec
+ * les Noirs, dont 17 Berlinoises) : 4.d3 (6 parties) et 4.O-O (6) d'abord,
+ * puis 4.Nc3 (3) et 4.Bxc6. Défaites relevées : 4.O-O d6 ou 4...Bd6 au lieu
+ * de 4...Nxe4 (traité en variante « imprécision » au chapitre 1), et des
+ * structures où le fou blanc prend en c6 sans contre-jeu noir. Les branches
+ * théoriques s'arrêtent au plus tard au demi-coup 27 ; les chapitres
+ * « Aléatoire surprise » prolongent de 8 coups environ avec les Blancs comme
+ * camp « mou » (`_tmp-drift-w.mts` : `_tmp-drift.mts` ne fait jouer « mou »
+ * que les Noirs). La surprise 1 part de 5.Re1 et non de la finale : en finale,
+ * la dérive ne trouvait qu'une seule faute calme de plus de 0.55.
+ *
+ * Convention côté Noirs (comme `op-caro-kann.ts`) : l'élève joue les Noirs ;
+ * les fautes sont des coups BLANCS qui portent les 3 indices `[%hint]` +
+ * `[%hintcsl]`, le coup noir suivant est la punition. Les « variantes
+ * piégées » sont des coups noirs tentants mais perdants. Les évaluations
+ * restent au point de vue des Blancs (négatif = avantage noir).
+ *
+ * Sources : théorie établie de la Berlinoise, TOUTES les lignes arbitrées par
+ * Stockfish 18 natif (profondeur 16). Contre 4.d3, le cours suit le levier
+ * ...d5 que préfère le moteur (et non ...d6). Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/berlin-black.pgn` (et l'en-tête
+ * `berlin-black.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-berlin-black` doit sortir 0 écart
+ * (un chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

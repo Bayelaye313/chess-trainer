@@ -682,6 +682,23 @@ export const OPENINGS: readonly OpeningLine[] = [
       6.exf5 Bxf5 7.d4 e4 8.Ng5 d5 9.f3 h6 10.Ne6 Qd7 11.Nxf8 Kxf8 12.O-O g6`,
   },
   {
+    id: "berlin-black",
+    name: "Défense Berlinoise",
+    eco: "C65",
+    side: "black",
+    description:
+      "3...Nf6 contre l'Espagnole : on contre-attaque e4 tout de suite. Contre 4.O-O, ...Nxe4 et la finale berlinoise ; contre 4.d3, le levier ...d5 ; contre 4.Nc3, ...Nd4.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "Nf6"],
+    pgn: `1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O
+      (4.d3 {Anti-Berlinoise 4.d3} Bc5 5.c3 O-O 6.O-O d5 7.exd5 Qxd5 8.Bc4 Qd8 9.b4 Bd6 10.Re1 h6)
+      (4.Nc3 {Quatre Cavaliers espagnol} Nd4 5.Nxd4 exd4 6.e5 dxc3 7.exf6 Qxf6 8.dxc3 Bc5 9.Qe2+ Qe7)
+      (4.Bxc6 {Variante d'échange} dxc6 5.Nc3 Be6 6.Qe2 Nd7 7.d4 Bd6 8.Be3 f6)
+      (4.Qe2 {Variante 4.Qe2} Bc5 5.O-O O-O 6.Bxc6 dxc6)
+      Nxe4 5.d4
+      (5.Re1 {Variante 5.Re1} Nd6 6.Nxe5 Be7 7.Bf1 Nxe5 8.Rxe5 O-O 9.Nc3 Bf6 10.Re1 Re8 11.d4 Rxe1 12.Qxe1 Bxd4)
+      Nd6 6.Bxc6 dxc6 7.dxe5 Nf5 8.Qxd8+ Kxd8 9.Nc3 Ke8 10.h3 h5 11.Bf4 Be7 12.Rad1 Be6 13.Ng5 Rh6`,
+  },
+  {
     id: "italian-game",
     name: "Partie Italienne",
     eco: "C50",
