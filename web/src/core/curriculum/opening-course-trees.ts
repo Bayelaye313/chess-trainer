@@ -3,6 +3,7 @@ import { OP_CARO_KANN } from "./course-trees/op-caro-kann";
 import { OP_ITALIAN_GAME } from "./course-trees/op-italian-game";
 import { OP_KINGS_INDIAN } from "./course-trees/op-kings-indian";
 import { OP_RUY_LOPEZ } from "./course-trees/op-ruy-lopez";
+import { OP_QUEENS_GAMBIT_DECLINED } from "./course-trees/op-queens-gambit-declined";
 import { OP_SCOTCH_GAMBIT } from "./course-trees/op-scotch-gambit";
 import { OP_SCOTCH_GAME } from "./course-trees/op-scotch-game";
 import { OP_SICILIAN_ALAPIN } from "./course-trees/op-sicilian-alapin";
@@ -29,6 +30,7 @@ export const OPENING_COURSE_TREES: Record<string, CourseTree> = {
   "sicilian-alapin": OP_SICILIAN_ALAPIN,
   "sicilian-dragon": OP_SICILIAN_DRAGON,
   "italian-game": OP_ITALIAN_GAME,
+  "queens-gambit-declined": OP_QUEENS_GAMBIT_DECLINED,
 };
 
 export function findOpeningCourseTree(openingId: string): CourseTree | null {

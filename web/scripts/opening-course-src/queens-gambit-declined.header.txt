@@ -1,0 +1,70 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Gambit Dame Refusé (avec les Noirs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/queens-gambit-declined/cours`).
+ * Public visé : 1500-1800 Elo, répertoire contre 1.d4 d5 2.c4 e6 3.Nc3 Nf6
+ * (atteint aussi par l'ordre de l'utilisateur 1.d4 Nf6 2.c4 e6 3.Nc3 d5).
+ *
+ * ## Contenu (v2 du 2026-10-19, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et l'Orthodoxe Lasker (4.Bg5 ... 7...Ne4).
+ * 2. Aléatoire surprise 1 : après la Lasker, le pion d4 qui reste.
+ * 3. Branche B : 4.Nf3 Be7 5.Bg5 h6 6.Bxf6 (Carlsbad avec la paire de fous).
+ * 4. Branche C : la Variante d'Échange 4.cxd5.
+ * 5. Branche D : le système tranquille 3.e3 / Nf3 / Bd3.
+ * 6. Aléatoire surprise 2 : après le système tranquille, le fou enterré.
+ * 7. Branche E : 4.Nf3 Be7 5.Bf4.
+ * 8. Anti-panique : la Catalane (3.Nf3 Nf6 4.g3) et les ordres de coups.
+ *
+ * Choix des chapitres d'après les parties de l'utilisateur (22 parties en
+ * structure ...d5/...e6 contre 1.d4) : défaites dans le système tranquille
+ * 3.e3-Bd3 (3 parties), dans 6.Bxf6 et contre la Catalane ; victoires dans
+ * les lignes ...h6 Bh4. Complété par la théorie principale (Orthodoxe,
+ * Échange, 5.Bf4). Les branches théoriques s'arrêtent au plus tard au
+ * demi-coup 27 ; les chapitres « Aléatoire surprise » prolongent de 8 coups
+ * environ avec les Blancs comme camp « mou » (`_tmp-autoplay.mts` soft=w :
+ * `_tmp-drift.mts` ne fait jouer « mou » que les Noirs).
+ *
+ * Convention côté Noirs (comme `op-caro-kann.ts`) : l'élève joue les Noirs ;
+ * les fautes sont des coups BLANCS qui portent les 3 indices `[%hint]` +
+ * `[%hintcsl]`, le coup noir suivant est la punition. Les « variantes
+ * piégées » sont des coups noirs tentants mais perdants. Les évaluations
+ * restent au point de vue des Blancs (négatif = avantage noir).
+ *
+ * Sources : théorie établie du GDR, TOUTES les lignes arbitrées par
+ * Stockfish 18 natif (profondeur 16). Écart assumé : 8...O-O dans la ligne
+ * 6.Bxf6, alors que 8...c6 est un peu plus précis (moins de 0.3). Toute la
+ * prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/queens-gambit-declined.pgn` (et l'en-tête
+ * `queens-gambit-declined.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts`). Les `[%eval]` viennent
+ * du moteur, pas de la main. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-queens-gambit-declined` doit sortir 0 écart
+ * (un chiffre n'est cité dans un commentaire que s'il est l'éval d'un nœud).
+ * Règles de l'utilisateur : SAN en texte brut uniquement (jamais de figurine
+ * Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
