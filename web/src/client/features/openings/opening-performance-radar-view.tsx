@@ -184,7 +184,7 @@ function HitParadeBlock({
                     }#${DRILL_ANCHOR_ID}`}
                     className="rounded border border-blunder/40 px-2 py-0.5 font-medium text-danger hover:bg-blunder/10"
                   >
-                    Drill immédiat →
+                    Drill immédiat
                   </Link>
                 )}
               </div>

@@ -225,7 +225,7 @@ export function OpeningMistakeExercise({
               onClick={onExit}
               className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             >
-              ← Retour au journal
+              Retour au journal
             </button>
           </div>
         )}

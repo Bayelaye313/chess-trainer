@@ -431,7 +431,7 @@ export function PuzzleBoard({
                 disabled={!postAnalysis.canGoPrevious}
                 className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm disabled:opacity-30"
               >
-                ← Précédent
+                Précédent
               </button>
               <span className="font-mono text-sm text-foreground-muted">
                 {postAnalysis.viewPly} / {postAnalysis.totalPlies}
@@ -442,7 +442,7 @@ export function PuzzleBoard({
                 disabled={!postAnalysis.canGoNext}
                 className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm disabled:opacity-30"
               >
-                Suivant →
+                Suivant
               </button>
             </div>
           )}
@@ -470,7 +470,7 @@ export function PuzzleBoard({
                     onClick={handleComplete}
                     className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
                   >
-                    Continuer →
+                    Continuer
                   </button>
                 </div>
               ) : (

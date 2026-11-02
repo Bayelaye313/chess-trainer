@@ -32,7 +32,7 @@
  *    réel reste largement sous le seuil où `react-window` apporterait quoi
  *    que ce soit — l'ajouter ici serait de la complexité sans bénéfice mesuré.
  */
-import { Check, Clock, RotateCcw } from "lucide-react";
+import { Check, Clock, Medal, RotateCcw } from "lucide-react";
 import * as Accordion from "@radix-ui/react-accordion";
 import { motion } from "motion/react";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -144,9 +144,7 @@ const TierSection = memo(function TierSection({
             whileTap={{ scale: 0.995 }}
             className="flex w-full items-center gap-3 px-4 py-3.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <span className="text-xl" aria-hidden="true">
-              {meta.icon}
-            </span>
+            <Medal aria-hidden="true" className={`size-5 shrink-0 ${meta.textClass}`} />
             <span className="min-w-0 flex-1">
               <span className={`block text-sm font-semibold ${meta.textClass}`}>{meta.label}</span>
               <span className="block text-xs text-foreground-muted">

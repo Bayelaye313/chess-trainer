@@ -30,6 +30,7 @@
  * composant ne connaît que "je m'affiche" / "on confirme l'entrée" — jamais
  * la logique de fermeture elle-même.
  */
+import { CircleDot } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "motion/react";
 import type { CurriculumCategoryMeta } from "@/core/curriculum/catalog";
@@ -93,7 +94,7 @@ export function MissionBriefing({ theme, category, objective, keyIdeas, onEnter 
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${threat.textClass} ${threat.borderClass}`}
                   >
-                    <span aria-hidden="true">{threat.icon}</span>
+                    <CircleDot aria-hidden="true" className="size-3.5" />
                     Niveau de menace : {threat.label}
                   </span>
                   <span className="text-2xl" aria-hidden="true">
