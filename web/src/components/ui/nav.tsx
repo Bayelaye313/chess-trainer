@@ -1,50 +1,165 @@
 "use client";
 
-import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import styles from "./nav.module.css";
+import { useEffect, useState } from "react";
+import {
+  ChartLine,
+  ChessKnight,
+  BookOpen,
+  CloudAlert,
+  CloudCheck,
+  Loader2,
+  Settings,
+  Sun,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
+import { listPlatformLinks } from "@/server/actions/platform-link";
+import { useSync } from "@/client/features/sync/sync-context";
+import { cx } from "./cx";
 
 interface NavItem {
   href: string;
   label: string;
-  icon: ComponentType;
+  icon: LucideIcon;
+  /** Préfixes de routes rattachées à cette destination. */
+  match: readonly string[];
 }
 
-function BotIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2" /><path d="M12 9V5M9 5h6" strokeLinecap="round" /><circle cx="12" cy="4" r="1.4" fill="currentColor" stroke="none" /><circle cx="9" cy="14" r="1.4" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.4" fill="currentColor" stroke="none" /><path d="M8 18h8" strokeLinecap="round" /></svg>; }
-function ReportIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 15l2.5-3 2 2L17 9" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
-function TrainIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" /><path d="M12 3v5l4-2" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
-function AcademyIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5L2 9Z" strokeLinejoin="round" /><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M22 9v6" strokeLinecap="round" /></svg>; }
-function OpeningsIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 6c-1.5-1.3-3.5-2-6-2v13c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2V4c-2.5 0-4.5 2-6 2Z" strokeLinejoin="round" /><path d="M12 6v13" /></svg>; }
-
+/** Les 5 destinations (docs/redesign/direction.md §1). */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/", label: "Jouer contre des Bots", icon: BotIcon },
-  { href: "/rapport", label: "Rapport", icon: ReportIcon },
-  { href: "/entrainer", label: "Entraîner", icon: TrainIcon },
-  { href: "/apprendre", label: "Apprendre", icon: AcademyIcon },
-  { href: "/ouvertures", label: "Ouvertures", icon: OpeningsIcon },
+  { href: "/", label: "Aujourd'hui", icon: Sun, match: [] },
+  { href: "/jouer", label: "Jouer", icon: ChessKnight, match: ["/jouer"] },
+  { href: "/ouvertures", label: "Ouvertures", icon: BookOpen, match: ["/ouvertures"] },
+  { href: "/entrainer", label: "S'entraîner", icon: Target, match: ["/entrainer", "/apprendre", "/pieges"] },
+  { href: "/rapport", label: "Progrès", icon: ChartLine, match: ["/rapport", "/parties", "/analyse"] },
 ];
+
+function isActive(item: NavItem, pathname: string): boolean {
+  if (item.href === "/") return pathname === "/";
+  return item.match.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+const SHORT_DATE = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+/**
+ * Pastille de synchronisation : seul reste de la synchro sur l'accueil.
+ * Mène aux Réglages (comptes liés, erreurs par pseudo).
+ */
+function SyncPill() {
+  const { state } = useSync();
+  const [lastSynced, setLastSynced] = useState<Date | null | undefined>(undefined);
+  const stamp = state.status === "ok" || state.status === "error" ? state.at.getTime() : 0;
+
+  useEffect(() => {
+    let ignore = false;
+    listPlatformLinks()
+      .then((links) => {
+        if (ignore) return;
+        const dates = links.map((link) => link.lastSyncedAt).filter((date): date is Date => date !== null);
+        setLastSynced(links.length === 0 ? null : dates.length > 0 ? new Date(Math.max(...dates.map((d) => new Date(d).getTime()))) : new Date(0));
+      })
+      .catch(() => {
+        if (!ignore) setLastSynced(undefined);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [stamp]);
+
+  let icon: LucideIcon = CloudCheck;
+  let label: string;
+  let tone = "text-foreground-muted";
+  if (state.status === "error") {
+    icon = CloudAlert;
+    label = "Synchro en échec";
+    tone = "text-warning";
+  } else if (lastSynced === null) {
+    label = "Lier un compte";
+  } else if (state.status === "running" && lastSynced === undefined) {
+    icon = Loader2;
+    label = "Synchronisation…";
+  } else if (lastSynced && lastSynced.getTime() > 0) {
+    label = `Synchronisé le ${SHORT_DATE.format(lastSynced)}`;
+  } else {
+    label = "Pas encore synchronisé";
+  }
+  const Icon = icon;
+
+  return (
+    <Link
+      href="/plus#comptes"
+      title={state.status === "error" ? state.message : "Comptes liés et synchronisation"}
+      className={cx("inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-xs hover:bg-surface-muted hover:text-foreground", tone)}
+    >
+      <Icon aria-hidden="true" className={cx("size-4 shrink-0", Icon === Loader2 && "animate-spin")} />
+      <span className="max-w-[46vw] truncate">{label}</span>
+    </Link>
+  );
+}
 
 export function Nav() {
   const pathname = usePathname();
+  const settingsActive = pathname === "/plus";
+
   return (
-    <header className={styles.header}>
-      <nav className={styles.nav} aria-label="Navigation principale">
-        <Link href="/" className={styles.brand} aria-label="Chess Trainer — Jouer contre des Bots">
-          <span className={styles.brandMark} aria-hidden="true">♞</span>
-          <span className={styles.brandCopy}><strong>Chess Trainer</strong><small>E-sports academy</small></span>
-        </Link>
-        <div className={styles.items}>
-          {NAV_ITEMS.map((item, index) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            const Icon = item.icon;
-            return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`${styles.item} ${active ? styles.active : ""}`}>
-              <span className={styles.itemIcon}><Icon /></span><span className={styles.index}>{String(index + 1).padStart(2, "0")}</span><span>{item.label}</span>
-            </Link>;
-          })}
+    <>
+      <header className="sticky top-0 z-40 h-[var(--header-h)] border-b border-border bg-background">
+        <div className="flex h-full items-center gap-1 px-[var(--space-page)] md:px-5">
+          <Link href="/" className="mr-auto inline-flex min-h-11 items-center gap-2 rounded-md text-foreground" aria-label="Chess Trainer — Aujourd'hui">
+            <ChessKnight aria-hidden="true" className="size-6 text-accent" />
+            <span className="font-display text-base font-semibold tracking-tight whitespace-nowrap sm:text-lg">Chess Trainer</span>
+          </Link>
+          <SyncPill />
+          <Link
+            href="/plus"
+            aria-label="Réglages"
+            title="Réglages"
+            aria-current={settingsActive ? "page" : undefined}
+            className={cx(
+              "inline-flex size-11 items-center justify-center rounded-md hover:bg-surface-muted hover:text-foreground",
+              settingsActive ? "text-foreground" : "text-foreground-muted",
+            )}
+          >
+            <Settings aria-hidden="true" className="size-5" />
+          </Link>
         </div>
-        <div className={styles.status}><span className={styles.session}>Session locale</span><span className={styles.level}>NIV. 07</span><span className={styles.xp}><span /></span></div>
+      </header>
+
+      <nav
+        aria-label="Navigation principale"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:inset-y-0 md:right-auto md:left-0 md:w-[var(--rail-w)] md:border-t-0 md:border-r md:top-[var(--header-h)] md:pt-3 md:pb-0"
+      >
+        <ul className="grid h-[var(--tabbar-h)] grid-cols-5 md:h-auto md:grid-cols-1 md:gap-1 md:px-2">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item, pathname);
+            const Icon = item.icon;
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cx(
+                    "flex h-full min-h-11 flex-col items-center justify-center gap-1 rounded-md px-1 text-[11px] leading-tight font-medium transition-colors md:min-h-16 md:py-2 md:text-xs",
+                    active ? "text-foreground" : "text-foreground-muted hover:text-foreground",
+                  )}
+                >
+                  <span
+                    className={cx(
+                      "inline-flex h-7 w-12 items-center justify-center rounded-full transition-colors",
+                      active ? "bg-surface-raised text-accent" : "",
+                    )}
+                  >
+                    <Icon aria-hidden="true" className="size-5" />
+                  </span>
+                  <span className="text-center">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
-    </header>
+    </>
   );
 }

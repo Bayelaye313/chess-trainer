@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Nav } from "@/components/ui/nav";
 import { SyncToast } from "@/components/sync-toast";
 import { EngineProvider } from "@/client/engine/engine-context";
+import { SyncProvider } from "@/client/features/sync/sync-context";
 import "./globals.css";
 
 /**
@@ -41,7 +42,7 @@ const plexMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Chess Trainer",
+  title: { default: "Chess Trainer", template: "%s · Chess Trainer" },
   description: "Entraîneur d'échecs local : analyse tes parties, révise tes erreurs.",
 };
 
@@ -51,16 +52,29 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="fr"
       className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="min-h-full font-sans">
+        <a
+          href="#contenu"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-foreground"
+        >
+          Aller au contenu
+        </a>
         {/*
           Le moteur est monté une fois pour toute l'application : le charger par
-          écran coûterait 7 Mo de WASM à chaque navigation.
+          écran coûterait 7 Mo de WASM à chaque navigation. La synchro des
+          comptes liés (sondage + état visible) l'est aussi.
         */}
         <EngineProvider>
-          <Nav />
-<main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-8">{children}</main>
-          {/* Sondage de fond des comptes liés (Chess.com/Lichess) + toast de notification. */}
-          <SyncToast />
+          <SyncProvider>
+            <Nav />
+            <main
+              id="contenu"
+              className="px-[var(--space-page)] pt-5 pb-[calc(var(--tabbar-h)+32px)] md:pt-8 md:pb-12 md:pl-[calc(var(--rail-w)+var(--space-page))]"
+            >
+              {children}
+            </main>
+            <SyncToast />
+          </SyncProvider>
         </EngineProvider>
       </body>
     </html>
