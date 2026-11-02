@@ -21,7 +21,7 @@ describe("opening-stats", () => {
   it("gaffe avant le coup 6 : verrouiller les réflexes en Sans Guide, côté du joueur", () => {
     const trigger = resolveTrigger({ ...base, tier: "fragile" });
     expect(trigger.kind).toBe("reflexes");
-    expect(trigger.label).toBe("Verrouiller les réflexes (Mode Sans Guide - Début)");
+    expect(trigger.label).toBe("Rejouer la ligne sans aide dès le 1er coup");
     expect(trigger.href).toBe("/ouvertures/slav-defense?drill=main_line&side=black&mode=sans-guide#drill");
   });
 
@@ -31,15 +31,15 @@ describe("opening-stats", () => {
     expect(trigger.href).not.toContain("mode=");
   });
 
-  it("gaffe après le coup 12 : simulateur de survie seulement si un cours existe", () => {
+  it("gaffe après le coup 12 : milieu de jeu dans le cours seulement si un cours existe", () => {
     expect(resolveTrigger({ ...base, tier: "solide" })).toMatchObject({
       kind: "survie",
-      label: "Lancer le simulateur de survie (Milieu de jeu)",
+      label: "Travailler le milieu de jeu dans le cours",
       href: "/ouvertures/slav-defense/cours",
     });
     expect(resolveTrigger({ ...base, tier: "intact" }).href).toBe("/ouvertures/slav-defense/cours");
     const fallback = resolveTrigger({ ...base, tier: "solide", hasCourse: false });
     expect(fallback.href).toContain("?drill=");
-    expect(fallback.label).not.toContain("simulateur");
+    expect(fallback.label).not.toContain("cours");
   });
 });

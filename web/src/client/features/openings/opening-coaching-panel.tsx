@@ -38,6 +38,7 @@
  * mode="wait"`), même patron déjà en place dans `academy-puzzle-arena.tsx` —
  * entièrement déclaratif via `key`, aucun état ni effet à gérer ici.
  */
+import { GitFork, GraduationCap, TriangleAlert } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { memo } from "react";
 import type { OpeningSide } from "@/core/curriculum/openings";
@@ -61,7 +62,7 @@ function EngineArrowToggle({
       onClick={onToggle}
       disabled={disabled}
       title={disabled ? "Aucune suggestion moteur pour cette position" : "Afficher/masquer la flèche du moteur"}
-      className="flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[11px] font-medium text-foreground-muted transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+      className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
     >
       <span
         aria-hidden="true"
@@ -74,7 +75,7 @@ function EngineArrowToggle({
           }`}
         />
       </span>
-      👁️ Vision Moteur
+      Flèche du moteur
     </button>
   );
 }
@@ -133,9 +134,9 @@ export const OpeningCoachingPanel = memo(function OpeningCoachingPanel({
   const namedAlternatives = alternatives.filter((a) => a.variationName);
 
   return (
-    <aside className="flex w-full flex-col gap-4 rounded-lg border border-border bg-surface p-4 lg:w-[280px]">
+    <aside className="flex w-full flex-col gap-4 rounded-lg border border-border bg-surface-muted p-4 lg:w-[280px]">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-accent">🧑‍🏫 Coach</p>
+        <p className="flex items-center gap-1.5 text-sm font-medium text-foreground"><GraduationCap aria-hidden="true" className="size-4 text-foreground-muted" />Coach</p>
         <EngineArrowToggle
           enabled={engineArrowEnabled}
           onToggle={onToggleEngineArrow}
@@ -194,16 +195,16 @@ export const OpeningCoachingPanel = memo(function OpeningCoachingPanel({
       {briefing?.engineSuggestion && (
         <p className="text-xs text-foreground-muted">
           <span className="font-semibold" style={{ color: "var(--engine-arrow-best)" }}>
-            ⚙ Suggestion moteur —
+            Suggestion du moteur :
           </span>{" "}
           <span className="font-mono">{briefing.engineSuggestion.san}</span>
-          {!engineArrowEnabled && " (flèche masquée, voir « Vision Moteur »)"}
+          {!engineArrowEnabled && " (flèche masquée)"}
         </p>
       )}
 
       {alternatives.length > 1 && (
-        <div className="rounded-md border border-border bg-surface-muted/40 p-2.5 text-xs text-foreground-muted">
-          <p className="font-semibold text-foreground">🌱 Bifurcation critique ici</p>
+        <div className="rounded-md bg-surface p-2.5 text-xs text-foreground-muted">
+          <p className="flex items-center gap-1.5 font-semibold text-foreground"><GitFork aria-hidden="true" className="size-3.5" />Bifurcation critique ici</p>
           <p className="mt-1">
             {alternatives.length} suites théoriques connues
             {namedAlternatives.length > 0 && ` — dont ${namedAlternatives.map((a) => a.variationName).join(", ")}`}.
@@ -215,7 +216,7 @@ export const OpeningCoachingPanel = memo(function OpeningCoachingPanel({
           convention que l'"Historique" de la colonne Chapitres). */}
       {sanHistory.length > 0 && (
         <div className="border-t border-border pt-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">Ligne jouée</p>
+          <p className="text-xs text-foreground-muted">Ligne jouée</p>
           <ol className="mt-2 flex flex-wrap gap-x-1.5 gap-y-1 font-mono text-xs text-foreground-muted">
             {sanHistory.map((san, index) => (
               <li key={index}>
@@ -239,7 +240,7 @@ export const OpeningCoachingPanel = memo(function OpeningCoachingPanel({
           key={trapPunishment.nonce}
           className="animate-trap-alert rounded-md border border-blunder bg-blunder/10 p-3 text-xs text-foreground"
         >
-          <p className="font-semibold text-danger">⚠️ ALERTE PIÈGE : {trapPunishment.trap.name}</p>
+          <p className="flex items-center gap-1.5 font-semibold text-danger"><TriangleAlert aria-hidden="true" className="size-4" />Piège : {trapPunishment.trap.name}</p>
           <p className="mt-1">{trapPunishment.trap.trapExplanation}</p>
         </div>
       )}

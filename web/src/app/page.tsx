@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { HomeShortcuts } from "@/client/features/home/shortcuts";
+import { ResumeCourse } from "@/client/features/home/resume-course";
 import { RecentGamesList } from "@/client/features/home/recent-games-list";
 import { TodaySession } from "@/client/features/reviews/training-recommendations-card";
 import { listGamesSummary } from "@/server/queries/games";
@@ -42,6 +43,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <PageHeader title="Aujourd'hui" description="Ta séance, tes révisions et tes dernières parties." className="pb-0" />
         <TodaySession recommendations={recommendations} preferences={preferences} sessionState={sessionState} initialPuzzleId={puzzle} />
         <HomeShortcuts dueTotal={dueTotal} />
+        <ResumeCourse />
       </div>
 
       <section aria-labelledby="parties-recentes" className="lg:pt-[88px]">

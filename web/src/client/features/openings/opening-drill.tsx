@@ -37,6 +37,9 @@
  *    variantes déjà pratiquées, pour contrôler la mémorisation globale (voir
  *    `build-final-test.ts`).
  */
+import { ArrowRight, ChevronDown, CircleCheck, Lightbulb, Lock, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chessboard } from "react-chessboard";
@@ -90,7 +93,7 @@ function SidebarButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full flex-col gap-0.5 rounded-md border border-border px-2.5 py-2 text-left text-sm transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-30"
+      className="flex min-h-12 w-full flex-col gap-0.5 rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-45"
     >
       <span className="font-medium text-foreground">{title}</span>
       <span className="text-xs text-foreground-muted">{subtitle}</span>
@@ -109,7 +112,7 @@ export function OpeningDrill({
   hintBehavior,
   playerSide,
   startInSansGuide = false,
-  onExit,
+  // `onExit` : conservé dans les props ; la fiche a désormais un seul retour, en haut à gauche.
 }: {
   opening: OpeningLine;
   plies: readonly AnnotatedPly[];
@@ -128,7 +131,7 @@ export function OpeningDrill({
   playerSide?: "white" | "black";
   /** `?mode=sans-guide` — ligne principale/variante démarrée en Manche 2, voir `useOpeningDrill`. */
   startInSansGuide?: boolean;
-  onExit: () => void;
+  onExit?: () => void;
 }) {
   const drill = useOpeningDrill({ opening, plies, hintBehavior, playerSide, startInSansGuide });
   const router = useRouter();
@@ -397,14 +400,25 @@ export function OpeningDrill({
         (lastMoveEntry ? computeHeuristicCommentary(lastMoveEntry.fenBefore, lastMoveEntry.uci) : GENERIC_BOOK_COMMENT))
       : null;
 
+  const chapterSelector = (
+    <ChapterSelector
+      mainLineLabel={opening.name}
+      mainLineEco={opening.eco}
+      variations={variations}
+      accuracyByKey={accuracyByKey}
+      activeKey={currentTrackedKey}
+      onSelect={(next) => drill.start(next.kind === "main-line" ? { kind: "main-line" } : { kind: "variation", variation: next.variation })}
+    />
+  );
+
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
+    <div>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            🎯 {selectionTitle ? `Entraînement — ${selectionTitle}` : "Mode Entraînement"}
+          <h2 className="font-display text-lg font-semibold text-foreground">
+            {selectionTitle ? `Drill · ${selectionTitle}` : "Drill"}
           </h2>
-          <p className="mt-1 text-xs text-foreground-muted">
+          <p className="mt-0.5 text-sm text-foreground-muted">
             {selection
               ? `Tu joues ${opening.side === "white" ? "les Blancs" : "les Noirs"}.${
                   selection.kind === "final-test" ? ` Manche ${drill.roundIndex + 1} / ${drill.totalRounds}.` : ""
@@ -418,9 +432,6 @@ export function OpeningDrill({
               : `L'IA joue ${opening.side === "white" ? "les Noirs" : "les Blancs"} en piochant dans la théorie — à toi de retrouver la suite.`}
           </p>
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour
-        </button>
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px_220px]">
@@ -428,7 +439,7 @@ export function OpeningDrill({
         <div className="flex flex-col items-center">
           {selection === null ? (
             <div className="flex aspect-square w-full max-w-[600px] flex-col items-center justify-center rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground-muted">
-              👉 Choisis un chapitre à droite pour commencer.
+              Choisis un chapitre pour commencer.
             </div>
           ) : (
             <>
@@ -465,11 +476,12 @@ export function OpeningDrill({
 
               <div className="mt-3 min-h-6 w-full max-w-[600px] text-center text-sm">
                 {drill.status === "autoplaying" ? (
-                  <p className="text-foreground-muted">🔁 Relecture de ta partie…</p>
+                  <p className="text-foreground-muted">Relecture de ta partie…</p>
                 ) : drill.status === "finished" ? (
-                  <p className="font-medium text-foreground">
+                  <p role="status" className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                    <CircleCheck aria-hidden="true" className="size-4 text-success" />
                     {isPerfectFinish
-                      ? "⭐⭐⭐ Variante maîtrisée, sans faute !"
+                      ? "Variante maîtrisée, sans faute !"
                       : selection.kind === "final-test"
                         ? "Test Final terminé !"
                         : drill.finishReason === "line-complete"
@@ -480,7 +492,7 @@ export function OpeningDrill({
               </div>
 
               {mistakeAlert && (
-                <div className="mt-3 w-full max-w-[600px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+                <div className="mt-3 w-full max-w-[600px] rounded-md bg-surface-muted p-3 text-center text-sm text-foreground">
                   Dans ta partie, tu as joué <span className="font-mono font-semibold">{mistakeAlert}</span>. Trouve le
                   bon coup théorique.
                 </div>
@@ -496,17 +508,17 @@ export function OpeningDrill({
                   retrouver toute la ligne de mémoire, voir `use-opening-drill.ts`. */}
               {hintCommentary && drill.hintsAllowed && !hintRevealed && (
                 <div className="mt-3 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setRevealedHint({ selection, ply: drill.nextPly })}
-                    className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
-                  >
-                    💡 Afficher l&apos;indice de ce coup !
-                  </button>
+                  <Button onClick={() => setRevealedHint({ selection, ply: drill.nextPly })}>
+                    <Lightbulb aria-hidden="true" />
+                    Afficher l&apos;indice de ce coup
+                  </Button>
                 </div>
               )}
               {hintCommentary && drill.hintsAllowed && hintRevealed && (
-                <p className="mt-3 text-center text-xs text-foreground-muted">💡 {hintCommentary.hint}</p>
+                <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm text-foreground-muted">
+                  <Lightbulb aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                  {hintCommentary.hint}
+                </p>
               )}
               {/* Protocole "Retenter sans guide" (Manche 2) — TOUJOURS affiché
                   dès que les indices sont coupés, indépendamment de
@@ -514,21 +526,22 @@ export function OpeningDrill({
                   la demande explicite de rejouer sans aucune aide ne doit
                   jamais dépendre du contenu pédagogique disponible. */}
               {!drill.hintsAllowed && (
-                <p className="mt-3 text-center text-xs font-medium text-foreground-muted">
-                  🔒 Manche 2 — Retenter sans guide : aucune flèche, aucun indice, retrouve toute la ligne de mémoire.
+                <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm text-foreground-muted">
+                  <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                  Manche 2 (sans aide) : aucune flèche, aucun indice, retrouve toute la ligne de mémoire.
                 </p>
               )}
 
               {/* `null` en mode Aléatoire/Test Final/Erreur ciblée (jamais suivis, voir `use-opening-drill.ts`) et tant que la Server Action n'a pas répondu. */}
               {drill.status === "finished" && drill.progressResult && (
-                <p className="mt-3 text-center text-xs text-foreground-muted">
-                  {drill.score.correct} / {drill.score.attempted} coups théoriques trouvés — série{" "}
-                  {drill.progressResult.streak} 🔥, prochaine révision{" "}
+                <p className="mt-3 text-center text-sm text-foreground-muted">
+                  {drill.score.correct} / {drill.score.attempted} coups théoriques trouvés · série de{" "}
+                  {drill.progressResult.streak}, prochaine révision{" "}
                   {drill.progressResult.nextReviewInDays === 0 ? "aujourd'hui" : `dans ${drill.progressResult.nextReviewInDays} j`}
                 </p>
               )}
               {drill.status === "finished" && !drill.progressResult && selection.kind !== "random" && (
-                <p className="mt-3 text-center text-xs text-foreground-muted">
+                <p className="mt-3 text-center text-sm text-foreground-muted">
                   {drill.score.correct} / {drill.score.attempted} coups théoriques trouvés
                 </p>
               )}
@@ -536,36 +549,27 @@ export function OpeningDrill({
               {drill.status === "finished" && (
                 <div className="mt-4 flex flex-wrap justify-center gap-3">
                   {inReviewQueue && queueRemaining > 0 ? (
-                    <button
-                      type="button"
-                      onClick={goToNextInQueue}
-                      className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-                    >
-                      Suivant de la file ({queueRemaining} restant{queueRemaining > 1 ? "s" : ""}) →
-                    </button>
+                    <Button variant="primary" onClick={goToNextInQueue}>
+                      Variante suivante ({queueRemaining} restante{queueRemaining > 1 ? "s" : ""})
+                      <ArrowRight aria-hidden="true" />
+                    </Button>
                   ) : inReviewQueue ? (
-                    <p className="rounded-md border border-best/40 bg-best/10 px-4 py-2 text-sm font-medium text-best">
-                      🎉 Révisions du jour terminées !
-                    </p>
+                    <Chip icon={CircleCheck} tone="success">
+                      Révisions du jour terminées
+                    </Chip>
                   ) : nextUnmastered ? (
                     // Transition automatique : une variante à 100% enchaîne
                     // directement sur la prochaine non maîtrisée du catalogue,
                     // sélecteur sauté — voir `findNextUnmasteredVariation`.
-                    <button
-                      type="button"
-                      onClick={startNextUnmastered}
-                      className="rounded-md bg-best px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-                    >
-                      ✨ Continuer avec « {nextUnmastered.label} » →
-                    </button>
+                    <Button variant="primary" onClick={startNextUnmastered}>
+                      Continuer avec « {nextUnmastered.label} »
+                      <ArrowRight aria-hidden="true" />
+                    </Button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => drill.start(selection)}
-                      className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-                    >
+                    <Button variant="primary" onClick={() => drill.start(selection)}>
+                      <RotateCcw aria-hidden="true" />
                       Recommencer
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -593,8 +597,15 @@ export function OpeningDrill({
 
         {/* Colonne de droite, discrète : chapitres, Aléatoire, Test Final — façon Listudy. */}
         <aside className="space-y-4 lg:border-l lg:border-border lg:pl-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-accent">Chapitres</p>
+          <details className="group lg:hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-border px-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+              Chapitres et variantes
+              <ChevronDown aria-hidden="true" className="size-4 text-foreground-subtle transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-2">{chapterSelector}</div>
+          </details>
+          <div className="hidden lg:block">
+            <p className="text-sm text-foreground-muted">Chapitres</p>
             <div className="mt-2">
               <ChapterSelector
                 mainLineLabel={opening.name}
@@ -610,14 +621,14 @@ export function OpeningDrill({
           </div>
 
           <SidebarButton
-            title="🎲 Aléatoire / Surprise"
+            title="Aléatoire"
             subtitle="Toute suite théorique connue"
             onClick={() => drill.start({ kind: "random" })}
           />
 
           <div className="border-t border-border pt-3">
             <SidebarButton
-              title="🏁 Test Final"
+              title="Test final"
               subtitle={
                 canRunFinalTest
                   ? "Positions clés tirées au sort parmi tes chapitres déjà pratiqués"
@@ -630,7 +641,7 @@ export function OpeningDrill({
 
           {selection && drill.history.length > 0 && (
             <div className="border-t border-border pt-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-accent">Historique</p>
+              <p className="text-sm text-foreground-muted">Coups joués</p>
               <ol className="mt-2 flex flex-wrap gap-x-1.5 gap-y-1 font-mono text-xs text-foreground-muted">
                 {drill.history.map((entry) => (
                   <li key={entry.ply}>

@@ -19,7 +19,7 @@ export function OpeningPerformanceRadar({ sessions }: { sessions: readonly Openi
   if (!profile) {
     return (
       <section className="rounded-lg border border-border bg-surface p-4 text-sm text-foreground-muted">
-        <span className="font-medium text-foreground">Radar de performance</span> — termine une Manche 2 « Sans Guide »
+        <span className="font-medium text-foreground">Radar de performance</span> — termine une Manche 2 (sans aide)
         dans n&apos;importe quelle ouverture pour obtenir ton premier diagnostic.
       </section>
     );
@@ -28,11 +28,11 @@ export function OpeningPerformanceRadar({ sessions }: { sessions: readonly Openi
   return (
     <section aria-labelledby="performance-radar-title" className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-4 md:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="performance-radar-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+        <h2 id="performance-radar-title" className="font-display text-base font-semibold text-foreground">
           Radar de performance
         </h2>
         <span className="text-xs text-foreground-muted">
-          {profile.sessionCount} session{profile.sessionCount > 1 ? "s" : ""} Sans Guide analysée
+          {profile.sessionCount} session{profile.sessionCount > 1 ? "s" : ""} sans aide analysée
           {profile.sessionCount > 1 ? "s" : ""}
         </span>
       </div>
@@ -53,14 +53,14 @@ export function OpeningPerformanceRadar({ sessions }: { sessions: readonly Openi
       {/* Hit-parade du répertoire */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <HitParadeBlock
-          title="Vos Forteresses"
+          title="Tes forteresses"
           subtitle="Les lignes que tu tiens le plus loin sans faute."
           empty="Aucune ouverture au-dessus de 75 % de ligne tenue pour l'instant."
           rows={profile.fortresses}
           tone="best"
         />
         <HitParadeBlock
-          title="Vos Zones de Danger"
+          title="Tes zones de danger"
           subtitle="À driller en priorité, de la plus critique à la moins critique."
           empty="Aucune zone de danger : toutes tes ouvertures tiennent au moins 75 % de leur ligne."
           rows={profile.dangerZones}
@@ -80,7 +80,7 @@ const LEVEL_TONE: Record<PillarLevel, { fill: string; text: string; label: strin
 function PillarCard({ pillar }: { pillar: Pillar }) {
   const tone = pillar.level ? LEVEL_TONE[pillar.level] : null;
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border bg-surface-muted/40 p-3">
+    <li className="flex flex-col gap-2 rounded-md bg-surface-muted p-3">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-medium text-foreground">{pillar.label}</span>
         <span className={`font-mono text-2xl font-bold ${tone?.text ?? "text-foreground-muted"}`}>
