@@ -1,0 +1,17 @@
+import "server-only";
+
+import phase1 from "@/core/programme/content/phase-1.json";
+import type { ProgrammeDay, ProgrammePhaseContent } from "@/core/programme/types";
+
+/**
+ * Contenu du programme disponible : les phases déjà générées par
+ * `scripts/programme/generate-phase.mts`. Une phase absente d'ici n'existe pas
+ * encore pour l'écran (il l'annonce, sans inventer de contenu).
+ */
+const PHASES: readonly ProgrammePhaseContent[] = [phase1 as unknown as ProgrammePhaseContent];
+
+export const ALL_DAYS: readonly ProgrammeDay[] = PHASES.flatMap((p) => p.jours);
+
+export function findDay(semaine: number, jour: number): ProgrammeDay | null {
+  return ALL_DAYS.find((d) => d.semaine === semaine && d.jour === jour) ?? null;
+}

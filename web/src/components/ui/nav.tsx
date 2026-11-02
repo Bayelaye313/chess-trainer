@@ -16,6 +16,7 @@ function ReportIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} 
 function TrainIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" /><path d="M12 3v5l4-2" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function AcademyIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5L2 9Z" strokeLinejoin="round" /><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M22 9v6" strokeLinecap="round" /></svg>; }
 function OpeningsIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 6c-1.5-1.3-3.5-2-6-2v13c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2V4c-2.5 0-4.5 2-6 2Z" strokeLinejoin="round" /><path d="M12 6v13" /></svg>; }
+function ProgrammeIcon() { return <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 20V10l8-6 8 6v10" strokeLinejoin="round" /><path d="M9 20v-6h6v6" strokeLinejoin="round" /><path d="M4 20h16" strokeLinecap="round" /></svg>; }
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Jouer contre des Bots", icon: BotIcon },
@@ -23,6 +24,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/entrainer", label: "Entraîner", icon: TrainIcon },
   { href: "/apprendre", label: "Apprendre", icon: AcademyIcon },
   { href: "/ouvertures", label: "Ouvertures", icon: OpeningsIcon },
+  { href: "/programme", label: "Programme 1000 h", icon: ProgrammeIcon },
 ];
 
 export function Nav() {
