@@ -125,7 +125,7 @@ function PillarCard({ pillar }: { pillar: Pillar }) {
       )}
 
       <p className="text-xs leading-relaxed text-foreground-muted">{pillar.detail}</p>
-      {tone && <span className={`text-[11px] font-semibold uppercase tracking-wide ${tone.text}`}>{tone.label}</span>}
+      {tone && <span className={`text-xs font-semibold ${tone.text}`}>{tone.label}</span>}
     </li>
   );
 }

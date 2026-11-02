@@ -24,7 +24,7 @@ export function LiveBroadcastPanel({ lines }: { lines: readonly LiveCommentaryLi
 
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">📡 Live Broadcast</h2>
+      <h2 className="font-display text-lg font-semibold text-foreground">Commentaire en direct</h2>
       <div ref={scrollRef} className="mt-3 max-h-48 space-y-2 overflow-y-auto scroll-smooth text-sm">
         {lines.length === 0 ? (
           <p className="text-xs text-foreground-muted">La partie commence — le commentaire suit chaque coup.</p>

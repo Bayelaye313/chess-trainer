@@ -429,7 +429,7 @@ export function PuzzleBoard({
                 type="button"
                 onClick={() => postAnalysis.goToPly(postAnalysis.viewPly - 1)}
                 disabled={!postAnalysis.canGoPrevious}
-                className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm disabled:opacity-30"
               >
                 ← Précédent
               </button>
@@ -440,7 +440,7 @@ export function PuzzleBoard({
                 type="button"
                 onClick={() => postAnalysis.goToPly(postAnalysis.viewPly + 1)}
                 disabled={!postAnalysis.canGoNext}
-                className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm disabled:opacity-30"
               >
                 Suivant →
               </button>
@@ -454,7 +454,7 @@ export function PuzzleBoard({
                   <button
                     type="button"
                     onClick={solver.requestReveal}
-                    className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-4 text-sm font-medium text-foreground hover:bg-surface-muted"
                   >
                     Révéler la solution
                   </button>
@@ -468,7 +468,7 @@ export function PuzzleBoard({
                   <button
                     type="button"
                     onClick={handleComplete}
-                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
                   >
                     Continuer →
                   </button>

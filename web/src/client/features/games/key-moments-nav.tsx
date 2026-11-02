@@ -14,7 +14,7 @@ export function KeyMomentsNav({
 
   return (
     <div>
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+      <h2 className="font-display text-lg font-semibold text-foreground">
         Moments clés
       </h2>
       <div className="mt-2 flex flex-wrap gap-2">

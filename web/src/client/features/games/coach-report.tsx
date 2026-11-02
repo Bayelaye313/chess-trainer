@@ -6,6 +6,7 @@
  * (`core/curriculum/motif-theme.ts`), résolu vers `/apprendre?themeId=`
  * (voir `app/apprendre/page.tsx` pour la résolution du deep-link).
  */
+import { GraduationCap, Target } from "lucide-react";
 import Link from "next/link";
 import type { CoachFinding } from "@/core/analysis/coach-narrative";
 import { themeForMotif } from "@/core/curriculum/motif-theme";
@@ -29,9 +30,9 @@ export function CoachReportPanel({ findings }: { findings: readonly CoachFinding
   if (findings.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">🎓 Rapport du Coach</h2>
-      <p className="mt-1 text-xs text-foreground-muted">
+    <section>
+      <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-foreground"><GraduationCap aria-hidden="true" className="size-5 text-foreground-muted" />Rapport du coach</h2>
+      <p className="mt-0.5 text-sm text-foreground-muted">
         Les lacunes détectées dans cette partie, avec l&apos;exercice de l&apos;Académie qui les corrige.
       </p>
       <ul className="mt-3 space-y-2">
@@ -46,29 +47,31 @@ export function CoachReportPanel({ findings }: { findings: readonly CoachFinding
           return (
             <li
               key={findingKey(finding)}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/60 bg-surface-muted/20 px-3 py-2"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-l-4 border-border border-l-inaccuracy bg-surface px-3 py-2"
             >
-              <span className="text-sm text-foreground">❌ Lacune détectée : {finding.message.text}</span>
+              <span className="text-sm text-foreground"><span className="font-medium">Lacune détectée :</span> {finding.message.text}</span>
               {theme && (
                 <Link
                   href={`/apprendre?themeId=${theme.themeId}`}
-                  className="shrink-0 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm font-medium text-foreground hover:bg-surface-raised"
                 >
-                  🎯 S&apos;exercer sur {MOTIF_PLURAL_LABEL[finding.message.motif!]} (Académie)
+                  <Target aria-hidden="true" className="size-4" />
+                  S&apos;exercer sur {MOTIF_PLURAL_LABEL[finding.message.motif!]} (Académie)
                 </Link>
               )}
               {!theme && isMissedMate && (
                 <Link
                   href="/apprendre?categoryId=checkmate_patterns"
-                  className="shrink-0 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm font-medium text-foreground hover:bg-surface-raised"
                 >
-                  🎯 Réviser les mats (Académie)
+                  <Target aria-hidden="true" className="size-4" />
+                  Réviser les mats (Académie)
                 </Link>
               )}
             </li>
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

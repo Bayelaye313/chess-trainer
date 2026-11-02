@@ -216,14 +216,14 @@ export function OpeningMistakeExercise({
             <button
               type="button"
               onClick={retry}
-              className="rounded-md border border-border px-4 py-2 text-sm hover:bg-surface-muted"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-4 text-sm hover:bg-surface-muted"
             >
               Rejouer
             </button>
             <button
               type="button"
               onClick={onExit}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             >
               ← Retour au journal
             </button>

@@ -1,5 +1,5 @@
-/** Squelette générique pendant le rendu serveur d'un écran. */
-export default function Loading() {
+/** Squelette générique pendant le rendu serveur d'un écran (fichiers `loading.tsx`). */
+export function PageSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite" className="mx-auto w-full max-w-[1200px] animate-pulse">
       <span className="sr-only">Chargement…</span>

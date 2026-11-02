@@ -14,7 +14,7 @@ export function GameOverview({ overview }: { overview: GameOverviewData }) {
 
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+      <h2 className="font-display text-lg font-semibold text-foreground">
         Aperçu de la partie
       </h2>
 

@@ -50,7 +50,7 @@ export function OpeningEnduranceHistory({
         className={`animate-fade-up-in flex flex-col gap-5 rounded-lg border p-5 md:p-6 ${tone.card}`}
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="endurance-status-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+          <h2 id="endurance-status-title" className="font-display text-lg font-semibold text-foreground">
             Statut d&apos;endurance
           </h2>
           <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold ${tone.badge}`}>
@@ -61,14 +61,14 @@ export function OpeningEnduranceHistory({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="text-xs uppercase tracking-wide text-foreground-muted">Ply Record</p>
+            <p className="text-sm text-foreground-muted">Ply Record</p>
             <p className={`mt-1 font-mono text-4xl font-bold ${tone.text}`}>Coup {status.recordMove}</p>
             <p className="mt-2 text-sm text-foreground-muted">
               Le plus loin que tu sois allé sans erreur, dans {status.recordSession.openingName}.
             </p>
           </div>
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="text-xs uppercase tracking-wide text-foreground-muted">
+            <p className="text-sm text-foreground-muted">
               Moyenne sur {status.rollingCount < ROLLING_WINDOW ? `${status.rollingCount} session${status.rollingCount > 1 ? "s" : ""}` : `${ROLLING_WINDOW} sessions`}
             </p>
             <p className="mt-1 font-mono text-4xl font-bold text-foreground">
@@ -82,7 +82,7 @@ export function OpeningEnduranceHistory({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Chronologie des progrès */}
         <section aria-labelledby="endurance-timeline-title" className="rounded-lg border border-border bg-surface p-5 lg:col-span-3">
-          <h2 id="endurance-timeline-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+          <h2 id="endurance-timeline-title" className="font-display text-lg font-semibold text-foreground">
             Chronologie des progrès
           </h2>
           <ol className="mt-4 flex flex-col">
@@ -109,7 +109,7 @@ export function OpeningEnduranceHistory({
         {/* Comparateur d'ouvertures */}
         <section aria-labelledby="endurance-compare-title" className="flex flex-col gap-3 lg:col-span-2">
           <div>
-            <h2 id="endurance-compare-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+            <h2 id="endurance-compare-title" className="font-display text-lg font-semibold text-foreground">
               Classement de mes ouvertures
             </h2>
             <p className="mt-1 text-xs text-foreground-muted">

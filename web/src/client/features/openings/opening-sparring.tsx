@@ -155,11 +155,11 @@ export function OpeningSparring({
           </p>
         </div>
         {!active ? (
-          <button type="button" onClick={() => void start()} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90">
+          <button type="button" onClick={() => void start()} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-3 text-xs font-medium text-accent-foreground hover:bg-accent-hover">
             Lancer le sparring
           </button>
         ) : (
-          <button type="button" onClick={() => void stop()} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-surface-muted">
+          <button type="button" onClick={() => void stop()} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-xs hover:bg-surface-muted">
             Quitter
           </button>
         )}

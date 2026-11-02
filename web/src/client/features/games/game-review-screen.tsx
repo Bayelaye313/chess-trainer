@@ -1,5 +1,9 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, RotateCcw, Volume2, VolumeX, Wrench } from "lucide-react";
+import { BackLink } from "@/components/ui/back-link";
+import { Disclosure } from "@/components/ui/disclosure";
+import { displayOpponentName } from "@/client/features/play/bot-display";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
@@ -73,6 +77,10 @@ export function GameReviewScreen({
   navigationQuery?: string;
 }) {
   const { engine } = useEngine();
+  // Un seul retour : vers la liste d'où vient la partie (Rapport › ouverture si `?course=`, sinon Mes parties).
+  const courseMatch = /[?&]course=([^&]+)/.exec(navigationQuery);
+  const backHref = courseMatch ? `/rapport/ouvertures/${decodeURIComponent(courseMatch[1])}` : "/parties";
+  const backLabel = courseMatch ? "Mes parties dans le cours" : "Mes parties";
   const [currentPly, setCurrentPly] = useState(initialPly ?? 0);
   const [retryPly, setRetryPly] = useState<number | null>(null);
   const [drillActive, setDrillActive] = useState(false);
@@ -284,33 +292,32 @@ export function GameReviewScreen({
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {game.playerColor === "w" ? "Blancs" : "Noirs"} contre{" "}
-            {game.opponentName ?? "adversaire inconnu"}
+    <div className="mx-auto w-full max-w-[1240px] space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <BackLink href={backHref}>{backLabel}</BackLink>
+          <h1 className="font-display text-[22px] leading-tight font-semibold sm:text-[28px]">
+            {game.playerColor === "w" ? "Blancs" : "Noirs"} contre {displayOpponentName(game.opponentName)}
           </h1>
           <p className="text-sm text-foreground-muted">
             {game.playedAt.toLocaleDateString("fr-FR")}
-            {accuracy !== null ? ` — précision approximative ${accuracy}%` : ""}
+            {accuracy !== null ? ` · précision approximative ${accuracy} %` : ""}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <nav aria-label="Parties voisines" className="flex shrink-0 items-center gap-2">
           {previousGameId && (
-            <Link href={`/analyse/${previousGameId}${navigationQuery}`} className="text-sm text-accent hover:underline">
-              ◀ Partie précédente
+            <Link href={`/analyse/${previousGameId}${navigationQuery}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm hover:bg-surface-raised disabled:opacity-40">
+              <ChevronLeft aria-hidden="true" className="size-4" />
+              Partie précédente
             </Link>
           )}
           {nextGameId && (
-            <Link href={`/analyse/${nextGameId}${navigationQuery}`} className="text-sm text-accent hover:underline">
-              Partie suivante ▶
+            <Link href={`/analyse/${nextGameId}${navigationQuery}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm hover:bg-surface-raised disabled:opacity-40">
+              Partie suivante
+              <ChevronRight aria-hidden="true" className="size-4" />
             </Link>
           )}
-          <Link href="/" className="text-sm text-accent hover:underline">
-            ← Retour
-          </Link>
-        </div>
+        </nav>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -361,7 +368,7 @@ export function GameReviewScreen({
               onExit={() => setRepertoireCorrection(false)}
             />
           ) : (
-            <div className="rounded-lg border border-border bg-surface p-5">
+            <div>
               {coachMessage && (
                 <div className="mb-4">
                   <CoachBubble message={coachMessage} />
@@ -369,9 +376,10 @@ export function GameReviewScreen({
                     <button
                       type="button"
                       onClick={() => setRepertoireCorrection(true)}
-                      className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
+                      className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
                     >
-                      🔧 Corriger ce coup
+                      <Wrench aria-hidden="true" className="size-4" />
+                      Corriger ce coup
                     </button>
                   )}
                 </div>
@@ -385,7 +393,7 @@ export function GameReviewScreen({
                   />
                 </div>
               )}
-              <div className="mx-auto flex max-w-[480px] items-stretch gap-2">
+              <div className="mx-auto flex max-w-[600px] items-stretch gap-2">
                 <EvaluationBar score={currentScore} />
                 <div className="min-w-0 flex-1">
                   <Chessboard
@@ -406,9 +414,10 @@ export function GameReviewScreen({
                   type="button"
                   onClick={() => goToPly(currentPly - 1)}
                   disabled={currentPly === 0}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+                  aria-label="Coup précédent"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm hover:bg-surface-raised disabled:opacity-40"
                 >
-                  ← Précédent
+                  <ChevronLeft aria-hidden="true" className="size-5" />
                 </button>
                 <span className="font-mono text-sm text-foreground-muted">
                   {currentPly} / {timeline.length}
@@ -417,18 +426,19 @@ export function GameReviewScreen({
                   type="button"
                   onClick={() => goToPly(currentPly + 1)}
                   disabled={currentPly === timeline.length}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+                  aria-label="Coup suivant"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm hover:bg-surface-raised disabled:opacity-40"
                 >
-                  Suivant →
+                  <ChevronRight aria-hidden="true" className="size-5" />
                 </button>
                 <button
                   type="button"
                   onClick={moveFx.toggleMuted}
                   aria-label={moveFx.muted ? "Activer le son des coups" : "Couper le son des coups"}
                   title={moveFx.muted ? "Activer le son des coups" : "Couper le son des coups"}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-strong bg-surface-muted px-3 text-sm hover:bg-surface-raised disabled:opacity-40"
                 >
-                  {moveFx.muted ? "🔇" : "🔈"}
+                  {moveFx.muted ? <VolumeX aria-hidden="true" className="size-5" /> : <Volume2 aria-hidden="true" className="size-5" />}
                 </button>
               </div>
             </div>
@@ -445,18 +455,22 @@ export function GameReviewScreen({
 
           <CoachReportPanel findings={coachFindings} />
 
-          <PostGameReport overview={overview} keyMoments={keyMoments} />
+          <Disclosure summary="Bilan du commentateur" className="border-b">
+            <PostGameReport overview={overview} keyMoments={keyMoments} />
+          </Disclosure>
 
           {!drillActive && mistakes.length > 0 && (
-            <div className="rounded-lg border border-border bg-surface p-4 text-center">
-              <p className="mb-2 text-sm text-foreground-muted">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+              <p className="text-sm text-foreground-muted">
                 {mistakes.length} erreur{mistakes.length > 1 ? "s" : ""} à corriger dans cette partie.
               </p>
               <button
                 type="button"
                 onClick={startDrill}
-                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+                data-primary-action
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
               >
+                <RotateCcw aria-hidden="true" className="size-4" />
                 Rejouer mes erreurs
               </button>
             </div>
@@ -465,7 +479,7 @@ export function GameReviewScreen({
 
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-surface p-4">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+            <h2 className="font-display text-lg font-semibold text-foreground">
               Fil de notation
             </h2>
             <div className="mt-3">

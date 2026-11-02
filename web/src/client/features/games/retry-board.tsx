@@ -96,7 +96,7 @@ export function RetryBoard({
           <button
             type="button"
             onClick={reset}
-            className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-surface-muted"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm hover:bg-surface-muted"
           >
             Réessayer
           </button>
@@ -104,7 +104,7 @@ export function RetryBoard({
         <button
           type="button"
           onClick={onExit}
-          className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-surface-muted"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm hover:bg-surface-muted"
         >
           Quitter l&apos;essai
         </button>

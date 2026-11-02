@@ -45,9 +45,9 @@ function closingLine(keyMoments: readonly KeyMoment[]): string {
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border/60 bg-surface-muted/30 px-3 py-2 text-center">
+    <div className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border/60 bg-surface-muted/30 px-3 text-center">
       <p className="text-lg font-semibold text-foreground">{value}</p>
-      <p className="text-[11px] uppercase tracking-wide text-foreground-muted">{label}</p>
+      <p className="text-sm text-foreground-muted">{label}</p>
     </div>
   );
 }
@@ -64,7 +64,7 @@ export function PostGameReport({
 
   return (
     <div className="rounded-lg border border-accent/30 bg-gradient-to-br from-surface to-surface-muted/40 p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-accent">📣 Bilan du commentateur</h2>
+      <h2 className="sr-only">Bilan du commentateur</h2>
 
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatTile label="Ta précision" value={player.accuracy !== null ? `${player.accuracy}%` : "—"} />

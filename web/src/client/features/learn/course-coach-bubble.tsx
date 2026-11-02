@@ -106,7 +106,7 @@ function BubbleBody({ message, tone }: { message: CoachMessage; tone: (typeof TO
         className={`absolute -left-[5px] bottom-3 size-2.5 rotate-45 border-b border-l bg-surface ${tone.tail}`}
       />
 
-      <p className={`mb-1 text-[11px] font-semibold tracking-wider uppercase ${tone.label}`}>{message.label}</p>
+      <p className={`mb-1 text-xs font-semibold ${tone.label}`}>{message.label}</p>
 
       <p className="sr-only">{message.text}</p>
       <p aria-hidden="true">

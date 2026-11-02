@@ -148,7 +148,7 @@ const TierSection = memo(function TierSection({
               {meta.icon}
             </span>
             <span className="min-w-0 flex-1">
-              <span className={`block text-sm font-black uppercase tracking-wide ${meta.textClass}`}>{meta.label}</span>
+              <span className={`block text-sm font-semibold ${meta.textClass}`}>{meta.label}</span>
               <span className="block text-xs text-foreground-muted">
                 {themes.length} thème{themes.length > 1 ? "s" : ""} — {masteredCount} maîtrisé{masteredCount > 1 ? "s" : ""}
               </span>
