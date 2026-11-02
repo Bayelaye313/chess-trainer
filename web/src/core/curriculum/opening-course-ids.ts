@@ -12,4 +12,4 @@ export const OPENING_COURSE_IDS: ReadonlySet<string> = new Set(["scotch-game", "
  * accessibles depuis leur fiche, mais le plan du jour ne les impose pas
  * (`listBotStartLines`, `server/queries/daily-plan.ts`).
  */
-export const OFF_REPERTOIRE_COURSE_IDS: ReadonlySet<string> = new Set(["slav-defense", "sicilian-dragon", "caro-kann", "sicilian-alapin"]);
+export const OFF_REPERTOIRE_COURSE_IDS: ReadonlySet<string> = new Set(["slav-defense", "sicilian-dragon", "caro-kann", "sicilian-alapin", "sicilian-najdorf"]);
