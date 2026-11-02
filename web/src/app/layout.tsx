@@ -4,6 +4,7 @@ import { Nav } from "@/components/ui/nav";
 import { SyncToast } from "@/components/sync-toast";
 import { EngineProvider } from "@/client/engine/engine-context";
 import { SyncProvider } from "@/client/features/sync/sync-context";
+import { SeanceBar } from "@/client/features/home/seance-bar";
 import "./globals.css";
 
 /**
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               id="contenu"
               className="px-[var(--space-page)] pt-5 pb-[calc(var(--tabbar-h)+32px)] md:pt-8 md:pb-12 md:pl-[calc(var(--rail-w)+var(--space-page))]"
             >
+              <SeanceBar />
               {children}
             </main>
             <SyncToast />

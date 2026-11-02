@@ -77,7 +77,7 @@ function SyncPill() {
     tone = "text-warning";
   } else if (lastSynced === null) {
     label = "Lier un compte";
-  } else if (state.status === "running" && lastSynced === undefined) {
+  } else if (state.status === "idle" && lastSynced === undefined) {
     icon = Loader2;
     label = "Synchronisation…";
   } else if (lastSynced && lastSynced.getTime() > 0) {

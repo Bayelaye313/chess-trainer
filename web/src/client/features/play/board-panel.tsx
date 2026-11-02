@@ -6,6 +6,8 @@ import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import { OPPONENT_MOVE_ANIMATION_MS } from "@/client/features/board/move-animation";
 import { describeGameResult, TERMINATION_LABEL } from "@/lib/labels";
 import type { PlayStatus } from "./use-play-game";
+import { Flag, Undo2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const STATUS_LABEL: Record<Exclude<PlayStatus, "setup" | "over">, string> = {
   loading: "Préparation de la partie…",
@@ -49,8 +51,8 @@ export function BoardPanel({
   const gameActive = status !== "setup" && status !== "over" && status !== "loading";
 
   return (
-    <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
-      <div className="mx-auto max-w-[520px] overflow-hidden rounded-lg border-2 border-border/70">
+    <section aria-label="Échiquier de la partie">
+      <div className="mx-auto w-full max-w-[560px]">
         <Chessboard
           options={{ ...ESPORT_BOARD_OPTIONS,
             id: "play-board",
@@ -60,33 +62,24 @@ export function BoardPanel({
             onPieceDrop,
             canDragPiece,
             allowDragging: status === "playing",
-            // Micro-animation du coup du bot en 180 ms ease-in-out (feuille de
-            // route Zone 2) — la surbrillance des cases attend la fin de
-            // l'animation (`use-play-game.ts#scheduleOpponentHighlight`,
-            // `move-animation.ts`).
             animationDurationInMs: OPPONENT_MOVE_ANIMATION_MS,
           }}
         />
       </div>
-      <p className="mt-4 min-h-5 text-center text-sm text-foreground-muted">{statusText}</p>
+      <p role="status" aria-live="polite" className="mx-auto mt-3 min-h-5 max-w-[560px] text-sm text-foreground-muted">
+        {statusText}
+      </p>
 
       {gameActive && (
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={onTakeback}
-            disabled={!canTakeback}
-            className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-foreground transition-colors hover:bg-surface-muted disabled:opacity-40"
-          >
-            ↩️ Annuler le coup
-          </button>
-          <button
-            type="button"
-            onClick={onResign}
-            className="rounded-xl border border-blunder/30 bg-blunder/5 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-danger transition-colors hover:bg-blunder/10"
-          >
-            🏳️ Abandonner
-          </button>
+        <div className="mx-auto mt-3 grid max-w-[560px] grid-cols-2 gap-2">
+          <Button onClick={onTakeback} disabled={!canTakeback}>
+            <Undo2 aria-hidden="true" />
+            Annuler le coup
+          </Button>
+          <Button variant="danger" onClick={onResign}>
+            <Flag aria-hidden="true" />
+            Abandonner
+          </Button>
         </div>
       )}
     </section>

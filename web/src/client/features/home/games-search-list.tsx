@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { searchGames } from "@/server/actions/games";
 import type { GameSummary } from "@/server/queries/games";
+import { Search } from "lucide-react";
 import { RecentGamesList } from "./recent-games-list";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -46,7 +47,7 @@ type SearchState =
  * par `?page=`, fiche partie sous `/analyse/`) : pas besoin de généricité ici.
  */
 const gameHref = (id: string) => `/analyse/${id}`;
-const paginationHref = (page: number) => `/?page=${page}`;
+const paginationHref = (page: number) => `/parties?page=${page}`;
 
 export function GamesSearchList({
   games,
@@ -87,15 +88,14 @@ export function GamesSearchList({
   return (
     <div className="space-y-3">
       <div className="relative">
-        <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted">
-          🔍
-        </span>
+        <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-foreground-subtle" />
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Rechercher une partie par pseudo ou nom de bot…"
-          className="w-full rounded-md border border-border bg-surface py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent focus:outline-none"
+          aria-label="Rechercher une partie"
+          placeholder="Rechercher par pseudo ou nom de bot…"
+          className="min-h-11 w-full rounded-md border border-border-strong bg-surface py-2 pr-3 pl-9 text-sm text-foreground placeholder:text-foreground-subtle focus:border-accent focus:outline-none"
         />
       </div>
 

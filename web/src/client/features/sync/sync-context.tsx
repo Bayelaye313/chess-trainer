@@ -25,8 +25,8 @@ export interface PlatformSyncError {
 }
 
 export type SyncState =
+  /** Premier sondage en cours (ou pas encore lancé). */
   | { status: "idle" }
-  | { status: "running" }
   | { status: "ok"; at: Date }
   | { status: "error"; at: Date; message: string };
 
@@ -59,7 +59,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const mounted = useRef(true);
 
   const poll = useCallback(() => {
-    setState((current) => (current.status === "idle" ? { status: "running" } : current));
     fetch("/api/sync", { method: "POST" })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

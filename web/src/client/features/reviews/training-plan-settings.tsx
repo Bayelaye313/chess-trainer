@@ -13,6 +13,9 @@ import {
 import { applyDailyPlan, resetDailyPlan } from "@/server/actions/training";
 import type { DailySessionState } from "@/server/queries/daily-plan";
 import { TRAINING_GOAL_LABEL } from "@/lib/labels";
+import { Check, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 
 const EFFORT_BAR_COLOR: Record<EffortLevel, string> = {
   light: "bg-inaccuracy",
@@ -27,10 +30,10 @@ const EFFORT_LEVEL_LABEL: Record<EffortLevel, string> = {
 /** Barre de charge — la largeur ET la couleur suivent la sélection en direct (`transition-all duration-500`). */
 function EffortBar({ points, percent, level }: { points: number; percent: number; level: EffortLevel }) {
   return (
-    <div className="mt-3">
-      <div className="flex items-baseline justify-between gap-3 text-xs">
+    <div className="mt-4">
+      <div className="flex items-baseline justify-between gap-3 text-sm">
         <span className="text-foreground-muted">Charge quotidienne</span>
-        <span className={`font-medium ${level === "optimal" ? "text-best" : "text-inaccuracy"}`}>
+        <span className={`font-mono font-medium ${level === "optimal" ? "text-success" : "text-warning"}`}>
           {points}/{MAX_EFFORT_POINTS} pts · {EFFORT_LEVEL_LABEL[level]}
         </span>
       </div>
@@ -118,31 +121,30 @@ export function TrainingPlanSettings({
 
   return (
     <form
-      className="mt-4 border-t border-border pt-4"
       onSubmit={(event) => {
         event.preventDefault();
         if (!active) handleApplyDailyPlan();
       }}
     >
       <fieldset disabled={active || pending}>
-        <legend className="flex w-full items-center justify-between gap-3">
-          <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">Plan du jour</span>
+        <legend className="flex w-full items-center justify-between gap-3 text-sm text-foreground-muted">
+          <span>Objectifs</span>
           {active && (
-            <span className="rounded-full border border-best/40 bg-best/10 px-2 py-0.5 text-[11px] font-medium text-best">
-              Session active
-            </span>
+            <Chip icon={Lock} tone="success">
+              Plan appliqué aujourd&apos;hui
+            </Chip>
           )}
         </legend>
 
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           {TRAINING_GOALS.map((goal) => {
             const checked = shownGoals.includes(goal);
             const done = completed.has(goal);
             return (
               <label
                 key={goal}
-                className={`flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition-colors has-[:disabled]:cursor-default ${
-                  checked ? "border-accent bg-accent/10 text-foreground" : "border-border text-foreground-muted hover:bg-surface-muted"
+                className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm transition-colors has-[:disabled]:cursor-default ${
+                  checked ? "border-accent bg-surface-raised text-foreground" : "border-border text-foreground-muted hover:bg-surface-muted"
                 }`}
               >
                 <input
@@ -151,15 +153,16 @@ export function TrainingPlanSettings({
                   value={goal}
                   checked={checked}
                   onChange={(event) => toggleGoal(goal, event.target.checked)}
-                  className="accent-current"
+                  className="size-4 accent-[var(--accent)]"
                 />
                 <span className="flex-1 font-medium">{TRAINING_GOAL_LABEL[goal]}</span>
                 {done ? (
-                  <span className="text-best" title="Au moins un exercice de ce type fait depuis l'application du plan.">
-                    ✓
+                  <span className="inline-flex items-center gap-1 text-xs text-success" title="Au moins un exercice de ce type fait depuis l'application du plan.">
+                    <Check aria-hidden="true" className="size-3.5" />
+                    Fait
                   </span>
                 ) : (
-                  <span className="font-mono text-[11px] text-foreground-muted">{GOAL_EFFORT_POINTS[goal]}</span>
+                  <span className="font-mono text-xs text-foreground-muted">{GOAL_EFFORT_POINTS[goal]} pts</span>
                 )}
               </label>
             );
@@ -169,7 +172,7 @@ export function TrainingPlanSettings({
         <EffortBar points={effort.points} percent={effort.percent} level={effort.level} />
 
         {!active && (
-          <label className="mt-3 flex items-center gap-3 text-xs text-foreground-muted">
+          <label className="mt-4 flex min-h-11 items-center gap-3 text-sm text-foreground-muted">
             Actions par séance
             <input
               type="range"
@@ -178,16 +181,16 @@ export function TrainingPlanSettings({
               max={8}
               value={dailyLimit}
               onChange={(event) => setDailyLimit(Number(event.target.value))}
-              className="flex-1 accent-current"
+              className="flex-1 accent-[var(--accent)]"
             />
-            <span className="w-4 text-right font-medium text-foreground">{dailyLimit}</span>
+            <span className="w-4 text-right font-mono font-medium text-foreground">{dailyLimit}</span>
           </label>
         )}
       </fieldset>
 
       {active && (
         <div className="mt-3">
-          <div className="flex items-baseline justify-between gap-3 text-xs">
+          <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="text-foreground-muted">Réalisé aujourd&apos;hui</span>
             <span className="font-medium text-foreground">
               {sessionState.completion.completedPoints}/{sessionState.session.effortPoints} pts
@@ -202,26 +205,17 @@ export function TrainingPlanSettings({
         </div>
       )}
 
-      <div className="mt-3 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         {active ? (
-          <button
-            type="button"
-            onClick={handleEditPlan}
-            disabled={pending}
-            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-muted disabled:opacity-60"
-          >
+          <Button onClick={handleEditPlan} disabled={pending}>
             {pending ? "Déverrouillage…" : "Modifier le plan"}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90 disabled:opacity-60"
-          >
+          <Button type="submit" variant="primary" disabled={pending}>
             {pending ? "Application…" : "Appliquer"}
-          </button>
+          </Button>
         )}
-        {error && <p className="text-xs text-danger">{error}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       </div>
     </form>
   );

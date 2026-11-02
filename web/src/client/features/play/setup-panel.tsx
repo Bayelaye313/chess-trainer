@@ -1,162 +1,157 @@
 "use client";
 
-import { useState } from "react";
-import { BOT_PROFILES, type BotProfile, type BotProfileId } from "@/core/chess/bot-profiles";
+import { useEffect, useRef, useState } from "react";
+import { Loader2, Route, TriangleAlert } from "lucide-react";
+import { BOT_PROFILES, type BotProfileId } from "@/core/chess/bot-profiles";
 import type { BotStartLine } from "@/core/training/daily-plan";
+import { ENGINE_FAILURE_TEXT, useEngineDisplayStatus } from "@/client/features/engine-check/use-engine-timeout";
+import { Button } from "@/components/ui/button";
+import { cx } from "@/components/ui/cx";
+import { BOT_DISPLAY, readLastSetup, writeLastSetup } from "./bot-display";
+
+const COLORS: readonly { value: "w" | "b"; label: string }[] = [
+  { value: "w", label: "Blancs" },
+  { value: "b", label: "Noirs" },
+];
 
 /**
- * Avatar + descriptif humain par profil — présentation pure, volontairement
- * tenue hors de `core/chess/bot-profiles.ts` (données framework-agnostiques,
- * voir son docstring) : même schéma que `MASTERPIECE_BLURB`
- * (`hall-of-fame.tsx`) ou les icônes par onglet de `nav.tsx`.
+ * Réglage minimal d'une partie : niveau du bot (4 profils), couleur,
+ * « Commencer ». Le dernier choix est mémorisé (localStorage) ; avec
+ * `autoStart`, la partie démarre seule dès que le moteur est prêt
+ * (raccourci « Rejouer » de l'accueil : 1 clic).
  */
-const PROFILE_AVATAR: Record<BotProfileId, string> = {
-  poussin: "🐥",
-  club: "🛡️",
-  champion: "⚔️",
-  stockfish: "🦾",
-};
-
-const PROFILE_BLURB: Record<BotProfileId, string> = {
-  poussin: "Commence ici ton apprentissage.",
-  club: "Un joueur tactique et solide de club.",
-  champion: "Calculateur redoutable de tournoi.",
-  stockfish: "Puissance brute, sans aucune bride.",
-};
-
-/** Repères de la jauge de force — du plancher Poussin au repère Stockfish (voir `BotProfile.nominalElo`). */
-const GAUGE_MIN_ELO = 1000;
-const GAUGE_MAX_ELO = 3200;
-
-function gaugePercent(profile: BotProfile): number {
-  const clamped = Math.min(GAUGE_MAX_ELO, Math.max(GAUGE_MIN_ELO, profile.nominalElo));
-  return Math.round(((clamped - GAUGE_MIN_ELO) / (GAUGE_MAX_ELO - GAUGE_MIN_ELO)) * 100);
-}
-
-function BotCard({
-  profile,
-  active,
-  onSelect,
-}: {
-  profile: BotProfile;
-  active: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={active}
-      className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-        active
-          ? "border-accent bg-accent/10 shadow-sm ring-1 ring-accent/40"
-          : "border-border bg-surface hover:bg-surface-muted/50"
-      }`}
-    >
-      <span
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-xl ${
-          active ? "border-accent/50 bg-surface" : "border-border bg-surface-muted/60"
-        }`}
-        aria-hidden="true"
-      >
-        {PROFILE_AVATAR[profile.id]}
-      </span>
-
-      <span className="min-w-0 flex-1">
-        <span className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-sm font-semibold text-foreground">{profile.label}</span>
-          <span className="shrink-0 font-mono text-xs font-bold text-foreground-muted">
-            {profile.elo !== null ? profile.elo : "Max"}
-          </span>
-        </span>
-        <span className="mt-0.5 block truncate text-xs text-foreground-muted">{PROFILE_BLURB[profile.id]}</span>
-        {/* Jauge de force — repère visuel rapide entre les 4 profils, voir `gaugePercent`. */}
-        <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
-          <span
-            className={`block h-full rounded-full ${active ? "bg-accent" : "bg-foreground-muted/40"}`}
-            style={{ width: `${gaugePercent(profile)}%` }}
-          />
-        </span>
-      </span>
-    </button>
-  );
-}
-
 export function SetupPanel({
   engineReady,
   loading,
   startLines = [],
+  autoStart = false,
   onStart,
 }: {
   engineReady: boolean;
   loading: boolean;
   startLines?: readonly BotStartLine[];
+  autoStart?: boolean;
   onStart: (color: "w" | "b", profileId: BotProfileId) => void;
 }) {
   const [color, setColor] = useState<"w" | "b">("w");
   const [profileId, setProfileId] = useState<BotProfileId>("club");
+  const [restored, setRestored] = useState(false);
+  const autoStarted = useRef(false);
+  const { status: engineStatus } = useEngineDisplayStatus();
   const side = color === "w" ? "white" : "black";
   const linesForColor = startLines.filter((line) => line.side === side);
 
+  // Lecture après montage : localStorage n'existe pas au rendu serveur.
+  useEffect(() => {
+    const last = readLastSetup();
+    /* eslint-disable react-hooks/set-state-in-effect -- restauration unique d'une préférence locale */
+    if (last) {
+      setProfileId(last.profileId);
+      setColor(last.color);
+    }
+    setRestored(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  function start() {
+    writeLastSetup({ profileId, color });
+    onStart(color, profileId);
+  }
+
+  useEffect(() => {
+    if (!autoStart || autoStarted.current || !restored || !engineReady || loading) return;
+    autoStarted.current = true;
+    writeLastSetup({ profileId, color });
+    onStart(color, profileId);
+  }, [autoStart, restored, engineReady, loading, color, profileId, onStart]);
+
+  const selected = BOT_DISPLAY[profileId];
+
   return (
-    <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
-      <h1 className="text-lg font-semibold">🎮 Nouvelle partie</h1>
-      <p className="mt-1 text-xs text-foreground-muted">
-        Affronte le moteur Stockfish, réglé sur le profil de ton choix.
-      </p>
+    <section aria-labelledby="nouvelle-partie" className="space-y-5">
+      <h2 id="nouvelle-partie" className="font-display text-lg font-semibold">
+        Nouvelle partie
+      </h2>
 
-      <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-        {BOT_PROFILES.map((profile) => (
-          <BotCard
-            key={profile.id}
-            profile={profile}
-            active={profileId === profile.id}
-            onSelect={() => setProfileId(profile.id)}
-          />
-        ))}
-      </div>
+      <fieldset>
+        <legend className="mb-2 text-sm text-foreground-muted">Niveau du bot</legend>
+        <div role="radiogroup" aria-label="Niveau du bot" className="grid grid-cols-2 gap-2">
+          {BOT_PROFILES.map((profile) => {
+            const display = BOT_DISPLAY[profile.id];
+            const Icon = display.icon;
+            const active = profileId === profile.id;
+            return (
+              <button
+                key={profile.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setProfileId(profile.id)}
+                className={cx(
+                  "flex min-h-14 items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors",
+                  active ? "border-accent bg-surface-raised" : "border-border bg-surface hover:bg-surface-muted",
+                )}
+              >
+                <Icon aria-hidden="true" className={cx("size-5 shrink-0", active ? "text-accent" : "text-foreground-subtle")} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-foreground">{display.name}</span>
+                  <span className="block text-xs text-foreground-muted">
+                    {display.level} · <span className="font-mono">{profile.elo ?? "Max"}</span>
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs text-foreground-muted">{selected.blurb}</p>
+      </fieldset>
 
-      <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="text-foreground-muted">Couleur</span>
-          <select
-            value={color}
-            onChange={(event) => setColor(event.target.value as "w" | "b")}
-            className="rounded-md border border-border bg-surface px-3 py-1.5"
-          >
-            <option value="w">Blancs</option>
-            <option value="b">Noirs</option>
-          </select>
-        </label>
-
-        <button
-          type="button"
-          disabled={!engineReady || loading}
-          onClick={() => onStart(color, profileId)}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-        >
-          {loading ? "Préparation…" : "Commencer"}
-        </button>
-      </div>
+      <fieldset>
+        <legend className="mb-2 text-sm text-foreground-muted">Tu joues</legend>
+        <div role="radiogroup" aria-label="Couleur" className="inline-flex rounded-lg border border-border bg-surface p-1">
+          {COLORS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={color === option.value}
+              onClick={() => setColor(option.value)}
+              className={cx(
+                "inline-flex min-h-10 min-w-24 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium",
+                color === option.value ? "bg-surface-raised text-foreground" : "text-foreground-muted hover:text-foreground",
+              )}
+            >
+              <span aria-hidden="true" className={cx("size-3 rounded-full border border-border-strong", option.value === "w" ? "bg-[#f4f1ea]" : "bg-[#1b1b1b]")} />
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
 
       {startLines.length > 0 && (
-        <div className="mt-4 rounded-md border border-best/30 bg-best/10 px-3 py-2 text-xs text-foreground">
-          <p className="font-medium text-best">Session active — le bot testera ton répertoire</p>
-          {linesForColor.length > 0 ? (
-            <p className="mt-1 text-foreground-muted">
-              Avec les {color === "w" ? "Blancs" : "Noirs"}, départ tiré parmi :{" "}
-              {[...new Set(linesForColor.map((line) => line.label))].join(", ")}.
+        <div className="flex gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2.5 text-sm">
+          <Route aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-book" />
+          <div>
+            <p className="font-medium">Plan du jour actif : le bot testera ton répertoire</p>
+            <p className="mt-0.5 text-foreground-muted">
+              {linesForColor.length > 0
+                ? `Avec les ${color === "w" ? "Blancs" : "Noirs"}, départ tiré parmi : ${[...new Set(linesForColor.map((line) => line.label))].join(", ")}.`
+                : `Aucune ligne de ton répertoire avec les ${color === "w" ? "Blancs" : "Noirs"} : départ classique.`}
             </p>
-          ) : (
-            <p className="mt-1 text-foreground-muted">
-              Aucune ligne de ton répertoire avec les {color === "w" ? "Blancs" : "Noirs"} : départ classique.
-            </p>
-          )}
+          </div>
         </div>
       )}
 
-      {!engineReady && (
-        <p className="mt-3 text-sm text-foreground-muted">Chargement du moteur…</p>
+      <Button variant="primary" data-primary-action className="w-full sm:w-auto sm:min-w-48" disabled={!engineReady || loading} onClick={start}>
+        {loading || (!engineReady && engineStatus === "loading") ? <Loader2 aria-hidden="true" className="animate-spin" /> : null}
+        {loading ? "Préparation…" : engineReady ? "Commencer" : "Chargement du moteur…"}
+      </Button>
+
+      {(engineStatus === "timeout" || engineStatus === "error") && (
+        <p role="alert" className="flex items-start gap-1.5 text-sm text-danger">
+          <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          {engineStatus === "timeout" ? ENGINE_FAILURE_TEXT.timeout : ENGINE_FAILURE_TEXT.error}
+        </p>
       )}
     </section>
   );
