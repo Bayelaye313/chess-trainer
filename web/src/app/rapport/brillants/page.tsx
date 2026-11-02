@@ -1,11 +1,13 @@
-import Link from "next/link";
-import { EsportCanvas } from "@/components/ui/esport-page";
+import type { Metadata } from "next";
+import { BackLink } from "@/components/ui/back-link";
+import { PageHeader } from "@/components/ui/page-header";
 import { HallOfFame } from "@/client/features/reports/hall-of-fame";
 import { listMasterpieces } from "@/server/queries/games";
 
 // Même raison qu'`/rapport` : l'historique des coups Brillant/Critique
 // s'allonge en continu à mesure que de nouvelles parties sont analysées.
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Coups brillants" };
 
 /**
  * Historique complet des coups Brillant/Critique — sorti de `/rapport`
@@ -22,20 +24,9 @@ export default async function BrillantsPage() {
   const masterpieces = await listMasterpieces(30, ["brilliant"]);
 
   return (
-    <EsportCanvas detail>
-    <div className="space-y-6">
-      <div>
-        <Link href="/rapport" className="text-sm text-accent hover:underline">
-          ← Retour au Rapport
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Historique des coups brillants</h1>
-        <p className="mt-2 text-sm text-foreground-muted">
-          Tous les coups classés Brillant repérés dans tes parties importées.
-        </p>
-      </div>
-
+    <div className="mx-auto w-full max-w-[960px]">
+      <PageHeader back={<BackLink href="/rapport">Progrès</BackLink>} title="Coups brillants" description="Les 30 derniers coups classés Brillant dans tes parties." />
       <HallOfFame masterpieces={masterpieces} />
     </div>
-    </EsportCanvas>
   );
 }

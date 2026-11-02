@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
+import { ShowMore } from "@/components/ui/show-more";
+import { Stat } from "@/components/ui/stat";
+import { displayOpponentName } from "@/client/features/play/bot-display";
 import { moveNumberLabel, type CourseMoveOption, type RecurringMove } from "@/core/curriculum/course-game-match";
 import type { CourseGameReport, CourseGameRow } from "@/server/queries/course-games";
 import {
@@ -40,9 +44,9 @@ function RecurringList({
   describe: (item: RecurringMove) => string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">{title}</h2>
-      <p className="mt-1 text-xs text-foreground-muted">{hint}</p>
+    <section>
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
+      <p className="mt-0.5 text-sm text-foreground-muted">{hint}</p>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-foreground-muted">{empty}</p>
       ) : (
@@ -50,7 +54,7 @@ function RecurringList({
           {items.map((item, index) => (
             <li
               key={`${item.positionKey}|${item.playedUci}`}
-              className={`rounded-md border px-3 py-2 ${index === 0 && item.count >= 2 ? "border-inaccuracy/40 bg-inaccuracy/10" : "border-border"}`}
+              className={`rounded-md border border-l-4 bg-surface px-3 py-2 ${index === 0 && item.count >= 2 ? "border-border border-l-inaccuracy" : "border-border border-l-border"}`}
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-sm">
@@ -64,23 +68,31 @@ function RecurringList({
                   {item.count}× <QualityTag quality={item.quality} />
                 </span>
               </div>
-              <div className="mt-1 flex flex-wrap gap-x-3 text-xs">
+              <div className="mt-1 flex flex-wrap items-center gap-x-4 text-sm">
                 {item.chapterIndex !== null && (
-                  <Link href={courseLink(openingId, item.chapterIndex, item.nodeId)} className="text-accent hover:underline">
-                    Voir dans le cours →
+                  <Link href={courseLink(openingId, item.chapterIndex, item.nodeId)} className="inline-flex min-h-11 items-center text-foreground-muted underline-offset-4 hover:text-foreground hover:underline">
+                    Voir la position dans le cours
                   </Link>
                 )}
-                {item.gameIds.map((gameId, gameIndex) => (
-                  <Link key={gameId} href={`/analyse/${gameId}?course=${openingId}&reviewPly=${item.ply}`} className="text-accent hover:underline">
-                    Partie {gameIndex + 1}
-                  </Link>
-                ))}
+                <details className="group">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 text-foreground-muted hover:text-foreground [&::-webkit-details-marker]:hidden">
+                    {item.gameIds.length} partie{item.gameIds.length > 1 ? "s" : ""}
+                    <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <span className="flex flex-wrap gap-x-3">
+                    {item.gameIds.map((gameId, gameIndex) => (
+                      <Link key={gameId} href={`/analyse/${gameId}?course=${openingId}&reviewPly=${item.ply}`} className="inline-flex min-h-11 items-center text-foreground underline underline-offset-4">
+                        Partie {gameIndex + 1}
+                      </Link>
+                    ))}
+                  </span>
+                </details>
               </div>
             </li>
           ))}
         </ol>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -90,7 +102,7 @@ function ExitCell({ row }: { row: CourseGameRow }) {
     return (
       <div>
         <p>
-          <span className="font-medium text-inaccuracy">Tu as quitté le cours</span> au coup{" "}
+          <span className="font-medium text-warning">Tu as quitté le cours</span> au coup{" "}
           <span className="font-mono">
             {moveNumberLabel(deviation.ply)}
             {deviation.playedSan}
@@ -117,7 +129,7 @@ function ExitCell({ row }: { row: CourseGameRow }) {
   }
   return (
     <p>
-      <span className="font-medium text-best">Cours suivi jusqu&apos;au bout</span>{" "}
+      <span className="font-medium text-success">Cours suivi jusqu&apos;au bout</span>{" "}
       <span className="text-xs text-foreground-muted">({followedPlies} demi-coups)</span>
     </p>
   );
@@ -137,7 +149,7 @@ export function CourseGameReportView({ report }: { report: CourseGameReport }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 border-y border-border py-4 sm:grid-cols-4">
         <Tile label="Parties" value={String(games.length)} hint={otherSide > 0 ? `dont ${otherSide} côté adverse du cours` : undefined} />
         <Tile label="Sorties du cours" value={`${deviated}`} hint={games.length > 0 ? `${Math.round((deviated / games.length) * 100)}% des parties` : undefined} />
         <Tile label="Victoires en suivant le cours" value={report.winRateInCourse !== null ? `${report.winRateInCourse}%` : "—"} valueClass={accuracyTextClass(report.winRateInCourse)} />
@@ -169,12 +181,10 @@ export function CourseGameReportView({ report }: { report: CourseGameReport }) {
         />
       </div>
 
-      <div className="rounded-lg border border-border bg-surface p-4">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">Toutes tes parties</h2>
-        <p className="mt-1 text-xs text-foreground-muted">
-          Plus récentes d&apos;abord. Ouvre une partie : la revue démarre au coup où tu as quitté le cours, et ◀ ▶ restent dans cette ouverture.
-        </p>
-        <ul className="mt-3 divide-y divide-border">
+      <section>
+        <h2 className="font-display text-lg font-semibold">Toutes tes parties</h2>
+        <p className="mt-0.5 text-sm text-foreground-muted">La revue démarre au coup où tu as quitté le cours.</p>
+        <ShowMore limit={10} className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface">
           {games.map((row) => {
             const outcome = gameOutcomeForPlayer(row.result, row.playerColor);
             // La revue s'ouvre sur la position APRÈS le coup qui quitte le cours (`currentPly` = demi-coups joués).
@@ -183,10 +193,10 @@ export function CourseGameReportView({ report }: { report: CourseGameReport }) {
               <li key={row.gameId}>
                 <Link
                   href={`/analyse/${row.gameId}?course=${openingId}&reviewPly=${startPly}`}
-                  className="grid gap-2 py-2.5 text-sm hover:bg-surface-muted/50 sm:grid-cols-[9rem_1fr_auto] sm:items-center"
+                  className="grid gap-2 px-4 py-2.5 text-sm hover:bg-surface-muted sm:grid-cols-[9rem_1fr_auto] sm:items-center"
                 >
                   <div>
-                    <p className="font-medium">{row.opponentName ?? "Adversaire inconnu"}</p>
+                    <p className="font-medium">{displayOpponentName(row.opponentName)}</p>
                     <p className="text-xs text-foreground-muted">
                       {row.playedAt.toLocaleDateString("fr-FR")} · {row.playerColor === "w" ? "Blancs" : "Noirs"}
                       {!row.withCourseSide && " (côté adverse)"}
@@ -200,24 +210,18 @@ export function CourseGameReportView({ report }: { report: CourseGameReport }) {
                         {row.firstMistake.san}
                       </span>
                     )}
-                    <span className={`rounded px-2 py-0.5 text-xs ${GAME_OUTCOME_BADGE_CLASS[outcome]}`}>{GAME_OUTCOME_LABEL[outcome]}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${GAME_OUTCOME_BADGE_CLASS[outcome]}`}>{GAME_OUTCOME_LABEL[outcome]}</span>
                   </div>
                 </Link>
               </li>
             );
           })}
-        </ul>
-      </div>
+        </ShowMore>
+      </section>
     </div>
   );
 }
 
 function Tile({ label, value, valueClass, hint }: { label: string; value: string; valueClass?: string; hint?: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{label}</p>
-      <p className={`mt-1 font-mono text-2xl font-semibold ${valueClass ?? ""}`}>{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-foreground-muted">{hint}</p>}
-    </div>
-  );
+  return <Stat label={label} value={value} valueClassName={valueClass} hint={hint} />;
 }

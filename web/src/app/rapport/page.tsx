@@ -1,36 +1,45 @@
-import { EsportCanvas, EsportHeader } from "@/components/ui/esport-page";
+import type { Metadata } from "next";
+import { History, ListOrdered, Sparkles } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { ProgressOverview } from "@/client/features/games/progress-overview";
 import { CourseGamesCard } from "@/client/features/reports/course-games-card";
 import { QualitySummaryTable } from "@/client/features/reports/quality-summary-table";
 import { getCourseGamesOverview } from "@/server/queries/course-games";
 import { getMoveQualityTally, getPlayerProgress } from "@/server/queries/progress";
 
-// Sans searchParams ni autre API dynamique, Next.js prérendrait cette page une
-// fois au build et servirait ensuite des statistiques figées — alors que de
-// nouvelles parties s'analysent en continu. Il faut la lire à chaque requête.
+export const metadata: Metadata = { title: "Progrès" };
+// De nouvelles parties s'analysent en continu : lu à chaque requête.
 export const dynamic = "force-dynamic";
 
 export default async function RapportPage() {
-  const [overview, qualityTally, courseGames] = await Promise.all([
-    getPlayerProgress(),
-    getMoveQualityTally(),
-    getCourseGamesOverview(),
-  ]);
+  const [overview, qualityTally, courseGames] = await Promise.all([getPlayerProgress(), getMoveQualityTally(), getCourseGamesOverview()]);
 
   return (
-    <EsportCanvas>
-    <div className="space-y-6">
-      <EsportHeader eyebrow="Rapport de performance / 02" title="Lis ton propre jeu.">
-        Précision par phase de jeu, fourchettes et clouages trouvés contre manqués, performance par ouverture,
-        pièces laissées en prise. Tout s&apos;agrège depuis la table des coups analysés.
-      </EsportHeader>
-
-      <ProgressOverview overview={overview} />
-
-      <CourseGamesCard rows={courseGames} />
-
+    <div className="mx-auto w-full max-w-[1100px] space-y-8">
+      <PageHeader
+        title="Progrès"
+        description="Ce que disent tes parties analysées."
+        className="pb-0"
+        action={
+          <nav aria-label="Accès Progrès" className="flex flex-wrap gap-1">
+            <ButtonLink href="/parties" variant="ghost">
+              <ListOrdered aria-hidden="true" />
+              Mes parties
+            </ButtonLink>
+            <ButtonLink href="/rapport/brillants" variant="ghost">
+              <Sparkles aria-hidden="true" />
+              Coups brillants
+            </ButtonLink>
+            <ButtonLink href="/ouvertures/historique-endurance" variant="ghost">
+              <History aria-hidden="true" />
+              Endurance
+            </ButtonLink>
+          </nav>
+        }
+      />
+      <ProgressOverview overview={overview} courseGames={<CourseGamesCard rows={courseGames} />} />
       <QualitySummaryTable tally={qualityTally} />
     </div>
-    </EsportCanvas>
   );
 }
