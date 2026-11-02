@@ -190,7 +190,7 @@ export function OpeningTrapDrill({
           title={canPoisonPawn ? undefined : "Pas encore disponible pour ce piège"}
           className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
             poisonMode
-              ? "border-blunder/40 bg-blunder/10 text-blunder"
+              ? "border-blunder/40 bg-blunder/10 text-danger"
               : "border-border text-foreground-muted hover:bg-surface-muted"
           } ${canPoisonPawn ? "" : "cursor-not-allowed opacity-50"}`}
         >

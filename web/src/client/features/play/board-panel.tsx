@@ -83,7 +83,7 @@ export function BoardPanel({
           <button
             type="button"
             onClick={onResign}
-            className="rounded-xl border border-blunder/30 bg-blunder/5 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-blunder transition-colors hover:bg-blunder/10"
+            className="rounded-xl border border-blunder/30 bg-blunder/5 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-danger transition-colors hover:bg-blunder/10"
           >
             🏳️ Abandonner
           </button>

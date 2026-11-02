@@ -183,10 +183,10 @@ const NEUTRAL_BUTTON = "border-border bg-surface-muted text-foreground hover:bor
 const TIER_TONE: Record<EnduranceTier, { card: string; badge: string; dot: string; text: string; button: string }> = {
   fragile: {
     card: "border-blunder/40 bg-blunder/10",
-    badge: "border-blunder/50 bg-blunder/15 text-blunder",
+    badge: "border-blunder/50 bg-blunder/15 text-danger",
     dot: "bg-blunder",
-    text: "text-blunder",
-    button: "border-blunder/60 bg-blunder/15 text-blunder hover:bg-blunder/25",
+    text: "text-danger",
+    button: "border-blunder/60 bg-blunder/15 text-danger hover:bg-blunder/25",
   },
   moyen: {
     card: "border-inaccuracy/40 bg-inaccuracy/10",

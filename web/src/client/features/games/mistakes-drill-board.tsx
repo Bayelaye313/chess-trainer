@@ -174,7 +174,7 @@ function DrillAttempt({
         {result === null && <p className="text-foreground-muted">Trouve la meilleure alternative.</p>}
         {result === "correct" && <p className="font-medium text-best">Bien joué !</p>}
         {result === "incorrect" && (
-          <p className="font-medium text-blunder">
+          <p className="font-medium text-danger">
             Essaye encore !{playedSan ? ` (${playedSan} n'était pas le meilleur coup` : ""}
             {playedSan ? ` — c'était ${mistake.bestSan})` : ""}
           </p>

@@ -1,43 +1,26 @@
 import type { ReactNode } from "react";
-import styles from "./esport-page.module.css";
+import { PageHeader } from "./page-header";
 
 /**
- * Canevas e-sport des onglets principaux — même décor que l'onglet Apprendre
- * (`PlaybookLearnScreen`). Les jetons de thème y sont redéfinis : les cartes
- * Tailwind existantes prennent la palette sans modification. `detail` : pages
- * de détail qui gardent leur propre en-tête (pas d'`EsportHeader`).
+ * Conteneur de page. Ancien « canevas e-sport » : il redéfinissait les jetons
+ * (double palette) et posait grille, halos et étincelles — tout cela est
+ * supprimé (docs/redesign/direction.md). Le nom est gardé pour ne pas toucher
+ * chaque route ; `detail` ne change plus rien et reste accepté.
  */
-export function EsportCanvas({ children, detail = false }: { children: ReactNode; detail?: boolean }) {
-  return (
-    <div className={styles.canvas}>
-      <div className={styles.ambientLine} aria-hidden="true" />
-      <span className={styles.spark} aria-hidden="true" />
-      <span className={`${styles.spark} ${styles.sparkPurple}`} aria-hidden="true" />
-      <div className={`${styles.inner} ${detail ? styles.detail : ""}`}>{children}</div>
-    </div>
-  );
+export function EsportCanvas({ children }: { children: ReactNode; detail?: boolean }) {
+  return <div className="mx-auto w-full max-w-[1200px]">{children}</div>;
 }
 
-/** En-tête d'onglet : sur-titre mono, grand titre, chapeau, encart optionnel à droite. */
+/** Ancien en-tête d'onglet : délègue à `PageHeader`. Le surtitre n'est plus affiché. */
 export function EsportHeader({
-  eyebrow,
   title,
   children,
   aside,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   children?: ReactNode;
   aside?: ReactNode;
 }) {
-  return (
-    <header className={styles.header}>
-      <div>
-        <p className={styles.eyebrow}>{eyebrow}</p>
-        <h1>{title}</h1>
-        {children && <p className={styles.lede}>{children}</p>}
-      </div>
-      {aside && <div className={styles.aside}>{aside}</div>}
-    </header>
-  );
+  return <PageHeader title={title} description={children} action={aside} />;
 }

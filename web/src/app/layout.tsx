@@ -6,39 +6,38 @@ import { EngineProvider } from "@/client/engine/engine-context";
 import "./globals.css";
 
 /**
- * Geist en AUTO-HÉBERGÉ (`next/font/local`), plus par `next/font/google`.
- *
- * `next/font/google` télécharge la police depuis `fonts.googleapis.com` À CHAQUE
- * build. Derrière le proxy du poste de développement, ce téléchargement échoue
- * (« Failed to download Geist Mono from Google Fonts. Using a fallback font
- * instead. ») : Next continue avec une police de repli, mais l'application ne
- * s'affiche alors plus dans sa propre typographie — et le build attend le
- * timeout réseau avant de le constater.
- *
- * Les deux fichiers `.woff2` (sous-ensemble latin, axe de graisse variable
- * 100-900) vivent donc dans le dépôt, à côté de ce layout. C'est la cohérence
- * du reste du projet : Stockfish est déjà servi depuis `public/engine/`, et la
- * banque de puzzles est un fichier TypeScript statique intégré au dépôt
- * (`core/curriculum/master-puzzles-dataset.ts`) — aucune partie de
- * l'application ne dépend du réseau pour démarrer.
- *
- * `fallback` liste les polices système utilisées le temps du chargement ;
- * `display: "swap"` évite le texte invisible pendant ce court instant.
+ * Polices AUTO-HÉBERGÉES (`next/font/local`) : COOP/COEP interdit toute
+ * ressource externe, et l'app démarre sans réseau. Couple choisi dans
+ * docs/redesign/direction.md : Fraunces (titres, axe optique), IBM Plex Sans
+ * (texte), IBM Plex Mono (notation, évaluations, Elo — chiffres tabulaires).
+ * Licences OFL à côté des fichiers.
  */
-const geistSans = localFont({
-  src: "./fonts/geist-latin.woff2",
-  variable: "--font-geist-sans",
+const fraunces = localFont({
+  src: "./fonts/fraunces-latin-opsz.woff2",
+  variable: "--font-fraunces",
   weight: "100 900",
   display: "swap",
-  fallback: ["ui-sans-serif", "system-ui", "Segoe UI", "Arial", "sans-serif"],
+  fallback: ["Georgia", "serif"],
 });
 
-const geistMono = localFont({
-  src: "./fonts/geist-mono-latin.woff2",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+const plexSans = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-sans-latin-wght.woff2", weight: "100 700", style: "normal" },
+    { path: "./fonts/ibm-plex-sans-latin-wght-italic.woff2", weight: "100 700", style: "italic" },
+  ],
+  variable: "--font-plex-sans",
   display: "swap",
-  fallback: ["ui-monospace", "Cascadia Mono", "Consolas", "monospace"],
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
+});
+
+const plexMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
+  variable: "--font-plex-mono",
+  display: "swap",
+  fallback: ["ui-monospace", "Consolas", "monospace"],
 });
 
 export const metadata: Metadata = {
@@ -50,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         {/*

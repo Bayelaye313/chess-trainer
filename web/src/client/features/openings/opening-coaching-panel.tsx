@@ -239,7 +239,7 @@ export const OpeningCoachingPanel = memo(function OpeningCoachingPanel({
           key={trapPunishment.nonce}
           className="animate-trap-alert rounded-md border border-blunder bg-blunder/10 p-3 text-xs text-foreground"
         >
-          <p className="font-semibold text-blunder">⚠️ ALERTE PIÈGE : {trapPunishment.trap.name}</p>
+          <p className="font-semibold text-danger">⚠️ ALERTE PIÈGE : {trapPunishment.trap.name}</p>
           <p className="mt-1">{trapPunishment.trap.trapExplanation}</p>
         </div>
       )}

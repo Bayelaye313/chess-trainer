@@ -60,7 +60,7 @@ export function EngineCheck() {
         </button>
       </div>
 
-      {runError && <p className="mt-3 text-sm text-blunder">{runError}</p>}
+      {runError && <p className="mt-3 text-sm text-danger">{runError}</p>}
 
       {status === "ready" && !multiThreaded && (
         <p className="mt-3 text-sm text-inaccuracy">

@@ -239,7 +239,7 @@ export function ProgressOverview({ overview }: { overview: PlayerProgressOvervie
         <StatTile
           label="Pièces laissées en prise"
           value={hangingRate !== null ? `${hangingRate}%` : "—"}
-          valueClass={hangingRate !== null && hangingRate > 0 ? "text-blunder" : ""}
+          valueClass={hangingRate !== null && hangingRate > 0 ? "text-danger" : ""}
           hint={
             totalBlunders > 0
               ? `${blunderCount} sur ${totalBlunders} gaffe${totalBlunders > 1 ? "s" : ""}`

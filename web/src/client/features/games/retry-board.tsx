@@ -85,7 +85,7 @@ export function RetryBoard({
           <p className="font-medium text-best">Correct — {playedSan} était le meilleur coup.</p>
         )}
         {result === "incorrect" && (
-          <p className="font-medium text-blunder">
+          <p className="font-medium text-danger">
             Pas tout à fait{playedSan ? ` (${playedSan})` : ""} — le meilleur coup était {bestSan}.
           </p>
         )}

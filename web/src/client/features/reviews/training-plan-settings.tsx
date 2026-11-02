@@ -221,7 +221,7 @@ export function TrainingPlanSettings({
             {pending ? "Application…" : "Appliquer"}
           </button>
         )}
-        {error && <p className="text-xs text-blunder">{error}</p>}
+        {error && <p className="text-xs text-danger">{error}</p>}
       </div>
     </form>
   );

@@ -44,7 +44,7 @@ export function ReportSummaryCard({ summary }: { summary: ReportSummary }) {
               value={summary.winRate !== null ? `${summary.winRate}%` : "—"}
               valueClass={accuracyTextClass(summary.winRate)}
             />
-            <Stat label="Gaffes" value={String(summary.totalBlunders)} valueClass="text-blunder" />
+            <Stat label="Gaffes" value={String(summary.totalBlunders)} valueClass="text-danger" />
             <Stat label="Coups brillants" value={String(summary.totalBrilliant)} valueClass="text-brilliant" />
           </div>
         )}

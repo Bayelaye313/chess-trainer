@@ -41,7 +41,7 @@ export function ExplorePanel({
           <span className="text-foreground-muted">Analyse en cours…</span>
         )}
         {evaluation.status === "error" && (
-          <span className="text-blunder">Analyse indisponible — {evaluation.message}</span>
+          <span className="text-danger">Analyse indisponible — {evaluation.message}</span>
         )}
         {evaluation.status === "ready" && lastMove && (
           <>

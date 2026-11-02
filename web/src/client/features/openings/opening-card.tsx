@@ -7,7 +7,7 @@ import { Stars } from "./stars";
 
 /** Pas de badge tant que l'ouverture n'a jamais été pratiquée en Mode Entraînement — voir `listOpeningReviewSummaries`. */
 const REVIEW_BADGE: Record<OpeningReviewStatus, { label: string; className: string }> = {
-  due: { label: "🔴 À réviser", className: "border-blunder/40 bg-blunder/10 text-blunder" },
+  due: { label: "🔴 À réviser", className: "border-blunder/40 bg-blunder/10 text-danger" },
   mastered: { label: "🟢 Maîtrisé", className: "border-best/40 bg-best/10 text-best" },
 };
 

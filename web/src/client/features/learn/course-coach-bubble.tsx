@@ -44,7 +44,7 @@ const TONE_CLASSES: Record<CoachTone, { bubble: string; tail: string; avatar: st
     bubble: "border-blunder/45 ring-1 ring-blunder/25 shadow-md shadow-blunder/20",
     tail: "border-blunder/45",
     avatar: "ring-2 ring-blunder/60",
-    label: "text-blunder",
+    label: "text-danger",
     caret: "bg-blunder",
   },
   fatigue: {

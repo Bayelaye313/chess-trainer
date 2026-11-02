@@ -31,7 +31,7 @@ export function PlayScreen({ startLines = [] }: { startLines?: readonly BotStart
         {/* Rendu ici, pas dans BoardPanel : une erreur au lancement remet le
             statut à "setup", où BoardPanel ne serait plus affiché. */}
         {game.error && (
-          <p className="rounded-md border border-blunder/30 bg-blunder/10 px-4 py-2 text-sm text-blunder">
+          <p className="rounded-md border border-blunder/30 bg-blunder/10 px-4 py-2 text-sm text-danger">
             {game.error}
           </p>
         )}

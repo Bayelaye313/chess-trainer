@@ -106,7 +106,7 @@ export function PuzzleBankScreen() {
       )}
 
       {state.status === "error" && (
-        <div className="rounded-lg border border-blunder/30 bg-blunder/10 p-6 text-center text-sm text-blunder">
+        <div className="rounded-lg border border-blunder/30 bg-blunder/10 p-6 text-center text-sm text-danger">
           <p>{state.message}</p>
           <button
             type="button"

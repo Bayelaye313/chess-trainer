@@ -179,9 +179,9 @@ function trendSentence(trend: number | null): string {
 const TIER_TONE: Record<EnduranceTier, { card: string; badge: string; dot: string; text: string }> = {
   fragile: {
     card: "border-blunder/40 bg-blunder/10",
-    badge: "border-blunder/50 bg-blunder/15 text-blunder",
+    badge: "border-blunder/50 bg-blunder/15 text-danger",
     dot: "bg-blunder",
-    text: "text-blunder",
+    text: "text-danger",
   },
   moyen: {
     card: "border-inaccuracy/40 bg-inaccuracy/10",
@@ -203,6 +203,6 @@ const TIER_BADGE: Record<EnduranceTier, string> = {
 const MOOD_TONE: Record<TimelineMood, { icon: string; label: string; marker: string }> = {
   record: { icon: "★", label: "Nouveau record", marker: "border-best/60 bg-best/20 text-best" },
   progres: { icon: "↑", label: "Progrès", marker: "border-best/40 bg-best/10 text-best" },
-  recul: { icon: "↓", label: "Recul", marker: "border-blunder/40 bg-blunder/10 text-blunder" },
+  recul: { icon: "↓", label: "Recul", marker: "border-blunder/40 bg-blunder/10 text-danger" },
   stable: { icon: "•", label: "Session", marker: "border-border bg-surface-muted text-foreground-muted" },
 };

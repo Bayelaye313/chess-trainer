@@ -74,7 +74,7 @@ export function OpeningPerformanceRadar({ sessions }: { sessions: readonly Openi
 const LEVEL_TONE: Record<PillarLevel, { fill: string; text: string; label: string }> = {
   fort: { fill: "bg-best", text: "text-best", label: "Point fort" },
   moyen: { fill: "bg-best/50", text: "text-foreground", label: "En progrès" },
-  faible: { fill: "bg-blunder", text: "text-blunder", label: "Point faible" },
+  faible: { fill: "bg-blunder", text: "text-danger", label: "Point faible" },
 };
 
 function PillarCard({ pillar }: { pillar: Pillar }) {
@@ -146,7 +146,7 @@ function HitParadeBlock({
   const accent =
     tone === "best"
       ? { card: "border-best/30 bg-best/5", text: "text-best", fill: "bg-best" }
-      : { card: "border-blunder/30 bg-blunder/5", text: "text-blunder", fill: "bg-blunder" };
+      : { card: "border-blunder/30 bg-blunder/5", text: "text-danger", fill: "bg-blunder" };
   return (
     <div className="flex flex-col gap-2">
       <div>
@@ -182,7 +182,7 @@ function HitParadeBlock({
                     href={`/ouvertures/${row.openingId}?drill=${MAIN_LINE_VARIATION_KEY}${
                       row.tier === "fragile" ? `&mode=${SANS_GUIDE_MODE}` : ""
                     }#${DRILL_ANCHOR_ID}`}
-                    className="rounded border border-blunder/40 px-2 py-0.5 font-medium text-blunder hover:bg-blunder/10"
+                    className="rounded border border-blunder/40 px-2 py-0.5 font-medium text-danger hover:bg-blunder/10"
                   >
                     Drill immédiat →
                   </Link>
