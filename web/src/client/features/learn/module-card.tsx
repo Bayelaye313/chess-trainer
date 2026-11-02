@@ -7,7 +7,7 @@
  * l'académie (thèmes maîtrisés plutôt que puzzles résolus).
  */
 import type { CurriculumCategoryOverview } from "@/server/queries/curriculum";
-import { moduleIcon } from "./module-icon";
+import { ModuleIcon } from "./module-icon";
 import { ProgressRing } from "./progress-ring";
 
 export function ModuleCard({ category, onSelect }: { category: CurriculumCategoryOverview; onSelect: () => void }) {
@@ -23,7 +23,7 @@ export function ModuleCard({ category, onSelect }: { category: CurriculumCategor
     >
       <div className="flex items-start justify-between gap-3">
         <span className="text-4xl" aria-hidden="true">
-          {moduleIcon(category.id)}
+          <ModuleIcon category={category.id} />
         </span>
         <ProgressRing percent={percent} size={56} />
       </div>

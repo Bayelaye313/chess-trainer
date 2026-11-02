@@ -34,7 +34,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "motion/react";
 import type { CurriculumCategoryMeta } from "@/core/curriculum/catalog";
 import type { CurriculumThemeOverview } from "@/server/queries/curriculum";
-import { moduleIcon } from "./module-icon";
+import { ModuleIcon } from "./module-icon";
 import { ProgressBar } from "./progress-bar";
 import {
   BRIEFING_BACKDROP_VARIANTS,
@@ -97,7 +97,7 @@ export function MissionBriefing({ theme, category, objective, keyIdeas, onEnter 
                     Niveau de menace : {threat.label}
                   </span>
                   <span className="text-2xl" aria-hidden="true">
-                    {moduleIcon(category.id)}
+                    <ModuleIcon category={category.id} />
                   </span>
                 </div>
 

@@ -34,6 +34,7 @@
  * seuls points qui font avancer l'état local — même contrainte que
  * `academy-puzzle-arena.tsx` (`react-hooks/set-state-in-effect`).
  */
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getThemePuzzleReviewSession } from "@/server/actions/curriculum";
 import type { ThemeReviewSession as ThemeReviewSessionData } from "@/server/queries/curriculum";
@@ -104,16 +105,17 @@ export function ThemeReviewSession({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-semibold">{title}</h1>
+      <div>
+        <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Thèmes
+        </button>
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-[22px] font-semibold sm:text-[26px]">{title}</h1>
           {state.status === "session" && (
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-accent">🔁 Mode Révision — le score global n&apos;est pas affecté</p>
+            <p className="mt-0.5 text-sm text-foreground-muted">Révision : ton score sur le thème n&apos;est pas modifié.</p>
           )}
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour aux thèmes
-        </button>
       </div>
 
       {description &&
@@ -162,9 +164,7 @@ export function ThemeReviewSession({
 
       {state.status === "session" && !currentPuzzle && puzzles.length > 0 && (
         <div className="animate-fade-up-in rounded-lg border border-border bg-surface p-8 text-center">
-          <span aria-hidden="true" className="text-4xl">
-            🔁
-          </span>
+          <RotateCcw aria-hidden="true" className="mx-auto size-9 text-success" />
           <p className="mt-2 text-lg font-semibold text-best">Session de révision terminée !</p>
           <p className="mt-1 text-sm text-foreground-muted">
             {puzzles.length} exercice{puzzles.length > 1 ? "s" : ""} revu{puzzles.length > 1 ? "s" : ""} — le score global du thème n&apos;a pas changé.
@@ -173,14 +173,15 @@ export function ThemeReviewSession({
             <button
               type="button"
               onClick={handleRestart}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             >
-              🔁 Revoir encore
+              <RotateCcw aria-hidden="true" className="size-4" />
+              Revoir encore
             </button>
             <button
               type="button"
               onClick={onExit}
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface-muted"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-sm font-medium hover:bg-surface-muted"
             >
               Retour aux thèmes
             </button>

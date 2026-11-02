@@ -21,6 +21,8 @@
  * l'exploration d'une erreur d'ouverture se lise exactement comme celle d'une
  * partie entière.
  */
+import { ArrowLeft } from "lucide-react";
+import { displayOpeningName } from "./opening-display";
 import { useEngine } from "@/client/engine/engine-context";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS, lastMoveSquareStyles, qualityRingColor } from "@/client/features/board/board-theme";
@@ -86,20 +88,21 @@ export function OpeningMistakeExplorer({
   const arrows = explore.evaluation.status === "ready" ? arrowsFromEngineLines(explore.evaluation.evaluated.bestLines) : [];
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex items-start justify-between gap-3">
+    <div>
+      <div>
+        <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Mes erreurs d&apos;ouverture
+        </button>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">🔍 Exploration libre — {deviation.openingName}</h2>
-          <p className="mt-1 text-xs text-foreground-muted">
+          <h1 className="font-display text-[22px] leading-tight font-semibold sm:text-[28px]">Exploration libre · {displayOpeningName(deviation.openingName)}</h1>
+          <p className="mt-1 text-sm text-foreground-muted">
             Position juste avant ta déviation — cherche librement avec Stockfish, aucun coup imposé.
           </p>
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour au journal
-        </button>
       </div>
 
-      <div className="mt-3 rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+      <div className="mt-3 rounded-md bg-surface-muted p-3 text-center text-sm text-foreground">
         Ici, tu avais joué <span className="font-mono font-semibold">{deviation.actualSan}</span> au lieu de{" "}
         <span className="font-mono font-semibold">{deviation.expectedSan}</span>.
       </div>

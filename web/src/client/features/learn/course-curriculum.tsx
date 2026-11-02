@@ -32,6 +32,7 @@
  *    réel reste largement sous le seuil où `react-window` apporterait quoi
  *    que ce soit — l'ajouter ici serait de la complexité sans bénéfice mesuré.
  */
+import { Check, Clock, RotateCcw } from "lucide-react";
 import * as Accordion from "@radix-ui/react-accordion";
 import { motion } from "motion/react";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -82,7 +83,7 @@ const ThemeRow = memo(function ThemeRow({
           }`}
           aria-hidden="true"
         >
-          {done ? "✓" : index + 1}
+          {done ? <Check aria-hidden="true" className="size-3.5" /> : index + 1}
         </span>
         <span className="min-w-0 flex-1">
           <span className={`block truncate text-sm font-medium ${empty ? "text-foreground-muted" : "text-foreground"}`}>
@@ -91,7 +92,7 @@ const ThemeRow = memo(function ThemeRow({
           <span className="mt-0.5 block truncate text-xs text-foreground-muted">{theme.description}</span>
         </span>
         {empty ? (
-          <span className="shrink-0 text-xs font-medium text-inaccuracy">⚠️ En attente</span>
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs text-foreground-muted"><Clock aria-hidden="true" className="size-3.5" />À venir</span>
         ) : (
           <span className="shrink-0 font-mono text-xs text-foreground-muted">
             {theme.completedCount}/{theme.totalPuzzles}
@@ -104,9 +105,9 @@ const ThemeRow = memo(function ThemeRow({
           onClick={onReview}
           title="Revoir les puzzles"
           aria-label="Revoir les puzzles"
-          className="shrink-0 rounded-md px-2 py-1.5 text-base hover:bg-surface-muted"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-foreground-muted hover:bg-surface-muted hover:text-foreground"
         >
-          🔁
+          <RotateCcw aria-hidden="true" className="size-4" />
         </button>
       )}
     </motion.div>

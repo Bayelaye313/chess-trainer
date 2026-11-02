@@ -25,7 +25,10 @@ import { getThemeCourseExamples } from "@/server/actions/curriculum";
 import type { CurriculumCategoryMeta } from "@/core/curriculum/catalog";
 import type { CurriculumThemeOverview, ThemePuzzle } from "@/server/queries/curriculum";
 import { CourseTreeViewer } from "./course-tree-viewer";
-import { moduleIcon } from "./module-icon";
+import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { categoryLabel, ModuleIcon } from "./module-icon";
 
 export function ThemeLesson({
   theme,
@@ -78,16 +81,15 @@ export function ThemeLesson({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold tracking-tight">
-            {moduleIcon(category.id)} {theme.title}
-          </h1>
-          <p className="mt-1 text-sm text-foreground-muted">Module « {category.label} » — cours avant exercices.</p>
-        </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour aux thèmes
-        </button>
+      <div className="min-w-0">
+        <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            {categoryLabel(category.id, category.label)}
+          </button>
+        <h1 className="font-display text-[22px] leading-tight font-semibold sm:text-[28px]">
+          <ModuleIcon category={category.id} /> {theme.title}
+        </h1>
+        <p className="mt-1 text-sm text-foreground-muted">Lis le cours, puis passe aux exercices.</p>
       </div>
 
       {/* Rectangle plein-largeur (Objectif + Idées clés) au-dessus, puis l'échiquier en dessous sur sa propre ligne —
@@ -105,24 +107,16 @@ export function ThemeLesson({
       )}
 
       {hasNoAuthenticContent ? (
-        <div className="mx-auto max-w-prose rounded-lg border border-inaccuracy/30 bg-inaccuracy/10 px-4 py-3 text-center text-sm text-inaccuracy">
-          ⚠️ En attente du fichier PGN authentique de l&apos;utilisateur — aucun exercice fidèle à ce thème n&apos;a encore été
-          importé. Dépose un fichier réel dans <code className="font-mono text-xs">data/import/academy/</code> puis relance
-          <code className="ml-1 font-mono text-xs">npm run db:seed-academy</code> pour débloquer les exercices.
-        </div>
+        <EmptyState icon={Clock} title="Exercices à venir" className="mx-auto max-w-prose">
+          Aucun exercice n&apos;est encore disponible pour ce thème.
+        </EmptyState>
       ) : (
         <div className="flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={onStart}
-            disabled={!courseCompleted}
-            className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Passer aux exercices ➔
-          </button>
-          {!courseCompleted && (
-            <p className="text-xs text-foreground-muted">Ouvre le dernier chapitre du cours pour débloquer les exercices.</p>
-          )}
+          <Button variant="primary" onClick={onStart} disabled={!courseCompleted}>
+            Passer aux exercices
+            <ArrowRight aria-hidden="true" />
+          </Button>
+          {!courseCompleted && <p className="text-sm text-foreground-muted">Ouvre le dernier chapitre du cours pour débloquer les exercices.</p>}
         </div>
       )}
     </div>

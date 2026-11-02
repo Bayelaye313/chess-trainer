@@ -26,7 +26,7 @@ export function SectionSwitcher({ links, label }: { links: readonly SectionLink[
             href={link.href}
             aria-current={active ? "page" : undefined}
             className={cx(
-              "inline-flex min-h-10 items-center rounded-md px-4 text-sm font-medium transition-colors",
+              "inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors",
               active ? "bg-surface-raised text-foreground" : "text-foreground-muted hover:text-foreground",
             )}
           >

@@ -33,6 +33,7 @@
  * flèches et les 3 essais sont IDENTIQUES dans les deux — voir le docstring de
  * `SolvablePuzzle` (`core/puzzle/solve-state.ts`).
  */
+import { BookOpen, Eye, GraduationCap, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
@@ -385,12 +386,12 @@ export function PuzzleBoard({
           {(coachMessage || practicalHint || courseToReview) && (
             <div
               key={`${coachMessage ?? ""}|${practicalHint?.text ?? ""}|${courseToReview?.href ?? ""}`}
-              className="rounded-lg border border-border bg-surface-muted/40 px-4 py-3 text-sm animate-fade-up-in"
+              className="rounded-lg border border-border border-l-4 border-l-border-strong bg-surface-muted px-4 py-3 text-sm animate-fade-up-in"
             >
               {coachMessage && (
-                <p className="text-foreground">
-                  <span aria-hidden="true">🎓 </span>
-                  {coachMessage}
+                <p className="flex items-start gap-2 text-foreground">
+                  <GraduationCap aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-foreground-muted" />
+                  <span>{coachMessage}</span>
                 </p>
               )}
               {practicalHint && (
@@ -399,13 +400,13 @@ export function PuzzleBoard({
                     practicalHint.kind === "error" ? "font-medium text-inaccuracy" : "text-foreground-muted"
                   }`}
                 >
-                  <span aria-hidden="true">{practicalHint.kind === "error" ? "⚠️" : "👁"}</span>
+                  {practicalHint.kind === "error" ? <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" /> : <Eye aria-hidden="true" className="mt-0.5 size-4 shrink-0" />}
                   <span>{practicalHint.text}</span>
                 </p>
               )}
               {courseToReview && (
                 <p className="mt-1.5 flex items-start gap-2 text-foreground-muted">
-                  <span aria-hidden="true">📘</span>
+                  <BookOpen aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                   <span>
                     Cours à revoir :{" "}
                     <Link

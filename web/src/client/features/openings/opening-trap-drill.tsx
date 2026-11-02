@@ -40,7 +40,9 @@ import { Chessboard } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
 import type { OpeningTrap } from "@/core/curriculum/traps";
 import { useErrorShake } from "./error-feedback";
-import { familyIcon } from "./trap-family-icon";
+import { ArrowLeft, ArrowRight, CircleCheck, Lightbulb, Lock, RotateCcw, Skull, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { displayOpeningName } from "./opening-display";
 import { markTrapSolved } from "./trap-progress";
 import { buildPoisonPawnRound, buildTrapRound } from "./trap-round";
 import { useOpeningDrill } from "./use-opening-drill";
@@ -161,25 +163,22 @@ export function OpeningTrapDrill({
   const isPoisonRun = drill.selection?.kind === "trap-poison";
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            {familyIcon(activeTrap.family)} {activeTrap.family} <span className="font-normal text-foreground-muted">· {activeTrap.gambit}</span>
-            {seriesIndex >= 0 && (
-              <span className="font-normal text-foreground-muted"> — Puzzle {seriesIndex + 1} / {seriesTraps.length}</span>
-            )}
-          </h2>
-          <p className="mt-1 text-xs text-foreground-muted">
-            {activeTrap.name} — tu joues {activeTrap.victimSide === "white" ? "les Blancs" : "les Noirs"}.
-            {!isPoisonRun && drill.selection?.kind === "trap" && (
-              <span> Manche {drill.learningRound} / 2{drill.learningRound === 1 ? " — guidée" : " — sans guide 🔒"}.</span>
-            )}
-          </p>
-        </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour aux pièges
+    <div>
+      <div>
+        <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Pièges
         </button>
+        <h1 className="font-display text-[22px] leading-tight font-semibold sm:text-[28px]">
+          {displayOpeningName(activeTrap.family)} <span className="font-normal text-foreground-muted">· {activeTrap.gambit}</span>
+        </h1>
+        <p className="mt-1 text-sm text-foreground-muted">
+          {seriesIndex >= 0 && <span className="font-mono">Piège {seriesIndex + 1}/{seriesTraps.length} · </span>}
+          {activeTrap.name} · tu joues {activeTrap.victimSide === "white" ? "les Blancs" : "les Noirs"}.
+          {!isPoisonRun && drill.selection?.kind === "trap" && (
+            <span> Manche {drill.learningRound}/2{drill.learningRound === 1 ? " (guidée)" : " (sans aide)"}.</span>
+          )}
+        </p>
       </div>
 
       <div className="mt-3 flex justify-center">
@@ -188,13 +187,14 @@ export function OpeningTrapDrill({
           disabled={!canPoisonPawn}
           onClick={() => setPoisonMode((current) => !current)}
           title={canPoisonPawn ? undefined : "Pas encore disponible pour ce piège"}
-          className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+          className={`inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors ${
             poisonMode
               ? "border-blunder/40 bg-blunder/10 text-danger"
               : "border-border text-foreground-muted hover:bg-surface-muted"
           } ${canPoisonPawn ? "" : "cursor-not-allowed opacity-50"}`}
         >
-          ☠️ Incarner la victime (Tomber dans le piège)
+          <Skull aria-hidden="true" className="size-4" />
+          {poisonMode ? "Revenir au rôle du défenseur" : "Jouer la victime : tomber dans le piège"}
         </button>
       </div>
 
@@ -216,33 +216,31 @@ export function OpeningTrapDrill({
 
         <div className="mt-3 min-h-6 w-full max-w-[600px] text-center text-sm">
           {drill.status === "autoplaying" ? (
-            <p className="text-foreground-muted">🔁 {isPoisonRun ? "L'IA amène le piège…" : "Mise en place du piège…"}</p>
+            <p className="text-foreground-muted">{isPoisonRun ? "L'ordinateur amène le piège…" : "Mise en place du piège…"}</p>
           ) : drill.status === "finished" ? (
-            <p className="font-medium text-foreground">
-              {isPoisonRun ? "😵 Tu es tombé dans le piège !" : "🔒 Piège maîtrisé !"}
+            <p role="status" className="inline-flex items-center gap-1.5 font-medium text-foreground">
+              {isPoisonRun ? <Skull aria-hidden="true" className="size-4 text-danger" /> : <CircleCheck aria-hidden="true" className="size-4 text-success" />}
+              {isPoisonRun ? "Tu es tombé dans le piège." : "Piège maîtrisé !"}
             </p>
           ) : null}
         </div>
 
         {drill.status === "round-gate" && (
-          <div className="mt-3 w-full max-w-[600px] rounded-md border border-accent/30 bg-accent/5 p-4 text-center">
+          <div className="mt-3 w-full max-w-[600px] rounded-md bg-surface-muted p-4 text-center">
             <p className="text-sm font-medium text-foreground">
               {drill.learningRound === 1
-                ? "✅ Manche 1 réussie ! Manche 2 : retrouve la réfutation sans indice."
+                ? "Manche 1 réussie. Manche 2 : retrouve la réfutation sans indice."
                 : "Presque — la Manche 2 doit être parcourue sans AUCUNE faute pour maîtriser ce piège."}
             </p>
-            <button
-              type="button"
-              onClick={drill.beginNextRound}
-              className="mt-3 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-            >
-              🔒 Retenter sans guide
-            </button>
+            <Button variant="primary" onClick={drill.beginNextRound} className="mt-3">
+              <Lock aria-hidden="true" />
+              Rejouer sans aide
+            </Button>
           </div>
         )}
 
         {trapAlert && (
-          <div className="mt-3 w-full max-w-[600px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+          <div className="mt-3 w-full max-w-[600px] rounded-md bg-surface-muted p-3 text-center text-sm text-foreground">
             Le piège classique tente <span className="font-mono font-semibold">{trapAlert}</span> ici.{" "}
             {activeTrap.trapExplanation}
           </div>
@@ -250,17 +248,17 @@ export function OpeningTrapDrill({
 
         {!hintRevealed && drill.status === "playing" && drill.hintsAllowed && (
           <div className="mt-3 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setHintRevealed(true)}
-              className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
-            >
-              💡 Show hints for this move!
-            </button>
+            <Button onClick={() => setHintRevealed(true)}>
+              <Lightbulb aria-hidden="true" />
+              Afficher l&apos;indice de ce coup
+            </Button>
           </div>
         )}
         {hintRevealed && drill.status === "playing" && drill.hintsAllowed && (
-          <p className="mt-3 text-center text-xs text-foreground-muted">💡 {activeTrap.hint}</p>
+          <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm text-foreground-muted">
+            <Lightbulb aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {activeTrap.hint}
+          </p>
         )}
 
         {drill.status === "finished" && (
@@ -268,33 +266,22 @@ export function OpeningTrapDrill({
             <p className="mt-3 max-w-[600px] text-center text-sm text-foreground-muted">
               {isPoisonRun ? activeTrap.trapExplanation : activeTrap.outcome}
             </p>
-            <p className="mt-3 max-w-[600px] rounded-md border border-border bg-surface-muted/30 p-3 text-center text-xs text-foreground-muted">
-              💬 {activeTrap.comments}
-            </p>
+            <p className="mt-3 max-w-[600px] rounded-md bg-surface-muted p-3 text-center text-sm text-foreground-muted">{activeTrap.comments}</p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                type="button"
-                onClick={retry}
-                className="rounded-md border border-border px-4 py-2 text-sm hover:bg-surface-muted"
-              >
+              <Button onClick={retry}>
+                <RotateCcw aria-hidden="true" />
                 Rejouer
-              </button>
+              </Button>
               {nextInSeries ? (
-                <button
-                  type="button"
-                  onClick={goToNextInSeries}
-                  className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-                >
-                  Suivant →
-                </button>
+                <Button variant="primary" onClick={goToNextInSeries}>
+                  Piège suivant
+                  <ArrowRight aria-hidden="true" />
+                </Button>
               ) : (
-                <button
-                  type="button"
-                  onClick={onExit}
-                  className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-                >
-                  🏆 Série terminée — Retour aux pièges
-                </button>
+                <Button variant="primary" onClick={onExit}>
+                  <Trophy aria-hidden="true" />
+                  Série terminée : retour aux pièges
+                </Button>
               )}
             </div>
           </>

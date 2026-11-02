@@ -46,6 +46,7 @@
  * (`getThemePuzzleSession`/`submitThemePuzzleSolved`) et de la bulle Coach,
  * l'Arena n'étant que la couche de présentation.
  */
+import { ArrowLeft, RotateCcw, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getThemePuzzleSession, submitThemePuzzleSolved } from "@/server/actions/curriculum";
 import type { ThemeSession as ThemeSessionData } from "@/server/queries/curriculum";
@@ -108,13 +109,14 @@ export function ThemeSession({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-semibold">{title}</h1>
-        </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour aux thèmes
+      <div>
+        <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Thèmes
         </button>
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-[22px] font-semibold sm:text-[26px]">{title}</h1>
+        </div>
       </div>
 
       {description &&
@@ -176,9 +178,7 @@ export function ThemeSession({
             </>
           ) : state.session.completedCount >= state.session.totalPuzzles ? (
             <div className="animate-fade-up-in">
-              <span aria-hidden="true" className="text-4xl">
-                🏆
-              </span>
+              <Trophy aria-hidden="true" className="mx-auto size-9 text-success" />
               <p className="mt-2 text-lg font-semibold text-best">Thème maîtrisé !</p>
               <p className="mt-1 text-sm text-foreground-muted">
                 {state.session.totalPuzzles} exercice{state.session.totalPuzzles > 1 ? "s" : ""} résolu
@@ -200,7 +200,7 @@ export function ThemeSession({
             <button
               type="button"
               onClick={onExit}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             >
               Retour aux thèmes
             </button>
@@ -208,9 +208,10 @@ export function ThemeSession({
               <button
                 type="button"
                 onClick={onReview}
-                className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface-muted"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-sm font-medium hover:bg-surface-muted"
               >
-                🔁 Revoir les puzzles
+                <RotateCcw aria-hidden="true" className="size-4" />
+                Revoir les exercices
               </button>
             )}
           </div>

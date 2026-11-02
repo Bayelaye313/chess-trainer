@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { LearnScreen, type LearnView } from "@/client/features/learn/learn-screen";
 import type { CurriculumCategoryOverview } from "@/server/queries/curriculum";
 import { listCurriculumOverview } from "@/server/queries/curriculum";
@@ -28,6 +29,9 @@ function resolveInitialView(
   }
   return undefined;
 }
+
+export const metadata: Metadata = { title: "Académie" };
+export const dynamic = "force-dynamic";
 
 export default async function ApprendrePage({
   searchParams,

@@ -33,6 +33,9 @@
  * chapitres à choisir, ni Test Final — juste l'échiquier, l'indice, le
  * commentaire, et un retour au journal une fois corrigé.
  */
+import { ArrowLeft, CircleCheck, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { displayOpeningName } from "./opening-display";
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
@@ -127,17 +130,18 @@ export function OpeningMistakeExercise({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex items-start justify-between gap-3">
+    <div>
+      <div>
+        <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Mes erreurs d&apos;ouverture
+        </button>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">🎯 Correction ciblée — {opening.name}</h2>
-          <p className="mt-1 text-xs text-foreground-muted">
+          <h1 className="font-display text-[22px] leading-tight font-semibold sm:text-[28px]">Correction ciblée · {displayOpeningName(opening.name)}</h1>
+          <p className="mt-1 text-sm text-foreground-muted">
             Ta partie, rejouée depuis le premier coup jusqu&apos;à ta déviation.
           </p>
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour au journal
-        </button>
       </div>
 
       <div className="mt-5 flex flex-col items-center">
@@ -170,14 +174,14 @@ export function OpeningMistakeExercise({
 
         <div className="mt-3 min-h-6 w-full max-w-[600px] text-center text-sm">
           {drill.status === "autoplaying" ? (
-            <p className="text-foreground-muted">🔁 Relecture de ta partie…</p>
+            <p className="text-foreground-muted">Relecture de ta partie…</p>
           ) : drill.status === "finished" ? (
-            <p className="font-medium text-foreground">✅ Corrigé !</p>
+            <p role="status" className="inline-flex items-center gap-1.5 font-medium text-foreground"><CircleCheck aria-hidden="true" className="size-4 text-success" />Corrigé !</p>
           ) : null}
         </div>
 
         {mistakeAlert && (
-          <div className="mt-3 w-full max-w-[600px] rounded-md border border-border bg-surface-muted/40 p-3 text-center text-sm text-foreground">
+          <div className="mt-3 w-full max-w-[600px] rounded-md bg-surface-muted p-3 text-center text-sm text-foreground">
             Dans ta partie avec {deviation.playerColor === "w" ? "les Blancs" : "les Noirs"} contre{" "}
             <span className="font-medium">{deviation.opponentName ?? "ton adversaire"}</span>, tu as joué{" "}
             <span className="font-mono font-semibold">{mistakeAlert}</span>. Trouve le bon coup théorique.
@@ -197,17 +201,14 @@ export function OpeningMistakeExercise({
 
         {hintCommentary && drill.status === "playing" && hintRevealed !== drill.nextPly && (
           <div className="mt-3 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setHintRevealed(drill.nextPly)}
-              className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
-            >
-              💡 Show hints for this move!
-            </button>
+            <Button onClick={() => setHintRevealed(drill.nextPly)}>
+              <Lightbulb aria-hidden="true" />
+              Afficher l&apos;indice de ce coup
+            </Button>
           </div>
         )}
         {hintCommentary && drill.status === "playing" && hintRevealed === drill.nextPly && (
-          <p className="mt-3 text-center text-xs text-foreground-muted">💡 {hintCommentary.hint}</p>
+          <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm text-foreground-muted"><Lightbulb aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{hintCommentary.hint}</p>
         )}
 
         {drill.status === "finished" && (

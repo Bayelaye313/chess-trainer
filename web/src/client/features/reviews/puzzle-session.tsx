@@ -6,6 +6,8 @@
  * (`submitPuzzleAnswer`). S'arrête quand `getNextPuzzle` ne renvoie plus rien
  * — le deck est à jour pour aujourd'hui.
  */
+import { CircleCheck, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { DECKS, type DeckId } from "@/core/chess/decks";
 import { getNextPuzzle, submitPuzzleAnswer } from "@/server/actions/practice";
@@ -52,16 +54,17 @@ export function PuzzleSession({ deckId, onExit }: { deckId: DeckId; onExit: () =
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">{deckTitle}</h1>
+          <h1 className="font-display text-[22px] font-semibold sm:text-[26px]">{deckTitle}</h1>
           {solvedCount > 0 && (
             <p className="text-sm text-foreground-muted">
               {solvedCount} puzzle{solvedCount > 1 ? "s" : ""} résolu{solvedCount > 1 ? "s" : ""} cette session.
             </p>
           )}
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
+        <Button variant="ghost" onClick={onExit} className="shrink-0">
+          <X aria-hidden="true" />
           Quitter la session
-        </button>
+        </Button>
       </div>
 
       {state.status === "loading" && (
@@ -72,19 +75,15 @@ export function PuzzleSession({ deckId, onExit }: { deckId: DeckId; onExit: () =
 
       {state.status === "empty" && (
         <div className="rounded-lg border border-border bg-surface p-8 text-center">
-          <p className="text-lg font-semibold">Deck à jour ! 👍</p>
+          <p className="flex items-center justify-center gap-2 text-lg font-semibold"><CircleCheck aria-hidden="true" className="size-5 text-success" />Deck à jour</p>
           <p className="mt-1 text-sm text-foreground-muted">
             {solvedCount > 0
               ? `${solvedCount} puzzle${solvedCount > 1 ? "s" : ""} résolu${solvedCount > 1 ? "s" : ""} — plus rien à réviser ici pour l'instant.`
               : "Aucune carte due dans ce deck pour l'instant."}
           </p>
-          <button
-            type="button"
-            onClick={onExit}
-            className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-          >
+          <Button variant="primary" onClick={onExit} className="mt-4">
             Retour aux decks
-          </button>
+          </Button>
         </div>
       )}
 

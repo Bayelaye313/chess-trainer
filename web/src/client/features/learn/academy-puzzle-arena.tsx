@@ -37,6 +37,7 @@
  * thèmes : `WaveHud` retombe simplement sur un affichage "N/total" compact
  * pour `totalPuzzles <= 1`, plutôt qu'une case unique qui n'apporterait rien.
  */
+import { Target } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { PuzzleBoard } from "@/client/features/board/puzzle-board";
 import { useMoveFx } from "@/client/features/games/use-move-fx";
@@ -55,7 +56,7 @@ function WaveHud({ completed, total }: { completed: number; total: number }) {
   if (total <= 1 || total > MAX_HUD_SEGMENTS) {
     return (
       <div className="flex items-center justify-center gap-1.5 font-mono text-xs text-foreground-muted">
-        <span aria-hidden="true">🎯</span>
+        <Target aria-hidden="true" className="size-3.5" />
         {completed}/{total}
       </div>
     );
