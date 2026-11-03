@@ -226,6 +226,25 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Les Noirs avancent leur pion dame d'une seule case.",
     },
   ],
+  "philidor-white": [
+    {
+      comment: "On occupe le centre et on libère le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "Symétrie : les Noirs contestent le centre.",
+      hint: "Les Noirs répondent par la poussée symétrique.",
+    },
+    {
+      comment: "Le cavalier attaque e5 tout de suite et prépare d4.",
+      hint: "Développe le cavalier-roi en attaquant le pion central adverse.",
+    },
+    {
+      comment:
+        "La Philidor : le pion d6 défend e5 mais enferme le fou f8. On frappera par d4 au coup suivant.",
+      hint: "Les Noirs défendent leur pion central avec un pion, pas avec une pièce.",
+    },
+  ],
   "scandinavian-white": [
     {
       comment: "On occupe le centre et on libère le fou f1 et la dame.",

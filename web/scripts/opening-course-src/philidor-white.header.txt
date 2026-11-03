@@ -1,0 +1,74 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Philidor (avec les Blancs) » — onglet Ouvertures,
+ * format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/philidor-white/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1.e4 e5 2.Nf3 contre 2...d6 (fiche
+ * curatée `philidor-white`, C41).
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Blancs)
+ *
+ * 1. Fiche d'identité, tronc commun : 3.d4 exd4 4.Nxd4 Nf6 5.Nc3 Be7 6.Bf4.
+ * 2. Aléatoire surprise 1 : après 3...exd4, la marée de pions.
+ * 3. Branche B : la Lion, 3...Nf6 4.Nc3 Nbd7 5.Bc4.
+ * 4. Branche C : la Hanham, 3...Nd7 4.Bc4.
+ * 5. Branche D : 3...Bg4 4.dxe5, la paire de fous et b7.
+ * 6. Aléatoire surprise 2 : après la Lion, le fou h6.
+ * 7. Branche E : le contre-gambit Philidor, 3...f5.
+ * 8. Anti-panique : 3...Nc6, 3...Qe7 et 3...Bd7.
+ *
+ * Choix des chapitres (2026-11-03) : la théorie principale après 3.d4
+ * (3...exd4, la Lion, la Hanham, 3...Bg4, 3...f5) et les coups rares
+ * 3...Nc6, 3...Qe7, 3...Bd7. Parties de l'utilisateur (copie de la base) :
+ * 3...exd4 deux fois, 3...Bg4 une fois. Le répertoire blanc de
+ * l'utilisateur est l'Écossaise (2...Nc6 3.d4) : aucun autre cours ne
+ * traite 2...d6. Les branches théoriques s'arrêtent au plus tard au
+ * demi-coup 27 ; les chapitres « Aléatoire surprise » prolongent avec les
+ * Noirs comme camp « mou » (dérive en MultiPV 30, comme `_tmp-drift-w.mts`
+ * mais camps inversés). La surprise 2 part du chapitre 3 (la Lion), plus
+ * riche en plans que le chapitre 5.
+ *
+ * Convention côté Blancs (comme `op-ruy-lopez.ts`) : l'élève joue les
+ * Blancs ; les fautes sont des coups NOIRS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup blanc suivant est la punition. Les
+ * « variantes piégées » sont des coups blancs tentants mais mauvais
+ * (5.Bc4 contre ...Nf6, 12.g3, 10.Bg3, 7.Qxf6 et 9.Qxa7 contre 3...Bg4,
+ * 4.Nc3 contre 3...f5, 4.dxe5 contre 3...Nc6). Les coups qui définissent un
+ * chapitre (3...f5) ne portent pas d'indices, même quand le moteur les juge
+ * mauvais.
+ *
+ * Sources : théorie établie de la Philidor, TOUTES les lignes arbitrées par
+ * Stockfish 19 natif (profondeur 16, MultiPV 1) ; 6.Bf4 au chapitre 1 et
+ * 7.a4 dans la Lion sont des choix du moteur. Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes noires qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/philidor-white.pgn` (et l'en-tête
+ * `philidor-white.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-philidor-white`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

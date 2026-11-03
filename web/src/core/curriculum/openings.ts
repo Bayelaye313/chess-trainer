@@ -831,6 +831,21 @@ export const OPENINGS: readonly OpeningLine[] = [
       5.e5 d5 6.Bb5 Ne4 7.Nxd4 Bd7 8.Bxc6 bxc6 9.O-O Bc5 10.f3 Ng5 11.Be3 Ne6 12.f4 Qe7 13.Nc3`,
   },
   {
+    id: "philidor-white",
+    name: "Philidor (avec les Blancs)",
+    eco: "C41",
+    side: "white",
+    description:
+      "Contre 2...d6 : 3.d4 ; Bf4, Qd2 et le grand roque contre 3...exd4, Bc4 et a4 contre la Lion et la Hanham, Qb3 contre b7 et f7 après 3...Bg4, Bc4 et Ng5 contre le contre-gambit 3...f5.",
+    moves: ["e4", "e5", "Nf3", "d6"],
+    pgn: `1.e4 e5 2.Nf3 d6 3.d4 exd4
+      (3...Nf6 {Lion} 4.Nc3 Nbd7 5.Bc4 Be7 6.O-O O-O 7.a4 a5 8.Re1 h6 9.h3 Re8 10.Be3 exd4 11.Qxd4 Nc5)
+      (3...Nd7 {Hanham} 4.Bc4 c6 5.O-O exd4 6.Nxd4 Ngf6 7.Re1 g6 8.Bf1 Bg7 9.Bf4 Ne5 10.h3 O-O)
+      (3...Bg4 4.dxe5 Bxf3 5.Qxf3 dxe5 6.Bc4 Qf6 7.Qb3 Nd7 8.Qxb7 Rb8 9.Qa6 Qxa6 10.Bxa6)
+      (3...f5 {Contre-gambit Philidor} 4.Bc4 Nc6 5.Ng5 Nh6 6.d5 Ne7 7.Nc3 g6 8.exf5 Nhxf5 9.g4 h6)
+      4.Nxd4 Nf6 5.Nc3 Be7 6.Bf4 Nc6 7.Qd2 O-O 8.O-O-O Nxd4 9.Qxd4 a6 10.f3 b5 11.Kb1 Be6`,
+  },
+  {
     id: "sicilian-najdorf",
     name: "Sicilienne Ouverte (Najdorf & Cie)",
     eco: "B20",
