@@ -36,14 +36,14 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * 5...Nxd5?). Les évaluations restent au point de vue des Blancs.
  *
  * Sources : théorie établie des Deux Cavaliers, TOUTES les lignes arbitrées
- * par Stockfish 18 natif (profondeur 16) ; quelques coups blancs de la ligne
+ * par Stockfish 19 natif (profondeur 16) ; quelques coups blancs de la ligne
  * principale sont des choix du moteur peu usuels en club (12.Kh1 au
  * chapitre 1, 8.Nd4 dans la Morphy). Toute la prose est originale.
  *
  ## Architecture technique des nœuds
  *
  * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
- * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 18 de la
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
  *   position après le coup (profondeur 16, point de vue Blancs), écrite
  *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
  * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
