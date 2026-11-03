@@ -44,6 +44,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chessboard } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS } from "@/client/features/board/board-theme";
+import { useHasWidth } from "@/client/features/board/use-has-width";
 import { buildFinalTestRounds, MIN_ROUND_PLIES, resolvePracticedEntries } from "./build-final-test";
 import { findNextUnmasteredVariation, type MasteryCandidate } from "@/core/curriculum/opening-mastery";
 import { GENERIC_BOOK_COMMENT, getMoveCommentary } from "@/core/curriculum/opening-commentary";
@@ -151,6 +152,10 @@ export function OpeningDrill({
   // texte, méthode Listudy stricte (voir le docstring du fichier et
   // `error-feedback.ts`).
   const shaking = useErrorShake(drill.errorPulse);
+  // Le Drill reste monté dans un onglet masqué (`opening-explorer.tsx`) : pas
+  // d'animation tant que le plateau n'a pas de largeur, sinon react-chessboard
+  // lève « Square width not found » sur le premier coup blanc côté Noirs.
+  const [boardHasWidth, boardRef] = useHasWidth();
 
   // "Vision Moteur" (`OpeningCoachingPanel`) — affichée par défaut (la
   // flèche de suggestion moteur, cahier des charges du 2026-09-12, doit être
@@ -461,10 +466,11 @@ export function OpeningDrill({
                 </div>
               )}
 
-              <div className={`w-full max-w-[600px] ${shaking ? "animate-shake-error" : ""}`}>
+              <div ref={boardRef} className={`w-full max-w-[600px] ${shaking ? "animate-shake-error" : ""}`}>
                 <Chessboard
                   options={{ ...ESPORT_BOARD_OPTIONS,
                     id: "opening-drill-board",
+                    showAnimations: boardHasWidth,
                     position: drill.fen,
                     boardOrientation: drill.userColor === "w" ? "white" : "black",
                     onPieceDrop: drill.onPieceDrop,
