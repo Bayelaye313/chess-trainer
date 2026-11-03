@@ -152,6 +152,25 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Les Noirs préparent la poussée de leur pion dame.",
     },
   ],
+  "caro-kann-white": [
+    {
+      comment: "On occupe le centre et on libère le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "La Caro-Kann : les Noirs préparent ...d5 sans enfermer leur fou c8.",
+      hint: "Les Noirs préparent la poussée de leur pion dame.",
+    },
+    {
+      comment: "Le centre idéal : deux pions côte à côte en d4 et e4.",
+      hint: "Complète ton centre avec le pion dame.",
+    },
+    {
+      comment:
+        "Les Noirs attaquent e4. Nos quatre systèmes : l'Avance 3.e5, la Classique 3.Nc3, l'Échange 3.exd5 avec 4.Bd3, et la Panov 4.c4.",
+      hint: "Les Noirs frappent ton pion e4 : choisis de l'avancer, de le défendre ou de l'échanger.",
+    },
+  ],
   "italian-game": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame dès le premier coup.",

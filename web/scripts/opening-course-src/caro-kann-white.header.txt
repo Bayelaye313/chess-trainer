@@ -1,0 +1,70 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Caro-Kann : Avance, Classique, Échange et Panov (avec les
+ * Blancs) » — onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/caro-kann-white/cours`). Public visé :
+ * 1500-1800 Elo, répertoire 1.e4 contre 1...c6 (fiche curatée
+ * `caro-kann-white`, B12). Ne touche pas au cours `caro-kann` (écrit pour les
+ * Noirs) : celui-ci le complète de l'autre côté.
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Blancs)
+ *
+ * 1. Fiche d'identité, tronc commun et l'Avance 3...Bf5 (système Short).
+ * 2. Aléatoire surprise 1 : après l'Avance, le roi noir au centre.
+ * 3. Branche B : l'Avance 3...c5 (4.dxc5).
+ * 4. Branche C : la Classique 4...Bf5 (h4-h5, Bd3, grand roque).
+ * 5. Branche D : la Classique 4...Nd7 (5.Ng5) et 4...Nf6 (5.Nxf6+).
+ * 6. Aléatoire surprise 2 : après la Classique, l'attaque g4-g5.
+ * 7. Branche E : l'Échange 3.exd5 cxd5 4.Bd3.
+ * 8. Branche F : la Panov 4.c4.
+ *
+ * Choix des chapitres (2026-11-03, sans base de parties) : les quatre
+ * systèmes demandés par l'utilisateur (Avance, Classique, Échange, Panov)
+ * avec la réponse noire principale de chacun ; pas de chapitre
+ * anti-panique séparé, les coups rares sont traités en variantes. Les
+ * branches théoriques s'arrêtent au plus tard au demi-coup 27 ; les
+ * chapitres « Aléatoire surprise » prolongent avec les Noirs comme camp
+ * « mou » (`_tmp-drift.mts`).
+ *
+ * Convention côté Blancs (comme `op-ruy-lopez.ts`) : l'élève joue les
+ * Blancs ; les fautes sont des coups NOIRS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup blanc suivant est la punition. Les
+ * « variantes piégées » sont des coups blancs tentants mais mauvais
+ * (10.dxc5, 10.cxd3, 9.Nxe6, 10.gxf3, 9.Bc4…). Une faute qui perd moins de
+ * 0.5 devient une « imprécision » sans indices.
+ *
+ * Sources : théorie établie de la Caro-Kann, TOUTES les lignes arbitrées par
+ * Stockfish 19 natif (profondeur 16, MultiPV 1). Toute la prose est
+ * originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes noires qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/caro-kann-white.pgn` (et l'en-tête
+ * `caro-kann-white.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-caro-kann-white`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

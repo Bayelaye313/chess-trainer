@@ -873,6 +873,25 @@ export const OPENINGS: readonly OpeningLine[] = [
       8.h5 Bh7 9.Bd3 Bxd3 10.Qxd3 e6 11.Bd2 Ngf6 12.O-O-O Be7`,
   },
   {
+    id: "caro-kann-white",
+    name: "Caro-Kann : Avance, Classique, Échange et Panov (avec les Blancs)",
+    eco: "B12",
+    side: "white",
+    description:
+      "Contre 1...c6 : l'Avance 3.e5 (système Short contre ...Bf5, dxc5 contre ...c5), la Classique 3.Nc3 (h4-h5 et grand roque), l'Échange 4.Bd3 et la Panov 4.c4.",
+    moves: ["e4", "c6", "d4", "d5"],
+    pgn: `1.e4 c6 2.d4 d5 3.e5 {Variante d'Avance}
+      (3.Nc3 {Variante Classique} dxe4 4.Nxe4 Bf5
+        (4...Nd7 {Système Karpov} 5.Ng5 Ngf6 6.Bd3 e6 7.N1f3 Bd6 8.Qe2 h6 9.Ne4 Nxe4 10.Qxe4 Qc7 11.O-O b6)
+        5.Ng3 Bg6 6.h4 h6 7.Nf3 Nd7 8.h5 Bh7 9.Bd3 Bxd3 10.Qxd3 e6 11.Bd2 Ngf6 12.O-O-O Be7 13.Kb1)
+      (3.exd5 {Variante d'Échange} cxd5 4.Bd3
+        (4.c4 {Attaque Panov} Nf6 5.Nc3 Nc6 6.Nf3 Bg4 7.cxd5 Nxd5 8.Qb3 Bxf3 9.gxf3 e6 10.Qxb7 Nxd4 11.Bb5+ Nxb5 12.Qc6+)
+        Nc6 5.c3 Nf6 6.Bf4 Bg4 7.Qb3 Qd7 8.Nd2 e6 9.Ngf3 Bxf3 10.Nxf3 Bd6 11.Bxd6 Qxd6 12.O-O O-O)
+      Bf5
+      (3...c5 4.dxc5 Nc6 5.Bb5 e6 6.Be3 Ne7 7.c3 Bd7 8.Nf3)
+      4.Nf3 e6 5.Be2 c5 6.Be3 Nd7 7.O-O Ne7 8.c4 dxc4 9.Na3 Nd5 10.Nxc4`,
+  },
+  {
     id: "french-defense",
     name: "Défense Française",
     eco: "C00",
