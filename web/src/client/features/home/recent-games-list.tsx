@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, CircleMinus, CircleX, Trophy, type LucideIcon } from "lucide-react";
 import type { GameSummary } from "@/server/queries/games";
 import { GAME_OUTCOME_LABEL, IMPORT_SOURCE_LABEL, accuracyTextClass, gameOutcomeForPlayer } from "@/lib/labels";
-import { formatRelativeDate } from "@/lib/relative-time";
 import { formatTimeControl } from "@/lib/time-control";
 import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { RelativeDate } from "@/components/ui/relative-date";
 import { displayOpponentName } from "@/client/features/play/bot-display";
 
 type Outcome = ReturnType<typeof gameOutcomeForPlayer>;
@@ -76,7 +76,8 @@ export function RecentGamesList({
                     {game.opponentRating ? <span className="ml-1.5 font-mono text-xs text-foreground-muted">{game.opponentRating}</span> : null}
                   </span>
                   <span className="block truncate text-xs text-foreground-muted">
-                    {compact ? formatRelativeDate(game.playedAt) : `${sourceLabel(game.source)} · ${formatTimeControl(game.timeControl)} · ${formatRelativeDate(game.playedAt)}`}
+                    {compact ? null : `${sourceLabel(game.source)} · ${formatTimeControl(game.timeControl)} · `}
+                    <RelativeDate date={game.playedAt} />
                   </span>
                 </span>
                 <span className={`shrink-0 font-mono text-sm ${accuracyTextClass(game.accuracy)}`} title="Précision">

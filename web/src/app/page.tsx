@@ -16,11 +16,11 @@ import { getDailySessionState } from "@/server/queries/daily-plan";
 // (synchro en tâche de fond) : jamais de rendu figé au build.
 export const dynamic = "force-dynamic";
 
-const RECENT_GAMES = 5;
+const RECENT_GAMES = 3;
 
 /**
  * Aujourd'hui : « Continuer » (prochaine action de la séance), les cartes à
- * réviser, deux raccourcis et les 5 dernières parties. Le plan se règle dans
+ * réviser, deux raccourcis et les 3 dernières parties. Le plan se règle dans
  * un tiroir ; la synchro des comptes n'a plus qu'une pastille d'en-tête.
  * `/?page=<n>` (ancienne pagination des parties) redirige vers `/parties`.
  */

@@ -320,6 +320,24 @@ export function GameReviewScreen({
         </nav>
       </div>
 
+      {/* Sous le titre : l'action principale reste visible sans défiler sur mobile. */}
+      {!drillActive && mistakes.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+          <p className="text-sm text-foreground-muted">
+            {mistakes.length} erreur{mistakes.length > 1 ? "s" : ""} à corriger dans cette partie.
+          </p>
+          <button
+            type="button"
+            onClick={startDrill}
+            data-primary-action
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+          >
+            <RotateCcw aria-hidden="true" className="size-4" />
+            Rejouer mes erreurs
+          </button>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           {drillActive ? (
@@ -458,23 +476,6 @@ export function GameReviewScreen({
           <Disclosure summary="Bilan du commentateur" className="border-b">
             <PostGameReport overview={overview} keyMoments={keyMoments} />
           </Disclosure>
-
-          {!drillActive && mistakes.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3">
-              <p className="text-sm text-foreground-muted">
-                {mistakes.length} erreur{mistakes.length > 1 ? "s" : ""} à corriger dans cette partie.
-              </p>
-              <button
-                type="button"
-                onClick={startDrill}
-                data-primary-action
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-              >
-                <RotateCcw aria-hidden="true" className="size-4" />
-                Rejouer mes erreurs
-              </button>
-            </div>
-          )}
         </div>
 
         <div className="space-y-6">

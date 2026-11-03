@@ -420,6 +420,8 @@ function moveNumberFromEntityId(entityId: string): number | null {
   return Number.isFinite(ply) && ply > 0 ? Math.ceil(ply / 2) : null;
 }
 
+const DECISIVE_CP_LOSS = 1000;
+
 /** Filtre les parties vides puis joint par « · » — `null` si rien ne reste. */
 function joinProof(parts: readonly (string | null)[]): string | null {
   const kept = parts.filter((part): part is string => part != null && part !== "");
@@ -444,6 +446,8 @@ export function formatTrainingProof(recommendation: { entityId: string; reasonCo
   const deck = evidence.deck ? DECK_TITLE[evidence.deck] ?? null : null;
   const family = evidence.trapFamily ?? null;
   const eco = evidence.eco ? `ECO ${evidence.eco}` : null;
+  // Au-delà de 1 000 cp (mat compté comme perte énorme), le chiffre n'informe plus : « perte décisive ».
+  const decisive = evidence.avgCpLoss != null && evidence.avgCpLoss > DECISIVE_CP_LOSS;
   const cp = evidence.avgCpLoss != null && evidence.avgCpLoss > 0 ? `−${Math.round(evidence.avgCpLoss)} cp` : null;
   const overdue = evidence.daysOverdue != null && evidence.daysOverdue > 0 ? `${evidence.daysOverdue} j` : null;
 
@@ -453,6 +457,7 @@ export function formatTrainingProof(recommendation: { entityId: string; reasonCo
       // provenance (« ça vient de mes erreurs rangées »).
       return joinProof([motif, deck ? `deck ${deck}` : null]);
     case "motif-missed":
+      if (decisive) return "perte décisive";
       return cp ? `${cp} de perte moyenne` : null;
     case "opening-due":
       return joinProof([
@@ -462,6 +467,7 @@ export function formatTrainingProof(recommendation: { entityId: string; reasonCo
         evidence.accuracy != null && evidence.accuracy > 0 ? `${evidence.accuracy} % au dernier passage` : null,
       ]);
     case "theory-exit":
+      if (decisive) return "perte décisive sur le coup";
       return cp ? `${cp} sur le coup` : null;
     case "game-error": {
       // Le cp est déjà dans le titre (ou signalé « mat ou perte lourde ») :

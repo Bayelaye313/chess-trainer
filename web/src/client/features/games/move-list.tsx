@@ -3,6 +3,7 @@
 import type { TimelinePly } from "@/core/analysis/timeline";
 import { formatMotifs, QUALITY_BORDER_CLASS, QUALITY_LABEL, QUALITY_TEXT_CLASS } from "@/lib/labels";
 import { QualityBadge } from "../board/quality-badge";
+import { TOUCH_HIT_AREA } from "@/components/ui/touch-target";
 
 export function MoveList({
   timeline,
@@ -48,7 +49,7 @@ export function MoveList({
               <button
                 type="button"
                 onClick={() => onSelectPly(entry.ply)}
-                className="flex flex-1 items-center gap-2 text-left hover:text-accent"
+                className={`flex flex-1 items-center gap-2 text-left hover:text-accent ${TOUCH_HIT_AREA}`}
               >
                 {quality && <QualityBadge quality={quality} />}
                 <span className={quality ? QUALITY_TEXT_CLASS[quality] : undefined}>{entry.san}</span>
@@ -62,7 +63,7 @@ export function MoveList({
                 <button
                   type="button"
                   onClick={() => onRetry(entry.ply)}
-                  className="shrink-0 rounded border border-border px-2 py-0.5 text-xs text-foreground-muted hover:text-foreground"
+                  className={`${TOUCH_HIT_AREA} shrink-0 rounded border border-border px-2 py-0.5 text-xs text-foreground-muted hover:text-foreground`}
                 >
                   Réessayer
                 </button>

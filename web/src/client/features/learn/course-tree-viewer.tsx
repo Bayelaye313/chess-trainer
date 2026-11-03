@@ -71,6 +71,7 @@ import {
   type PlayedMove,
 } from "./course-tree-nav";
 import { MoveTreeViewer } from "./move-tree-viewer";
+import { TOUCH_HIT_AREA } from "@/components/ui/touch-target";
 
 /** Flèches et cercles de l'auteur : pinceaux Lichess, comme dans l'étude d'origine. */
 const GREEN = LICHESS_BRUSH.green;
@@ -463,7 +464,7 @@ export function CourseTreeViewer({
                   role="radio"
                   aria-checked={state.mode === mode}
                   onClick={() => setMode(mode)}
-                  className={`inline-flex min-h-10 items-center rounded-md px-3 font-medium transition-colors ${
+                  className={`${TOUCH_HIT_AREA} inline-flex min-h-10 items-center rounded-md px-3 font-medium transition-colors ${
                     state.mode === mode ? "bg-surface-raised text-foreground" : "text-foreground-muted hover:text-foreground"
                   }`}
                 >
@@ -594,7 +595,7 @@ function PositionNotesIndex({
             <button
               type="button"
               onClick={() => onSelect(note)}
-              className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-foreground-muted hover:bg-surface-muted hover:text-foreground"
+              className={`${TOUCH_HIT_AREA} flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-foreground-muted hover:bg-surface-muted hover:text-foreground`}
             >
               <span className="min-w-0 truncate">
                 <span className="font-mono text-foreground">

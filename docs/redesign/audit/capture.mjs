@@ -23,8 +23,17 @@ function measure() {
   const vh = window.innerHeight;
   const chrome = (el) => el.closest("header, nav[aria-label='Navigation principale'], [data-skip-audit]");
   const square = (el) => el.closest("[data-square]") || /-square-/.test(el.id || "");
+  // Contenu d'un <details> fermé : Chrome lui garde une boîte (content-visibility), il n'est pas visible pour autant.
+  const collapsed = (el) => {
+    for (let d = el.parentElement?.closest("details"); d; d = d.parentElement?.closest("details")) {
+      if (!d.open && !(el.tagName === "SUMMARY" && el.parentElement === d)) return true;
+      el = d;
+    }
+    return false;
+  };
   const visible = (el) => {
     if (el.closest('.sr-only') || el.classList.contains('sr-only')) return false;
+    if (collapsed(el)) return false;
     const style = getComputedStyle(el);
     if (style.visibility === "hidden" || style.display === "none") return false;
     const r = el.getBoundingClientRect();
@@ -37,8 +46,21 @@ function measure() {
     const r = el.getBoundingClientRect();
     return r.top < vh && r.bottom > 0 && r.left < vw && r.right > 0;
   });
-  const small = content.filter((el) => {
+  // Zone de clic étendue par un pseudo-élément absolu (TOUCH_HIT_AREA) : c'est elle qui reçoit le toucher.
+  const hitBox = (el) => {
     const r = el.getBoundingClientRect();
+    let height = r.height;
+    let width = r.width;
+    for (const pseudo of ["::before", "::after"]) {
+      const s = getComputedStyle(el, pseudo);
+      if (s.content === "none" || s.position !== "absolute") continue;
+      height = Math.max(height, parseFloat(s.height) || 0);
+      width = Math.max(width, parseFloat(s.width) || 0, parseFloat(s.minWidth) || 0);
+    }
+    return { height, width };
+  };
+  const small = content.filter((el) => {
+    const r = hitBox(el);
     if (el.matches("input[type=range], input[type=checkbox], input[type=radio]") && el.closest("label")) {
       const l = el.closest("label").getBoundingClientRect();
       return l.height < 44 && l.width < 44;

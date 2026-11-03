@@ -20,6 +20,7 @@
  */
 import { Fragment, memo, useEffect, useRef, type ReactNode } from "react";
 import { plyOffsetOf, type ChessMoveNode } from "@/core/chess/move-tree";
+import { TOUCH_HIT_AREA } from "@/components/ui/touch-target";
 
 const MoveToken = memo(function MoveToken({
   node,
@@ -47,6 +48,7 @@ const MoveToken = memo(function MoveToken({
       type="button"
       onClick={() => onSelect(node.id)}
       className={[
+        TOUCH_HIT_AREA,
         "rounded px-1 py-0.5 font-mono text-[13px] leading-relaxed transition-colors",
         isCurrent
           ? "bg-accent text-accent-foreground"

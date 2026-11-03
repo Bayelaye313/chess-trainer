@@ -67,6 +67,11 @@ describe("formatTrainingProof", () => {
     expect(formatTrainingProof({ entityId: "g1:13", reasonCode })).toBe("−95 cp sur le coup");
   });
 
+  it("perte au-delà de 1 000 cp : « perte décisive » plutôt qu'un chiffre illisible", () => {
+    const reasonCode = encodeTrainingReason("motif-missed", { motif: "fork", missCount: 2, avgCpLoss: 8609 });
+    expect(formatTrainingProof({ entityId: "fork", reasonCode })).toBe("perte décisive");
+  });
+
   it("erreur de partie : localise le coup fautif et nomme l'ouverture", () => {
     const reasonCode = encodeTrainingReason("game-error", { avgCpLoss: 240, openingName: "Sicilienne" });
     expect(formatTrainingProof({ entityId: "game-42:17", reasonCode })).toBe("Coup 9 · Sicilienne");
