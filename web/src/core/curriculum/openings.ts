@@ -955,6 +955,24 @@ export const OPENINGS: readonly OpeningLine[] = [
       4.d4 Nf6 5.Nf3 c6 6.Bc4 Bf5 7.Bd2 e6 8.Qe2 Bb4 9.O-O-O Nbd7 10.Ne4 Nxe4 11.Qxe4 O-O-O`,
   },
   {
+    id: "scandinavian-white",
+    name: "Scandinave (avec les Blancs)",
+    eco: "B01",
+    side: "white",
+    description:
+      "Contre 1...d5 : 2.exd5 et 3.Nc3 contre la dame (grand roque contre ...Qa5, g3-g4 contre ...Qd6, Ne5 et g4 contre ...Qd8), d4 et c4 contre 2...Nf6, f3-g4 contre le gambit portugais.",
+    moves: ["e4", "d5", "exd5"],
+    pgn: `1.e4 d5 2.exd5 Qxd5
+      (2...Nf6 {Scandinave moderne} 3.d4 Nxd5
+        (3...Bg4 {Gambit portugais} 4.f3 Bf5 5.g4 Bg6 6.c4 e6 7.Nc3 exd5 8.g5 Nh5 9.f4 Nc6 10.cxd5)
+        4.Nf3 g6 5.Be2 Bg7 6.O-O O-O 7.c4 Nb6 8.Nc3 Nc6 9.d5 Ne5 10.Nxe5 Bxe5)
+      3.Nc3 Qa5
+      (3...Qd6 4.d4 Nf6 5.Nf3 a6 6.g3 Bg4 7.Bg2 Nc6 8.O-O O-O-O 9.h3 Bh5 10.g4 Bg6)
+      (3...Qd8 4.d4 Nf6 5.Nf3 c6 6.Bc4 Bf5 7.Ne5 e6 8.g4 Bg6 9.h4 Nbd7 10.Qe2)
+      (3...Qe5+ 4.Be2 Bg4 5.d4 Bxe2 6.Ngxe2 Qa5 7.O-O Nf6)
+      4.d4 Nf6 5.Nf3 c6 6.Bc4 Bf5 7.Bd2 e6 8.Qe2 Bb4 9.O-O-O Nbd7 10.a3 Bxc3 11.Bxc3 Qc7 12.Ne5`,
+  },
+  {
     id: "queens-gambit",
     name: "Gambit Dame",
     eco: "D06",

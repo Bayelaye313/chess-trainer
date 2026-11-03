@@ -1,0 +1,71 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Scandinave (avec les Blancs) » — onglet Ouvertures,
+ * format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/scandinavian-white/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1.e4 contre 1...d5 (fiche curatée
+ * `scandinavian-white`, B01). Ne remplace pas `scandinavian` (fiche côté
+ * Noirs, sans cours).
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Blancs)
+ *
+ * 1. Fiche d'identité, tronc commun et 3...Qa5 (Bd2, Qe2, grand roque).
+ * 2. Aléatoire surprise 1 : après 3...Qa5, le roi noir sans abri.
+ * 3. Branche B : 3...Qd6 (g3, Bg2, h3-g4).
+ * 4. Aléatoire surprise 2 : après 3...Qd6, la marée de pions.
+ * 5. Branche C : 3...Qd8 (Ne5, g4-h4).
+ * 6. Branche D : 2...Nf6 3.d4 Nxd5, la Scandinave moderne.
+ * 7. Branche E : le gambit portugais 3...Bg4 (f3, g4, c4).
+ * 8. Anti-panique : 3...Qe5+, 3...Qe6+ et 3...Qa5 4.d4 e5.
+ *
+ * Choix des chapitres (2026-11-03, sans base de parties) : les réponses
+ * noires principales après 2.exd5 (trois retraites de dame, deux systèmes
+ * avec 2...Nf6) et les échecs précoces de la dame ; aucun autre cours ne
+ * traite 1...d5. Les branches théoriques s'arrêtent au plus tard au
+ * demi-coup 27 ; les chapitres « Aléatoire surprise » prolongent avec les
+ * Noirs comme camp « mou » (`_tmp-drift.mts`).
+ *
+ * Convention côté Blancs (comme `op-ruy-lopez.ts`) : l'élève joue les
+ * Blancs ; les fautes sont des coups NOIRS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup blanc suivant est la punition. Les
+ * « variantes piégées » sont des coups blancs tentants mais mauvais
+ * (11.bxc3, 15.Bxc5, 6.Bf4 et 11.Bf4 contre la dame d6, 8.O-O, 10.Bf4,
+ * 9.cxd5, 4.Ne4, 6.dxe5). Une faute qui perd moins de 0.5 devient une
+ * « imprécision » sans indices.
+ *
+ * Sources : théorie établie de la Scandinave, TOUTES les lignes arbitrées
+ * par Stockfish 19 natif (profondeur 16, MultiPV 1) ; 8.g4 et 9.h4 contre
+ * 3...Qd8, et 5.g4 dans le gambit portugais, sont des choix du moteur. Toute
+ * la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes noires qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/scandinavian-white.pgn` (et l'en-tête
+ * `scandinavian-white.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-scandinavian-white`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

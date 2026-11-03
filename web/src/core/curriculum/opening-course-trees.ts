@@ -10,6 +10,7 @@ import { OP_KINGS_INDIAN } from "./course-trees/op-kings-indian";
 import { OP_RUY_LOPEZ } from "./course-trees/op-ruy-lopez";
 import { OP_QUEENS_GAMBIT_DECLINED } from "./course-trees/op-queens-gambit-declined";
 import { OP_SCOTCH_GAMBIT } from "./course-trees/op-scotch-gambit";
+import { OP_SCANDINAVIAN_WHITE } from "./course-trees/op-scandinavian-white";
 import { OP_SCOTCH_FOUR_KNIGHTS_BLACK } from "./course-trees/op-scotch-four-knights-black";
 import { OP_SCOTCH_GAME } from "./course-trees/op-scotch-game";
 import { OP_SICILIAN_ALAPIN } from "./course-trees/op-sicilian-alapin";
@@ -45,6 +46,7 @@ export const OPENING_COURSE_TREES: Record<string, CourseTree> = {
   "scotch-four-knights-black": OP_SCOTCH_FOUR_KNIGHTS_BLACK,
   "french-white": OP_FRENCH_WHITE,
   "caro-kann-white": OP_CARO_KANN_WHITE,
+  "scandinavian-white": OP_SCANDINAVIAN_WHITE,
 };
 
 export function findOpeningCourseTree(openingId: string): CourseTree | null {

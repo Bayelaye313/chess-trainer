@@ -171,6 +171,21 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Les Noirs frappent ton pion e4 : choisis de l'avancer, de le défendre ou de l'échanger.",
     },
   ],
+  "scandinavian-white": [
+    {
+      comment: "On occupe le centre et on libère le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "La Scandinave : les Noirs attaquent e4 tout de suite.",
+      hint: "Les Noirs frappent ton pion e4 avec leur pion dame.",
+    },
+    {
+      comment:
+        "On prend : la pièce noire qui reprendra en d5 (dame ou cavalier) sera chassée avec gain de temps par Nc3 ou c4.",
+      hint: "Prends le pion qui attaque e4.",
+    },
+  ],
   "italian-game": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame dès le premier coup.",
