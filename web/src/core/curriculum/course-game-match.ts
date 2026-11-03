@@ -162,6 +162,56 @@ export function matchGameToCourse(
   return reachedSignature || followedPlies >= signatureLength ? { followedPlies, exit, deviation } : null;
 }
 
+/** Un cours candidat à l'attribution d'une partie (`attributeGameToCourse`). */
+export interface AttributableCourse {
+  id: string;
+  /** Camp pour lequel le cours est écrit. */
+  color: "w" | "b";
+  index: CourseIndex;
+  signatureKey: string | null;
+  /** Longueur de la ligne caractéristique : plus elle est longue, plus la fiche est spécifique. */
+  signatureLength: number;
+}
+
+export interface CourseAttribution {
+  courseId: string;
+  match: CourseGameMatch;
+  /** `true` : cours écrit pour ton camp ; `false` : aucun cours de ton camp ne correspond, celui-ci sert de référence côté adverse. */
+  withCourseSide: boolean;
+}
+
+/**
+ * Le cours UNIQUE auquel une partie est comptée, pour que la somme des
+ * parties par cours n'excède jamais le nombre de parties. Seuls les cours
+ * écrits pour TON camp entrent en compte ; parmi eux, celui que la partie
+ * suit le plus loin (`followedPlies`), à égalité la fiche la plus spécifique
+ * (ligne caractéristique la plus longue). Les cours du camp adverse ne
+ * servent — même règle — que si aucun cours de ton camp ne correspond.
+ */
+export function attributeGameToCourse(
+  courses: readonly AttributableCourse[],
+  playerColor: "w" | "b",
+  moves: readonly CourseGameMove[],
+): CourseAttribution | null {
+  const best = (withCourseSide: boolean): CourseAttribution | null => {
+    let chosen: { course: AttributableCourse; match: CourseGameMatch } | null = null;
+    for (const course of courses) {
+      if ((course.color === playerColor) !== withCourseSide) continue;
+      const match = matchGameToCourse(course.index, course.signatureKey, course.signatureLength, moves);
+      if (!match) continue;
+      if (
+        !chosen ||
+        match.followedPlies > chosen.match.followedPlies ||
+        (match.followedPlies === chosen.match.followedPlies && course.signatureLength > chosen.course.signatureLength)
+      ) {
+        chosen = { course, match };
+      }
+    }
+    return chosen && { courseId: chosen.course.id, match: chosen.match, withCourseSide };
+  };
+  return best(true) ?? best(false);
+}
+
 /** Un coup répété dans plusieurs parties à la même position — déviation récurrente ou gaffe récurrente. */
 export interface RecurringMove {
   positionKey: string;

@@ -15,15 +15,16 @@ import type { GameResult } from "@/core/chess/types";
 import { MOVE_TREE_START_FEN } from "@/core/chess/move-tree";
 import { didPlayerWin } from "@/core/analysis/progress-insights";
 import {
+  attributeGameToCourse,
   buildCourseIndex,
-  matchGameToCourse,
   positionKey,
   signatureKeyOf,
   tallyDeviations,
   tallyMistakes,
+  type AttributableCourse,
+  type CourseAttribution,
   type CourseGameMatch,
   type CourseGameMove,
-  type CourseIndex,
   type CoursePositionNote,
   type RecurringMove,
 } from "@/core/curriculum/course-game-match";
@@ -32,10 +33,8 @@ import { findOpening, type OpeningLine } from "@/core/curriculum/openings";
 import { db } from "@/server/db";
 import { games, moves } from "@/server/db/schema";
 
-interface PreparedCourse {
+interface PreparedCourse extends AttributableCourse {
   opening: OpeningLine;
-  index: CourseIndex;
-  signatureKey: string | null;
 }
 
 // Les cours sont statiques : un index par cours, construit une seule fois.
@@ -47,7 +46,14 @@ function prepareCourses(): Map<string, PreparedCourse> {
   for (const [id, tree] of Object.entries(OPENING_COURSE_TREES)) {
     const opening = findOpening(id);
     if (!opening) continue;
-    preparedCourses.set(id, { opening, index: buildCourseIndex(tree), signatureKey: signatureKeyOf(opening.moves) });
+    preparedCourses.set(id, {
+      id,
+      opening,
+      color: opening.side === "white" ? "w" : "b",
+      index: buildCourseIndex(tree),
+      signatureKey: signatureKeyOf(opening.moves),
+      signatureLength: opening.moves.length,
+    });
   }
   return preparedCourses;
 }
@@ -115,23 +121,26 @@ async function loadGames(gameIds?: readonly string[]): Promise<StoredGame[]> {
     .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime());
 }
 
-function courseColorOf(opening: OpeningLine): "w" | "b" {
-  return opening.side === "white" ? "w" : "b";
-}
+type AttributedGame = { game: StoredGame } & CourseAttribution;
 
 /**
- * Les parties de `games` qui relèvent du cours, DES DEUX CAMPS : un cours
- * écrit pour les Blancs traite aussi les réponses noires, il reste donc la
- * référence théorique quand tu joues l'autre camp (`withCourseSide` les
- * distingue à l'affichage).
+ * Chaque partie comptée pour UN seul cours (`attributeGameToCourse`) : celui
+ * de ton camp qui la suit le plus loin, ou à défaut un cours du camp adverse
+ * qui sert alors de référence théorique (`withCourseSide: false`).
  */
-function matchCourse(course: PreparedCourse, allGames: readonly StoredGame[]): { game: StoredGame; match: CourseGameMatch }[] {
-  const matched: { game: StoredGame; match: CourseGameMatch }[] = [];
+function attributeGames(allGames: readonly StoredGame[]): AttributedGame[] {
+  const courses = Array.from(prepareCourses().values());
+  const attributed: AttributedGame[] = [];
   for (const game of allGames) {
-    const match = matchGameToCourse(course.index, course.signatureKey, course.opening.moves.length, game.moves);
-    if (match) matched.push({ game, match });
+    const attribution = attributeGameToCourse(courses, game.playerColor, game.moves);
+    if (attribution) attributed.push({ game, ...attribution });
   }
-  return matched;
+  return attributed;
+}
+
+/** Les parties attribuées au cours, plus récentes d'abord. */
+function matchCourse(course: PreparedCourse, allGames: readonly StoredGame[]): AttributedGame[] {
+  return attributeGames(allGames).filter(({ courseId }) => courseId === course.id);
 }
 
 function winRateOf(list: readonly { game: StoredGame }[]): number | null {
@@ -156,17 +165,17 @@ export interface CourseGamesOverviewRow {
 
 /** Une ligne par cours d'ouverture, même ceux sans partie — la carte du Rapport n'affiche que ceux joués. */
 export async function getCourseGamesOverview(): Promise<CourseGamesOverviewRow[]> {
-  const allGames = await loadGames();
+  const attributed = attributeGames(await loadGames());
   const rows: CourseGamesOverviewRow[] = [];
   for (const [openingId, course] of prepareCourses()) {
-    const matched = matchCourse(course, allGames);
+    const matched = attributed.filter(({ courseId }) => courseId === openingId);
     const deviations = tallyDeviations(matched.map(({ game, match }) => ({ gameId: game.id, deviation: match.deviation })));
     rows.push({
       openingId,
       openingName: course.opening.name,
       side: course.opening.side,
       gamesPlayed: matched.length,
-      gamesWithCourseSide: matched.filter(({ game }) => game.playerColor === courseColorOf(course.opening)).length,
+      gamesWithCourseSide: matched.filter(({ withCourseSide }) => withCourseSide).length,
       gamesWithDeviation: matched.filter(({ match }) => match.deviation !== null).length,
       winRate: winRateOf(matched),
       topDeviation: deviations[0] && deviations[0].count >= 2 ? deviations[0] : null,
@@ -211,12 +220,12 @@ export async function getCourseGameReport(openingId: string): Promise<CourseGame
   if (!course) return null;
   const matched = matchCourse(course, await loadGames());
 
-  const rows: CourseGameRow[] = matched.map(({ game, match }) => {
+  const rows: CourseGameRow[] = matched.map(({ game, match, withCourseSide }) => {
     const mistake = game.moves.find((m) => m.byPlayer && (m.quality === "blunder" || m.quality === "inaccuracy"));
     return {
       gameId: game.id,
       playerColor: game.playerColor,
-      withCourseSide: game.playerColor === courseColorOf(course.opening),
+      withCourseSide,
       opponentName: game.opponentName,
       opponentRating: game.opponentRating,
       playerRating: game.playerRating,

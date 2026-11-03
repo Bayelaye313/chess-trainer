@@ -3,13 +3,17 @@ import { describe, expect, it } from "vitest";
 import { parseMoveTree } from "@/core/chess/move-tree";
 import type { MoveQuality } from "@/core/chess/types";
 import type { CourseTree } from "./course-tree";
+import { OPENING_COURSE_TREES } from "./opening-course-trees";
+import { findOpening } from "./openings";
 import {
+  attributeGameToCourse,
   buildCourseIndex,
   matchGameToCourse,
   moveNumberLabel,
   signatureKeyOf,
   tallyDeviations,
   tallyMistakes,
+  type AttributableCourse,
   type CourseGameMove,
 } from "./course-game-match";
 
@@ -122,5 +126,44 @@ describe("moveNumberLabel", () => {
   it("numérote les coups blancs et noirs", () => {
     expect(moveNumberLabel(9)).toBe("5.");
     expect(moveNumberLabel(10)).toBe("5...");
+  });
+});
+
+describe("attributeGameToCourse", () => {
+  // Les vrais cours du catalogue : c'est leur chevauchement qui est en jeu.
+  const COURSES: AttributableCourse[] = Object.entries(OPENING_COURSE_TREES).flatMap(([id, tree]) => {
+    const opening = findOpening(id);
+    if (!opening) return [];
+    return [{
+      id,
+      color: opening.side === "white" ? ("w" as const) : ("b" as const),
+      index: buildCourseIndex(tree),
+      signatureKey: signatureKeyOf(opening.moves),
+      signatureLength: opening.moves.length,
+    }];
+  });
+  const attribute = (sans: string[], playerColor: "w" | "b") => attributeGameToCourse(COURSES, playerColor, game(sans, {}, playerColor));
+
+  it("compte une Écossaise jouée avec les Blancs pour scotch-game, pas pour les Quatre Cavaliers (Noirs)", () => {
+    const result = attribute(["e4", "e5", "Nf3", "Nc6", "d4", "exd4", "Nxd4", "Bc5", "Nxc6", "Qf6"], "w");
+    expect(result).toMatchObject({ courseId: "scotch-game", withCourseSide: true });
+  });
+
+  it("compte des Quatre Cavaliers joués avec les Noirs pour scotch-four-knights-black", () => {
+    const result = attribute(["e4", "e5", "Nf3", "Nc6", "Nc3", "Nf6", "d4", "exd4", "Nxd4", "Bb4"], "b");
+    expect(result).toMatchObject({ courseId: "scotch-four-knights-black", withCourseSide: true });
+  });
+
+  it("compte des Deux Cavaliers joués avec les Noirs pour italian-game-black, pas pour italian-game (Blancs)", () => {
+    const result = attribute(["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"], "b");
+    expect(result).toMatchObject({ courseId: "italian-game-black", withCourseSide: true });
+  });
+
+  it("ne retombe sur un cours du camp adverse que si aucun cours de ton camp ne correspond", () => {
+    const sans = ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"];
+    const whiteOnly = COURSES.filter((course) => course.color === "w");
+    const result = attributeGameToCourse(whiteOnly, "b", game(sans, {}, "b"));
+    expect(result?.withCourseSide).toBe(false);
+    expect(result?.courseId).not.toBe("italian-game-black");
   });
 });
