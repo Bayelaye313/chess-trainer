@@ -1,0 +1,436 @@
+## Fiche d'identité, tronc commun : Gambit du Roi accepté, la défense Fischer 3...d6
+{ LE GAMBIT DU ROI ET LA VIENNOISE, AVEC LES NOIRS.
+
+Le vrai enjeu : contre 1...e5, les Blancs jouent f4 tôt (2.f4, ou 2.Nc3 puis f4) pour ouvrir la colonne f et attaquer f7. Nous prenons le pion, et nous le gardons avec la chaîne ...d6, ...g5 : les Blancs doivent sacrifier du temps pour le récupérer, pendant que nos pièces sortent derrière.
+
+Le déséquilibre recherché : un pion de plus et un roi blanc sans pion f, contre une avance de développement blanche. Dans la Viennoise, nous contre-attaquons e4 avec le cavalier f6 et ...d5.
+
+Pourquoi ces chapitres : le choix suit la théorie principale contre les deux débuts à f4 : le gambit accepté avec 3.Nf3 (ce chapitre) et 3.Bc4 (chapitre 3), le gambit refusé par le contre-gambit Falkbeer 2...d5 (chapitre 4), le gambit Viennois 3.f4 d5 (chapitre 5) et la Viennoise calme 3.Bc4 (chapitre 7), plus les coups rares au chapitre 8. Dans tes parties, 6 suivent le Falkbeer et 4 la Viennoise par 2...Nc6 3.Bc4 Nf6. Aucun autre cours de Noirs ne traite 2.f4 ou 2.Nc3 : berlin-black, italian-game-black et scotch-four-knights-black commencent tous par 2.Nf3 Nc6.
+
+Les structures types :
+- Gambit accepté : chaîne noire d6-f4-g5 ou f4-g4, roi blanc sans abri, colonne e ouverte.
+- Falkbeer : pion d5 blanc avancé, attaqué par ...Nf6 et ...c6.
+- Viennoise : cavalier e4 noir au centre, pion e5 blanc avancé ou échangé.
+
+Règle d'or : contre f4, développe vite et vise le roi blanc ; un pion de plus ne vaut rien si tes pièces restent à la maison. }
+1. e4 { Les Blancs occupent le centre. }
+1... e5 { On répond symétriquement. [%csl Ge5] }
+2. f4 { LE GAMBIT DU ROI : les Blancs offrent un pion pour ouvrir la colonne f. Le moteur juge ce gambit douteux (-0.55), mais il faut le connaître. (2.Nc3 : chapitres 5 à 7.) [%cal Gf4e5] }
+2... exf4 { On accepte : c'est le coup le plus fort. (2...d5 : chapitre 4.) [%cal Ge5f4] }
+3. Nf3 { Le cavalier empêche ...Qh4+ et prépare d4. (3.Bc4 : chapitre 3 ; 3.d4, 3.Nc3, 3.Qf3 et 3.Be2 : chapitre 8.) }
+3... d6 { LA DÉFENSE FISCHER : le pion d6 prend la case e5 au cavalier f3 et prépare ...g5 pour tenir f4. [%cal Gd6e5] }
+4. d4 { Les Blancs prennent le centre et libèrent le fou c1 vers f4. }
+4... g5 { Le pion g5 soutient f4. [%cal Gg5f4] }
+5. h4 { Les Blancs attaquent la chaîne par sa tête. }
+5... g4 { Le pion avance et chasse le cavalier f3. [%cal Gg4f3] }
+6. Ng1 { Le cavalier recule : il ne peut aller ni en e5, tenu par d6, ni en g5. }
+(6. Bxf4 { Le fou prend le pion f4, mais le cavalier f3 est attaqué : l'évaluation passe de -0.72 à -2.13. [%hint "les Blancs reprennent un pion et oublient que leur cavalier f3 est attaqué par le pion g4."] [%hint "le cavalier f3. Notre pion g4 le prend."] [%hint "6...gxf3 : une pièce de plus."] [%hintcsl Rf3,Gg4] }
+6... gxf3 { On prend le cavalier. }
+7. Qxf3 { La dame reprend. }
+7... Nc6 { Le cavalier se développe et vise d4. }
+8. Bb5 { Le fou cloue le cavalier. }
+8... Bd7 { À RETENIR. PRO TIP : -1.83, une pièce de plus. Dans la défense Fischer, ...g4 attaque toujours le cavalier f3 : avant toute prise en f4, regarde où est ce cavalier. [%csl Rf3] })
+6... Qf6 { La dame vise f4, d4 et b2. [%cal Gf6f4,Gf6d4] }
+7. Nc3 { Le cavalier se développe et vise d5. }
+(7. Bd3 { Une imprécision : le fou se développe, mais il coupe la dame d1 de la défense de d4. L'évaluation passe de -0.76 à -1.10. }
+7... Nc6 { Le cavalier attaque d4. [%cal Gc6d4] }
+8. Nc3 { Développement. }
+8... Nge7 { À RETENIR. PRO TIP : -1.13. Le pion d4 reste sous pression et le pion f4 tient toujours. Un fou en d3 devant la dame d1, c'est un défenseur de d4 en moins. [%cal Gf6d4] })
+7... Ne7 { Le cavalier se développe sans gêner la dame, et couvre d5 et f5. [%cal Ge7d5] }
+(7... Nc6 { LA VARIANTE PIÉGÉE : le cavalier attaque d4… [%csl Rc7] }
+8. Nd5 { …mais le cavalier blanc attaque la dame et vise c7. }
+8... Qxd4 { On prend d4… }
+9. Nxc7+ { …mais la fourchette tombe en c7. }
+9... Kd8 { À RETENIR. PRO TIP : +1.31. La tour a8 est perdue. Avec la dame en f6, la case d5 doit être tenue : ...Ne7 d'abord, ...Nc6 ensuite. [%csl Rc7,Ra8] })
+8. Bc4 { Le fou vise f7. }
+8... Bh6 { Le fou soutient f4. [%cal Gh6f4] }
+9. Nge2 { Le cavalier se développe et attaque f4. }
+9... Nbc6 { Le cavalier se développe et vise d4. [%cal Gc6d4] }
+10. Nb5 { Le cavalier vise c7. }
+(10. Qd2 { La dame défend f4… mais laisse ...Bd7 et ...O-O-O venir : l'évaluation passe de -0.40 à -1.15. [%hint "les Blancs jouent un coup de dame passif au lieu de menacer c7."] [%hint "la case d7. Notre fou y vient et prépare le grand roque."] [%hint "10...Bd7 : développement, puis ...O-O-O."] [%hintcsl Gd7,Gc8] }
+10... Bd7 { Le fou se développe. }
+11. g3 { Les Blancs attaquent la chaîne. }
+11... O-O-O { À RETENIR. PRO TIP : -1.57. Notre roi est à l'abri, toutes nos pièces jouent, la chaîne f4-g4 tient. Contre un coup passif, finis ton développement par le grand roque. [%csl Gc8] })
+10... O-O { On roque : c7 est défendu… par le sacrifice que les Blancs n'ont pas le temps de jouer.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (-0.47).
+1. Contre 11.Nxc7, ...Rb8 : le cavalier c7 est enfermé.
+2. ...f3 : le pion f3 ouvre la diagonale du fou h6 et casse le roque blanc.
+3. ...Ng6 : le cavalier vise h4 et f4. [%cal Gf4f3] }
+*
+
+## Aléatoire surprise 1 : après la défense Fischer, le pion f qui casse tout
+{ ALÉATOIRE SURPRISE.
+
+On reprend le chapitre 1 jusqu'à 10...O-O. La théorie s'arrête là. Les Blancs ne prennent pas en c7 : ils jouent des coups qui semblent solides, mais notre pion f4 et nos pièces avancent. À chaque faute, l'échelle des 3 indices guide vers la bonne réponse :
+- indice 1 : le principe violé ;
+- indice 2 : la case clé (cases allumées) ;
+- indice 3 : l'action concrète.
+
+PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quel pion noir peut avancer vers le roi blanc ? 3. Quelle pièce noire peut entrer derrière lui ? }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. f4 { Le gambit. }
+2... exf4 { Accepté. }
+3. Nf3 { Contre ...Qh4+. }
+3... d6 { La défense Fischer. }
+4. d4 { Le centre. }
+4... g5 { Soutien de f4. }
+5. h4 { Contre la chaîne. }
+5... g4 { Chasse. }
+6. Ng1 { Recul. }
+6... Qf6 { Vers f4 et d4. }
+7. Nc3 { Développement. }
+7... Ne7 { Développement. }
+8. Bc4 { Contre f7. }
+8... Bh6 { Soutien de f4. }
+9. Nge2 { Contre f4. }
+9... Nbc6 { Contre d4. }
+10. Nb5 { Vers c7. }
+10... O-O { Fin de la théorie. }
+11. g3 { Les Blancs attaquent f4, mais ouvrent la case f3 : l'évaluation passe de -0.47 à -1.71. [%hint "les Blancs poussent un pion devant leur roi au lieu de prendre en c7."] [%hint "la case f3. Notre pion f4 y avance et s'installe au cœur du camp blanc."] [%hint "11...f3 : le pion avance avec gain de temps sur le cavalier e2."] [%hintcsl Gf3,Re2] }
+11... f3 { Le pion attaque le cavalier e2. [%cal Gf3e2] }
+12. Bxh6 { Les Blancs échangent le fou h6. }
+12... Qxh6 { La dame reprend et vise e3 et d2. }
+13. Nf4 { Le cavalier se place en f4. }
+13... Na5 { Le cavalier attaque le fou c4. [%cal Ga5c4] }
+14. Bd3 { Le fou recule. }
+14... f5 { Le pion f ouvre la colonne vers le roi blanc. [%cal Gf5e4] }
+15. Nc3 { Le cavalier revient défendre e4, mais la colonne f s'ouvre : l'évaluation passe de -2.35 à -3.31. [%hint "les Blancs ramènent un cavalier en arrière au lieu de bloquer le centre par e5."] [%hint "le pion e4. Notre pion f5 le prend, et la colonne f s'ouvre vers f4."] [%hint "15...fxe4 : on ouvre la colonne f."] [%hintcsl Re4,Gf5] }
+15... fxe4 { On ouvre la colonne f. }
+16. Nxe4 { Le cavalier reprend. }
+16... Bf5 { Le fou cloue le cavalier e4 sur le fou d3. [%cal Gf5e4] }
+17. Kf2 { Le roi monte défendre le cavalier f4, mais il se place sur la colonne f, face à notre tour. }
+17... Bxe4 { On prend le cavalier. }
+18. Bxe4 { Le fou reprend. }
+18... Rxf4 { À RETENIR. PRO TIP : -4.76. Une pièce de plus et une attaque. Dans la défense Fischer, le pion f4 avance en f3 dès que les Blancs affaiblissent leur roque, puis ...f5 ouvre la colonne. [%cal Gf4e4] }
+*
+
+## Branche B : le Gambit du Fou, 3.Bc4
+{ LE GAMBIT DU FOU (3.Bc4).
+
+Le fou vise f7 tout de suite, mais il laisse ...Qh4+ possible. Notre plan : développer le cavalier f6 contre e4, préparer ...d5 par ...c6, et rendre le pion f4 contre une position active.
+
+Points clés : le fou c4 est la cible de ...d5 ; après l'échange en d5, notre pion c6 reprend et le centre est à nous. }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. f4 { Le gambit. }
+2... exf4 { On accepte. }
+3. Bc4 { LE GAMBIT DU FOU : le fou vise f7. [%cal Gc4f7] }
+3... Nf6 { Le cavalier attaque e4. [%cal Gf6e4] }
+4. Nc3 { Le cavalier défend e4. }
+4... c6 { On prépare ...d5, qui frappera le fou c4. [%cal Gc6d5] }
+5. d4 { Les Blancs prennent le centre. }
+(5. Nf3 { Le cavalier se développe, mais ...d5 arrive avec gain de temps : l'évaluation passe de -0.26 à -0.79. [%hint "les Blancs développent un cavalier pendant que leur fou c4 et le pion e4 sont tous deux visés."] [%hint "la case d5. Notre pion y avance et attaque le fou c4 et le pion e4 à la fois."] [%hint "5...d5 : la fourchette de pion."] [%hintcsl Gd5,Rc4] }
+5... d5 { Le pion attaque le fou et e4. [%cal Gd5c4,Gd5e4] }
+6. exd5 { Les Blancs prennent. }
+6... cxd5 { On reprend : le fou c4 est attaqué. }
+7. Bb3 { Le fou recule. }
+7... Nc6 { À RETENIR. PRO TIP : -1.04. Le centre d5 est à nous, le pion f4 tient. Contre 3.Bc4, chaque coup blanc qui ne règle pas ...d5 laisse la fourchette de pion arriver. [%csl Gd5] })
+5... d5 { On frappe le fou c4. [%cal Gd5c4] }
+6. exd5 { Les Blancs prennent. }
+(6. Bb3 { Le fou recule et laisse e4 sans soutien : l'évaluation passe de -0.27 à -1.11. [%hint "le fou recule alors que le pion e4 n'est plus défendu que par le cavalier c3."] [%hint "le cavalier c3. Notre fou f8 peut le clouer en b4, et e4 tombe."] [%hint "6...Bb4 : le clouage."] [%hintcsl Gb4,Rc3] }
+6... Bb4 { Le fou cloue le cavalier c3. [%cal Gb4c3] }
+7. exd5 { Les Blancs échangent. }
+7... Nxd5 { Le cavalier reprend. }
+8. Bxd5 { Les Blancs échangent le cavalier. }
+8... cxd5 { À RETENIR. PRO TIP : -1.21. Notre centre d5 tient, le pion f4 aussi, et le cavalier c3 reste cloué. Contre 3.Bc4, un fou qui recule devant ...d5 laisse e4 seul. [%cal Gb4c3] })
+6... cxd5 { On reprend : le fou c4 est attaqué. }
+7. Bb5+ { Le fou s'échappe avec échec. }
+7... Nc6 { Le cavalier pare l'échec et se développe. }
+8. Bxf4 { Les Blancs récupèrent le pion. }
+8... Be7 { Le fou se développe et prépare le roque. }
+9. Nf3 { Développement. }
+9... O-O { On roque. [%csl Gg8] }
+10. O-O { Les Blancs roquent. }
+(10. Qe2 { La dame se met sur la colonne e, devant notre futur tour : l'évaluation passe de -0.33 à -0.84. [%hint "la dame blanche s'installe sur la colonne e, où notre tour va venir."] [%hint "la case e8. Notre tour y vient, derrière le fou e7 : un coup de fou découvrira l'attaque sur la dame."] [%hint "10...Re8 : la tour sur la colonne e."] [%hintcsl Ge8,Re2] }
+10... Re8 { La tour se place derrière le fou e7. [%cal Ge8e2] }
+11. O-O { Les Blancs roquent. }
+11... Ba3 { À RETENIR. PRO TIP : -1.16. Le fou découvre l'attaque de la tour sur la dame e2 et vise b2. Une dame sur la même colonne qu'une tour adverse, c'est une cible pour les attaques à la découverte. [%cal Ge8e2,Ga3b2] })
+10... Ne4 { Le cavalier s'installe au centre. [%csl Ge4] }
+11. Qe2 { La dame attaque le cavalier e4. }
+11... Bg4 { Le fou cloue le cavalier f3 et se développe. [%cal Gg4f3] }
+(11... Bd6 { LA VARIANTE PIÉGÉE : le fou propose l'échange en f4… [%csl Rd5] }
+12. Nxd5 { …mais le pion d5 n'est plus défendu par la dame, et le cavalier le prend. À RETENIR. PRO TIP : +0.55. Avant de déplacer une pièce, vérifie ce qu'elle défendait : ici le pion d5 n'était tenu que par la dame d8 et le cavalier c6, déjà cloué. [%csl Rd5] })
+12. Bxc6 { Les Blancs échangent le cavalier c6. }
+12... Nxc3 { On prend le cavalier c3 d'abord.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (-0.44).
+1. Après 13.bxc3 bxc6 : notre structure c6-d5 tient, le fou g4 cloue toujours.
+2. ...Rb8 : la colonne b ouverte vise b2.
+3. ...Bd6 : on échange le fou f4, gardien de leur roi. [%cal Gc3d1] }
+*
+
+## Branche C : le gambit refusé, le contre-gambit Falkbeer 2...d5
+{ LE GAMBIT REFUSÉ : LE CONTRE-GAMBIT FALKBEER (2...d5).
+
+On ne prend pas f4 : on frappe e4 tout de suite. Après 3.exd5, on prend en f4 (3...exf4), et la position ressemble à la défense Moderne du gambit accepté, avec un ordre de coups qui évite les lignes à ...g5. Les Blancs ne peuvent pas garder le pion d5 longtemps.
+
+Pourquoi ...d5 et non 2...Bc5 : à profondeur 16, le moteur trouve que 2...Bc5 cède davantage que 2...d5 face au meilleur coup 2...exf4. Le refus par ...d5 est le plus simple à jouer, et c'est ton coup : 6 de tes parties contre 2.f4 suivent ce chapitre.
+
+Points clés : le pion d5 blanc avancé est une cible pour ...Nf6 et ...c6 ; notre fou f8 donne l'échec en b4 pour gêner le développement blanc. }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. f4 { Le gambit. }
+2... d5 { LE CONTRE-GAMBIT FALKBEER : on frappe e4 au lieu de prendre. L'évaluation passe de -0.55 à -0.33, un peu moins bien que 2...exf4, mais la position reste saine. [%cal Gd5e4] }
+3. exd5 { Les Blancs prennent. }
+3... exf4 { On prend f4 à notre tour : le pion d5 blanc sera notre cible. [%cal Ge5f4] }
+4. Nf3 { Le cavalier empêche ...Qh4+. }
+4... Nf6 { Le cavalier se développe et vise d5. [%cal Gf6d5] }
+5. c4 { Les Blancs soutiennent d5 par un pion. }
+5... c6 { On attaque d5 une deuxième fois. [%cal Gc6d5] }
+6. d4 { Les Blancs prennent le centre. }
+(6. dxc6 { Les Blancs échangent en c6, mais notre cavalier sort avec gain de temps : l'évaluation passe de -0.06 à -0.94. [%hint "les Blancs prennent un pion qui ne faisait rien et développent nos pièces à notre place."] [%hint "la case c6. Notre cavalier b8 y reprend, se développe et vise d4 et b4."] [%hint "6...Nxc6 : on reprend avec une pièce, avance de développement."] [%hintcsl Gc6,Gd4] }
+6... Nxc6 { Le cavalier reprend : deux pièces déjà sorties. [%cal Gb8c6] }
+7. d4 { Les Blancs prennent le centre. }
+7... Bg4 { Le fou cloue le cavalier f3, défenseur de d4. [%cal Gg4d1] }
+8. Be2 { Le fou décloue. }
+8... Qb6 { À RETENIR. PRO TIP : -0.73. La dame vise d4 et b2 en même temps, le pion f4 tient toujours. Quand les Blancs prennent en c6, reprends avec le cavalier, jamais avec le pion b7. [%cal Gb6d4,Gb6b2] })
+6... Bb4+ { L'échec gêne le développement blanc : le cavalier c3 sera cloué. [%cal Gb4e1] }
+(6... Bf5 { LA VARIANTE PIÉGÉE : un développement naturel… [%csl Rb7] }
+7. Qb3 { …mais la dame blanche vise b7, que le fou c8 défendait. }
+7... Qc7 { La dame défend b7… }
+8. Nc3 { …et les Blancs gagnent un temps de développement. À RETENIR. PRO TIP : +0.43. Quand le pion c4 blanc ouvre la diagonale de la dame vers b7, ne sors pas le fou c8 avant d'avoir réglé d5. [%csl Rb7] })
+7. Nc3 { Le cavalier pare l'échec. }
+7... cxd5 { On reprend : le pion d5 attaque c4. [%cal Gd5c4] }
+8. Be2 { Le fou se développe. }
+(8. cxd5 { Les Blancs reprennent et laissent un pion isolé en d5 : l'évaluation passe de -0.08 à -0.90. [%hint "les Blancs isolent leur pion d5 au lieu de préparer le roque."] [%hint "le pion d5. Notre cavalier f6 et la dame d8 l'attaquent, et le roi blanc est encore en e1."] [%hint "8...O-O : le roi à l'abri, puis ...Nxd5."] [%hintcsl Rd5,Ge8] }
+8... O-O { On roque d'abord : le pion d5 ne s'enfuira pas. [%csl Gg8] }
+9. Bxf4 { Les Blancs récupèrent le pion f4. }
+9... Nxd5 { À RETENIR. PRO TIP : -0.78. Le pion d5 est tombé, le cavalier c3 est cloué et le roi blanc est toujours au centre. Contre un pion isolé, roque d'abord, prends ensuite. [%cal Gd5c3] })
+8... Nc6 { Le cavalier se développe et vise d4. [%cal Gc6d4] }
+9. O-O { Les Blancs roquent. }
+9... Be6 { Le fou soutient d5. [%cal Ge6d5] }
+10. Qb3 { La dame attaque b7 et le fou b4 par la colonne b. }
+10... dxc4 { On ouvre la position. }
+11. Bxc4 { Le fou reprend. }
+11... Bxc4 { On échange le fou blanc le plus actif. }
+12. Qxc4 { La dame reprend. }
+12... O-O { On roque.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (-0.11).
+1. ...Bd6 et ...Re8 : on garde le pion f4 le plus longtemps possible.
+2. ...Rc8 : la colonne c est à nous.
+3. Contre Bxf4, ...Bxc3 puis ...Nd5 : le pion isolé d4 devient une cible. [%csl Gf4] }
+*
+
+## Branche D : le gambit Viennois, 2.Nc3 Nf6 3.f4 d5
+{ LE GAMBIT VIENNOIS (2.Nc3 Nf6 3.f4).
+
+Les Blancs jouent f4 après Nc3. Notre réponse est la même idée : ...d5 au centre. Après 4.fxe5 Nxe4, notre cavalier est installé en e4, et nous visons ...f5 pour le soutenir ou l'échange en c3.
+
+Points clés : le cavalier e4 est fort, le pion e5 blanc est avancé mais isolé de ses soutiens, et notre roque arrive vite. }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. Nc3 { LA VIENNOISE : le cavalier soutient e4 et prépare f4. } (2. f4 { Le Gambit du Roi : chapitres 1 à 4 et 8. })
+2... Nf6 { Le cavalier attaque e4. [%cal Gf6e4] }
+3. f4 { LE GAMBIT VIENNOIS. (3.Bc4 : chapitre 7.) }
+3... d5 { On frappe le centre : la réponse classique. [%cal Gd5e4] }
+4. fxe5 { Les Blancs prennent en e5 : notre cavalier est attaqué. }
+4... Nxe4 { Le cavalier prend e4 et s'installe au centre. [%csl Ge4] }
+5. Nf3 { Développement. }
+5... Be7 { Le fou se développe et prépare le roque. }
+6. d4 { Les Blancs prennent le centre. }
+6... O-O { On roque. [%csl Gg8] }
+7. Bd3 { Le fou attaque le cavalier e4. }
+(7. Be3 { Le fou se développe, mais notre fou va clouer le cavalier c3 : l'évaluation passe de +0.08 à -0.84. [%hint "les Blancs développent le mauvais fou : le cavalier c3, défenseur de e4, reste sans soutien."] [%hint "le cavalier c3. Notre fou e7 le cloue depuis b4."] [%hint "7...Bb4 : le clouage."] [%hintcsl Gb4,Rc3] }
+7... Bb4 { Le fou cloue le cavalier c3. [%cal Gb4c3] }
+8. a3 { Les Blancs chassent le fou. }
+8... Bxc3+ { On prend en c3. }
+9. bxc3 { Le pion reprend : pions doublés. }
+9... c5 { À RETENIR. PRO TIP : -1.14. Les pions c doublés et le pion d4 deviennent des cibles. Contre un cavalier c3 non soutenu, le clouage ...Bb4 est le coup naturel. [%cal Gc5d4] })
+7... f5 { Le pion soutient le cavalier e4. [%cal Gf5e4] }
+8. exf6 { Les Blancs prennent en passant. }
+8... Bxf6 { Le fou reprend et vise d4. [%cal Gf6d4] }
+(8... Nxc3 { LA VARIANTE PIÉGÉE : on échange tout de suite le cavalier c3… [%csl Rf6] }
+9. bxc3 { …le pion reprend… }
+9... Rxf6 { …et on reprend f6 avec la tour… }
+10. O-O { …mais les Blancs roquent, avec la colonne f et un fou d3 qui vise h7. À RETENIR. PRO TIP : +0.76. Le cavalier e4 est notre meilleure pièce : ne l'échange pas pour rien. Reprends d'abord en f6 avec le fou. [%csl Rh7] })
+9. O-O { Les Blancs roquent. }
+9... Nc6 { Le cavalier attaque d4. [%cal Gc6d4] }
+10. Nxe4 { Les Blancs échangent le cavalier e4. }
+(10. Bxe4 { Le fou prend le cavalier, mais le pion d4 manque ensuite de défenseurs : l'évaluation passe de +0.12 à -0.65. [%hint "les Blancs prennent avec le fou et laissent le pion d4 sous le feu de nos pièces."] [%hint "le pion d4. Notre fou f6 et notre cavalier c6 l'attaquent après ...dxe4."] [%hint "10...dxe4 : on reprend, puis d4 tombera."] [%hintcsl Rd4,Gf6] }
+10... dxe4 { Le pion reprend et attaque le cavalier f3. }
+11. Nxe4 { Les Blancs reprennent le pion. }
+11... Bxd4+ { Le fou prend d4 avec échec. }
+12. Kh1 { Le roi s'écarte. }
+12... Bb6 { À RETENIR. PRO TIP : -0.53. Le pion d4 est tombé, notre fou vise g1. Quand les Blancs échangent leur fou de cases blanches en e4, compte les défenseurs de d4. [%cal Gb6g1] })
+10... dxe4 { Le pion reprend. }
+11. Bxe4 { Le fou reprend. }
+(11. Bc4+ { L'échec semble actif, mais notre roi trouve h8 et d4 reste faible : l'évaluation passe de +0.13 à -0.79. [%hint "un échec qui ne gagne rien : notre roi est en sécurité en h8."] [%hint "la case h8. Notre roi s'y abrite, puis le pion d4 tombe."] [%hint "11...Kh8 : on évite tout clouage sur la diagonale."] [%hintcsl Gh8,Rd4] }
+11... Kh8 { À RETENIR. PRO TIP : -0.71. Le pion e4 attaque le cavalier f3 et d4 est attaqué deux fois. Contre un échec sans suite, cherche la case la plus sûre pour le roi. [%cal Ge4f3] })
+11... Nxd4 { Le cavalier prend d4. }
+12. c3 { Le pion chasse le cavalier. }
+12... Nxf3+ { On échange le cavalier f3. }
+13. Bxf3 { Le fou reprend. }
+13... c6 { Le pion contrôle d5 et b5.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (+0.04).
+1. ...Qb6+ puis ...Be6 : nos fous prennent les diagonales.
+2. ...Rad8 : la colonne d ouverte.
+3. Contre Bg4, ...Bxg4 : on échange le fou blanc actif. [%csl Gd5] }
+*
+
+## Aléatoire surprise 2 : après le gambit Viennois, le pion b2 qui tombe
+{ ALÉATOIRE SURPRISE.
+
+On reprend le chapitre 5 jusqu'à 13...c6. La théorie s'arrête là. Les Blancs jouent des coups qui semblent actifs mais laissent leur aile dame sans défense. À chaque faute, l'échelle des 3 indices guide vers la bonne réponse :
+- indice 1 : le principe violé ;
+- indice 2 : la case clé (cases allumées) ;
+- indice 3 : l'action concrète.
+
+PRO TIP : la méthode. 1. Qu'a changé le dernier coup adverse ? 2. Quel pion blanc est sans défense ? 3. Quelle pièce noire l'attaque avec gain de temps ? }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. Nc3 { La Viennoise. } (2. f4 { Le Gambit du Roi : chapitres 1 à 4 et 8. })
+2... Nf6 { Contre e4. }
+3. f4 { Le gambit. }
+3... d5 { Au centre. }
+4. fxe5 { Prise. }
+4... Nxe4 { Le cavalier au centre. }
+5. Nf3 { Développement. }
+5... Be7 { Développement. }
+6. d4 { Le centre. }
+6... O-O { Roque. }
+7. Bd3 { Contre e4. }
+7... f5 { Soutien. }
+8. exf6 { En passant. }
+8... Bxf6 { Reprise. }
+9. O-O { Roque. }
+9... Nc6 { Contre d4. }
+10. Nxe4 { Échange. }
+10... dxe4 { Reprise. }
+11. Bxe4 { Reprise. }
+11... Nxd4 { Le pion d4. }
+12. c3 { Chasse. }
+12... Nxf3+ { Échange. }
+13. Bxf3 { Reprise. }
+13... c6 { Fin de la théorie. }
+14. Bg4 { Le fou propose l'échange, mais il quitte la défense de la diagonale a7-g1 : l'évaluation passe de +0.04 à -0.59. [%hint "les Blancs déplacent leur fou au lieu de sortir la dame, et leur roi reste sur la diagonale de notre dame."] [%hint "la case b6. Notre dame y donne échec au roi g1 et vise b2."] [%hint "14...Qb6+ : échec et pression sur b2."] [%hintcsl Gb6,Rg1] }
+14... Qb6+ { Échec : la dame vise aussi b2. [%cal Gb6g1,Gb6b2] }
+15. Kh1 { Le roi s'écarte. }
+15... Bxg4 { On échange le fou. }
+16. Qxg4 { La dame reprend. }
+16... Qb5 { La dame se recentre et surveille la cinquième rangée. }
+17. Be3 { Le fou se développe et laisse b2. }
+17... Qxb2 { On prend le pion b2. }
+18. Rab1 { La tour attaque la dame, mais c3 tombe à son tour : l'évaluation passe de -0.79 à -1.44. [%hint "la tour chasse notre dame, mais le pion c3 n'est plus défendu par le pion b2."] [%hint "le pion c3. Notre dame le prend en quittant b2."] [%hint "18...Qxc3 : un deuxième pion."] [%hintcsl Rc3,Gb2] }
+18... Qxc3 { Deuxième pion. }
+19. Bg1 { Le fou se replie. }
+19... Rf7 { La tour défend la septième rangée. }
+20. Rbd1 { La tour prend la colonne d, mais la colonne e est libre pour nous : l'évaluation passe de -1.95 à -2.50. [%hint "les Blancs prennent une colonne et laissent la colonne e à nos tours."] [%hint "la case e8. Notre tour a8 y vient et contrôle la colonne e."] [%hint "20...Re8 : la deuxième tour entre en jeu."] [%hintcsl Ge8] }
+20... Re8 { À RETENIR. PRO TIP : -2.73. Deux pions de plus, deux tours actives. Quand les Blancs sacrifient l'aile dame pour l'activité, prends les pions et active tes tours avant de défendre. [%cal Ge8e1] }
+*
+
+## Branche E : la Viennoise calme, 3.Bc4 Nc6 4.d3 Na5
+{ LA VIENNOISE CALME (3.Bc4).
+
+Les Blancs développent le fou vers f7 avant f4. Notre plan le plus simple : ...Nc6, puis ...Na5 pour échanger ce fou dangereux, et ...Bc5 pour gêner f4 (le roi g1 serait sur la diagonale).
+
+Points clés : la paire de fous est à nous après ...Nxc4 ; le fou c5 surveille f2 et g1. }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. Nc3 { La Viennoise. } (2. f4 { Le Gambit du Roi : chapitres 1 à 4 et 8. })
+2... Nf6 { Le cavalier attaque e4. }
+3. Bc4 { Le fou vise f7. }
+3... Nc6 { Le cavalier se développe. Même position par l'ordre 2...Nc6 3.Bc4 Nf6, celui de 4 de tes parties. }
+4. d3 { Les Blancs soutiennent e4. }
+4... Na5 { Le cavalier vise le fou c4 : nous aurons la paire de fous. [%cal Ga5c4] }
+5. Nge2 { Le cavalier se développe sans gêner f4. }
+5... Bc5 { Le fou vise f2 et la diagonale du roi. [%cal Gc5f2] }
+6. O-O { Les Blancs roquent. }
+(6. Be3 { Le fou propose l'échange, mais il abîme la structure blanche : l'évaluation passe de +0.05 à -1.02. [%hint "les Blancs offrent un échange qui double leurs pions e."] [%hint "le fou e3. Notre fou c5 le prend, et après fxe3 le pion e3 est faible."] [%hint "6...Bxe3 7.fxe3 Nxc4 : la paire de fous et des pions doublés chez eux."] [%hintcsl Re3,Gc4] }
+6... Bxe3 { On prend le fou. }
+7. fxe3 { Le pion reprend : pions e doublés. }
+7... Nxc4 { On prend le fou c4. }
+8. dxc4 { Le pion reprend : encore des pions doublés. }
+8... d6 { À RETENIR. PRO TIP : -0.89. Deux paires de pions doublés chez les Blancs. Un fou qui propose l'échange en e3 contre notre fou c5 abîme souvent sa propre structure. [%csl Rc4,Re3] })
+6... O-O { On roque. [%csl Gg8] }
+7. Ng3 { Le cavalier vise f5. }
+7... Nxc4 { On prend le fou c4 : la paire de fous est à nous. }
+8. dxc4 { Le pion reprend. }
+8... d6 { Le pion soutient e5 et ouvre le fou c8. }
+9. Qd3 { La dame se développe. }
+9... Nd7 { Le cavalier va vers c5 ou f6. [%cal Gd7c5] }
+(9... Bd7 { LA VARIANTE PIÉGÉE : un développement naturel… [%csl Rf6] }
+10. Bg5 { …mais le fou blanc cloue notre cavalier f6 sur la dame… }
+10... h6 { …on chasse le fou… }
+11. Bxf6 { …il prend en f6… }
+11... Qxf6 { …et Nd5 ou Nh5 viendront avec gain de temps sur la dame. À RETENIR. PRO TIP : +1.10. Le cavalier f6 était cloué ; après 9...Nd7, le fou blanc n'a plus de cible en g5. [%csl Rf6] })
+10. Be3 { Les Blancs proposent l'échange du fou c5. }
+(10. b4 { Le pion attaque le fou c5, mais il n'est pas défendu : l'évaluation passe de +0.10 à -1.49. [%hint "les Blancs avancent un pion que rien ne protège."] [%hint "le pion b4. Notre fou c5 le prend."] [%hint "10...Bxb4 : un pion de plus."] [%hintcsl Rb4,Gc5] }
+10... Bxb4 { On prend le pion. }
+11. Nd5 { Le cavalier attaque le fou b4. }
+11... Bc5 { À RETENIR. PRO TIP : -1.31. Un pion de plus et la paire de fous. Avant de répondre à une attaque de pion, regarde s'il est défendu. [%csl Gc5] })
+10... Bxe3 { On échange. }
+11. Qxe3 { La dame reprend. }
+(11. fxe3 { Le pion reprend vers le centre, mais la structure blanche s'abîme : l'évaluation passe de -0.09 à -0.72. [%hint "les Blancs doublent leurs pions e alors que la dame pouvait reprendre."] [%hint "la case c5. Notre cavalier d7 y saute et vise e4 et d3."] [%hint "11...Nc5 : le cavalier attaque la dame."] [%hintcsl Gc5,Re3] }
+11... Nc5 { Le cavalier attaque la dame. [%cal Gc5d3] }
+12. Qe2 { La dame recule. }
+12... Be6 { À RETENIR. PRO TIP : -0.80. Deux paires de pions doublés chez les Blancs, nos pièces sont mieux placées. Contre une reprise de pion en e3, le cavalier en c5 est notre meilleure pièce. [%cal Ge6c4] })
+11... Nc5 { Le cavalier se place en c5.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (-0.03).
+1. ...Ne6 : le cavalier vise d4 et f4.
+2. ...Be6 et ...b6 : on attaque le pion c4, doublé.
+3. Contre f4, ...exf4 puis ...Re8 : la colonne e ouverte. [%cal Gc5e6] }
+*
+
+## Anti-panique : 3.d4, 3.Nc3, 3.Qf3 et 3.Be2
+{ ANTI-PANIQUE.
+
+Après 1.e4 e5 2.f4 exf4, les Blancs ont d'autres coups que 3.Nf3 et 3.Bc4. Pas de panique : la règle reste la même. Contre un coup qui laisse h4 libre, pense à ...Qh4+ ; contre les autres, développe et frappe le centre par ...d5.
+
+PRO TIP : contre un coup rare, demande-toi d'abord si la case h4 est encore contrôlée par un cavalier en f3. }
+1. e4 { Le centre. }
+1... e5 { Symétrie. }
+2. f4 { Le gambit. }
+2... exf4 { On accepte. }
+3. d4 { Une imprécision : les Blancs prennent le centre mais laissent h4 libre. L'évaluation passe de -0.51 à -0.89. }
+(3. Nc3 { Le cavalier se développe vers d5. }
+3... Nc6 { On se développe aussi : l'échec ...Qh4+ attend que d4 soit joué. }
+4. d4 { Les Blancs prennent le centre. }
+4... Qh4+ { Maintenant l'échec : le roi doit marcher. [%cal Gh4e1] }
+5. Ke2 { Le roi monte. }
+5... g5 { À RETENIR. PRO TIP : -0.60. Le pion f4 est soutenu par g5, le roi blanc n'a pas roqué. Contre 3.Nc3, développe d'abord, puis ...Qh4+ dès que d4 a affaibli e1-h4. [%cal Gg5f4] })
+(3. Qf3 { Une imprécision : la dame vise f4, mais elle prend la case du cavalier g1. L'évaluation passe de -0.51 à -0.71. }
+3... Nc6 { Le cavalier se développe et vise d4 et b4. }
+(3... Qh4+ { LA VARIANTE PIÉGÉE : l'échec réflexe… [%csl Rh4] }
+4. g3 { …les Blancs interposent le pion g… }
+4... fxg3 { …on prend… }
+5. hxg3 { …et la tour h1 attaque notre dame par la colonne h, ouverte par notre propre prise. À RETENIR. PRO TIP : -0.27. Le pion f4 a disparu et la dame doit encore bouger. Avec la dame blanche en f3, ...Qh4+ ne chasse pas le roi : il ouvre la colonne h aux Blancs. [%cal Gh1h4] })
+4. Qxf4 { La dame reprend le pion. }
+4... Bd6 { Le fou attaque la dame avec gain de temps. [%cal Gd6f4] }
+5. Qe3 { La dame recule. }
+5... Nf6 { À RETENIR. PRO TIP : -1.23. Trois pièces sorties contre une dame déjà promenée. Contre une sortie précoce de la dame, développe avec gain de temps sur elle. [%cal Gf6e4] })
+(3. Be2 { Une imprécision : le petit gambit du fou, sans menace sur f7. L'évaluation passe de -0.51 à -0.82. }
+3... d5 { On frappe le centre. [%cal Gd5e4] }
+4. exd5 { Les Blancs prennent. }
+(4. e5 { Le pion avance et ferme le centre, mais il laisse d4 et f4 à nos pions : l'évaluation passe de -0.60 à -2.29. [%hint "les Blancs avancent un pion au lieu de se développer, et leur centre reste en retard."] [%hint "la case d4. Notre pion d5 y avance et prend l'espace, le pion d2 blanc est bloqué."] [%hint "4...d4 : le pion avance, puis ...Nc6."] [%hintcsl Gd4,Rd2] }
+4... d4 { Le pion prend l'espace. [%csl Gd4] }
+5. Nf3 { Développement. }
+5... Nc6 { À RETENIR. PRO TIP : -2.64. Deux pions de plus en d4 et f4 dans la position, nos pièces sortent vite. Contre e5 qui ferme le centre, avance ton pion d. [%cal Gc6e5] })
+4... Nf6 { Le cavalier vise d5. }
+5. Nf3 { Développement. }
+5... Nxd5 { Le cavalier reprend. }
+6. d4 { Le centre. }
+6... Bb4+ { À RETENIR. PRO TIP : -0.68. L'échec gêne le développement blanc, et le pion f4 tient toujours. Contre 3.Be2, ...d5 et ...Nf6 suffisent. [%cal Gb4e1] })
+3... Qh4+ { L'échec : le roi blanc doit marcher. [%cal Gh4e1] }
+4. Ke2 { Le roi monte en e2. }
+4... d5 { On frappe le centre : la colonne e va s'ouvrir vers le roi blanc. [%cal Gd5e4] }
+5. exd5 { Les Blancs prennent. }
+(5. e5 { Le pion avance et ferme la colonne e, mais le roi e2 reste sous le feu : l'évaluation passe de -0.87 à -3.19. [%hint "les Blancs ferment le centre avec leur roi en e2, sans se développer."] [%hint "la case g4. Notre fou y donne échec au roi e2."] [%hint "5...Bg4+ : échec, puis ...Nc6 contre d4."] [%hintcsl Gg4,Re2] }
+5... Bg4+ { Échec au roi. [%cal Gg4e2] }
+6. Nf3 { Le cavalier s'interpose. }
+6... Nc6 { À RETENIR. PRO TIP : -3.71. Le cavalier f3 est cloué, d4 est attaqué et le roi blanc n'a aucun abri. Avec le roi adverse en e2, chaque développement avec gain de temps compte double. [%cal Gc6d4] })
+5... Bg4+ { Le fou donne échec. [%cal Gg4e2] }
+6. Nf3 { Le cavalier s'interpose. }
+6... Bxf3+ { On prend le cavalier avec échec. }
+7. gxf3 { Le pion reprend : le roi blanc est sans abri. }
+7... Nd7 { Le cavalier vise e5 et f6.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (-0.93).
+1. ...O-O-O : notre roi à l'abri, la tour sur la colonne d.
+2. ...Ngf6 et ...Nxd5 : on reprend le pion d5.
+3. ...Re8+ : la colonne e vise le roi e2. [%cal Gd7e5] }
+*

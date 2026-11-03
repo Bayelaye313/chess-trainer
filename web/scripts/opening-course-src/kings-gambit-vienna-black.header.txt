@@ -1,0 +1,80 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Gambit du Roi et Viennoise (avec les Noirs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/kings-gambit-vienna-black/cours`).
+ * Public visé : 1500-1800 Elo, répertoire 1...e5 contre 1.e4 2.f4 et 2.Nc3
+ * (fiche curatée `kings-gambit-vienna-black`, C30-C39 et C25-C29). Ligne
+ * caractéristique 1.e4 e5 2.f4 : les chapitres viennois portent un renvoi
+ * 2.f4 en variante, pour que chaque chapitre contienne cette ligne.
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et la défense Fischer 3.Nf3 d6.
+ * 2. Aléatoire surprise 1 : après la défense Fischer, le pion f qui casse tout.
+ * 3. Branche B : le Gambit du Fou, 3.Bc4 Nf6 4.Nc3 c6.
+ * 4. Branche C : le gambit refusé, le contre-gambit Falkbeer 2...d5.
+ * 5. Branche D : le gambit Viennois, 2.Nc3 Nf6 3.f4 d5.
+ * 6. Aléatoire surprise 2 : après le gambit Viennois, le pion b2 qui tombe.
+ * 7. Branche E : la Viennoise calme, 3.Bc4 Nc6 4.d3 Na5.
+ * 8. Anti-panique : 3.d4, 3.Nc3, 3.Qf3 et 3.Be2.
+ *
+ * Choix des chapitres (2026-11-03) : la théorie
+ * principale contre 2.f4 (accepté avec 3.Nf3 et 3.Bc4, refusé) et contre
+ * 2.Nc3 (gambit Viennois, 3.Bc4), plus les coups rares après 2...exf4.
+ * Aucun autre cours côté Noirs ne traite 2.f4 ni 2.Nc3 (berlin-black,
+ * italian-game-black et scotch-four-knights-black partent de 2.Nf3 Nc6).
+ * Parties de l'utilisateur (copie de la base du 2026-11-03) : 10 parties
+ * attribuées à ce cours, 6 Falkbeer 2...d5 et 4 Viennoises 2...Nc6 3.Bc4 Nf6
+ * (transposition vers le chapitre 7).
+ * Décisions moteur : 3...d6 (Fischer) plutôt que 3...d5, qui cède 0.5 à
+ * profondeur 16 ; le refus par 2...d5 plutôt que 2...Bc5, qui cède davantage
+ * que 2...exf4 ; 6...Qf6 au chapitre 1. Les
+ * branches théoriques s'arrêtent au plus tard au demi-coup 27 ; les
+ * chapitres « Aléatoire surprise » prolongent avec les Blancs comme camp
+ * « mou » (`_tmp-drift-w.mts`).
+ *
+ * Convention côté Noirs (comme `op-berlin-black.ts`) : l'élève joue les
+ * Noirs ; les fautes sont des coups BLANCS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup noir suivant est la punition. Les
+ * « variantes piégées » sont des coups noirs tentants mais mauvais (7...Nc6
+ * contre la dame f6, 11...Bd6, 6...Bf5, 8...Nxc3, 9...Bd7). Une faute qui
+ * perd moins de 0.5 devient une « imprécision » sans indices (7.Bd3, 3.d4,
+ * 3.Qf3, 3.Be2).
+ *
+ * Sources : théorie établie du Gambit du Roi et de la Viennoise, TOUTES les
+ * lignes arbitrées par Stockfish 19 natif (profondeur 16, MultiPV 1) ; la
+ * suite 6...Qf6 7.Nc3 Ne7 de la défense Fischer est un choix du moteur.
+ * Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs, comme partout), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/kings-gambit-vienna-black.pgn` (et l'en-tête
+ * `kings-gambit-vienna-black.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-kings-gambit-vienna-black`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

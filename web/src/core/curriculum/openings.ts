@@ -751,6 +751,24 @@ export const OPENINGS: readonly OpeningLine[] = [
       bxc6 6.e5 {Attaque Mieses} Qe7 7.Qe2 Nd5 8.c4 Ba6 9.b3 g6 10.Bb2 Bg7 11.g3 O-O-O 12.Bg2 Rhe8 13.O-O Bxe5`,
   },
   {
+    id: "kings-gambit-vienna-black",
+    name: "Gambit du Roi et Viennoise (avec les Noirs)",
+    eco: "C34",
+    side: "black",
+    description:
+      "1...e5 contre 2.f4 et 2.Nc3 : la défense Fischer 3...d6 et ...g5 contre 3.Nf3, ...Nf6 et ...d5 contre le Gambit du Fou, le contre-gambit Falkbeer 2...d5, ...d5 et ...Nxe4 contre le gambit Viennois, ...Na5 contre 3.Bc4.",
+    moves: ["e4", "e5", "f4"],
+    pgn: `1.e4 e5 2.f4
+      (2.Nc3 {Viennoise} Nf6 3.f4
+        (3.Bc4 {Viennoise calme} Nc6 4.d3 Na5 5.Nge2 Bc5 6.O-O O-O 7.Ng3 Nxc4 8.dxc4 d6)
+        d5 4.fxe5 Nxe4 5.Nf3 Be7 6.d4 O-O 7.Bd3 f5 8.exf6 Bxf6 9.O-O Nc6)
+      exf4
+      (2...d5 {Contre-gambit Falkbeer} 3.exd5 exf4 4.Nf3 Nf6 5.c4 c6 6.d4 Bb4+ 7.Nc3 cxd5 8.Be2 Nc6 9.O-O Be6)
+      3.Nf3
+      (3.Bc4 {Gambit du Fou} Nf6 4.Nc3 c6 5.d4 d5 6.exd5 cxd5 7.Bb5+ Nc6 8.Bxf4 Be7 9.Nf3 O-O 10.O-O Ne4)
+      d6 {Défense Fischer} 4.d4 g5 5.h4 g4 6.Ng1 Qf6 7.Nc3 Ne7 8.Bc4 Bh6 9.Nge2 Nbc6 10.Nb5 O-O`,
+  },
+  {
     id: "scotch-game",
     name: "Partie Écossaise",
     eco: "C45",

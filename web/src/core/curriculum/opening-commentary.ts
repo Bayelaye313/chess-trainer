@@ -95,6 +95,21 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Contre-attaque le pion e4 avec ton second cavalier.",
     },
   ],
+  "kings-gambit-vienna-black": [
+    {
+      comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "Symétrie : le pion e5 conteste le centre et ouvre la diagonale du fou f8.",
+      hint: "Réponds par la poussée symétrique de ton pion roi.",
+    },
+    {
+      comment:
+        "Le Gambit du Roi : les Blancs offrent le pion f pour ouvrir la colonne f vers f7 et prendre le centre par d4. On l'accepte, puis la chaîne ...d6 et ...g5 le garde.",
+      hint: "Les Blancs offrent un pion de l'aile roi pour détourner ton pion central.",
+    },
+  ],
   "italian-game-black": [
     {
       comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",
