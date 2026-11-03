@@ -769,6 +769,24 @@ export const OPENINGS: readonly OpeningLine[] = [
       d6 {Défense Fischer} 4.d4 g5 5.h4 g4 6.Ng1 Qf6 7.Nc3 Ne7 8.Bc4 Bh6 9.Nge2 Nbc6 10.Nb5 O-O`,
   },
   {
+    id: "bishops-center-black",
+    name: "Partie du Fou et Partie du Centre (avec les Noirs)",
+    eco: "C24",
+    side: "black",
+    description:
+      "1...e5 contre 2.Bc4 et 2.d4 : ...Nf6, ...c6 et ...d5 contre la Partie du Fou, 4...Nxe4 contre l'Urusov, ...f6 dans le Boden-Kieseritzky, ...Nc6 et ...Bb4 contre la Partie du Centre, ...d5 contre le gambit danois, et la défense de f7 contre 2.Qh5.",
+    moves: ["e4", "e5", "Bc4"],
+    pgn: `1.e4 e5 2.Bc4
+      (2.d4 {Partie du Centre} exd4 3.Qxd4
+        (3.c3 {Gambit danois} d5 4.exd5 Qxd5 5.cxd4 Nc6 6.Nf3 Bg4 7.Be2 Bb4+ 8.Nc3 Bxf3 9.Bxf3 Qc4)
+        Nc6 4.Qe3 Nf6 5.Nc3 Bb4 6.Bd2 O-O 7.O-O-O Re8 8.Bc4 d6 9.Nf3 Be6)
+      (2.Qh5 {Sortie de dame} Nc6 3.Bc4 g6 4.Qf3 Nf6 5.Ne2 d6 6.Nbc3 Bg4)
+      Nf6 3.d3
+      (3.d4 {Gambit Urusov} exd4 4.Nf3 Nxe4 5.Qxd4 Nf6 6.Nc3 Be7 7.Bg5 h6 8.Qh4 c6 9.O-O-O d5)
+      (3.Nf3 {Gambit Boden-Kieseritzky} Nxe4 4.Nc3 Nxc3 5.dxc3 f6 6.O-O Nc6 7.b4 Ne7)
+      c6 4.Nf3 d5 5.Bb3 Bd6 6.Nc3 O-O 7.O-O dxe4 8.Nxe4 Nxe4 9.dxe4 Na6 10.Be3 Qe7`,
+  },
+  {
     id: "scotch-game",
     name: "Partie Écossaise",
     eco: "C45",

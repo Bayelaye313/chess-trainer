@@ -110,6 +110,21 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Les Blancs offrent un pion de l'aile roi pour détourner ton pion central.",
     },
   ],
+  "bishops-center-black": [
+    {
+      comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "Symétrie : le pion e5 conteste le centre et ouvre la diagonale du fou f8.",
+      hint: "Réponds par la poussée symétrique de ton pion roi.",
+    },
+    {
+      comment:
+        "La Partie du Fou : le fou vise f7 tout de suite et garde le choix entre d3, d4, Nc3 et f4. On répond par ...Nf6 contre e4, puis ...c6 et ...d5 chassent le fou.",
+      hint: "Les Blancs développent d'abord le fou-roi vers la case faible de ton roque.",
+    },
+  ],
   "italian-game-black": [
     {
       comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",

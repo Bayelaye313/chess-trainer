@@ -1,0 +1,80 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Partie du Fou et Partie du Centre (avec les Noirs) » —
+ * onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/bishops-center-black/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1...e5 contre 1.e4 2.Bc4 et 2.d4 (fiche
+ * curatée `bishops-center-black`, C23-C24 et C21-C22). Ligne caractéristique
+ * 1.e4 e5 2.Bc4 : les chapitres de la Partie du Centre et l'anti-panique
+ * portent un renvoi 2.Bc4 en variante, pour que chaque chapitre contienne
+ * cette ligne.
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun : 2.Bc4 Nf6 3.d3 c6 4.Nf3 d5.
+ * 2. Aléatoire surprise 1 : après la Partie du Fou, le roque blanc abîmé.
+ * 3. Branche B : le gambit Urusov, 3.d4 exd4 4.Nf3 Nxe4.
+ * 4. Branche C : 3.Nf3 Nxe4 4.Nc3, le gambit Boden-Kieseritzky.
+ * 5. Branche D : la Partie du Centre, 2.d4 exd4 3.Qxd4.
+ * 6. Aléatoire surprise 2 : après la Partie du Centre, le cavalier qui entre en b4.
+ * 7. Branche E : le gambit danois, 3.c3 d5.
+ * 8. Anti-panique : 2.Qh5, 2.Qf3 et le mat du berger.
+ *
+ * Choix des chapitres (2026-11-03) : la théorie principale contre 2.Bc4
+ * (3.d3, 3.d4, 3.Nf3) et contre 2.d4 (3.Qxd4, 3.c3), plus les sorties de
+ * dame 2.Qh5 et 2.Qf3. Parties de l'utilisateur (copie de la base) : 2.Bc4
+ * cinq fois (2...Nf6 trois fois, 2...Nc6 deux fois), 2.Qf3 deux fois, 2.d4
+ * une fois. Aucun autre cours côté Noirs ne traite ces débuts ; 2.Bc4 Nf6
+ * 3.Nc3 renvoie à la Viennoise (`kings-gambit-vienna-black`), 2.d4 exd4
+ * 3.Nf3 à l'Écossaise (`scotch-four-knights-black`), 2.Bc4 Nf6 3.Nf3 Nc6
+ * aux Deux Cavaliers (`italian-game-black`). Décision moteur : contre
+ * l'Urusov, 4...Nxe4 plutôt que 4...d5, qui cède 0.5 à profondeur 16. Les
+ * branches théoriques s'arrêtent au plus tard au demi-coup 27 ; les
+ * chapitres « Aléatoire surprise » prolongent avec les Blancs comme camp
+ * « mou » (`_tmp-drift-w.mts`).
+ *
+ * Convention côté Noirs (comme `op-berlin-black.ts`) : l'élève joue les
+ * Noirs ; les fautes sont des coups BLANCS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup noir suivant est la punition. Les
+ * « variantes piégées » sont des coups noirs tentants mais mauvais (4...Bc5,
+ * 9...O-O contre le fou g5, 5...d5 dans le Boden, 7...Qe7, 6...Qe6+, et
+ * 3...Nf6 qui perd sur le mat du berger). Une faute qui perd moins de 0.5
+ * devient une « imprécision » sans indices (6.Be3 au chapitre 4, 16.a4 à la
+ * surprise 2, 6.c3 au chapitre 8).
+ *
+ * Sources : théorie établie de la Partie du Fou, de la Partie du Centre et du
+ * gambit danois, TOUTES les lignes arbitrées par Stockfish 19 natif
+ * (profondeur 16, MultiPV 1) ; 7.b4 dans le Boden-Kieseritzky et 10.Bd3 dans
+ * la Partie du Centre sont des choix du moteur. Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs, comme partout), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/bishops-center-black.pgn` (et l'en-tête
+ * `bishops-center-black.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-bishops-center-black`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
