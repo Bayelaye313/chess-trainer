@@ -732,6 +732,25 @@ export const OPENINGS: readonly OpeningLine[] = [
       c6 7.dxc6 bxc6 8.Be2 h6 9.Nf3 e4 10.Ne5 Bc5 11.O-O O-O 12.Kh1 Bd6`,
   },
   {
+    id: "scotch-four-knights-black",
+    name: "Écossaise et Quatre Cavaliers (avec les Noirs)",
+    eco: "C47",
+    side: "black",
+    description:
+      "1...e5 contre 3.d4 et 3.Nc3 : contre l'Écossaise, ...Nf6 puis ...Qe7 face à la Mieses ou ...Bb4 face à 5.Nc3 ; contre les Quatre Cavaliers, ...Nb4 face au Belgrade et ...d5 face à la Glek.",
+    moves: ["e4", "e5", "Nf3", "Nc6"],
+    pgn: `1.e4 e5 2.Nf3 Nc6 3.d4
+      (3.Nc3 {Quatre Cavaliers} Nf6 4.d4
+        (4.g3 {Variante Glek} d5 5.exd5 Nxd5 6.Bg2 Nxc3 7.bxc3 Bd6 8.O-O O-O 9.d3 h6 10.Re1 Re8)
+        (4.Nxe5 {Gambit Halloween} Nxe5 5.d4 Ng6 6.e5 Ng8 7.Bc4 c6 8.Qf3 d5 9.exd6 Be6)
+        exd4 5.Nd5 {Gambit de Belgrade} Nb4 6.Bc4 Nbxd5 7.exd5 Bb4+ 8.Bd2 Qe7+ 9.Qe2 Bxd2+ 10.Kxd2 Qxe2+ 11.Kxe2 O-O)
+      exd4 4.Nxd4
+      (4.c3 {Gambit Göring} d5 5.exd5 Qxd5 6.cxd4 Bg4 7.Be2 Bb4+ 8.Nc3 Bxf3 9.Bxf3 Qc4 10.Bxc6+ bxc6 11.Qe2+ Qxe2+ 12.Kxe2)
+      Nf6 5.Nxc6
+      (5.Nc3 {Écossaise des Quatre Cavaliers} Bb4 6.Nxc6 bxc6 7.Bd3 d5 8.exd5 cxd5 9.O-O O-O 10.Bg5 c6 11.Qf3 Bd6 12.h3 Rb8 13.b3 h6)
+      bxc6 6.e5 {Attaque Mieses} Qe7 7.Qe2 Nd5 8.c4 Ba6 9.b3 g6 10.Bb2 Bg7 11.g3 O-O-O 12.Bg2 Rhe8 13.O-O Bxe5`,
+  },
+  {
     id: "scotch-game",
     name: "Partie Écossaise",
     eco: "C45",

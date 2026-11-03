@@ -1,0 +1,76 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Écossaise et Quatre Cavaliers (avec les Noirs) » —
+ * onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/scotch-four-knights-black/cours`).
+ * Public visé : 1500-1800 Elo, répertoire 1.e4 e5 2.Nf3 Nc6 contre 3.d4 et
+ * 3.Nc3 (fiche curatée `scotch-four-knights-black`, C47).
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Noirs)
+ *
+ * 1. Fiche d'identité, tronc commun et l'Attaque Mieses (5.Nxc6 bxc6 6.e5).
+ * 2. Aléatoire surprise 1 : après la Mieses, la tour en septième rangée.
+ * 3. Branche B : 5.Nc3 Bb4, l'Écossaise des Quatre Cavaliers.
+ * 4. Branche C : les gambits 4.c3 (Göring) et 4.Bc4.
+ * 5. Branche D : 3.Nc3 Nf6 4.d4 et le Gambit de Belgrade (5.Nd5 Nb4).
+ * 6. Aléatoire surprise 2 : après le Belgrade, le roi blanc perdu au centre.
+ * 7. Branche E : la Glek 4.g3 (4...d5) et 4.h3.
+ * 8. Anti-panique : le Gambit Halloween (4.Nxe5).
+ *
+ * Choix des chapitres (2026-11-03, sans base de parties) : la théorie
+ * principale de l'Écossaise (4...Nf6 : 5.Nxc6 ou 5.Nc3 ; 4.c3) et des
+ * Quatre Cavaliers (4.d4, 4.g3), moins ce que les autres cours couvrent
+ * déjà. Le Gambit Écossais 4.Bc4 Nf6 rejoint la branche 4.d4 de
+ * `op-italian-game-black` ; 3.Nc3 Nf6 4.Bb5 Nd4 rejoint la branche 4.Nc3 de
+ * `op-berlin-black` ; 4.Bc4 Nxe4 rejoint l'anti-panique 4.Nc3 de
+ * `op-italian-game-black` : ces trois cas ne sont que des renvois (feuilles
+ * « À RETENIR »). Les branches théoriques s'arrêtent au plus tard au
+ * demi-coup 27 ; les chapitres « Aléatoire surprise » prolongent avec les
+ * Blancs comme camp « mou » (`_tmp-drift-w.mts`), un coup blanc sur deux
+ * perdant 0.55 à 1.1 pion au moteur.
+ *
+ * Convention côté Noirs (comme `op-caro-kann.ts`) : l'élève joue les Noirs ;
+ * les fautes sont des coups BLANCS qui portent les 3 indices `[%hint]` +
+ * `[%hintcsl]`, le coup noir suivant est la punition. Les « variantes
+ * piégées » sont des coups noirs tentants mais perdants (dont 9...Bxd6??
+ * 10.Qxf7# dans le Halloween). Une faute qui perd moins de 0.5 devient une
+ * « imprécision » sans indices. Les évaluations restent au point de vue des
+ * Blancs.
+ *
+ * Sources : théorie établie de l'Écossaise et des Quatre Cavaliers, TOUTES
+ * les lignes arbitrées par Stockfish 19 natif (profondeur 16, MultiPV 1) ;
+ * 11...Bd6 (au lieu du classique 11...Be7) dans l'Écossaise des Quatre
+ * Cavaliers est le choix du moteur. Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes blanches qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/scotch-four-knights-black.pgn` (et l'en-tête
+ * `scotch-four-knights-black.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard :
+ * `scripts/_tmp-check-cited-evals.mts op-scotch-four-knights-black` doit
+ * sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

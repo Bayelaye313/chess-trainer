@@ -122,6 +122,25 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Contre-attaque le pion e4 avec ton second cavalier.",
     },
   ],
+  "scotch-four-knights-black": [
+    {
+      comment: "Les Blancs occupent le centre et libèrent le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "Symétrie : le pion e5 conteste le centre et ouvre la diagonale du fou f8.",
+      hint: "Réponds par la poussée symétrique de ton pion roi.",
+    },
+    {
+      comment: "Le cavalier se développe en attaquant e5.",
+      hint: "Développe ton cavalier-roi en attaquant le pion central adverse.",
+    },
+    {
+      comment:
+        "Le cavalier défend e5. Contre 3.d4 (Écossaise), on prend puis ...Nf6 ; contre 3.Nc3 (Quatre Cavaliers), ...Nf6 aussi, et ...Nb4 si le cavalier saute en d5.",
+      hint: "Défends ton pion central avec un cavalier.",
+    },
+  ],
   "italian-game": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame dès le premier coup.",
