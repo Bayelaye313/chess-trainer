@@ -94,7 +94,7 @@ export function resolveTrigger(input: {
   if (input.tier === "fragile") {
     return {
       kind: "reflexes",
-      label: "Verrouiller les réflexes (Mode Sans Guide - Début)",
+      label: "Rejouer la ligne sans aide dès le 1er coup",
       hint: "Ligne principale sans indice dès le premier coup, jusqu'au sans-faute.",
       href: sansGuideHref,
     };
@@ -117,7 +117,7 @@ export function resolveTrigger(input: {
   }
   return {
     kind: "survie",
-    label: "Lancer le simulateur de survie (Milieu de jeu)",
+    label: "Travailler le milieu de jeu dans le cours",
     hint: "Variantes surprises et lignes de club prolongées au-delà de la théorie.",
     href: `/ouvertures/${input.openingId}/cours`,
   };

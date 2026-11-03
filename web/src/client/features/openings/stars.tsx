@@ -11,7 +11,7 @@ export function Stars({ count, className }: { count: MasteryStars; className?: s
   return (
     <span className={`inline-flex shrink-0 tracking-tight ${className ?? ""}`} aria-label={`${count} sur 3 étoiles`}>
       {[1, 2, 3].map((slot) => (
-        <span key={slot} className={slot <= count ? "text-accent" : "text-border"} aria-hidden>
+        <span key={slot} className={slot <= count ? "text-accent" : "text-border-strong"} aria-hidden>
           ★
         </span>
       ))}

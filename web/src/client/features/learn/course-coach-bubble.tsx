@@ -20,6 +20,7 @@
  * Fond `bg-surface` : à poser HORS d'un `.paper-surface` (qui redéfinit le
  * texte en sombre sans redéfinir `--surface`).
  */
+import { GraduationCap } from "lucide-react";
 import { useState } from "react";
 import type { CoachMessage } from "@/core/curriculum/coach-feedbacks";
 
@@ -34,28 +35,28 @@ export function coachTone(message: Pick<CoachMessage, "profile" | "outcome">): C
 
 const TONE_CLASSES: Record<CoachTone, { bubble: string; tail: string; avatar: string; label: string; caret: string }> = {
   success: {
-    bubble: "border-best/40 ring-1 ring-best/25 shadow-md shadow-best/15",
+    bubble: "border-best/40",
     tail: "border-best/40",
-    avatar: "ring-2 ring-best/60",
+    avatar: "text-best",
     label: "text-best",
     caret: "bg-best",
   },
   blunder: {
-    bubble: "border-blunder/45 ring-1 ring-blunder/25 shadow-md shadow-blunder/20",
+    bubble: "border-blunder/45",
     tail: "border-blunder/45",
-    avatar: "ring-2 ring-blunder/60",
-    label: "text-blunder",
+    avatar: "text-blunder",
+    label: "text-danger",
     caret: "bg-blunder",
   },
   fatigue: {
-    bubble: "border-inaccuracy/40 ring-1 ring-inaccuracy/25 shadow-md shadow-inaccuracy/15",
+    bubble: "border-inaccuracy/40",
     tail: "border-inaccuracy/40",
-    avatar: "ring-2 ring-inaccuracy/60",
+    avatar: "text-inaccuracy",
     label: "text-inaccuracy",
     caret: "bg-inaccuracy",
   },
   surprise: {
-    bubble: "border-coach-surprise/50 ring-1 ring-brilliant/30 shadow-md shadow-coach-surprise/25",
+    bubble: "border-coach-surprise/50",
     tail: "border-coach-surprise/50",
     avatar: "ring-2 ring-coach-surprise/70",
     label: "bg-linear-to-r from-coach-surprise to-brilliant bg-clip-text text-transparent",
@@ -76,9 +77,9 @@ export function CourseCoachBubble({ message }: { message: CoachMessage }) {
     <div className="flex items-end gap-3 animate-coach-bubble-in motion-reduce:animate-none">
       <span
         aria-hidden="true"
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted text-lg ${tone.avatar}`}
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted ${tone.avatar}`}
       >
-        🎓
+        <GraduationCap className="size-5" />
       </span>
       {/* `key` : un nouveau message relance la révélation (état « passé » remis à zéro). */}
       <BubbleBody key={message.text} message={message} tone={tone} />
@@ -105,7 +106,7 @@ function BubbleBody({ message, tone }: { message: CoachMessage; tone: (typeof TO
         className={`absolute -left-[5px] bottom-3 size-2.5 rotate-45 border-b border-l bg-surface ${tone.tail}`}
       />
 
-      <p className={`mb-1 text-[11px] font-semibold tracking-wider uppercase ${tone.label}`}>{message.label}</p>
+      <p className={`mb-1 text-xs font-semibold ${tone.label}`}>{message.label}</p>
 
       <p className="sr-only">{message.text}</p>
       <p aria-hidden="true">

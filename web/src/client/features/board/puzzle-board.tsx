@@ -33,6 +33,7 @@
  * flèches et les 3 essais sont IDENTIQUES dans les deux — voir le docstring de
  * `SolvablePuzzle` (`core/puzzle/solve-state.ts`).
  */
+import { BookOpen, Eye, GraduationCap, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chessboard, type SquareRenderer } from "react-chessboard";
@@ -385,12 +386,12 @@ export function PuzzleBoard({
           {(coachMessage || practicalHint || courseToReview) && (
             <div
               key={`${coachMessage ?? ""}|${practicalHint?.text ?? ""}|${courseToReview?.href ?? ""}`}
-              className="rounded-lg border border-border bg-surface-muted/40 px-4 py-3 text-sm animate-fade-up-in"
+              className="rounded-lg border border-border border-l-4 border-l-border-strong bg-surface-muted px-4 py-3 text-sm animate-fade-up-in"
             >
               {coachMessage && (
-                <p className="text-foreground">
-                  <span aria-hidden="true">🎓 </span>
-                  {coachMessage}
+                <p className="flex items-start gap-2 text-foreground">
+                  <GraduationCap aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-foreground-muted" />
+                  <span>{coachMessage}</span>
                 </p>
               )}
               {practicalHint && (
@@ -399,13 +400,13 @@ export function PuzzleBoard({
                     practicalHint.kind === "error" ? "font-medium text-inaccuracy" : "text-foreground-muted"
                   }`}
                 >
-                  <span aria-hidden="true">{practicalHint.kind === "error" ? "⚠️" : "👁"}</span>
+                  {practicalHint.kind === "error" ? <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" /> : <Eye aria-hidden="true" className="mt-0.5 size-4 shrink-0" />}
                   <span>{practicalHint.text}</span>
                 </p>
               )}
               {courseToReview && (
                 <p className="mt-1.5 flex items-start gap-2 text-foreground-muted">
-                  <span aria-hidden="true">📘</span>
+                  <BookOpen aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                   <span>
                     Cours à revoir :{" "}
                     <Link
@@ -428,9 +429,9 @@ export function PuzzleBoard({
                 type="button"
                 onClick={() => postAnalysis.goToPly(postAnalysis.viewPly - 1)}
                 disabled={!postAnalysis.canGoPrevious}
-                className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm disabled:opacity-30"
               >
-                ← Précédent
+                Précédent
               </button>
               <span className="font-mono text-sm text-foreground-muted">
                 {postAnalysis.viewPly} / {postAnalysis.totalPlies}
@@ -439,9 +440,9 @@ export function PuzzleBoard({
                 type="button"
                 onClick={() => postAnalysis.goToPly(postAnalysis.viewPly + 1)}
                 disabled={!postAnalysis.canGoNext}
-                className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-30"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm disabled:opacity-30"
               >
-                Suivant →
+                Suivant
               </button>
             </div>
           )}
@@ -453,7 +454,7 @@ export function PuzzleBoard({
                   <button
                     type="button"
                     onClick={solver.requestReveal}
-                    className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-4 text-sm font-medium text-foreground hover:bg-surface-muted"
                   >
                     Révéler la solution
                   </button>
@@ -467,9 +468,9 @@ export function PuzzleBoard({
                   <button
                     type="button"
                     onClick={handleComplete}
-                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
                   >
-                    Continuer →
+                    Continuer
                   </button>
                 </div>
               ) : (

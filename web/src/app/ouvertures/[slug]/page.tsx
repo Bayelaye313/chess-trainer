@@ -1,13 +1,16 @@
 import { notFound } from "next/navigation";
-import { EsportCanvas } from "@/components/ui/esport-page";
+import type { Metadata } from "next";
 import { compareOpenings } from "@/client/features/openings/opening-endurance-history";
 import { OpeningExplorer } from "@/client/features/openings/opening-explorer";
-import { OpeningStatsZone } from "@/client/features/openings/opening-stats-zone";
 import { SANS_GUIDE_MODE } from "@/client/features/openings/opening-stats";
 import { listEnduranceSessions } from "@/server/queries/opening-endurance";
 import { getRepertoireDeviations } from "@/server/queries/opening-mistakes";
 import { listOpeningVariationAccuracies, listPracticedVariationKeys } from "@/server/queries/opening-progress";
 import { getOpeningDetail } from "@/server/queries/openings";
+import { getCourseGamesOverview } from "@/server/queries/course-games";
+import { OPENING_COURSE_IDS } from "@/core/curriculum/opening-course-ids";
+
+export const metadata: Metadata = { title: "Ouverture" };
 
 export default async function OpeningDetailPage({
   params,
@@ -36,34 +39,29 @@ export default async function OpeningDetailPage({
   // Quatre lectures indépendantes de la progression/des parties importées —
   // en parallèle, comme `app/ouvertures/page.tsx`. L'historique d'endurance
   // est lu en entier : le rang de cette ouverture dépend des autres.
-  const [deviations, practicedVariationKeys, variationAccuracies, enduranceSessions] = await Promise.all([
+  const [deviations, practicedVariationKeys, variationAccuracies, enduranceSessions, courseOverview] = await Promise.all([
     getRepertoireDeviations(detail.plies),
     listPracticedVariationKeys(detail.opening.id),
     listOpeningVariationAccuracies(detail.opening.id),
     listEnduranceSessions(),
+    OPENING_COURSE_IDS.has(detail.opening.id) ? getCourseGamesOverview() : Promise.resolve([]),
   ]);
 
   return (
-    <EsportCanvas detail>
-    <div className="space-y-6">
-    <OpeningStatsZone
-      openingId={detail.opening.id}
-      openingName={detail.opening.name}
-      playerSide={playerSideOverride ?? detail.opening.side}
-      ranking={compareOpenings(enduranceSessions)}
-    />
-    <OpeningExplorer
-      opening={detail.opening}
-      plies={detail.plies}
-      variations={detail.variations}
-      drillVariationKey={drill}
-      sideOverride={playerSideOverride}
-      startInSansGuide={mode === SANS_GUIDE_MODE}
-      practicedVariationKeys={practicedVariationKeys}
-      deviations={deviations}
-      variationAccuracies={variationAccuracies}
-    />
+    <div className="mx-auto w-full max-w-[1240px]">
+      <OpeningExplorer
+        opening={detail.opening}
+        plies={detail.plies}
+        variations={detail.variations}
+        drillVariationKey={drill}
+        sideOverride={playerSideOverride}
+        startInSansGuide={mode === SANS_GUIDE_MODE}
+        practicedVariationKeys={practicedVariationKeys}
+        deviations={deviations}
+        variationAccuracies={variationAccuracies}
+        ranking={compareOpenings(enduranceSessions)}
+        courseGames={courseOverview.find((row) => row.openingId === detail.opening.id) ?? null}
+      />
     </div>
-    </EsportCanvas>
   );
 }

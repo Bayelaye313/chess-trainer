@@ -43,7 +43,7 @@ export const QUALITY_TEXT_CLASS: Record<MoveQuality, string> = {
   best: "text-best",
   okay: "text-okay",
   inaccuracy: "text-inaccuracy",
-  blunder: "text-blunder",
+  blunder: "text-danger",
   book: "text-book",
 };
 
@@ -273,7 +273,7 @@ export const GAME_OUTCOME_LABEL: Record<GameOutcomeForPlayer, string> = {
 /** Fond plein assorti, pour le badge d'issue de partie du flux "Parties récentes". */
 export const GAME_OUTCOME_BADGE_CLASS: Record<GameOutcomeForPlayer, string> = {
   win: "bg-best/15 text-best border border-best/30",
-  loss: "bg-blunder/15 text-blunder border border-blunder/30",
+  loss: "bg-blunder/15 text-danger border border-blunder/30",
   draw: "bg-surface-muted text-foreground-muted border border-border",
   unknown: "bg-surface-muted text-foreground-muted border border-border",
 };
@@ -288,7 +288,7 @@ export function accuracyTextClass(accuracy: number | null): string {
   if (accuracy >= 90) return "text-brilliant";
   if (accuracy >= 75) return "text-best";
   if (accuracy >= 55) return "text-inaccuracy";
-  return "text-blunder";
+  return "text-danger";
 }
 
 /** Couleur de remplissage assortie, pour les barres de progression. */
@@ -324,7 +324,7 @@ export const CURRICULUM_LEVEL_LABEL: Record<CurriculumLevel, string> = {
 export const CURRICULUM_LEVEL_TEXT_CLASS: Record<CurriculumLevel, string> = {
   beginner: "text-best",
   intermediate: "text-inaccuracy",
-  advanced: "text-blunder",
+  advanced: "text-danger",
 };
 
 export const CURRICULUM_LEVEL_BORDER_CLASS: Record<CurriculumLevel, string> = {
@@ -346,9 +346,9 @@ export const KEY_MOMENT_LABEL: Record<KeyMomentKind, string> = {
 export const KEY_MOMENT_TEXT_CLASS: Record<KeyMomentKind, string> = {
   brilliant: "text-brilliant",
   critical: "text-critical",
-  blunder: "text-blunder",
+  blunder: "text-danger",
   inaccuracy: "text-inaccuracy",
-  missed_mate: "text-blunder",
+  missed_mate: "text-danger",
   missed_tactic: "text-inaccuracy",
 };
 

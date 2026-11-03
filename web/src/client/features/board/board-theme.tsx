@@ -5,10 +5,11 @@
  * d'animation du coup adverse, `OPPONENT_MOVE_ANIMATION_MS`).
  *
  * Remplace les cases brun/ambre par défaut de `react-chessboard`
- * (#B58863/#F0D9B5) par une ardoise froide assortie au canevas e-sport
- * (`components/ui/esport-page.module.css`), cadre à halo cyan.
+ * (#B58863/#F0D9B5) par une ardoise froide : ces deux teintes sont la SOURCE
+ * de la palette de l'interface (`--board-light`/`--board-dark`, globals.css).
+ * Cadre sobre, sans halo.
  *
- * Marquage des cases façon Lichess, commun lui aussi : voile cyan léger sur
+ * Marquage des cases façon Lichess, commun lui aussi : voile bleu léger sur
  * le dernier coup, CERCLES (qualité du coup, indices) — jamais une case
  * pleine teintée qui masque la pièce. Voir `lastMoveSquareStyles`.
  */
@@ -27,10 +28,10 @@ export const ESPORT_BOARD_OPTIONS = {
   lightSquareNotationStyle: { color: DARK_SQUARE },
   darkSquareNotationStyle: { color: LIGHT_SQUARE },
   boardStyle: {
-    borderRadius: "3px",
-    boxShadow: "0 0 0 1px rgb(102 252 241 / .35), 0 0 22px rgb(102 252 241 / .14), 0 12px 32px rgb(0 0 0 / .45)",
+    borderRadius: "4px",
+    boxShadow: "0 0 0 1px rgb(255 255 255 / .08)",
   } satisfies CSSProperties,
-  dropSquareStyle: { boxShadow: "inset 0 0 0 3px rgb(102 252 241 / .75)" },
+  dropSquareStyle: { boxShadow: "inset 0 0 0 3px rgb(233 238 243 / .8)" },
   animationDurationInMs: BOARD_MOVE_ANIMATION_MS,
   showAnimations: true,
 } as const;
@@ -46,8 +47,8 @@ export const LICHESS_BRUSH = {
   yellow: "#e68f00",
 } as const;
 
-/** Voile du dernier coup joué — cyan e-sport discret, jamais un fond plein. */
-export const LAST_MOVE_TINT = "rgb(102 252 241 / .22)";
+/** Voile du dernier coup joué — bleu discret lisible sur les deux teintes de case, jamais un fond plein. */
+export const LAST_MOVE_TINT = "rgb(64 140 214 / .34)";
 
 /**
  * Qualités ordinaires : badge seul, PAS de cercle sur la pièce — un cercle

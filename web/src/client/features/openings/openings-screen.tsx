@@ -16,25 +16,33 @@
  */
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { ArrowRight, History, RotateCcw, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { EsportHeader } from "@/components/ui/esport-page";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { Disclosure } from "@/components/ui/disclosure";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader, SectionTitle } from "@/components/ui/page-header";
 import { MASTERY_STARS_FULL } from "@/core/curriculum/opening-mastery";
-import type { OpeningSide } from "@/core/curriculum/openings";
 import type { OpeningMasterySummary, OpeningReviewStatus } from "@/server/queries/opening-progress";
 import type { OpeningSummary } from "@/server/queries/openings";
 import { OpeningCard } from "./opening-card";
+import { displayOpeningName, isOffRepertoire } from "./opening-display";
 import type { OpeningSessionHistory } from "./opening-endurance-history";
 import { OpeningPerformanceRadar } from "./opening-performance-radar-view";
 import { type ReviewQueueItem, saveReviewQueue } from "./review-queue";
 
-type ColorFilter = OpeningSide | "both";
+const SIDES = [
+  { side: "white", title: "Avec les Blancs" },
+  { side: "black", title: "Avec les Noirs" },
+] as const;
 
-const COLOR_FILTERS: { id: ColorFilter; label: string }[] = [
-  { id: "both", label: "Les deux camps" },
-  { id: "white", label: "Blancs" },
-  { id: "black", label: "Noirs" },
-];
-
+/**
+ * Ouvertures : « Mon répertoire » d'abord (cartes curatées, par camp), puis
+ * « Autres ouvertures » repliées (familles Lichess sans cours et cours hors
+ * répertoire), « Mon niveau » replié (progression, radar, endurance). Un
+ * seul CTA : réviser les variantes dues aujourd'hui.
+ */
 export function OpeningsScreen({
   openings,
   reviewStatuses,
@@ -52,7 +60,6 @@ export function OpeningsScreen({
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [colorFilter, setColorFilter] = useState<ColorFilter>("both");
 
   const statusByOpening = useMemo(() => {
     const map = new Map<string, OpeningReviewStatus>();
@@ -66,24 +73,25 @@ export function OpeningsScreen({
     return map;
   }, [masterySummaries]);
 
-  // « Progression Totale » du répertoire : combien du catalogue est maîtrisé
-  // (3⭐) — même dénominateur que le texte d'intro ("Explore N ouvertures"),
-  // pour rester cohérent avec le vocabulaire déjà affiché sur cet écran.
+  // Progression du répertoire : part du catalogue entier maîtrisée (3 étoiles).
   const masteredCount = masterySummaries.filter((summary) => summary.stars === MASTERY_STARS_FULL).length;
   const masteryPercent = openings.length > 0 ? Math.round((masteredCount / openings.length) * 100) : 0;
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return openings.filter((opening) => {
-      if (colorFilter !== "both" && opening.side !== colorFilter) return false;
-      if (!needle) return true;
-      return (
+    if (!needle) return openings;
+    return openings.filter(
+      (opening) =>
         opening.name.toLowerCase().includes(needle) ||
+        displayOpeningName(opening.name).toLowerCase().includes(needle) ||
         opening.eco.toLowerCase().includes(needle) ||
-        opening.description.toLowerCase().includes(needle)
-      );
-    });
-  }, [openings, query, colorFilter]);
+        opening.description.toLowerCase().includes(needle),
+    );
+  }, [openings, query]);
+
+  const repertoire = filtered.filter((opening) => !opening.id.startsWith("lichess-") && !isOffRepertoire(opening.id));
+  const others = filtered.filter((opening) => opening.id.startsWith("lichess-") || isOffRepertoire(opening.id));
+  const searching = query.trim().length > 0;
 
   function startTodaysReviews() {
     const [first, ...rest] = dueReviews;
@@ -92,113 +100,108 @@ export function OpeningsScreen({
     router.push(`/ouvertures/${first.openingId}?drill=${encodeURIComponent(first.variationKey)}`);
   }
 
+  const card = (opening: OpeningSummary) => (
+    <li key={opening.id}>
+      <OpeningCard opening={opening} reviewStatus={statusByOpening.get(opening.id)} stars={starsByOpening.get(opening.id)} />
+    </li>
+  );
+
   return (
-    <div className="space-y-6">
-      <EsportHeader
-        eyebrow="Répertoire / 05"
-        title="Prends l'avantage dès le premier coup."
-        aside={dueReviews.length > 0 && (
-          <button
-            type="button"
-            onClick={startTodaysReviews}
-            className="shrink-0 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-          >
-            ⚡ Lancer les révisions du jour
-            <span className="ml-1.5 rounded-full bg-accent-foreground/20 px-1.5 py-0.5 text-xs">{dueReviews.length}</span>
-          </button>
-        )}
-      >
-        Explore {openings.length} ouvertures classiques : rejoue leur ligne de référence coup par coup, ou dévie
-        librement pour voir jusqu&apos;où la théorie te suit.
-      </EsportHeader>
+    <div>
+      <PageHeader
+        title="Ouvertures"
+        description="Ton répertoire : cours commentés, drills et révisions des variantes."
+        action={
+          dueReviews.length > 0 ? (
+            <Button variant="primary" data-primary-action onClick={startTodaysReviews} className="w-full sm:w-auto">
+              <RotateCcw aria-hidden="true" />
+              Réviser les variantes du jour ({dueReviews.length})
+            </Button>
+          ) : (
+            <Chip tone="success">Aucune variante à réviser aujourd&apos;hui</Chip>
+          )
+        }
+      />
 
-      {/* Progression Totale du répertoire, façon Lotus Chess — même
-          dénominateur que l'intro ci-dessus (le catalogue entier), pas
-          seulement les ouvertures déjà entamées : une ouverture jamais
-          pratiquée compte comme "pas encore maîtrisée", pas comme absente. */}
-      {masterySummaries.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-foreground">Progression Totale du répertoire</span>
-            <span className="font-mono text-foreground-muted">
-              {masteredCount} / {openings.length} maîtrisées ({masteryPercent}%)
-            </span>
-          </div>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-muted">
-            <div
-              className="h-full rounded-full bg-best transition-[width] duration-300"
-              style={{ width: `${masteryPercent}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      <OpeningPerformanceRadar sessions={enduranceSessions} />
-
-      {/* Accès à l'historique d'endurance « Sans Guide » (toutes ouvertures). */}
-      <Link
-        href="/ouvertures/historique-endurance"
-        className="group flex items-center gap-4 rounded-lg border border-accent/30 bg-accent/10 p-4 transition-colors hover:border-accent/60 hover:bg-accent/15"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent/20 text-accent" aria-hidden>
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 3v18h18" />
-            <path d="m7 15 4-4 3 3 5-6" />
-          </svg>
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block font-medium text-foreground">Suivre mon historique d&apos;endurance positionnelle</span>
-          <span className="block text-sm text-foreground-muted">
-            Ton record sans faute, ta tendance et tes ouvertures les plus solides.
-          </span>
-        </span>
-        <span className="shrink-0 text-accent transition-transform group-hover:translate-x-0.5" aria-hidden>
-          →
-        </span>
-      </Link>
-
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="relative mb-6 max-w-sm">
+        <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-foreground-subtle" />
         <input
-          type="text"
+          type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Chercher une ouverture…"
+          placeholder="Chercher une ouverture ou un code ECO…"
           aria-label="Chercher une ouverture"
-          className="w-full max-w-xs rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent/60 focus:outline-none"
+          className="min-h-11 w-full rounded-md border border-border-strong bg-surface py-2 pr-3 pl-9 text-sm text-foreground placeholder:text-foreground-subtle focus:border-accent focus:outline-none"
         />
-        <div className="flex gap-1.5" role="group" aria-label="Filtrer par camp">
-          {COLOR_FILTERS.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setColorFilter(filter.id)}
-              aria-pressed={colorFilter === filter.id}
-              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                colorFilter === filter.id
-                  ? "border-accent/40 bg-accent/10 text-foreground"
-                  : "border-border text-foreground-muted hover:border-accent/30 hover:text-foreground"
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {filtered.length === 0 ? (
-        <p className="text-sm text-foreground-muted">Aucune ouverture ne correspond à cette recherche.</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((opening) => (
-            <OpeningCard
-              key={opening.id}
-              opening={opening}
-              reviewStatus={statusByOpening.get(opening.id)}
-              stars={starsByOpening.get(opening.id)}
-            />
-          ))}
+      <section aria-labelledby="mon-repertoire" className="mb-6">
+        <SectionTitle id="mon-repertoire">Mon répertoire</SectionTitle>
+        {repertoire.length === 0 ? (
+          <EmptyState title="Aucune ouverture de ton répertoire ne correspond à cette recherche." />
+        ) : (
+          <div className="space-y-5">
+            {SIDES.map(({ side, title }) => {
+              const list = repertoire.filter((opening) => opening.side === side);
+              if (list.length === 0) return null;
+              return (
+                <div key={side}>
+                  <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground-muted">
+                    <span aria-hidden="true" className={`size-2.5 rounded-full border border-border-strong ${side === "white" ? "bg-[#f4f1ea]" : "bg-[#1b1b1b]"}`} />
+                    {title}
+                    <span className="font-mono text-foreground-subtle">{list.length}</span>
+                  </h3>
+                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{list.map(card)}</ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <Disclosure
+        key={searching ? "recherche" : "repos"}
+        defaultOpen={searching && others.length > 0}
+        summary="Autres ouvertures"
+        meta={<span className="font-mono">{others.length}</span>}
+      >
+        <p className="mb-3 text-sm text-foreground-muted">Familles de la base Lichess (drill seul) et cours hors de ton répertoire.</p>
+        {others.length === 0 ? (
+          <p className="text-sm text-foreground-muted">Aucune ouverture ne correspond à cette recherche.</p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{others.map(card)}</ul>
+        )}
+      </Disclosure>
+
+      <Disclosure summary="Mon niveau" meta={`${masteredCount}/${openings.length} maîtrisées`} className="border-b">
+        <div className="space-y-5">
+          <div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-foreground-muted">Progression du répertoire</span>
+              <span className="font-mono">
+                {masteredCount}/{openings.length} · {masteryPercent} %
+              </span>
+            </div>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+              <div className="h-full rounded-full bg-best" style={{ width: `${masteryPercent}%` }} />
+            </div>
+          </div>
+
+          <OpeningPerformanceRadar sessions={enduranceSessions} />
+
+          <Link
+            href="/ouvertures/historique-endurance"
+            className="flex min-h-14 items-center gap-3 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-surface-muted"
+          >
+            <History aria-hidden="true" className="size-5 shrink-0 text-accent" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">Historique d&apos;endurance</span>
+              <span className="block text-sm text-foreground-muted">Ton record sans aide, ta tendance et le classement de tes ouvertures.</span>
+            </span>
+            <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-foreground-muted" />
+          </Link>
         </div>
-      )}
+      </Disclosure>
     </div>
   );
 }

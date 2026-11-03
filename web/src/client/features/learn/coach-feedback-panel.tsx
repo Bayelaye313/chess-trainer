@@ -10,6 +10,7 @@
  * Hauteur minimale fixe : passer d'un nœud commenté à un nœud muet ne fait
  * pas sauter la page. Composant de présentation pur.
  */
+import { GraduationCap } from "lucide-react";
 import type { ReactNode } from "react";
 import type { CoachFeedback } from "@/core/curriculum/coach-feedback";
 import { formatEvaluation, REVEAL_ARROW_COLOR } from "@/lib/labels";
@@ -32,10 +33,10 @@ export function CoachFeedbackPanel({
   const silent = feedback.comment === null && feedback.tip === null && engine === null;
 
   return (
-    <section aria-live="polite" className="paper-surface min-h-[10rem] rounded-lg border border-border px-6 py-5 text-[15px] shadow-sm">
+    <section aria-live="polite" className="paper-surface min-h-[10rem] rounded-lg border border-border px-5 py-4 text-[15px]">
       {prompt && <div className="mb-3 border-b border-border pb-3">{prompt}</div>}
 
-      <p className="font-mono text-[13px] font-semibold text-foreground-muted">{heading}</p>
+      <p className="font-display text-base font-semibold text-foreground">{heading}</p>
 
       {silent && !prompt && (
         <p className="mt-2 text-foreground-muted">
@@ -47,9 +48,7 @@ export function CoachFeedbackPanel({
 
       {feedback.tip && (
         <div className="mt-3 flex items-start gap-2.5 rounded-md bg-surface-muted px-4 py-3">
-          <span aria-hidden="true" className="shrink-0">
-            🎓
-          </span>
+          <GraduationCap aria-hidden="true" className="mt-1.5 size-4 shrink-0 text-foreground-muted" />
           <p className="leading-7 text-foreground">
             <span className="font-semibold">Conseil de GM — </span>
             {feedback.tip}

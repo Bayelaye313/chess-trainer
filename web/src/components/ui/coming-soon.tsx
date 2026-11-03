@@ -10,7 +10,7 @@ export function ComingSoon({
 }) {
   return (
     <section className="rounded-lg border border-dashed border-border p-8">
-      <p className="text-xs font-medium uppercase tracking-wide text-foreground-muted">
+      <p className="text-sm text-foreground-muted">
         Étape {step}
       </p>
       <h1 className="mt-2 text-xl font-semibold">{title}</h1>

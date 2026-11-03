@@ -1,11 +1,13 @@
-import Link from "next/link";
-import { EsportCanvas } from "@/components/ui/esport-page";
+import type { Metadata } from "next";
+import { BackLink } from "@/components/ui/back-link";
+import { PageHeader } from "@/components/ui/page-header";
 import { OpeningEnduranceHistory } from "@/client/features/openings/opening-endurance-history-view";
 import { listEnduranceSessions } from "@/server/queries/opening-endurance";
 
 // Même raison qu'`/rapport` : chaque Manche 2 terminée ajoute une session,
 // un prérendu au build figerait l'historique.
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Historique d'endurance" };
 
 /**
  * Historique d'endurance « Sans Guide », toutes ouvertures confondues —
@@ -20,20 +22,13 @@ export default async function HistoriqueEndurancePage() {
   const now = new Date();
 
   return (
-    <EsportCanvas detail>
-    <div className="space-y-6">
-      <div>
-        <Link href="/ouvertures" className="text-sm text-accent hover:underline">
-          ← Toutes les ouvertures
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Historique d&apos;endurance positionnelle</h1>
-        <p className="mt-2 text-sm text-foreground-muted">
-          Jusqu&apos;où tiens-tu sans guide avant ta première gaffe ? Chaque Manche 2 terminée s&apos;ajoute ici.
-        </p>
-      </div>
-
+    <div className="mx-auto w-full max-w-[1100px]">
+      <PageHeader
+        back={<BackLink href="/ouvertures">Ouvertures</BackLink>}
+        title="Historique d'endurance"
+        description="Jusqu'où tiens-tu sans aide avant ta première gaffe ? Chaque Manche 2 terminée s'ajoute ici."
+      />
       <OpeningEnduranceHistory sessions={sessions} now={now} />
     </div>
-    </EsportCanvas>
   );
 }

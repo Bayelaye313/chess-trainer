@@ -87,7 +87,7 @@ function ChapterTreeItem({
           <button
             type="button"
             onClick={() => onToggle(node.key)}
-            className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted hover:text-foreground"
+            className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-sm text-foreground-muted hover:text-foreground"
           >
             <span className="truncate">{node.label}</span>
             <span className="shrink-0 font-normal normal-case text-foreground-muted/70">({countChapters(node)})</span>

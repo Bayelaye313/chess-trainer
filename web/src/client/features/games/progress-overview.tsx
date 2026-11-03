@@ -1,4 +1,10 @@
-import Link from "next/link";
+import type { ReactNode } from "react";
+import { Dumbbell, TriangleAlert } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ShowMore } from "@/components/ui/show-more";
+import { Stat } from "@/components/ui/stat";
+import { displayOpeningName } from "@/client/features/openings/opening-display";
 import type { GamePhase } from "@/core/chess/types";
 import { MAIN_LINE_VARIATION_KEY } from "@/core/curriculum/opening-variation-key";
 import type { PlayerProgressOverview } from "@/server/queries/progress";
@@ -8,217 +14,142 @@ import { MOTIF_LABEL, PHASE_LABEL, accuracyBarClass, accuracyTextClass } from "@
 const PHASE_ORDER: readonly GamePhase[] = ["opening", "middlegame", "endgame"];
 const MOTIF_ORDER: readonly TrackedTacticalMotif[] = ["fork", "pin"];
 
-function StatTile({
-  label,
-  value,
-  valueClass,
-  hint,
-}: {
-  label: string;
-  value: string;
-  valueClass?: string;
-  hint?: string;
-}) {
+function ProgressBar({ ratio, barClass, label }: { ratio: number; barClass: string; label: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{label}</p>
-      <p className={`mt-1 font-mono text-2xl font-semibold ${valueClass ?? ""}`}>{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-foreground-muted">{hint}</p>}
+    <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(ratio)} className="h-1.5 w-full overflow-hidden rounded-full bg-surface-raised">
+      <div className={`h-full rounded-full ${barClass}`} style={{ width: `${Math.max(0, Math.min(100, ratio))}%` }} />
     </div>
   );
 }
 
-/** Barre horizontale simple : `ratio` de 0 à 100, aucune dépendance externe. */
-function ProgressBar({ ratio, barClass }: { ratio: number; barClass: string }) {
+function PercentRow({ label, value, detail }: { label: string; value: number | null; detail: string }) {
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
-      <div
-        className={`h-full rounded-full transition-[width] duration-300 ${barClass}`}
-        style={{ width: `${Math.max(0, Math.min(100, ratio))}%` }}
-      />
-    </div>
-  );
-}
-
-function PhaseAccuracyCard({ phaseAccuracy }: { phaseAccuracy: PlayerProgressOverview["phaseAccuracy"] }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
-        Précision par phase de jeu
-      </h2>
-      <div className="mt-4 space-y-4">
-        {PHASE_ORDER.map((phase) => {
-          const stats = phaseAccuracy[phase];
-          return (
-            <div key={phase}>
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">{PHASE_LABEL[phase]}</span>
-                <span className="text-foreground-muted">
-                  {stats.accuracy !== null ? (
-                    <span className={`font-mono ${accuracyTextClass(stats.accuracy)}`}>{stats.accuracy}%</span>
-                  ) : (
-                    <span className="font-mono">—</span>
-                  )}{" "}
-                  · {stats.movesAnalysed} coup{stats.movesAnalysed > 1 ? "s" : ""}
-                </span>
-              </div>
-              <div className="mt-1.5">
-                <ProgressBar ratio={stats.accuracy ?? 0} barClass={accuracyBarClass(stats.accuracy)} />
-              </div>
-            </div>
-          );
-        })}
+    <div>
+      <div className="flex items-baseline justify-between gap-3 text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-foreground-muted">
+          <span className={`font-mono ${accuracyTextClass(value)}`}>{value !== null ? `${value} %` : "—"}</span> · {detail}
+        </span>
+      </div>
+      <div className="mt-1.5">
+        <ProgressBar ratio={value ?? 0} barClass={accuracyBarClass(value)} label={label} />
       </div>
     </div>
   );
 }
 
-function TacticalMotifsCard({ tacticalMotifs }: { tacticalMotifs: PlayerProgressOverview["tacticalMotifs"] }) {
+function PhaseAccuracy({ phaseAccuracy }: { phaseAccuracy: PlayerProgressOverview["phaseAccuracy"] }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+    <section aria-labelledby="phases-titre">
+      <h2 id="phases-titre" className="mb-3 font-display text-lg font-semibold">
+        Précision par phase
+      </h2>
+      <div className="space-y-4">
+        {PHASE_ORDER.map((phase) => {
+          const stats = phaseAccuracy[phase];
+          return <PercentRow key={phase} label={PHASE_LABEL[phase]} value={stats.accuracy} detail={`${stats.movesAnalysed} coup${stats.movesAnalysed > 1 ? "s" : ""}`} />;
+        })}
+      </div>
+    </section>
+  );
+}
+
+function TacticalMotifs({ tacticalMotifs }: { tacticalMotifs: PlayerProgressOverview["tacticalMotifs"] }) {
+  return (
+    <section aria-labelledby="motifs-titre">
+      <h2 id="motifs-titre" className="font-display text-lg font-semibold">
         Fourchettes et clouages
       </h2>
-      <p className="mt-1 text-xs text-foreground-muted">
-        Occasions où le meilleur coup exploitait le motif : trouvées contre manquées.
-      </p>
-      <div className="mt-4 space-y-4">
+      <p className="mb-3 text-sm text-foreground-muted">Occasions trouvées contre manquées.</p>
+      <div className="space-y-4">
         {MOTIF_ORDER.map((motif) => {
           const stats = tacticalMotifs[motif];
           const total = stats.found + stats.missed;
-          return (
-            <div key={motif}>
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">{MOTIF_LABEL[motif]}</span>
-                <span className="text-foreground-muted">
-                  {stats.successRate !== null ? (
-                    <span className={`font-mono ${accuracyTextClass(stats.successRate)}`}>
-                      {stats.successRate}%
-                    </span>
-                  ) : (
-                    <span className="font-mono">—</span>
-                  )}{" "}
-                  · {stats.found}/{total} trouvée{stats.found > 1 ? "s" : ""}
-                </span>
-              </div>
-              <div className="mt-1.5">
-                <ProgressBar ratio={stats.successRate ?? 0} barClass={accuracyBarClass(stats.successRate)} />
-              </div>
-            </div>
-          );
+          return <PercentRow key={motif} label={MOTIF_LABEL[motif]} value={stats.successRate} detail={`${stats.found}/${total} trouvée${stats.found > 1 ? "s" : ""}`} />;
         })}
       </div>
-    </div>
+    </section>
   );
 }
 
-function OpeningPerformanceCard({
-  openingPerformance,
-}: {
-  openingPerformance: PlayerProgressOverview["openingPerformance"];
-}) {
+/** Lignes du tableau visibles avant « Voir tout ». */
+const OPENING_ROWS = 8;
+
+export function OpeningPerformanceTable({ openingPerformance }: { openingPerformance: PlayerProgressOverview["openingPerformance"] }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4 sm:col-span-2">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-foreground-muted">Performance par ouverture</h2>
+    <section aria-labelledby="perf-ouvertures-titre">
+      <h2 id="perf-ouvertures-titre" className="mb-3 font-display text-lg font-semibold">
+        Performance par ouverture
+      </h2>
       {openingPerformance.length === 0 ? (
-        <p className="mt-3 text-sm text-foreground-muted">
-          Aucune ouverture identifiée pour l&apos;instant — les parties importées n&apos;ont pas encore de code ECO.
-        </p>
+        <p className="text-sm text-foreground-muted">Aucune ouverture identifiée pour l&apos;instant : les parties importées n&apos;ont pas encore de code ECO.</p>
       ) : (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-foreground-muted">
-                <th className="py-1.5 pr-4 font-medium">Ouverture</th>
-                <th className="py-1.5 pr-4 font-medium">Parties</th>
-                <th className="py-1.5 pr-4 font-medium">Victoires</th>
-                <th className="py-1.5 pr-4 font-medium">Précision</th>
-                <th className="py-1.5 pr-4 font-medium">Ply moyen de la 1ère gaffe</th>
+        <ShowMore
+          limit={OPENING_ROWS}
+          variant="table"
+          className="w-full text-sm"
+          head={
+            <thead className="bg-surface">
+              <tr className="text-left text-foreground-muted">
+                <th scope="col" className="px-3 py-2 font-medium">Ouverture</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">Parties</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">Victoires</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">Précision</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium" title="Demi-coup moyen de ta première gaffe">1re gaffe (ply)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {openingPerformance.map((opening) => (
-                <tr key={opening.eco}>
-                  <td className="py-2 pr-4">
-                    <p className="font-medium">{opening.name}</p>
-                    <p className="font-mono text-xs text-foreground-muted">{opening.eco}</p>
-                  </td>
-                  <td className="py-2 pr-4 text-foreground-muted">{opening.gamesPlayed}</td>
-                  <td className="py-2 pr-4">
-                    <span className={`font-mono ${accuracyTextClass(opening.winRate)}`}>{opening.winRate}%</span>
-                  </td>
-                  <td className="py-2 pr-4">
-                    {opening.accuracy !== null ? (
-                      <span className={`font-mono ${accuracyTextClass(opening.accuracy)}`}>
-                        {opening.accuracy}%
-                      </span>
-                    ) : (
-                      <span className="font-mono text-foreground-muted">—</span>
-                    )}
-                  </td>
-                  <td className="py-2 pr-4 font-mono text-foreground-muted">
-                    {opening.avgMistakePly !== null ? opening.avgMistakePly : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          }
+        >
+          {openingPerformance.map((opening) => (
+            <tr key={opening.eco}>
+              <td className="px-3 py-2">
+                <p className="font-medium">{displayOpeningName(opening.name)}</p>
+                <p className="font-mono text-xs text-foreground-subtle">{opening.eco}</p>
+              </td>
+              <td className="px-3 py-2 text-right font-mono text-foreground-muted">{opening.gamesPlayed}</td>
+              <td className={`px-3 py-2 text-right font-mono ${accuracyTextClass(opening.winRate)}`}>{opening.winRate} %</td>
+              <td className={`px-3 py-2 text-right font-mono ${accuracyTextClass(opening.accuracy)}`}>{opening.accuracy !== null ? `${opening.accuracy} %` : "—"}</td>
+              <td className="px-3 py-2 text-right font-mono text-foreground-muted">{opening.avgMistakePly ?? "—"}</td>
+            </tr>
+          ))}
+        </ShowMore>
       )}
-    </div>
+    </section>
   );
 }
 
-/**
- * « ⚠️ Ouverture en difficulté » : le pire taux de victoire du joueur avec un
- * échantillon suffisant (`findStrugglingOpening`, `progress-insights.ts`),
- * suivi d'un lien direct vers le Drill Listudy de ce chapitre quand le
- * catalogue d'Ouvertures le couvre (`resolveOpeningSlug`,
- * `server/curriculum/opening-slug.ts`) — texte seul sinon (ouverture hors
- * catalogue).
- */
 function StrugglingOpeningBanner({ opening }: { opening: PlayerProgressOverview["strugglingOpening"] }) {
   if (!opening) return null;
-
   const plySentence = opening.avgMistakePly !== null ? ` Tu as tendance à faire des gaffes au coup ${opening.avgMistakePly}.` : "";
-
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blunder/40 bg-blunder/10 px-4 py-3">
-      <p className="text-sm text-foreground">
-        ⚠️ <span className="font-medium">Ouverture en difficulté :</span> tu as un taux de réussite de seulement{" "}
-        <span className="font-mono font-semibold">{opening.winRate}%</span> avec {opening.name}.{plySentence}
+    <div role="note" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-l-4 border-border border-l-blunder bg-surface px-4 py-3">
+      <p className="flex min-w-0 flex-1 items-start gap-2 text-sm text-foreground">
+        <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-danger" />
+        <span>
+          <span className="font-medium">Ouverture en difficulté :</span> <span className="font-mono">{opening.winRate} %</span> de victoires avec{" "}
+          {displayOpeningName(opening.name)}.{plySentence}
+        </span>
       </p>
       {opening.openingSlug && (
-        <Link
-          // `side` = camp majoritaire DU JOUEUR dans ce groupe ECO
-          // (`OpeningPerformance.playerSide`, Zone 4) — le drill et l'orientation
-          // du plateau doivent suivre la couleur avec laquelle IL a joué cette
-          // ouverture, jamais la perspective camp du catalogue (`opening.side`).
-          href={`/ouvertures/${opening.openingSlug}?drill=${MAIN_LINE_VARIATION_KEY}&side=${
-            opening.playerSide === "b" ? "black" : "white"
-          }`}
-          className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
-        >
-          🎯 Lancer le Drill Listudy
-        </Link>
+        <ButtonLink href={`/ouvertures/${opening.openingSlug}?drill=${MAIN_LINE_VARIATION_KEY}&side=${opening.playerSide === "b" ? "black" : "white"}`}>
+          <Dumbbell aria-hidden="true" />
+          Driller cette ouverture
+        </ButtonLink>
       )}
     </div>
   );
 }
 
 /**
- * Onglet « Rapport » : agrège les quatre axes de `aggregatePlayerProgress`
- * (voir `core/analysis/progress-insights.ts`) en cartes Tailwind — pas de
- * bibliothèque de graphes, de simples barres de progression HTML/CSS
- * suffisent à cette étape.
+ * Progrès : 3 chiffres, précision par phase et motifs, puis `courseGames`
+ * (« Mes ouvertures face au cours ») AVANT le tableau par ouverture.
  */
-export function ProgressOverview({ overview }: { overview: PlayerProgressOverview }) {
+export function ProgressOverview({ overview, courseGames }: { overview: PlayerProgressOverview; courseGames?: ReactNode }) {
   if (overview.gamesAnalysed === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-foreground-muted">
-        Aucune partie analysée pour l&apos;instant — joue une partie ou importe-en depuis Chess.com/Lichess pour
-        voir apparaître ton profil de progression.
-      </p>
+      <EmptyState title="Aucune partie analysée pour l'instant">
+        Joue une partie ou lie ton compte Chess.com / Lichess dans les Réglages pour voir ton profil de progression.
+      </EmptyState>
     );
   }
 
@@ -226,33 +157,27 @@ export function ProgressOverview({ overview }: { overview: PlayerProgressOvervie
   const hangingRate = totalBlunders > 0 ? Math.round((blunderCount / totalBlunders) * 100) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <StrugglingOpeningBanner opening={overview.strugglingOpening} />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <StatTile
-          label="Précision globale"
-          value={overview.overallAccuracy !== null ? `${overview.overallAccuracy}%` : "—"}
-          valueClass={accuracyTextClass(overview.overallAccuracy)}
-        />
-        <StatTile label="Parties analysées" value={String(overview.gamesAnalysed)} />
-        <StatTile
+      <div className="grid grid-cols-3 gap-4 border-y border-border py-4">
+        <Stat label="Précision globale" value={overview.overallAccuracy !== null ? `${overview.overallAccuracy} %` : "—"} valueClassName={accuracyTextClass(overview.overallAccuracy)} />
+        <Stat label="Parties analysées" value={overview.gamesAnalysed} />
+        <Stat
           label="Pièces laissées en prise"
-          value={hangingRate !== null ? `${hangingRate}%` : "—"}
-          valueClass={hangingRate !== null && hangingRate > 0 ? "text-blunder" : ""}
-          hint={
-            totalBlunders > 0
-              ? `${blunderCount} sur ${totalBlunders} gaffe${totalBlunders > 1 ? "s" : ""}`
-              : "Aucune gaffe analysée"
-          }
+          value={hangingRate !== null ? `${hangingRate} %` : "—"}
+          hint={totalBlunders > 0 ? `${blunderCount} sur ${totalBlunders} gaffe${totalBlunders > 1 ? "s" : ""}` : "Aucune gaffe analysée"}
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <PhaseAccuracyCard phaseAccuracy={overview.phaseAccuracy} />
-        <TacticalMotifsCard tacticalMotifs={overview.tacticalMotifs} />
-        <OpeningPerformanceCard openingPerformance={overview.openingPerformance} />
+      <div className="grid gap-8 md:grid-cols-2">
+        <PhaseAccuracy phaseAccuracy={overview.phaseAccuracy} />
+        <TacticalMotifs tacticalMotifs={overview.tacticalMotifs} />
       </div>
+
+      {courseGames}
+
+      <OpeningPerformanceTable openingPerformance={overview.openingPerformance} />
     </div>
   );
 }

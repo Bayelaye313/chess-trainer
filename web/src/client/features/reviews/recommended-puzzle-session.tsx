@@ -13,6 +13,8 @@
  * composant ne fait que rejouer ce pont dans un contexte d'accueil, sans
  * jamais naviguer.
  */
+import { CircleCheck, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getNextPuzzle, getPuzzle, submitPuzzleAnswer } from "@/server/actions/practice";
 import type { DeckPuzzle } from "@/server/queries/reviews";
@@ -58,19 +60,20 @@ export function RecommendedPuzzleSession({
   }
 
   return (
-    <div className="space-y-4 sm:col-span-2 lg:col-span-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">🧩 Puzzle à réviser</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground">Séance du jour · puzzle</h2>
           {solvedCount > 0 && (
             <p className="mt-0.5 text-xs text-foreground-muted">
               {solvedCount} puzzle{solvedCount > 1 ? "s" : ""} résolu{solvedCount > 1 ? "s" : ""} cette séance.
             </p>
           )}
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-xs text-accent hover:underline">
-          ✕ Fermer
-        </button>
+        <Button variant="ghost" onClick={onExit} className="shrink-0">
+          <X aria-hidden="true" />
+          Fermer
+        </Button>
       </div>
 
       {state.status === "loading" && (
@@ -81,19 +84,15 @@ export function RecommendedPuzzleSession({
 
       {state.status === "empty" && (
         <div className="rounded-lg border border-border bg-surface p-8 text-center">
-          <p className="text-lg font-semibold">Tout est à jour ! 👍</p>
+          <p className="flex items-center justify-center gap-2 text-lg font-semibold"><CircleCheck aria-hidden="true" className="size-5 text-success" />Tout est à jour</p>
           <p className="mt-1 text-sm text-foreground-muted">
             {solvedCount > 0
               ? `${solvedCount} puzzle${solvedCount > 1 ? "s" : ""} résolu${solvedCount > 1 ? "s" : ""} — plus rien à réviser pour l'instant.`
               : "Aucun puzzle dû pour l'instant."}
           </p>
-          <button
-            type="button"
-            onClick={onExit}
-            className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
-          >
-            Retour
-          </button>
+          <Button variant="primary" onClick={onExit} className="mt-4">
+            Continuer
+          </Button>
         </div>
       )}
 

@@ -1,16 +1,13 @@
+import { BookOpen, CalendarDays, Crown, Flag, Puzzle, Swords, Target, type LucideIcon } from "lucide-react";
 import type { DeckId } from "@/core/chess/decks";
 
-/**
- * Un repère visuel par deck, purement cosmétique — `core/chess/decks.ts` ne
- * porte que le vocabulaire du domaine (titre/sous-titre déjà en français,
- * voir son docstring), pas de préoccupation d'affichage.
- */
-export const DECK_ICON: Record<DeckId, string> = {
-  daily: "🗓️",
-  opening_mistakes: "📖",
-  missed_checkmates: "♚",
-  endgame_mistakes: "🏁",
-  missed_tactics: "🎯",
-  tactical_mistakes: "⚔️",
-  positional_mistakes: "🧩",
+/** Icône par deck (une seule bibliothèque : lucide). */
+export const DECK_ICON: Record<DeckId, LucideIcon> = {
+  daily: CalendarDays,
+  opening_mistakes: BookOpen,
+  missed_checkmates: Crown,
+  endgame_mistakes: Flag,
+  missed_tactics: Target,
+  tactical_mistakes: Swords,
+  positional_mistakes: Puzzle,
 };

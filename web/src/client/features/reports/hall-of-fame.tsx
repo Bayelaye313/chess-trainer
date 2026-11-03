@@ -8,6 +8,9 @@
  * position juste après le coup, avec le même marquage que la Revue de
  * partie (`lastMoveSquareStyles`) — un seul développé à la fois.
  */
+import { ChevronDown, Sparkles } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { displayOpponentName } from "@/client/features/play/bot-display";
 import { useState } from "react";
 import Link from "next/link";
 import { Chessboard } from "react-chessboard";
@@ -39,11 +42,12 @@ function MasterpieceRow({
   const squareStyles = lastMoveSquareStyles(from, to, qualityRingColor(entry.quality as MoveQuality));
 
   return (
-    <div className="rounded-lg border border-border bg-surface">
+    <li>
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 text-left hover:bg-surface-muted/30"
+        aria-expanded={expanded}
+        className="flex min-h-14 w-full flex-wrap items-center justify-between gap-2 px-4 py-3 text-left hover:bg-surface-muted"
       >
         <span className="flex min-w-0 items-center gap-2.5">
           <span
@@ -53,14 +57,14 @@ function MasterpieceRow({
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-foreground">
-              {entry.san} — contre {entry.opponentName ?? "adversaire inconnu"}
+              <span className="font-mono">{entry.san}</span> contre {displayOpponentName(entry.opponentName)}
             </span>
             <span className="block text-xs text-foreground-muted">
               {entry.playedAt.toLocaleDateString("fr-FR")} · coup {entry.ply} · {MASTERPIECE_BLURB[entry.quality]}
             </span>
           </span>
         </span>
-        <span className="shrink-0 text-xs text-accent">{expanded ? "▲ Réduire" : "▼ Revoir"}</span>
+        <span className="inline-flex shrink-0 items-center gap-1 text-sm text-foreground-muted">{expanded ? "Réduire" : "Revoir"}<ChevronDown aria-hidden="true" className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} /></span>
       </button>
 
       {expanded && (
@@ -77,13 +81,13 @@ function MasterpieceRow({
             />
           </div>
           <div className="mt-3 text-center">
-            <Link href={`/analyse/${entry.gameId}`} className="text-xs text-accent hover:underline">
-              Voir la partie complète →
+            <Link href={`/analyse/${entry.gameId}`} className="inline-flex min-h-11 items-center text-sm text-foreground underline underline-offset-4">
+              Voir la partie complète
             </Link>
           </div>
         </div>
       )}
-    </div>
+    </li>
   );
 }
 
@@ -92,19 +96,13 @@ export function HallOfFame({ masterpieces }: { masterpieces: readonly Masterpiec
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">🏆 Mes Chefs-d&apos;œuvre</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          Les coups classés Brillant dans tes parties importées — clique pour revoir le moment exact.
-        </p>
-      </div>
 
       {masterpieces.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-foreground-muted">
-          Aucun coup Brillant repéré pour l&apos;instant — continue à importer tes parties.
-        </p>
+        <EmptyState icon={Sparkles} title="Aucun coup Brillant repéré pour l'instant">
+          Ils apparaîtront ici à mesure que tes parties sont analysées.
+        </EmptyState>
       ) : (
-        <div className="space-y-2">
+        <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
           {masterpieces.map((entry) => {
             const key = `${entry.gameId}-${entry.ply}`;
             return (
@@ -116,7 +114,7 @@ export function HallOfFame({ masterpieces }: { masterpieces: readonly Masterpiec
               />
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

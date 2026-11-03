@@ -32,6 +32,14 @@
  * tourner `getOpeningMistakesHub` en entier juste pour rafraîchir des badges.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CircleCheck, Dumbbell, Search, TriangleAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { Disclosure } from "@/components/ui/disclosure";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { takeBudget } from "@/components/ui/take-budget";
+import { displayOpeningName } from "@/client/features/openings/opening-display";
 import { OpeningMistakeExercise } from "@/client/features/openings/opening-mistake-exercise";
 import { OpeningMistakeExplorer } from "@/client/features/openings/opening-mistake-explorer";
 import { getOpeningMistakesHub, type DeviationGameSummaryDto } from "@/server/actions/practice";
@@ -45,24 +53,18 @@ import {
 
 function ReviewedBadge() {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-best/40 bg-best/10 px-2 py-0.5 text-xs font-medium text-best">
-      ✅ Vue / Révisée
-    </span>
+    <Chip icon={CircleCheck} tone="success">
+      Revue
+    </Chip>
   );
 }
 
-/**
- * Jauge de criticité (§12b) — largeur proportionnelle à `criticality`
- * (`opening-mistake-groups.ts`, déjà normalisée sur l'erreur la plus répétée
- * du journal entier), couleur qui monte du jaune (`--quality-inaccuracy`) au
- * rouge (`--quality-blunder`) avec l'intensité : mêmes jetons que
- * `TAG_ACCENT_CLASS` du reste de la Revue, pas de nouvelle palette.
- */
 function CriticalityGauge({ criticality }: { criticality: number }) {
   const percent = Math.round(criticality * 100);
   return (
-    <span className="flex w-24 shrink-0 items-center gap-1.5" title={`Criticité : ${percent}%`}>
-      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted">
+    <span className="flex w-28 shrink-0 items-center gap-1.5" title={`Criticité : ${percent} %`}>
+      <span className="sr-only">Criticité</span>
+      <span aria-hidden="true" className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-raised">
         <span
           className="block h-full rounded-full"
           style={{
@@ -71,12 +73,12 @@ function CriticalityGauge({ criticality }: { criticality: number }) {
           }}
         />
       </span>
-      <span className="w-8 shrink-0 text-right text-[11px] font-medium text-foreground-muted">{percent}%</span>
+      <span className="w-9 shrink-0 text-right font-mono text-xs text-foreground-muted">{percent} %</span>
     </span>
   );
 }
 
-function OpeningMistakeCard({
+function OpeningMistakeRow({
   mistake,
   onTrain,
   onExplore,
@@ -86,89 +88,89 @@ function OpeningMistakeCard({
   onExplore: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-      <span className="min-w-0">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-foreground">
-            Coup {mistake.ply} — <span className="font-mono">{mistake.actualSan}</span> au lieu de{" "}
-            <span className="font-mono">{mistake.expectedSan}</span>
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+          <span>
+            Coup {mistake.ply} : <span className="font-mono text-warning">{mistake.actualSan}</span> au lieu de{" "}
+            <span className="font-mono text-success">{mistake.expectedSan}</span>
           </span>
           {mistake.reviewed && <ReviewedBadge />}
         </span>
-        <span className="mt-1 flex flex-wrap items-center gap-3">
-          <span className="text-xs text-foreground-muted">
-            {mistake.gameCount} partie{mistake.gameCount > 1 ? "s" : ""} importée{mistake.gameCount > 1 ? "s" : ""}
-          </span>
+        <span className="mt-1 flex flex-wrap items-center gap-3 text-xs text-foreground-muted">
+          {mistake.gameCount} partie{mistake.gameCount > 1 ? "s" : ""} importée{mistake.gameCount > 1 ? "s" : ""}
           <CriticalityGauge criticality={mistake.criticality} />
         </span>
       </span>
       <span className="flex shrink-0 gap-2">
-        <button
-          type="button"
-          onClick={onExplore}
-          className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-muted"
-        >
-          🔍 Explorer
-        </button>
-        <button
-          type="button"
-          onClick={onTrain}
-          className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20"
-        >
-          🎯 S&apos;entraîner
-        </button>
+        <Button variant="ghost" onClick={onExplore}>
+          <Search aria-hidden="true" />
+          Explorer
+        </Button>
+        <Button onClick={onTrain}>
+          <Dumbbell aria-hidden="true" />
+          S&apos;entraîner
+        </Button>
       </span>
-    </div>
+    </li>
   );
 }
 
+/** Erreurs visibles par groupe avant « Voir tout ». */
+const VISIBLE_PER_GROUP = 10;
+
 function OpeningFamilySection({
   group,
+  defaultOpen,
   onTrain,
   onExplore,
 }: {
   group: OpeningFamilyGroup;
+  defaultOpen: boolean;
   onTrain: (mistake: OpeningMistakeEntry) => void;
   onExplore: (mistake: OpeningMistakeEntry) => void;
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = takeBudget(group.subVariations, (sub) => sub.mistakes, showAll ? Number.POSITIVE_INFINITY : VISIBLE_PER_GROUP);
+  const hidden = Math.max(0, group.subVariations.reduce((sum, sub) => sum + sub.mistakes.length, 0) - VISIBLE_PER_GROUP);
+
   return (
-    <details open className="rounded-lg border border-border bg-surface-muted/20">
-      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 rounded-lg px-4 py-3 hover:bg-surface-muted/40">
-        <span className="text-sm font-semibold text-foreground">📂 {group.label}</span>
-        <span className="text-xs text-foreground-muted">
-          {group.subVariations.length} sous-variante{group.subVariations.length > 1 ? "s" : ""} ·{" "}
+    <Disclosure
+      defaultOpen={defaultOpen}
+      summary={displayOpeningName(group.label)}
+      meta={
+        <>
           {group.totalMistakes} erreur{group.totalMistakes > 1 ? "s" : ""}
           {group.reviewedCount > 0 && ` · ${group.reviewedCount} revue${group.reviewedCount > 1 ? "s" : ""}`}
-        </span>
-      </summary>
-      <div className="space-y-3 px-4 pb-4">
-        {group.subVariations.map((subVariation) => (
-          <details key={subVariation.key} open className="rounded-md border border-border/60 bg-surface">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-accent hover:bg-surface-muted/30">
-              <span>♟️ {subVariation.label}</span>
-              <span className="normal-case text-foreground-muted">
-                {subVariation.mistakes.length} erreur{subVariation.mistakes.length > 1 ? "s" : ""} distincte
-                {subVariation.mistakes.length > 1 ? "s" : ""}
-              </span>
-            </summary>
-            <div className="space-y-2 p-3 pt-1">
-              {subVariation.mistakes.map((mistake) => (
-                <OpeningMistakeCard
-                  key={mistake.key}
-                  mistake={mistake}
-                  onTrain={() => onTrain(mistake)}
-                  onExplore={() => onExplore(mistake)}
-                />
-              ))}
-            </div>
-          </details>
-        ))}
+        </>
+      }
+    >
+      <div className="space-y-3">
+        {visible.map(({ group: subVariation, shown }) => {
+          return (
+            <section key={subVariation.key}>
+              <h3 className="text-sm text-foreground-muted">
+                {displayOpeningName(subVariation.label)}{" "}
+                <span className="font-mono text-foreground-subtle">· {subVariation.mistakes.length}</span>
+              </h3>
+              <ul className="divide-y divide-border">
+                {shown.map((mistake) => (
+                  <OpeningMistakeRow key={mistake.key} mistake={mistake} onTrain={() => onTrain(mistake)} onExplore={() => onExplore(mistake)} />
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+        {hidden > 0 && (
+          <Button variant="ghost" onClick={() => setShowAll((value) => !value)}>
+            {showAll ? "Réduire" : `Voir tout (${hidden} de plus)`}
+          </Button>
+        )}
       </div>
-    </details>
+    </Disclosure>
   );
 }
 
-/** L'écran affiché — liste, ou une des deux actions ouvertes sur une erreur précise. Jamais deux à la fois. */
 type HubView = { mode: "list" } | { mode: "train"; mistake: OpeningMistakeEntry } | { mode: "explore"; mistake: OpeningMistakeEntry };
 
 export function OpeningMistakesHub({ onExit }: { onExit: () => void }) {
@@ -239,37 +241,46 @@ export function OpeningMistakesHub({ onExit }: { onExit: () => void }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">📊 Mes erreurs d&apos;ouverture</h1>
-          <p className="mt-2 max-w-prose text-sm text-foreground-muted">
-            Les ouvertures où tu t&apos;écartes de la théorie dans tes vraies parties, classées par ouverture puis par
-            sous-variante — corrige-les une à une, ou explore-les librement au moteur.
-          </p>
+    <div>
+      <PageHeader
+        back={
+          <button type="button" onClick={onExit} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            Réviser
+          </button>
+        }
+        title="Mes erreurs d'ouverture"
+        description="Là où tu quittes la théorie dans tes parties, par ouverture : corrige-les ou explore-les au moteur."
+      />
+
+      {error && (
+        <EmptyState icon={TriangleAlert} title="Impossible de charger le journal pour l'instant.">
+          Réessaie dans un instant.
+        </EmptyState>
+      )}
+
+      {!groups && !error && (
+        <div aria-busy="true" className="space-y-2">
+          <span className="sr-only">Chargement…</span>
+          {[0, 1, 2, 3].map((row) => (
+            <div key={row} className="h-12 animate-pulse rounded-md bg-surface" />
+          ))}
         </div>
-        <button type="button" onClick={onExit} className="shrink-0 text-sm text-accent hover:underline">
-          ← Retour aux decks
-        </button>
-      </div>
-
-      {error && <p className="text-sm text-inaccuracy">Impossible de charger le journal pour l&apos;instant.</p>}
-
-      {!groups && !error && <p className="text-sm text-foreground-muted">Chargement…</p>}
+      )}
 
       {groups && groups.length === 0 && (
-        <p className="text-sm text-foreground-muted">
-          Aucune déviation détectée dans tes parties importées pour l&apos;instant — continue comme ça, ou importe
-          d&apos;autres parties depuis l&apos;onglet « Parties ».
-        </p>
+        <EmptyState title="Aucune déviation détectée dans tes parties importées">
+          Continue comme ça, ou lie un compte dans les Réglages pour importer d&apos;autres parties.
+        </EmptyState>
       )}
 
       {groups && groups.length > 0 && (
-        <div className="space-y-4">
-          {groups.map((group) => (
+        <div className="border-b border-border">
+          {groups.map((group, index) => (
             <OpeningFamilySection
               key={group.key}
               group={group}
+              defaultOpen={index === 0}
               onTrain={(mistake) => setView({ mode: "train", mistake })}
               onExplore={(mistake) => setView({ mode: "explore", mistake })}
             />

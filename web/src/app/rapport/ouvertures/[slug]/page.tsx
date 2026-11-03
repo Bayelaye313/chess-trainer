@@ -1,11 +1,15 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { EsportCanvas, EsportHeader } from "@/components/ui/esport-page";
+import { BookOpen } from "lucide-react";
+import { BackLink } from "@/components/ui/back-link";
+import { ButtonLink } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { CourseGameReportView } from "@/client/features/reports/course-game-report";
+import { displayOpeningName } from "@/client/features/openings/opening-display";
 import { getCourseGameReport } from "@/server/queries/course-games";
 
-// Même raison qu'`/rapport` : de nouvelles parties s'analysent en continu.
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Mes parties dans le cours" };
 
 /** « Rapport › ouverture » : tes parties dans un cours d'ouverture, une par une, confrontées au cours. */
 export default async function RapportOpeningPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -14,28 +18,19 @@ export default async function RapportOpeningPage({ params }: { params: Promise<{
   if (!report) notFound();
 
   return (
-    <EsportCanvas detail>
-      <div className="space-y-6">
-        <Link href="/rapport" className="text-sm text-accent hover:underline">
-          ← Retour au Rapport
-        </Link>
-        <EsportHeader
-          eyebrow="Rapport › ouverture"
-          title={report.openingName}
-          aside={
-            <Link
-              href={`/ouvertures/${slug}/cours`}
-              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:opacity-90"
-            >
-              Ouvrir le cours
-            </Link>
-          }
-        >
-          Chaque partie est rejouée dans le cours commenté (cours écrit pour les {report.side === "white" ? "Blancs" : "Noirs"}) : le
-          rapport signale le coup exact où tu l&apos;as quitté, et ce que tu y joues le plus souvent.
-        </EsportHeader>
-        <CourseGameReportView report={report} />
-      </div>
-    </EsportCanvas>
+    <div className="mx-auto w-full max-w-[1100px]">
+      <PageHeader
+        back={<BackLink href="/rapport">Progrès</BackLink>}
+        title={displayOpeningName(report.openingName)}
+        description={`Tes parties rejouées dans le cours (écrit pour les ${report.side === "white" ? "Blancs" : "Noirs"}) : où tu le quittes, et ce que tu y joues.`}
+        action={
+          <ButtonLink href={`/ouvertures/${slug}/cours`}>
+            <BookOpen aria-hidden="true" />
+            Ouvrir le cours
+          </ButtonLink>
+        }
+      />
+      <CourseGameReportView report={report} />
+    </div>
   );
 }

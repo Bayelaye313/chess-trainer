@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EsportCanvas } from "@/components/ui/esport-page";
 import { GameReviewScreen, type GameDeviation } from "@/client/features/games/game-review-screen";
@@ -5,6 +6,8 @@ import { getCourseGameContext } from "@/server/queries/course-games";
 import { getAdjacentGameIds, getGameDetail } from "@/server/queries/games";
 import { getGameOpeningDeviation } from "@/server/queries/opening-mistakes";
 import { getOpeningDetail } from "@/server/queries/openings";
+
+export const metadata: Metadata = { title: "Revue de partie" };
 
 export default async function GameDetailPage({
   params,

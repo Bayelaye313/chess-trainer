@@ -50,7 +50,7 @@ export function OpeningEnduranceHistory({
         className={`animate-fade-up-in flex flex-col gap-5 rounded-lg border p-5 md:p-6 ${tone.card}`}
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="endurance-status-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+          <h2 id="endurance-status-title" className="font-display text-lg font-semibold text-foreground">
             Statut d&apos;endurance
           </h2>
           <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold ${tone.badge}`}>
@@ -61,14 +61,14 @@ export function OpeningEnduranceHistory({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="text-xs uppercase tracking-wide text-foreground-muted">Ply Record</p>
+            <p className="text-sm text-foreground-muted">Ply Record</p>
             <p className={`mt-1 font-mono text-4xl font-bold ${tone.text}`}>Coup {status.recordMove}</p>
             <p className="mt-2 text-sm text-foreground-muted">
               Le plus loin que tu sois allé sans erreur, dans {status.recordSession.openingName}.
             </p>
           </div>
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="text-xs uppercase tracking-wide text-foreground-muted">
+            <p className="text-sm text-foreground-muted">
               Moyenne sur {status.rollingCount < ROLLING_WINDOW ? `${status.rollingCount} session${status.rollingCount > 1 ? "s" : ""}` : `${ROLLING_WINDOW} sessions`}
             </p>
             <p className="mt-1 font-mono text-4xl font-bold text-foreground">
@@ -82,7 +82,7 @@ export function OpeningEnduranceHistory({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Chronologie des progrès */}
         <section aria-labelledby="endurance-timeline-title" className="rounded-lg border border-border bg-surface p-5 lg:col-span-3">
-          <h2 id="endurance-timeline-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+          <h2 id="endurance-timeline-title" className="font-display text-lg font-semibold text-foreground">
             Chronologie des progrès
           </h2>
           <ol className="mt-4 flex flex-col">
@@ -109,7 +109,7 @@ export function OpeningEnduranceHistory({
         {/* Comparateur d'ouvertures */}
         <section aria-labelledby="endurance-compare-title" className="flex flex-col gap-3 lg:col-span-2">
           <div>
-            <h2 id="endurance-compare-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
+            <h2 id="endurance-compare-title" className="font-display text-lg font-semibold text-foreground">
               Classement de mes ouvertures
             </h2>
             <p className="mt-1 text-xs text-foreground-muted">
@@ -179,9 +179,9 @@ function trendSentence(trend: number | null): string {
 const TIER_TONE: Record<EnduranceTier, { card: string; badge: string; dot: string; text: string }> = {
   fragile: {
     card: "border-blunder/40 bg-blunder/10",
-    badge: "border-blunder/50 bg-blunder/15 text-blunder",
+    badge: "border-blunder/50 bg-blunder/15 text-danger",
     dot: "bg-blunder",
-    text: "text-blunder",
+    text: "text-danger",
   },
   moyen: {
     card: "border-inaccuracy/40 bg-inaccuracy/10",
@@ -203,6 +203,6 @@ const TIER_BADGE: Record<EnduranceTier, string> = {
 const MOOD_TONE: Record<TimelineMood, { icon: string; label: string; marker: string }> = {
   record: { icon: "★", label: "Nouveau record", marker: "border-best/60 bg-best/20 text-best" },
   progres: { icon: "↑", label: "Progrès", marker: "border-best/40 bg-best/10 text-best" },
-  recul: { icon: "↓", label: "Recul", marker: "border-blunder/40 bg-blunder/10 text-blunder" },
+  recul: { icon: "↓", label: "Recul", marker: "border-blunder/40 bg-blunder/10 text-danger" },
   stable: { icon: "•", label: "Session", marker: "border-border bg-surface-muted text-foreground-muted" },
 };

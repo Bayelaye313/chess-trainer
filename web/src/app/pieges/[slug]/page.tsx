@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { EsportCanvas } from "@/components/ui/esport-page";
+
 import { PiegeDrillScreen } from "@/client/features/openings/piege-drill-screen";
 import { DIFFICULTY_ORDER } from "@/core/curriculum/traps";
 import { listAllTraps } from "@/server/queries/traps";
+
+export const metadata: Metadata = { title: "Piège" };
 
 export default async function PiegeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

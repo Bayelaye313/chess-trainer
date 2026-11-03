@@ -1,3 +1,6 @@
+import { GraduationCap } from "lucide-react";
+import { COACH_BUBBLE_CLASS, COACH_ICON_CLASS, COACH_TONE_CLASS } from "@/components/ui/coach";
+
 /**
  * Bulle de commentaire du coach — l'onglet « Apprendre » n'a pas de FSRS ni
  * de notation (voir le docstring de `userThemeProgress`), mais un cours sans
@@ -43,10 +46,8 @@ export function CoachBubble({
   const debrief = variant === "debrief" && solutionSan && solutionSan.length > 0;
 
   return (
-    <div className="flex items-start gap-2.5 rounded-lg border border-accent/25 bg-accent/5 px-3.5 py-2.5 text-sm">
-      <span aria-hidden="true" className="mt-0.5 shrink-0 text-lg">
-        🎓
-      </span>
+    <div className={`${COACH_BUBBLE_CLASS} ${COACH_TONE_CLASS[debrief ? "success" : "neutral"]}`}>
+      <GraduationCap aria-hidden="true" className={COACH_ICON_CLASS} />
       <div className="min-w-0">
         {debrief ? (
           <p className="text-foreground">

@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { EsportCanvas } from "@/components/ui/esport-page";
 import { OpeningsScreen } from "@/client/features/openings/openings-screen";
 import { listDueReviews, listOpeningMasterySummaries, listOpeningReviewSummaries } from "@/server/queries/opening-progress";
 import { listEnduranceSessions } from "@/server/queries/opening-endurance";
 import { listOpenings } from "@/server/queries/openings";
+
+export const metadata: Metadata = { title: "Ouvertures" };
+// Révisions dues et progression changent à chaque drill : jamais figées au build.
+export const dynamic = "force-dynamic";
 
 export default async function OuverturesPage() {
   const [reviewSummaries, dueReviews, masterySummaries, enduranceSessions] = await Promise.all([

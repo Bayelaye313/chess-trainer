@@ -63,7 +63,7 @@ export function MistakesDrillBoard({
         <button
           type="button"
           onClick={onExit}
-          className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
+          className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
         >
           Retour à la revue
         </button>
@@ -174,7 +174,7 @@ function DrillAttempt({
         {result === null && <p className="text-foreground-muted">Trouve la meilleure alternative.</p>}
         {result === "correct" && <p className="font-medium text-best">Bien joué !</p>}
         {result === "incorrect" && (
-          <p className="font-medium text-blunder">
+          <p className="font-medium text-danger">
             Essaye encore !{playedSan ? ` (${playedSan} n'était pas le meilleur coup` : ""}
             {playedSan ? ` — c'était ${mistake.bestSan})` : ""}
           </p>
@@ -186,7 +186,7 @@ function DrillAttempt({
           <button
             type="button"
             onClick={reset}
-            className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-surface-muted"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm hover:bg-surface-muted"
           >
             Réessayer
           </button>
@@ -195,7 +195,7 @@ function DrillAttempt({
           <button
             type="button"
             onClick={onNext}
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:opacity-90"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-3 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
           >
             {index + 1 < total ? "Coup suivant" : "Terminer"}
           </button>

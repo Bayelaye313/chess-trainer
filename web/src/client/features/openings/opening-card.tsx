@@ -1,16 +1,18 @@
 import Link from "next/link";
+import { CircleCheck, RotateCcw } from "lucide-react";
 import type { MasteryStars } from "@/core/curriculum/opening-mastery";
 import type { OpeningReviewStatus } from "@/server/queries/opening-progress";
 import type { OpeningSummary } from "@/server/queries/openings";
-import { SIDE_LABEL, SideDot } from "./side-dot";
+import { Chip } from "@/components/ui/chip";
+import { COURSE_STATE_DISPLAY, courseState, displayOpeningName } from "./opening-display";
 import { Stars } from "./stars";
 
-/** Pas de badge tant que l'ouverture n'a jamais été pratiquée en Mode Entraînement — voir `listOpeningReviewSummaries`. */
-const REVIEW_BADGE: Record<OpeningReviewStatus, { label: string; className: string }> = {
-  due: { label: "🔴 À réviser", className: "border-blunder/40 bg-blunder/10 text-blunder" },
-  mastered: { label: "🟢 Maîtrisé", className: "border-best/40 bg-best/10 text-best" },
+const REVIEW_CHIP: Record<OpeningReviewStatus, { label: string; icon: typeof RotateCcw; tone: "warning" | "success" }> = {
+  due: { label: "À réviser", icon: RotateCcw, tone: "warning" },
+  mastered: { label: "Maîtrisé", icon: CircleCheck, tone: "success" },
 };
 
+/** Carte d'ouverture : nom, ECO, état du cours (icône + libellé), révision, étoiles. */
 export function OpeningCard({
   opening,
   reviewStatus,
@@ -18,44 +20,31 @@ export function OpeningCard({
 }: {
   opening: OpeningSummary;
   reviewStatus?: OpeningReviewStatus;
-  /** Étoiles agrégées (précision moyenne de toutes les variantes suivies) — `undefined` tant que l'ouverture n'a jamais été pratiquée, voir `listOpeningMasterySummaries`. */
   stars?: MasteryStars;
 }) {
-  const badge = reviewStatus ? REVIEW_BADGE[reviewStatus] : null;
+  const state = COURSE_STATE_DISPLAY[courseState(opening.id)];
+  const review = reviewStatus ? REVIEW_CHIP[reviewStatus] : null;
 
   return (
     <Link
       href={`/ouvertures/${opening.id}`}
-      className="flex flex-col rounded-lg border border-border bg-surface p-4 text-left transition-colors hover:border-accent/40"
+      className="flex min-h-[68px] flex-col justify-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-3 transition-colors hover:bg-surface-muted"
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">{opening.name}</h3>
-        <span className="shrink-0 rounded-full border border-book/40 bg-book/10 px-2 py-0.5 text-[11px] font-medium text-book">
-          {opening.eco}
-        </span>
-      </div>
-
-      <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-foreground-muted">
-        <SideDot side={opening.side} />
-        {SIDE_LABEL[opening.side]}
-      </div>
-
-      <p className="mt-2 line-clamp-2 flex-1 text-xs text-foreground-muted">{opening.description}</p>
-
-      {(badge || stars !== undefined) && (
-        <div className="mt-2 flex items-center gap-2">
-          {badge && (
-            <span className={`w-fit rounded-full border px-2 py-0.5 text-[11px] font-medium ${badge.className}`}>
-              {badge.label}
-            </span>
-          )}
-          {stars !== undefined && <Stars count={stars} className="text-xs" />}
-        </div>
-      )}
-
-      <p className="mt-3 truncate border-t border-border pt-2 font-mono text-[11px] text-foreground-muted">
-        {opening.preview}
-      </p>
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="min-w-0 truncate font-medium text-foreground">{displayOpeningName(opening.name)}</span>
+        <span className="shrink-0 font-mono text-xs text-foreground-subtle">{opening.eco}</span>
+      </span>
+      <span className="flex flex-wrap items-center gap-1.5">
+        <Chip icon={state.icon} tone={state.tone}>
+          {state.label}
+        </Chip>
+        {review && (
+          <Chip icon={review.icon} tone={review.tone}>
+            {review.label}
+          </Chip>
+        )}
+        {stars !== undefined && stars > 0 && <Stars count={stars} className="ml-auto text-xs" />}
+      </span>
     </Link>
   );
 }

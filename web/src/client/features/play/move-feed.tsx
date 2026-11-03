@@ -13,12 +13,13 @@ export function MoveFeed({ feed }: { feed: FeedEntry[] }) {
   }, [feed.length]);
 
   return (
-    <ol ref={listRef} className="max-h-96 space-y-1.5 overflow-y-auto text-sm">
+    <ol ref={listRef} aria-label="Coups joués" className="max-h-80 space-y-0.5 overflow-y-auto text-sm">
       {feed.map((entry, index) => (
         // L'index suffit : le journal n'est jamais réordonné ni filtré.
-        <li key={index} className="rounded-md px-2 py-1.5 odd:bg-surface-muted/60">
+        <li key={index} className="rounded-md px-2 py-1.5 odd:bg-surface-muted">
           <div className="flex items-center gap-2">
-            <span className={entry.by === "ai" ? "text-foreground-muted" : ""}>
+            <span className="w-8 shrink-0 font-mono text-xs text-foreground-subtle">{Math.floor(index / 2) + 1}{index % 2 === 0 ? "." : "…"}</span>
+            <span className={`font-mono ${entry.by === "ai" ? "text-foreground-muted" : ""}`}>
               {entry.san}
             </span>
             {entry.quality && (

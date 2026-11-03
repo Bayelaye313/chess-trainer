@@ -1,39 +1,18 @@
 "use client";
 
-/**
- * Onglet « ⚔️ Pièges » — Dashboard de Campagne à DEUX niveaux de navigation,
- * pensé pour absorber l'explosion de contenu de l'architecture « Gambits &
- * Variantes » (voir le docstring de `traps.ts`) :
- *
- *  - NIVEAU 1 (`selectedFamily === null`) : grille de dossiers, une grande
- *    carte par `family` (l'ouverture — « Partie Italienne », « Défense
- *    Sicilienne »…) avec un anneau de progression (résolus / total, voir
- *    `trap-progress.ts`).
- *  - NIVEAU 2 (`selectedFamily` posé) : au clic sur une ouverture, liste des
- *    séries de gambits (`gambit`) qu'elle contient — chaque carte est un lien
- *    DIRECT vers `/pieges/[slug]` du premier piège NON résolu de la série (le
- *    premier tout court si elle est déjà entièrement résolue), jamais une
- *    grille de pastilles numériques intermédiaire à parcourir avant
- *    d'atteindre l'échiquier (voir `firstActiveTrap` ci-dessous) : `/pieges/
- *    [slug]` sert déjà tout l'enchaînement de la série (`seriesTraps`,
- *    bouton « Suivant → » de `OpeningTrapDrill`), inutile de reparcourir
- *    manuellement chaque pastille pour y accéder.
- *
- * Filtrage/navigation entièrement côté client pour NIVEAU 1↔2 (pas de route
- * dédiée) : `selectedFamily` est un simple état React, jamais persisté — un
- * aller-retour vers `/pieges` repart toujours du NIVEAU 1, ce qui est le
- * comportement voulu (voir aussi `PiegeDrillScreen`, qui ramène ici via
- * `onExit`).
- */
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight, CircleCheck, Shield } from "lucide-react";
 import type { OpeningTrap } from "@/core/curriculum/traps";
 import { DIFFICULTY_ORDER } from "@/core/curriculum/traps";
-import { familyIcon } from "./trap-family-icon";
+import { ButtonLink } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader, SectionTitle } from "@/components/ui/page-header";
+import { displayOpeningName } from "./opening-display";
 import { getSolvedTrapIds } from "./trap-progress";
-import { EsportHeader } from "@/components/ui/esport-page";
 
-/** Regroupe `items` par la clé de `keyOf`, dans l'ordre de première apparition — sert aux trois niveaux (famille, gambit). */
+/** Regroupe en conservant l'ordre de première apparition. */
 function groupByKey<T>(items: readonly T[], keyOf: (item: T) => string): [string, T[]][] {
   const map = new Map<string, T[]>();
   for (const item of items) {
@@ -45,141 +24,144 @@ function groupByKey<T>(items: readonly T[], keyOf: (item: T) => string): [string
   return Array.from(map.entries());
 }
 
-/** Puzzles d'une série (`gambit`), triés du plus accessible au plus pointu — même ordre que la grille de pastilles NIVEAU 3 et que `OpeningTrapDrill` (voir `seriesTraps` dans `piege-drill-screen.tsx`). */
 function sortByDifficulty(traps: readonly OpeningTrap[]): OpeningTrap[] {
   return [...traps].sort((a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty));
 }
 
-/** Anneau de progression façon Dashboard de Campagne — pur CSS (`conic-gradient`), aucune lib de charts pour un simple pourcentage. */
-function ProgressRing({ percent }: { percent: number }) {
+function Progress({ solved, total }: { solved: number; total: number }) {
+  const percent = total > 0 ? Math.round((solved / total) * 100) : 0;
   return (
-    <div
-      aria-hidden="true"
-      className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-      style={{ background: `conic-gradient(var(--accent) ${Math.round(percent * 3.6)}deg, var(--surface-muted) 0deg)` }}
-    >
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-[10px] font-semibold text-foreground">
-        {percent}%
-      </div>
-    </div>
+    <span className="flex w-28 shrink-0 flex-col items-end gap-1">
+      <span className="font-mono text-xs text-foreground-muted">
+        {solved}/{total} {solved === total && total > 0 ? "maîtrisés" : "résolus"}
+      </span>
+      <span aria-hidden="true" className="h-1.5 w-full overflow-hidden rounded-full bg-surface-raised">
+        <span className="block h-full rounded-full bg-best" style={{ width: `${percent}%` }} />
+      </span>
+    </span>
   );
 }
 
-function BackButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function FamilyRow({ family, traps, solvedIds, onOpen }: { family: string; traps: OpeningTrap[]; solvedIds: ReadonlySet<string>; onOpen: () => void }) {
+  const solved = traps.filter((trap) => solvedIds.has(trap.id)).length;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
-    >
-      {children}
-    </button>
+    <li>
+      <button type="button" onClick={onOpen} className="flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted">
+        {solved === traps.length ? (
+          <CircleCheck aria-hidden="true" className="size-5 shrink-0 text-success" />
+        ) : (
+          <Shield aria-hidden="true" className="size-5 shrink-0 text-foreground-subtle" />
+        )}
+        <span className="min-w-0 flex-1 truncate font-medium">{displayOpeningName(family)}</span>
+        <Progress solved={solved} total={traps.length} />
+      </button>
+    </li>
   );
 }
 
-export function PiegesScreen({ traps }: { traps: readonly OpeningTrap[] }) {
+/**
+ * Pièges d'ouverture, 3 niveaux : famille → série (gambit) → piège
+ * (`/pieges/<id>`). « Mon répertoire » d'abord (familles qui correspondent
+ * aux ouvertures de ton répertoire), les autres familles repliées.
+ */
+export function PiegesScreen({ traps, repertoireFamilies = [] }: { traps: readonly OpeningTrap[]; repertoireFamilies?: readonly string[] }) {
   const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
-  // Chargée après montage (localStorage n'existe pas côté serveur) — voir `trap-progress.ts`.
   const [solvedIds, setSolvedIds] = useState<ReadonlySet<string>>(() => new Set());
+  // Progression en localStorage : lue après montage (absente au rendu serveur).
   useEffect(() => {
-    // `setState` déféré au prochain tick (jamais synchrone dans le corps de l'effet, react-hooks/set-state-in-effect)
-    // — même convention que `use-opening-drill.ts`/`error-feedback.ts`.
     const timer = setTimeout(() => setSolvedIds(getSolvedTrapIds()), 0);
     return () => clearTimeout(timer);
   }, []);
 
   const familyGroups = useMemo(() => groupByKey(traps, (trap) => trap.family), [traps]);
+  const inRepertoire = new Set(repertoireFamilies);
+  const mine = familyGroups.filter(([family]) => inRepertoire.has(family));
+  const others = familyGroups.filter(([family]) => !inRepertoire.has(family));
+  const nextTrap = (mine.length > 0 ? mine : familyGroups).flatMap(([, list]) => sortByDifficulty(list)).find((trap) => !solvedIds.has(trap.id));
 
   const gambitGroups = useMemo(() => {
     if (selectedFamily === null) return [];
-    const familyTraps = traps.filter((trap) => trap.family === selectedFamily);
-    return groupByKey(familyTraps, (trap) => trap.gambit);
+    return groupByKey(
+      traps.filter((trap) => trap.family === selectedFamily),
+      (trap) => trap.gambit,
+    );
   }, [traps, selectedFamily]);
 
-  function goToFamilies() {
-    setSelectedFamily(null);
-  }
-
-  // ──────────────────────────────────────────────────────────────────────
-  // NIVEAU 2 — séries de gambits d'une ouverture, chacune un lien direct
-  // vers l'échiquier de son premier piège actif (voir le docstring de fichier).
-  // ──────────────────────────────────────────────────────────────────────
   if (selectedFamily !== null) {
     return (
-      <div className="space-y-6 pt-8">
-        <div>
-          <BackButton onClick={goToFamilies}>← Retour aux ouvertures</BackButton>
-          <h1 className="mt-2 text-xl font-semibold tracking-tight">
-            {familyIcon(selectedFamily)} {selectedFamily}
-          </h1>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <PageHeader
+          back={
+            <button type="button" onClick={() => setSelectedFamily(null)} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+              <ArrowLeft aria-hidden="true" className="size-4" />
+              Pièges
+            </button>
+          }
+          title={displayOpeningName(selectedFamily)}
+          description="Chaque série s'enchaîne du piège le plus simple au plus difficile."
+        />
+        <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
           {gambitGroups.map(([gambit, gambitTraps]) => {
             const sorted = sortByDifficulty(gambitTraps);
-            const solvedCount = sorted.filter((trap) => solvedIds.has(trap.id)).length;
-            const percent = Math.round((solvedCount / sorted.length) * 100);
-            // Premier piège NON résolu de la série (le tout premier si elle est déjà entièrement résolue) — c'est
-            // LUI que sert `/pieges/[slug]`, jamais l'entrée #1 sans égard à la progression déjà faite.
-            const firstActiveTrap = sorted.find((trap) => !solvedIds.has(trap.id)) ?? sorted[0];
+            const solved = sorted.filter((trap) => solvedIds.has(trap.id)).length;
+            const first = sorted.find((trap) => !solvedIds.has(trap.id)) ?? sorted[0];
             return (
-              <Link
-                key={gambit}
-                href={`/pieges/${firstActiveTrap.id}`}
-                className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface p-4 text-left transition-colors hover:border-accent/40"
-              >
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-sm font-semibold text-foreground">{gambit}</h3>
-                  <p className="mt-0.5 text-xs text-foreground-muted">
-                    {solvedCount} / {sorted.length} résolus
-                  </p>
-                </div>
-                <ProgressRing percent={percent} />
-              </Link>
+              <li key={gambit}>
+                <Link href={`/pieges/${first.id}`} className="flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-muted">
+                  <span className="min-w-0 flex-1 truncate font-medium">{gambit}</span>
+                  <Progress solved={solved} total={sorted.length} />
+                  <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-foreground-subtle" />
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────
-  // NIVEAU 1 — grille de dossiers, une carte par ouverture.
-  // ──────────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      <EsportHeader eyebrow="Répertoire / 05 / Pièges" title="Ne tombe plus dans le piège.">
-        {traps.length} puzzles répartis en {familyGroups.length} ouvertures, chacune découpée en séries de gambits.
-        L&apos;ordinateur amène chaque position de manière agressive — à toi de résister à la tentation et de trouver
-        la réfutation précise avant qu&apos;il ne referme le piège.
-      </EsportHeader>
+    <div>
+      <PageHeader
+        title="Pièges"
+        description={`${traps.length} pièges d'ouverture : l'ordinateur amène la position, à toi de trouver la réfutation.`}
+        action={
+          nextTrap && (
+            <ButtonLink href={`/pieges/${nextTrap.id}`} variant="primary" data-primary-action className="w-full sm:w-auto">
+              Continuer : {displayOpeningName(nextTrap.family)}
+              <ArrowRight aria-hidden="true" />
+            </ButtonLink>
+          )
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {familyGroups.map(([family, familyTraps]) => {
-          const solvedCount = familyTraps.filter((trap) => solvedIds.has(trap.id)).length;
-          const percent = Math.round((solvedCount / familyTraps.length) * 100);
-          return (
-            <button
-              key={family}
-              type="button"
-              onClick={() => setSelectedFamily(family)}
-              className="flex w-full items-center gap-4 rounded-xl border border-border bg-surface p-5 text-left transition-colors hover:border-accent/40 hover:shadow-sm"
-            >
-              <span className="text-3xl" aria-hidden="true">
-                {familyIcon(family)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-base font-semibold text-foreground">{family}</h2>
-                <p className="mt-0.5 text-xs text-foreground-muted">
-                  {solvedCount} / {familyTraps.length} résolus
-                </p>
-              </div>
-              <ProgressRing percent={percent} />
-            </button>
-          );
-        })}
-        {familyGroups.length === 0 && <p className="text-sm text-foreground-muted">Aucun piège disponible pour l&apos;instant.</p>}
-      </div>
+      {familyGroups.length === 0 ? (
+        <EmptyState icon={Shield} title="Aucun piège disponible pour l'instant." />
+      ) : (
+        <>
+          <section aria-labelledby="pieges-repertoire" className="mb-6">
+            <SectionTitle id="pieges-repertoire">Mon répertoire</SectionTitle>
+            {mine.length === 0 ? (
+              <EmptyState title="Aucune famille de pièges ne correspond à ton répertoire.">Toutes les familles sont dans « Autres ouvertures ».</EmptyState>
+            ) : (
+              <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+                {mine.map(([family, list]) => (
+                  <FamilyRow key={family} family={family} traps={list} solvedIds={solvedIds} onOpen={() => setSelectedFamily(family)} />
+                ))}
+              </ul>
+            )}
+          </section>
+          {others.length > 0 && (
+            <Disclosure summary="Autres ouvertures" meta={`${others.length} familles`} className="border-b">
+              <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+                {others.map(([family, list]) => (
+                  <FamilyRow key={family} family={family} traps={list} solvedIds={solvedIds} onOpen={() => setSelectedFamily(family)} />
+                ))}
+              </ul>
+            </Disclosure>
+          )}
+        </>
+      )}
     </div>
   );
 }

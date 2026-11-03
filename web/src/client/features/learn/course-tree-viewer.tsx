@@ -44,6 +44,8 @@
  * clavier, un autre annule la réponse adverse programmée au démontage, et
  * `useLiveEvaluation` n'écrit qu'à l'arrivée de la réponse du moteur.
  */
+import { ArrowRight, MapPin, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs, type SquareRenderer } from "react-chessboard";
@@ -139,9 +141,12 @@ export function CourseTreeViewer({
   onComplete,
   initialFocus,
   positionNotes = [],
+  onPositionChange,
 }: {
   tree: CourseTree;
   onComplete?: () => void;
+  /** Appelé à chaque changement de chapitre ou de nœud (mémorisation de la position de lecture). */
+  onPositionChange?: (focus: CourseTreeFocus) => void;
   initialFocus?: CourseTreeFocus;
   /** Tes sorties du cours dans tes parties (`listCoursePositionNotes`) — encart « Dans tes parties » sur la position concernée. */
   positionNotes?: readonly CoursePositionNote[];
@@ -288,6 +293,10 @@ export function CourseTreeViewer({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [goPrev, goNext, awaitingRead, playReply]);
 
+  useEffect(() => {
+    onPositionChange?.({ chapterIndex: state.chapterIndex, nodeId: state.currentId });
+  }, [state.chapterIndex, state.currentId, onPositionChange]);
+
   // Dernier chapitre ouvert au moins une fois = cours terminé (navigation
   // libre : rien à « finir » dans un arbre qu'on explore dans tous les sens).
   useEffect(() => {
@@ -354,29 +363,34 @@ export function CourseTreeViewer({
           {state.feedback === "wrong" ? "Ce n'est pas le coup de l'étude — réessaie." : `À toi de jouer : trouve le coup des ${sideLabel(playerColor)}.`}
         </p>
         <div className="flex shrink-0 gap-1.5">
-          <button type="button" onClick={() => dispatch({ type: "hint" })} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+          <Button onClick={() => dispatch({ type: "hint" })}>
+            <Lightbulb aria-hidden="true" />
             {hintButtonLabel(currentNode, state.hintLevel)}
-          </button>
-          <button type="button" onClick={() => playForPlayer(currentNode.children[0], true)} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+          </Button>
+          <Button variant="ghost" onClick={() => playForPlayer(currentNode.children[0], true)}>
             Voir le coup
-          </button>
+          </Button>
         </div>
       </div>
     ) : lineFinished ? (
       <div className="flex items-center justify-between gap-2">
-        <p className="font-medium text-best">✓ Ligne terminée.</p>
+        <p role="status" className="flex items-center gap-1.5 font-medium text-success">
+          <CircleCheck aria-hidden="true" className="size-4" />
+          Ligne terminée.
+        </p>
         {state.chapterIndex < tree.chapters.length - 1 && (
-          <button type="button" onClick={() => goToChapter(state.chapterIndex + 1)} className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-            Chapitre suivant →
-          </button>
+          <Button variant="primary" onClick={() => goToChapter(state.chapterIndex + 1)}>
+            Chapitre suivant
+            <ArrowRight aria-hidden="true" />
+          </Button>
         )}
       </div>
     ) : awaitingRead ? (
       <div className="flex items-center justify-between gap-2">
         <p className="font-medium text-foreground">Lis le commentaire, puis passe à la réponse adverse.</p>
-        <button type="button" onClick={playReply} className="shrink-0 rounded bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+        <Button variant="primary" onClick={playReply} className="shrink-0">
           Suivant (Espace)
-        </button>
+        </Button>
       </div>
     ) : (
       <p className="text-foreground-muted">Réponse adverse…</p>
@@ -386,9 +400,10 @@ export function CourseTreeViewer({
   // Lecture libre : les indices se dévoilent aussi, sans flèche (l'arbre montre déjà la suite).
   const readHintButton =
     !playing && currentNode.hints.length > 0 && state.hintLevel < currentNode.hints.length ? (
-      <button type="button" onClick={() => dispatch({ type: "hint" })} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-surface-muted">
+      <Button onClick={() => dispatch({ type: "hint" })} className="shrink-0">
+        <Lightbulb aria-hidden="true" />
         {hintButtonLabel(currentNode, state.hintLevel)}
-      </button>
+      </Button>
     ) : null;
   const hintLadder =
     shownHints.length > 0 || readHintButton ? (
@@ -402,7 +417,7 @@ export function CourseTreeViewer({
         {shownHints.length > 0 && (
           <ol className="space-y-1">
             {shownHints.map((hint, index) => (
-              <li key={index} className="rounded border border-border bg-surface-muted px-2 py-1 text-xs text-foreground">
+              <li key={index} className="rounded-md bg-surface-muted px-3 py-2 text-sm text-foreground">
                 <span className="font-semibold">Indice {index + 1} : </span>
                 {hint}
               </li>
@@ -440,7 +455,7 @@ export function CourseTreeViewer({
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between gap-2 pl-9 sm:pl-11">
-            <div className="inline-flex rounded-md border border-border p-0.5 text-xs" role="radiogroup" aria-label="Mode de lecture">
+            <div className="inline-flex rounded-lg border border-border bg-surface p-1 text-sm" role="radiogroup" aria-label="Mode de lecture">
               {(["read", "play"] as const).map((mode) => (
                 <button
                   key={mode}
@@ -448,8 +463,8 @@ export function CourseTreeViewer({
                   role="radio"
                   aria-checked={state.mode === mode}
                   onClick={() => setMode(mode)}
-                  className={`rounded px-2.5 py-1 font-medium transition-colors ${
-                    state.mode === mode ? "bg-accent text-accent-foreground" : "text-foreground-muted hover:text-foreground"
+                  className={`inline-flex min-h-10 items-center rounded-md px-3 font-medium transition-colors ${
+                    state.mode === mode ? "bg-surface-raised text-foreground" : "text-foreground-muted hover:text-foreground"
                   }`}
                 >
                   {mode === "read" ? "Lecture" : "Jouer les coups"}
@@ -462,18 +477,18 @@ export function CourseTreeViewer({
                 onClick={goPrev}
                 disabled={!parentNode}
                 aria-label="Coup précédent"
-                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex size-11 items-center justify-center rounded-md border border-border-strong bg-surface-muted text-foreground hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
               >
-                ←
+                <ChevronLeft aria-hidden="true" className="size-5" />
               </button>
               <button
                 type="button"
                 onClick={goNext}
                 disabled={lineFinished}
                 aria-label="Coup suivant"
-                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex size-11 items-center justify-center rounded-md border border-border-strong bg-surface-muted text-foreground hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
               >
-                →
+                <ChevronRight aria-hidden="true" className="size-5" />
               </button>
             </div>
           </div>
@@ -481,7 +496,16 @@ export function CourseTreeViewer({
 
         <div className="min-w-0 flex-1 space-y-4">
           {tree.chapters.length > 1 ? (
-            <nav aria-label="Chapitres" className="max-h-44 overflow-y-auto rounded-md border border-border">
+            <details className="group rounded-lg border border-border bg-surface">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-3 [&::-webkit-details-marker]:hidden">
+                <span className="shrink-0 font-mono text-xs text-foreground-subtle">
+                  {state.chapterIndex + 1}/{tree.chapters.length}
+                </span>
+                <span className="min-w-0 flex-1 truncate font-medium">{chapter.title}</span>
+                <span className="shrink-0 text-xs text-foreground-muted">Chapitres</span>
+                <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-foreground-subtle transition-transform group-open:rotate-180" />
+              </summary>
+            <nav aria-label="Chapitres" className="max-h-72 overflow-y-auto border-t border-border">
               <ol>
                 {tree.chapters.map((c, index) => (
                   <li key={index}>
@@ -489,23 +513,24 @@ export function CourseTreeViewer({
                       type="button"
                       aria-current={index === state.chapterIndex ? "true" : undefined}
                       onClick={() => goToChapter(index)}
-                      className={`flex w-full items-baseline gap-2 px-3 py-1.5 text-left text-[13px] transition-colors ${
-                        index === state.chapterIndex ? "bg-accent/15 font-semibold text-foreground" : "text-foreground-muted hover:bg-surface-muted hover:text-foreground"
+                      className={`flex min-h-11 w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors ${
+                        index === state.chapterIndex ? "bg-surface-raised font-medium text-foreground" : "text-foreground-muted hover:bg-surface-muted hover:text-foreground"
                       }`}
                     >
-                      <span className="w-5 shrink-0 text-right font-mono text-[11px] text-foreground-muted">{index + 1}</span>
+                      <span className="w-5 shrink-0 text-right font-mono text-xs text-foreground-subtle">{index + 1}</span>
                       <span className="min-w-0 truncate">{c.title}</span>
                     </button>
                   </li>
                 ))}
               </ol>
             </nav>
+            </details>
           ) : (
             <p className="text-sm font-semibold text-foreground">{chapter.title}</p>
           )}
           {playing ? (
             // Mode jeu : l'arbre complet donnerait la solution — on n'affiche que les coups déjà joués, comme le gamebook Lichess.
-            <p className="paper-surface min-h-[3rem] rounded-lg border border-border px-5 py-3 font-mono text-[13px] text-foreground shadow-sm">
+            <p className="paper-surface min-h-[3rem] rounded-lg border border-border px-5 py-3 font-mono text-sm text-foreground">
               {path.length > 1 ? path.slice(1).map((node) => node.san).join(" ") : "—"}
             </p>
           ) : (
@@ -525,7 +550,7 @@ export function CourseTreeViewer({
 function PositionNotesBox({ notes }: { notes: readonly CoursePositionNote[] }) {
   return (
     <div className="rounded-lg border border-inaccuracy/40 bg-inaccuracy/10 px-4 py-3 text-sm">
-      <p className="font-medium text-foreground">📌 Dans tes parties, ici :</p>
+      <p className="flex items-center gap-1.5 font-medium text-foreground"><MapPin aria-hidden="true" className="size-4 text-warning" />Dans tes parties, ici :</p>
       <ul className="mt-1 space-y-1">
         {notes.map((note) => (
           <li key={note.playedSan}>

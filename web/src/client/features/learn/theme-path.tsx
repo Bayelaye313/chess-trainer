@@ -6,6 +6,7 @@
  * une fois maîtrisé, `ProgressBar` sous le titre — cliquable dès qu'il reste
  * du contenu à résoudre, même règle que l'ancien `ThemeCard`.
  */
+import { Check, Clock } from "lucide-react";
 import { CURRICULUM_LEVEL_LABEL, CURRICULUM_LEVEL_TEXT_CLASS, CURRICULUM_LEVEL_BORDER_CLASS } from "@/lib/labels";
 import type { CurriculumThemeOverview } from "@/server/queries/curriculum";
 import { ProgressBar } from "./progress-bar";
@@ -38,7 +39,7 @@ function ThemeNode({
               : "border-accent/40 bg-surface text-foreground-muted"
           }`}
         >
-          {done ? "✅" : index + 1}
+          {done ? <Check aria-hidden="true" className="size-3.5" /> : index + 1}
         </span>
         {!isLast && <span className="mt-1 w-px flex-1 bg-border" aria-hidden="true" />}
       </div>
@@ -60,7 +61,7 @@ function ThemeNode({
         </div>
         <p className="mt-1.5 line-clamp-2 text-xs text-foreground-muted">{theme.description}</p>
         {empty ? (
-          <p className="mt-3 text-xs font-medium text-inaccuracy">⚠️ En attente de contenu authentique — pas encore d&apos;exercice.</p>
+          <p className="mt-3 inline-flex items-center gap-1 text-xs text-foreground-muted"><Clock aria-hidden="true" className="size-3.5" />Exercices à venir.</p>
         ) : (
           <ProgressBar completed={theme.completedCount} total={theme.totalPuzzles} className="mt-3" />
         )}

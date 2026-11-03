@@ -30,11 +30,12 @@
  * composant ne connaît que "je m'affiche" / "on confirme l'entrée" — jamais
  * la logique de fermeture elle-même.
  */
+import { CircleDot } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "motion/react";
 import type { CurriculumCategoryMeta } from "@/core/curriculum/catalog";
 import type { CurriculumThemeOverview } from "@/server/queries/curriculum";
-import { moduleIcon } from "./module-icon";
+import { ModuleIcon } from "./module-icon";
 import { ProgressBar } from "./progress-bar";
 import {
   BRIEFING_BACKDROP_VARIANTS,
@@ -93,15 +94,15 @@ export function MissionBriefing({ theme, category, objective, keyIdeas, onEnter 
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${threat.textClass} ${threat.borderClass}`}
                   >
-                    <span aria-hidden="true">{threat.icon}</span>
+                    <CircleDot aria-hidden="true" className="size-3.5" />
                     Niveau de menace : {threat.label}
                   </span>
                   <span className="text-2xl" aria-hidden="true">
-                    {moduleIcon(category.id)}
+                    <ModuleIcon category={category.id} />
                   </span>
                 </div>
 
-                <p className="mt-5 text-xs font-semibold uppercase tracking-widest text-foreground-muted">
+                <p className="mt-5 text-sm text-foreground-muted">
                   Module — {category.label}
                   {category.author && <span> · {category.author}</span>}
                 </p>
@@ -114,7 +115,7 @@ export function MissionBriefing({ theme, category, objective, keyIdeas, onEnter 
                 </Dialog.Description>
 
                 <div className="mt-6">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">📋 Mission checklist</h2>
+                  <h2 className="text-sm text-foreground-muted">📋 Mission checklist</h2>
                   <motion.ul
                     variants={CHECKLIST_LIST_VARIANTS}
                     initial="hidden"
@@ -134,7 +135,7 @@ export function MissionBriefing({ theme, category, objective, keyIdeas, onEnter 
 
                 {hasProgress && (
                   <div className="mt-6">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Progression du module</p>
+                    <p className="text-sm text-foreground-muted">Progression du module</p>
                     <ProgressBar completed={theme.completedCount} total={theme.totalPuzzles} className="mt-2" />
                   </div>
                 )}
@@ -145,7 +146,7 @@ export function MissionBriefing({ theme, category, objective, keyIdeas, onEnter 
                   whileHover={{ boxShadow: GLOW.cta, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   transition={SPRING}
-                  className="mt-8 w-full rounded-lg bg-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-accent-foreground"
+                  className="mt-8 w-full rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground"
                 >
                   Entrer dans l&apos;arène ➔
                 </motion.button>

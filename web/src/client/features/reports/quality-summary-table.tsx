@@ -10,6 +10,7 @@
  * `lib/labels.ts`).
  */
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import type { MoveQuality } from "@/core/chess/types";
 import type { QualityTally } from "@/core/analysis/timeline";
 import { QUALITY_BADGE_INK_CLASS, QUALITY_BG_CLASS, QUALITY_LABEL, QUALITY_SYMBOL } from "@/lib/labels";
@@ -19,36 +20,39 @@ const SUMMARY_QUALITIES: readonly MoveQuality[] = ["brilliant", "critical", "bes
 
 function QualityRow({ quality, count }: { quality: MoveQuality; count: number }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+    <div className="flex items-center gap-3 py-2">
       <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${QUALITY_BG_CLASS[quality]} ${QUALITY_BADGE_INK_CLASS[quality]}`}
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full font-mono text-sm font-medium ${QUALITY_BG_CLASS[quality]} ${QUALITY_BADGE_INK_CLASS[quality]}`}
         aria-hidden="true"
       >
         {QUALITY_SYMBOL[quality]}
       </span>
       <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-foreground-muted">{QUALITY_LABEL[quality]}</p>
-        <p className="font-mono text-xl font-semibold text-foreground">{count}</p>
+        <p className="font-mono text-lg text-foreground">{count}</p>
+        <p className="text-sm text-foreground-muted">{QUALITY_LABEL[quality]}</p>
       </div>
     </div>
   );
 }
 
+/** Décompte des qualités de coup sur toutes les parties analysées. */
 export function QualitySummaryTable({ tally }: { tally: QualityTally }) {
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold tracking-tight">📊 Tableau statistique</h2>
-        <Link href="/rapport/brillants" className="text-sm text-accent hover:underline">
-          Voir l&apos;historique de mes coups brillants →
+    <section aria-labelledby="qualites-titre">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="qualites-titre" className="font-display text-lg font-semibold">
+          Qualité de tes coups
+        </h2>
+        <Link href="/rapport/brillants" className="inline-flex min-h-11 items-center gap-1 text-sm text-foreground-muted hover:text-foreground">
+          Mes coups brillants
+          <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
       </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-x-6 sm:grid-cols-3 lg:grid-cols-5">
         {SUMMARY_QUALITIES.map((quality) => (
           <QualityRow key={quality} quality={quality} count={tally[quality]} />
         ))}
       </div>
-    </div>
+    </section>
   );
 }

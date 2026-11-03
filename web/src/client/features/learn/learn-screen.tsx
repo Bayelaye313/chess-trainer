@@ -35,7 +35,9 @@ import { EsportCanvas } from "@/components/ui/esport-page";
 import { getCurriculumOverview } from "@/server/actions/curriculum";
 import type { CurriculumCategoryOverview, CurriculumThemeOverview } from "@/server/queries/curriculum";
 import { CourseCurriculum } from "./course-curriculum";
-import { moduleIcon } from "./module-icon";
+import { ArrowLeft } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { categoryLabel, ModuleIcon } from "./module-icon";
 import { ThemeLesson } from "./theme-lesson";
 import { ThemeReviewSession } from "./theme-review-session";
 import { ThemeSession } from "./theme-session";
@@ -60,7 +62,8 @@ function directViewForTheme(categoryId: string, themeId: string): LearnView {
 
 function BackButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+    <button type="button" onClick={onClick} className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-foreground-muted hover:text-foreground">
+      <ArrowLeft aria-hidden="true" className="size-4" />
       {children}
     </button>
   );
@@ -130,8 +133,8 @@ export function LearnScreen({
       return (
         <EsportCanvas detail>
         <div className="space-y-4">
-          <BackButton onClick={() => setView({ kind: "modules" })}>← Retour à l&apos;académie</BackButton>
-          <p className="text-sm text-foreground-muted">Thème introuvable.</p>
+          <BackButton onClick={() => setView({ kind: "modules" })}>Académie</BackButton>
+          <EmptyState title="Thème introuvable." />
         </div>
         </EsportCanvas>
       );
@@ -160,8 +163,8 @@ export function LearnScreen({
       return (
         <EsportCanvas detail>
         <div className="space-y-4">
-          <BackButton onClick={() => setView({ kind: "modules" })}>← Retour à l&apos;académie</BackButton>
-          <p className="text-sm text-foreground-muted">Module introuvable.</p>
+          <BackButton onClick={() => setView({ kind: "modules" })}>Académie</BackButton>
+          <EmptyState title="Catégorie introuvable." />
         </div>
         </EsportCanvas>
       );
@@ -175,12 +178,12 @@ export function LearnScreen({
       <EsportCanvas detail>
       <div className="space-y-6">
         <div>
-          <BackButton onClick={() => setView({ kind: "modules" })}>← Retour à l&apos;académie</BackButton>
-          <h1 className="mt-2 text-xl font-semibold tracking-tight">
-            {moduleIcon(category.id)} {category.label}
+          <BackButton onClick={() => setView({ kind: "modules" })}>Académie</BackButton>
+          <h1 className="font-display text-[22px] leading-tight font-semibold sm:text-[28px]">
+            <ModuleIcon category={category.id} /> {categoryLabel(category.id, category.label)}
             {category.author && <span className="text-foreground-muted"> — {category.author}</span>}
           </h1>
-          <p className="mt-1 max-w-prose text-sm text-foreground-muted">{category.description}</p>
+          <p className="mt-1 line-clamp-2 max-w-[70ch] text-sm text-foreground-muted">{category.description}</p>
           <p className="mt-2 text-sm font-medium text-foreground">
             {masteredCount} / {visibleThemes.length} thème{visibleThemes.length > 1 ? "s" : ""} maîtrisé
             {masteredCount > 1 ? "s" : ""}

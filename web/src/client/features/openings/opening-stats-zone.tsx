@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { OPENING_COURSE_IDS } from "@/core/curriculum/opening-course-ids";
 import { MIN_SESSIONS_FOR_RANKING, type OpeningEnduranceComparison } from "./opening-endurance-history";
 import {
@@ -28,7 +29,10 @@ export function OpeningStatsZone({
   openingName,
   playerSide,
   ranking,
+  onOpenCourse,
 }: {
+  /** Fiche à onglets : le bouton « cours » ouvre l'onglet Cours au lieu d'un second lien vers le cours. */
+  onOpenCourse?: () => void;
   openingId: string;
   openingName: string;
   /** Camp du drill lancé par le bouton (`?side=` ou camp du catalogue). */
@@ -43,15 +47,12 @@ export function OpeningStatsZone({
     // Première session : Manche 1 guidée puis Manche 2 — le drill normal.
     const trigger = resolveTrigger({ openingId, playerSide, tier: "moyen", hasCourse });
     return (
-      <section className="animate-fade-up-in flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-foreground-muted">Endurance Sans Guide</p>
-          <p className="mt-1 text-sm text-foreground">
-            Aucune session sur {openingName} pour l&apos;instant. Le drill de la ligne principale est juste en
-            dessous : joue la Manche 1 guidée, puis la Manche 2 sans indice, qui mesure ta première gaffe.
-          </p>
-        </div>
-        <CallToAction href={trigger.href} label="Aller au drill" className={NEUTRAL_BUTTON} />
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-foreground-muted">
+          Aucune session sur {openingName} pour l&apos;instant : joue la Manche 1 guidée, puis la Manche 2 sans aide,
+          qui mesure ta première gaffe.
+        </p>
+        {!onOpenCourse && <CallToAction href={trigger.href} label="Aller au drill" className={NEUTRAL_BUTTON} />}
       </section>
     );
   }
@@ -65,12 +66,12 @@ export function OpeningStatsZone({
   return (
     <section
       aria-labelledby="opening-stats-title"
-      className="animate-fade-up-in flex flex-col gap-5 rounded-lg border border-border bg-surface p-5"
+      className="flex flex-col gap-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="opening-stats-title" className="text-sm font-medium uppercase tracking-wide text-foreground-muted">
-          Endurance Sans Guide
-        </h2>
+        <h3 id="opening-stats-title" className="text-sm text-foreground-muted">
+          Endurance sans aide
+        </h3>
         <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold ${tone.badge}`}>
           <span className={`h-2.5 w-2.5 rounded-full ${tone.dot}`} aria-hidden />
           {row.verdict}
@@ -81,17 +82,17 @@ export function OpeningStatsZone({
         {/* Compteur d'endurance tactique */}
         <div className={`flex flex-col gap-3 rounded-md border p-4 sm:col-span-2 ${tone.card}`}>
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-xs uppercase tracking-wide text-foreground-muted">Première gaffe en moyenne</p>
-            <p className={`font-mono text-2xl font-bold ${tone.text}`}>{endurance.label}</p>
+            <p className="text-sm text-foreground-muted">Première gaffe en moyenne</p>
+            <p className={`font-mono text-2xl font-medium ${tone.text}`}>{endurance.label}</p>
           </div>
           <EnduranceGauge ratio={endurance.ratio} tier={row.tier} />
           <p className="text-sm text-foreground-muted">{TIER_CAPTION[row.tier]}</p>
         </div>
 
         {/* Score et rang dans le classement global */}
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-muted/40 p-4">
-          <p className="text-xs uppercase tracking-wide text-foreground-muted">Robustesse</p>
-          <p className="font-mono text-2xl font-bold text-foreground">
+        <div className="flex flex-col gap-2 rounded-md bg-surface-muted p-4">
+          <p className="text-sm text-foreground-muted">Robustesse</p>
+          <p className="font-mono text-2xl font-medium text-foreground">
             {row.robustness}
             <span className="text-sm font-medium text-foreground-muted"> / 100</span>
           </p>
@@ -113,11 +114,17 @@ export function OpeningStatsZone({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <CallToAction href={trigger.href} label={trigger.label} className={tone.button} />
+          {onOpenCourse && trigger.href.endsWith("/cours") ? (
+            <Button onClick={onOpenCourse} className="self-start">
+              {trigger.label}
+            </Button>
+          ) : (
+            <CallToAction href={trigger.href} label={trigger.label} className={tone.button} />
+          )}
           <p className="text-xs text-foreground-muted">{trigger.hint}</p>
         </div>
-        <Link href="/ouvertures/historique-endurance" className="text-sm text-accent hover:underline">
-          Classement de mes ouvertures →
+        <Link href="/ouvertures/historique-endurance" className="inline-flex min-h-11 items-center text-sm text-foreground-muted underline-offset-4 hover:text-foreground hover:underline">
+          Classement de mes ouvertures
         </Link>
       </div>
     </section>
@@ -171,8 +178,8 @@ function EnduranceGauge({ ratio, tier }: { ratio: number; tier: EnduranceTier })
 
 function CallToAction({ href, label, className }: { href: string; label: string; className: string }) {
   return (
-    <Link href={href} className={`self-start rounded-md border px-4 py-2 text-sm font-semibold transition-colors ${className}`}>
-      {label} →
+    <Link href={href} className={`inline-flex min-h-11 items-center self-start rounded-md border px-4 text-sm font-medium transition-colors ${className}`}>
+      {label}
     </Link>
   );
 }
@@ -183,10 +190,10 @@ const NEUTRAL_BUTTON = "border-border bg-surface-muted text-foreground hover:bor
 const TIER_TONE: Record<EnduranceTier, { card: string; badge: string; dot: string; text: string; button: string }> = {
   fragile: {
     card: "border-blunder/40 bg-blunder/10",
-    badge: "border-blunder/50 bg-blunder/15 text-blunder",
+    badge: "border-blunder/50 bg-blunder/15 text-danger",
     dot: "bg-blunder",
-    text: "text-blunder",
-    button: "border-blunder/60 bg-blunder/15 text-blunder hover:bg-blunder/25",
+    text: "text-danger",
+    button: "border-blunder/60 bg-blunder/15 text-danger hover:bg-blunder/25",
   },
   moyen: {
     card: "border-inaccuracy/40 bg-inaccuracy/10",

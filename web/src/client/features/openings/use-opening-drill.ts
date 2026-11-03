@@ -639,8 +639,8 @@ export function useOpeningDrill({
           // que "la théorie vient de se terminer", juste qu'on recommence.
           setRoundTransitionNotice(
             learningRound === 1
-              ? "Variante théorique terminée ! 🔒 Passage au test à l'aveugle..."
-              : "Faute détectée — 🔁 Nouvelle tentative en Manche 2, sans guide.",
+              ? "Variante terminée : passage à la Manche 2, sans aide."
+              : "Faute détectée : nouvelle tentative de la Manche 2, sans aide.",
           );
           boardRef.current = new Chess(activeRound.startFen);
           setHistory([]);
