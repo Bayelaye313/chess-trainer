@@ -99,7 +99,7 @@ describe("OPENING_COURSE_TREES", () => {
       Object.keys(OPENING_COURSE_TREES)
         .filter((id) => !OFF_REPERTOIRE_COURSE_IDS.has(id) && OPENINGS.find((opening) => opening.id === id)!.side === side)
         .sort();
-    expect(repertoire("white")).toEqual(["caro-kann-white", "french-white", "scandinavian-white", "scotch-gambit", "scotch-game"]);
+    expect(repertoire("white")).toEqual(["caro-kann-white", "french-white", "open-sicilian-white", "scandinavian-white", "scotch-gambit", "scotch-game"]);
     expect(repertoire("black")).toEqual(["anti-london-black", "berlin-black", "bishops-center-black", "italian-game-black", "kings-gambit-vienna-black", "kings-indian", "queens-gambit-declined", "scotch-four-knights-black"]);
     // Cours écrits pour les Blancs, ouvertures que l'utilisateur ne joue qu'avec les Noirs : « Autres ouvertures ».
     for (const id of ["ruy-lopez", "italian-game"]) {

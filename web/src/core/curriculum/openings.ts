@@ -855,6 +855,23 @@ export const OPENINGS: readonly OpeningLine[] = [
       {Sicilienne : Najdorf, Attaque Anglaise} e5 7.Nb3 Be6 8.f3 Be7 9.Qd2 O-O 10.O-O-O b5 11.g4 b4 12.Nd5 Bxd5 13.exd5 a5`,
   },
   {
+    id: "open-sicilian-white",
+    name: "Sicilienne ouverte, 2.Nf3 et 3.d4 (avec les Blancs)",
+    eco: "B32",
+    side: "white",
+    description:
+      "Contre 1...c5 : 2.Nf3 et 3.d4 ; 7.Nd5 contre la Sveshnikov, Nb5-d6 contre la Löwenthal, l'étau de Maroczy contre le dragon accéléré, 5.Bd3 contre la Kan, l'attaque anglaise contre la Najdorf, 3.e5 contre 2...Nf6.",
+    moves: ["e4", "c5", "Nf3"],
+    pgn: `1.e4 c5 2.Nf3 Nc6
+      (2...e6 {Kan} 3.d4 cxd4 4.Nxd4 a6 5.Bd3 Bc5 6.Nb3 Ba7 7.Nc3 d6 8.Qe2 Nc6 9.Be3 b5 10.f4 Nge7)
+      (2...d6 {Najdorf, attaque anglaise} 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 6.Be3 e5 7.Nb3 Be6 8.f3 Be7 9.Qd2 O-O 10.O-O-O Qc7)
+      (2...Nf6 {Nimzowitsch} 3.e5 Nd5 4.Nc3 e6 5.Nxd5 exd5 6.d4 Nc6 7.dxc5 Bxc5 8.Qxd5 Qb6 9.Bc4)
+      3.d4 cxd4 4.Nxd4 Nf6
+      (4...e5 {Löwenthal} 5.Nb5 a6 6.Nd6+ Bxd6 7.Qxd6 Qf6 8.Qd1 Nge7 9.Nc3 d6 10.Be3 O-O 11.Qd2 Be6)
+      (4...g6 {Dragon accéléré, Maroczy} 5.c4 Nf6 6.Nc3 d6 7.Be2 Nxd4 8.Qxd4 Bg7 9.Be3 O-O 10.Qd2 Be6 11.O-O Qa5)
+      5.Nc3 e5 {Sveshnikov} 6.Ndb5 d6 7.Nd5 Nxd5 8.exd5 Nb8 9.a4 Be7 10.Bd2 Nd7 11.a5 a6 12.Na3 Nf6`,
+  },
+  {
     id: "sicilian-dragon",
     name: "Sicilienne : Variante du Dragon",
     eco: "B70",

@@ -201,6 +201,21 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Les Noirs frappent ton pion e4 : choisis de l'avancer, de le défendre ou de l'échanger.",
     },
   ],
+  "open-sicilian-white": [
+    {
+      comment: "On occupe le centre et on libère le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "La Sicilienne : les Noirs contrôlent d4 avec un pion de l'aile et préparent la colonne c semi-ouverte.",
+      hint: "Les Noirs frappent la case d4 avec un pion de l'aile dame.",
+    },
+    {
+      comment:
+        "Le cavalier se développe et prépare d4 : on ouvrira le centre au coup suivant pour profiter de l'avance de développement.",
+      hint: "Développe le cavalier qui soutiendra la poussée du pion dame.",
+    },
+  ],
   "scandinavian-white": [
     {
       comment: "On occupe le centre et on libère le fou f1 et la dame.",

@@ -1,0 +1,78 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Sicilienne ouverte, 2.Nf3 et 3.d4 (avec les Blancs) » —
+ * onglet Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/open-sicilian-white/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1.e4 contre 1...c5 (fiche curatée
+ * `open-sicilian-white`, B30-B33, B40-B43, B90). Ne remplace ni
+ * `sicilian-najdorf` ni `sicilian-dragon` (cours côté Noirs), ni
+ * `sicilian-alapin` (2.c3).
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Blancs)
+ *
+ * 1. Fiche d'identité, tronc commun : 2...Nc6 3.d4, la Sveshnikov et 7.Nd5.
+ * 2. Aléatoire surprise 1 : après la Sveshnikov, la tour a7 enfermée.
+ * 3. Branche B : la Löwenthal, 4...e5 5.Nb5 a6 6.Nd6+.
+ * 4. Branche C : le dragon accéléré 4...g6 5.c4, l'étau de Maroczy.
+ * 5. Branche D : 2...e6 3.d4, la Kan 4...a6 5.Bd3.
+ * 6. Aléatoire surprise 2 : après la Kan, le roi noir au centre.
+ * 7. Branche E : 2...d6 3.d4, la Najdorf et l'attaque anglaise.
+ * 8. Anti-panique : 2...Nf6, 2...g6 et les ordres de coups.
+ *
+ * Choix des chapitres (2026-11-03) : la demande de l'utilisateur (2.Nf3
+ * puis 3.d4 contre l'Ancienne Sicilienne, la Löwenthal, 2...e6 et 2...d6)
+ * et la théorie principale de chacune : 4...Nf6 5.Nc3 e5 avec la ligne
+ * simple 7.Nd5, 4...e5 5.Nb5, 4...g6 5.c4, la Kan 5.Bd3, l'attaque anglaise
+ * contre la Najdorf ; plus 2...Nf6 et 2...g6. Parties de l'utilisateur
+ * (copie de la base) : 2...Nc6 3.d4 dix fois, 2...e6 trois fois, 2...d6
+ * quatre fois. Aucun cours côté Blancs ne traitait la Sicilienne ouverte.
+ * Les branches théoriques s'arrêtent au plus tard au demi-coup 27 ; les
+ * chapitres « Aléatoire surprise » prolongent avec les Noirs comme camp
+ * « mou » (`_tmp-drift.mts` pour la surprise 1 ; pour la surprise 2, la
+ * même dérive en MultiPV 30, les Noirs mous, car MultiPV 5 ne trouvait
+ * aucun coup calme assez faible).
+ *
+ * Convention côté Blancs (comme `op-ruy-lopez.ts`) : l'élève joue les
+ * Blancs ; les fautes sont des coups NOIRS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup blanc suivant est la punition. Les
+ * « variantes piégées » sont des coups blancs tentants mais mauvais
+ * (8.Qxd5, 8.Qd5, 6.Be2 dans le Maroczy, 12.e5 dans la Kan, 7.Nf5 dans la
+ * Najdorf). Une faute qui perd moins de 0.5 devient une « imprécision »
+ * sans indices (11...Nxa7 au chapitre 5).
+ *
+ * Sources : théorie établie de la Sicilienne ouverte, TOUTES les lignes
+ * arbitrées par Stockfish 19 natif (profondeur 16, MultiPV 1) ; 9.a4 et
+ * 10.Bd2 contre la Sveshnikov, et 7.Nc3 dans la Kan, sont des choix du
+ * moteur. Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes noires qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/open-sicilian-white.pgn` (et l'en-tête
+ * `open-sicilian-white.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-open-sicilian-white`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
