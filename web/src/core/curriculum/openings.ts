@@ -889,6 +889,24 @@ export const OPENINGS: readonly OpeningLine[] = [
       5.e5 Nfd7 6.Bxe7 Qxe7 7.f4 O-O 8.Nf3 c5 9.Qd2 Nc6 10.dxc5 Qxc5 11.O-O-O a6 12.Kb1 b5`,
   },
   {
+    id: "french-white",
+    name: "Française : Avance et 2.Nf3 (avec les Blancs)",
+    eco: "C00",
+    side: "white",
+    description:
+      "Contre 1...e6 : l'Avance 3.e5 (a3 et b4 contre ...Qb6, Na3-c2 contre ...Bd7) ou l'ordre 2.Nf3 et 3.Nc3, qui ouvre le centre par dxc5.",
+    moves: ["e4", "e6"],
+    pgn: `1.e4 e6 2.d4
+      (2.Nf3 {Deux Cavaliers} d5 3.Nc3 Nf6 4.e5 Nfd7 5.d4 c5 6.dxc5 Nc6 7.Bf4 Bxc5 8.Bd3 f6 9.exf6 Qxf6 10.Bg5 Qf7 11.O-O)
+      d5 3.e5 {Variante d'Avance} c5 4.c3 Nc6
+      (4...Qb6 {Plan ...Bd7-b5} 5.Nf3 Bd7 6.Be2 Bb5 7.O-O Bxe2 8.Qxe2 Qa6 9.Qd1 cxd4 10.cxd4 Nc6 11.Nc3 Nge7 12.Ne2)
+      5.Nf3 Qb6
+      (5...Bd7 6.Be2 Nge7 7.Na3 cxd4 8.cxd4 Nf5 9.Nc2 Qb6 10.O-O Rc8)
+      6.a3 Nh6
+      (6...c4 7.Nbd2 Na5 8.Be2 Ne7 9.O-O Bd7 10.Rb1 Nf5 11.Re1 h6 12.Nf1)
+      7.b4 cxd4 8.cxd4 Nf5 9.Bb2 Bd7 10.Be2 Rc8 11.O-O h5 12.Kh1 Na5 13.Nbd2`,
+  },
+  {
     id: "pirc-defense",
     name: "Défense Pirc",
     eco: "B07",

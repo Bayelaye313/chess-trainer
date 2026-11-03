@@ -141,6 +141,17 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Défends ton pion central avec un cavalier.",
     },
   ],
+  "french-white": [
+    {
+      comment: "On occupe le centre et on libère le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment:
+        "La Française : les Noirs préparent ...d5. Notre plan est l'Avance (2.d4 d5 3.e5), qui enferme le fou c8 noir, ou l'ordre 2.Nf3 suivi de 3.Nc3.",
+      hint: "Les Noirs préparent la poussée de leur pion dame.",
+    },
+  ],
   "italian-game": [
     {
       comment: "Occupe le centre et ouvre les diagonales du fou-roi et de la dame dès le premier coup.",
