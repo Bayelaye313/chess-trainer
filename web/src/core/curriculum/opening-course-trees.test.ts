@@ -1,7 +1,7 @@
 import { Chess } from "chess.js";
 import { describe, expect, it } from "vitest";
 import { collectNodes } from "@/core/chess/move-tree";
-import { OPENING_COURSE_IDS } from "./opening-course-ids";
+import { OFF_REPERTOIRE_COURSE_IDS, OPENING_COURSE_IDS } from "./opening-course-ids";
 import { OPENING_COURSE_TREES } from "./opening-course-trees";
 import { OPENINGS } from "./openings";
 
@@ -91,6 +91,20 @@ describe("OPENING_COURSE_TREES", () => {
           }
         }
       }
+    }
+  });
+
+  it("« Mon répertoire » (hors OFF_REPERTOIRE_COURSE_IDS) = Écossaise avec les Blancs, 1...e5 et 1...Nf6 avec les Noirs", () => {
+    const repertoire = (side: "white" | "black") =>
+      Object.keys(OPENING_COURSE_TREES)
+        .filter((id) => !OFF_REPERTOIRE_COURSE_IDS.has(id) && OPENINGS.find((opening) => opening.id === id)!.side === side)
+        .sort();
+    expect(repertoire("white")).toEqual(["caro-kann-white", "french-white", "scandinavian-white", "scotch-gambit", "scotch-game"]);
+    expect(repertoire("black")).toEqual(["anti-london-black", "berlin-black", "italian-game-black", "kings-indian", "queens-gambit-declined", "scotch-four-knights-black"]);
+    // Cours écrits pour les Blancs, ouvertures que l'utilisateur ne joue qu'avec les Noirs : « Autres ouvertures ».
+    for (const id of ["ruy-lopez", "italian-game"]) {
+      expect(OFF_REPERTOIRE_COURSE_IDS.has(id), id).toBe(true);
+      expect(OPENINGS.find((opening) => opening.id === id)!.side, id).toBe("white");
     }
   });
 });

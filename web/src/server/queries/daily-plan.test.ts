@@ -51,7 +51,7 @@ describe("daily-plan queries", () => {
     const { state } = await applyDailyPlan({ goals: ["openings", "traps"], dailyLimit: 3 }, APPLIED);
     const lines = listBotStartLines(state.session);
     const sourceIds = lines.map((line) => line.sourceId);
-    expect(sourceIds).toEqual(expect.arrayContaining(["scotch-game", "ruy-lopez", "kings-indian"]));
+    expect(sourceIds).toEqual(expect.arrayContaining(["scotch-game", "berlin-black", "kings-indian"]));
     // Les cours hors répertoire restent sur leur fiche, mais le plan du jour ne les impose pas.
     for (const offRepertoire of OFF_REPERTOIRE_COURSE_IDS) expect(sourceIds).not.toContain(offRepertoire);
     expect(lines.some((line) => line.kind === "trap")).toBe(true);

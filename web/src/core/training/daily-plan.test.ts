@@ -102,6 +102,16 @@ describe("lignes de départ du bot", () => {
     ]);
   });
 
+  it("rattache un piège sans famille du répertoire à l'ouverture du camp de la victime qui ouvre sa ligne", () => {
+    const blackE5: RepertoireOpening[] = [{ id: "e5-black", name: "Écossaise (avec les Noirs)", side: "black", moves: ["e4", "e5", "Nf3", "Nc6"] }];
+    const italianTraps: RepertoireTrap[] = [
+      { id: "fried-liver", name: "Foie frit", family: "Partie Italienne", victimSide: "black", setupMoves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5"] },
+      { id: "white-victim", name: "Victime blanche", family: "Partie Italienne", victimSide: "white", setupMoves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nd4"] },
+      { id: "philidor", name: "Autre ligne", family: "Partie Italienne", victimSide: "black", setupMoves: ["e4", "e5", "Nf3", "d6"] },
+    ];
+    expect(buildBotStartLines(["traps"], blackE5, italianTraps).map((line) => line.sourceId)).toEqual(["fried-liver"]);
+  });
+
   it("tire une ligne de la couleur choisie, ou aucune", () => {
     const lines = buildBotStartLines(["openings", "traps"], openings, traps);
     expect(pickBotStartLine(lines, "w", () => 0)?.sourceId).toBe("scotch-game");

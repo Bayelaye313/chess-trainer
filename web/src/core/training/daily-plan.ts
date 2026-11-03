@@ -154,10 +154,26 @@ export interface RepertoireTrap {
   setupMoves: readonly string[];
 }
 
-/** Rattache un piège à une ouverture du répertoire par son nom de famille (« Partie Écossaise », « Défense Caro-Kann »…). */
+/**
+ * Rattache un piège à une ouverture du répertoire : par son nom de famille
+ * (« Partie Écossaise », « Défense Caro-Kann »…), ou, à défaut, par une
+ * ouverture du camp de la victime dont la ligne caractéristique ouvre la
+ * ligne d'installation du piège (1.e4 e5 2.Nf3 Nc6 pour les pièges de
+ * l'Italienne et de l'Écossaise qui visent les Noirs).
+ */
 function trapBelongsTo(trap: RepertoireTrap, openings: readonly RepertoireOpening[]): RepertoireOpening | null {
   const family = trap.family.toLocaleLowerCase("fr");
-  return openings.find((opening) => opening.name.toLocaleLowerCase("fr").startsWith(family)) ?? null;
+  const byName = openings.find((opening) => opening.name.toLocaleLowerCase("fr").startsWith(family));
+  if (byName) return byName;
+  return (
+    openings.find(
+      (opening) =>
+        opening.side === trap.victimSide &&
+        opening.moves.length > 0 &&
+        opening.moves.length <= trap.setupMoves.length &&
+        opening.moves.every((san, index) => trap.setupMoves[index] === san),
+    ) ?? null
+  );
 }
 
 /**
