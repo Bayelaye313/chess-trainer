@@ -7,6 +7,7 @@ export * from "./opening-endurance";
 export * from "./opening-mistake-review";
 export * from "./opening-progress";
 export * from "./platform-links";
+export * from "./programme";
 export * from "./puzzles";
 export * from "./reviews";
 export * from "./settings";

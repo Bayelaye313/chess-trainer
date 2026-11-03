@@ -7,6 +7,7 @@ import {
   ChartLine,
   ChessKnight,
   BookOpen,
+  CalendarClock,
   CloudAlert,
   CloudCheck,
   Loader2,
@@ -27,13 +28,14 @@ interface NavItem {
   match: readonly string[];
 }
 
-/** Les 5 destinations (docs/redesign/direction.md §1). */
+/** Les 5 destinations (docs/redesign/direction.md §1) + le Programme 1000 heures. */
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Aujourd'hui", icon: Sun, match: [] },
   { href: "/jouer", label: "Jouer", icon: ChessKnight, match: ["/jouer"] },
   { href: "/ouvertures", label: "Ouvertures", icon: BookOpen, match: ["/ouvertures"] },
   { href: "/entrainer", label: "S'entraîner", icon: Target, match: ["/entrainer", "/apprendre", "/pieges"] },
   { href: "/rapport", label: "Progrès", icon: ChartLine, match: ["/rapport", "/parties", "/analyse"] },
+  { href: "/programme", label: "Programme", icon: CalendarClock, match: ["/programme"] },
 ];
 
 function isActive(item: NavItem, pathname: string): boolean {
@@ -131,7 +133,7 @@ export function Nav() {
         aria-label="Navigation principale"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:inset-y-0 md:right-auto md:left-0 md:w-[var(--rail-w)] md:border-t-0 md:border-r md:top-[var(--header-h)] md:pt-3 md:pb-0"
       >
-        <ul className="grid h-[var(--tabbar-h)] grid-cols-5 md:h-auto md:grid-cols-1 md:gap-1 md:px-2">
+        <ul className="grid h-[var(--tabbar-h)] grid-cols-6 md:h-auto md:grid-cols-1 md:gap-1 md:px-2">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item, pathname);
             const Icon = item.icon;
