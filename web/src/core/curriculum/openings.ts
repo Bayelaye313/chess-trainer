@@ -994,6 +994,24 @@ export const OPENINGS: readonly OpeningLine[] = [
       7.O-O e5 8.dxe5 dxe5 9.f5 gxf5 10.exf5 Bxf5 11.Nxe5 Nxe5 12.Bxf5 Re8`,
   },
   {
+    id: "pirc-modern-white",
+    name: "Pirc et Moderne (avec les Blancs)",
+    eco: "B07",
+    side: "white",
+    description:
+      "Contre 1...d6 et 1...g6 : un seul schéma, l'attaque 150 (Be3, Qd2, f3, Bh6, grand roque) ; 4.f4 contre la Pirc tchèque, dxc5 contre 3...c5, et la prise du pion contre ...c5 ou ...e5 trop tôt.",
+    moves: ["e4", "d6"],
+    pgn: `1.e4 d6
+      (1...g6 {Moderne} 2.d4 Bg7 3.Nc3 d6
+        (3...c5 4.dxc5 Nc6 5.Bd2 Nf6 6.Bc4 O-O 7.Nf3 d6 8.cxd6 Qxd6 9.h3 Be6)
+        4.Be3 a6 5.Qd2 b5 6.O-O-O Nf6 7.f3 Nbd7 8.h4 Nb6 9.Nh3 c6)
+      2.d4 Nf6 3.Nc3 g6
+      (3...c6 {Pirc tchèque} 4.f4 Qa5 5.Bd3 e5 6.Nf3 exd4 7.Nxd4 Be7 8.O-O O-O 9.h3 Na6)
+      4.Be3 Bg7 5.Qd2 c6
+      (5...O-O 6.O-O-O Ng4 7.Bg5 c5 8.dxc5 Qa5 9.Nh3 Nc6 10.cxd6 Be6)
+      6.f3 b5 7.Bh6 Bxh6 8.Qxh6 Nbd7 9.Bd3 b4 10.Nd1 c5 11.d5 Qb6`,
+  },
+  {
     id: "scandinavian",
     name: "Défense Scandinave",
     eco: "B01",

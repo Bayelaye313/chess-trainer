@@ -216,6 +216,16 @@ const OPENING_COMMENTARY: Readonly<Record<string, readonly MoveCommentary[]>> = 
       hint: "Développe le cavalier qui soutiendra la poussée du pion dame.",
     },
   ],
+  "pirc-modern-white": [
+    {
+      comment: "On occupe le centre et on libère le fou f1 et la dame.",
+      hint: "Avance ton pion roi de deux cases.",
+    },
+    {
+      comment: "La Pirc : les Noirs laissent le centre aux Blancs et préparent ...Nf6 et ...g6 pour le contester plus tard.",
+      hint: "Les Noirs avancent leur pion dame d'une seule case.",
+    },
+  ],
   "scandinavian-white": [
     {
       comment: "On occupe le centre et on libère le fou f1 et la dame.",

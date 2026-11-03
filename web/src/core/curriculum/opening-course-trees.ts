@@ -11,6 +11,7 @@ import { OP_KINGS_GAMBIT_VIENNA_BLACK } from "./course-trees/op-kings-gambit-vie
 import { OP_KINGS_INDIAN } from "./course-trees/op-kings-indian";
 import { OP_RUY_LOPEZ } from "./course-trees/op-ruy-lopez";
 import { OP_OPEN_SICILIAN_WHITE } from "./course-trees/op-open-sicilian-white";
+import { OP_PIRC_MODERN_WHITE } from "./course-trees/op-pirc-modern-white";
 import { OP_QUEENS_GAMBIT_DECLINED } from "./course-trees/op-queens-gambit-declined";
 import { OP_SCOTCH_GAMBIT } from "./course-trees/op-scotch-gambit";
 import { OP_SCANDINAVIAN_WHITE } from "./course-trees/op-scandinavian-white";
@@ -53,6 +54,7 @@ export const OPENING_COURSE_TREES: Record<string, CourseTree> = {
   "kings-gambit-vienna-black": OP_KINGS_GAMBIT_VIENNA_BLACK,
   "bishops-center-black": OP_BISHOPS_CENTER_BLACK,
   "open-sicilian-white": OP_OPEN_SICILIAN_WHITE,
+  "pirc-modern-white": OP_PIRC_MODERN_WHITE,
 };
 
 export function findOpeningCourseTree(openingId: string): CourseTree | null {

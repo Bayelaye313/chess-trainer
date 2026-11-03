@@ -1,0 +1,77 @@
+import { parseMoveTree } from "@/core/chess/move-tree";
+import type { CourseChapterTree, CourseTree } from "../course-tree";
+
+/**
+ * Cours d'ouverture « Pirc et Moderne (avec les Blancs) » — onglet
+ * Ouvertures, format « un commentaire par coup » de l'Académie, lu par
+ * `CourseTreeViewer` (route `/ouvertures/pirc-modern-white/cours`). Public
+ * visé : 1500-1800 Elo, répertoire 1.e4 contre 1...d6 et 1...g6 (fiche
+ * curatée `pirc-modern-white`, B07-B09 et B06). Ligne caractéristique
+ * 1.e4 d6 : les chapitres de la Moderne portent un renvoi 1...d6 en
+ * variante, pour que chaque chapitre contienne cette ligne. Ne remplace pas
+ * `pirc-defense` (fiche côté Noirs, sans cours).
+ *
+ * ## Contenu (v2 du 2026-11-03, format Ruy Lopez v2, côté Blancs)
+ *
+ * 1. Fiche d'identité, tronc commun : la Pirc 3...g6 4.Be3, l'attaque 150.
+ * 2. Aléatoire surprise 1 : après l'attaque 150, le roi noir au centre.
+ * 3. Branche B : la Pirc tchèque, 3...c6 4.f4.
+ * 4. Branche C : la Pirc avec le petit roque rapide, 5...O-O 6.O-O-O.
+ * 5. Branche D : la Moderne, 3...d6 4.Be3 a6.
+ * 6. Aléatoire surprise 2 : après la Moderne, le levier f5.
+ * 7. Branche E : la Moderne avec 3...c5.
+ * 8. Anti-panique : 2...e5, 2...c5 et les ordres de coups.
+ *
+ * Choix des chapitres (2026-11-03) : un seul schéma blanc pour la Pirc et la
+ * Moderne (Be3, Qd2, f3, Bh6, grand roque), et la théorie principale des
+ * réponses noires : ...c6 et ...b5, la tchèque 3...c6 (contre laquelle on
+ * joue 4.f4), le petit roque rapide, la Moderne avec ...a6 et ...b5, puis
+ * 3...c5 ; plus 2...e5, 2...c5, 2...Nc6 et 3...d5 dans la Moderne. Parties
+ * de l'utilisateur (copie de la base) : huit parties seulement contre 1...d6
+ * ou 1...g6, souvent avec 2.Nf3 ; le cours suit l'ordre 2.d4 et 3.Nc3.
+ * Aucun autre cours ne traite 1...d6 ou 1...g6. Les branches théoriques
+ * s'arrêtent au plus tard au demi-coup 27 ; les chapitres « Aléatoire
+ * surprise » prolongent avec les Noirs comme camp « mou » (dérive en
+ * MultiPV 30, comme `_tmp-drift-w.mts` mais camps inversés).
+ *
+ * Convention côté Blancs (comme `op-ruy-lopez.ts`) : l'élève joue les
+ * Blancs ; les fautes sont des coups NOIRS qui portent les 3 indices
+ * `[%hint]` + `[%hintcsl]`, le coup blanc suivant est la punition. Les
+ * « variantes piégées » sont des coups blancs tentants mais mauvais (3.Bc4,
+ * 5.Nf3 contre ...Qa5, 9.cxd6, 7.Be2, 4.Bc4, 4.d5 contre ...e5). Une faute qui perd moins de
+ * 0.5 devient une « imprécision » sans indices (18...Nc4 à la surprise 2).
+ *
+ * Sources : théorie établie de la Pirc et de la Moderne, TOUTES les lignes
+ * arbitrées par Stockfish 19 natif (profondeur 16, MultiPV 1) ; 10.Nd1 et
+ * 12.Nh3 au chapitre 1, 9.Nh3 au chapitre 4 et 9.Nh3 au chapitre 5 sont des
+ * choix du moteur. Toute la prose est originale.
+ *
+ ## Architecture technique des nœuds
+ *
+ * Chaque nœud (`ChessMoveNode`, `core/chess/move-tree.ts`) porte :
+ * - `evaluationScore` / `evaluationMate` : évaluation Stockfish 19 de la
+ *   position après le coup (profondeur 16, point de vue Blancs), écrite
+ *   `[%eval x]` ; `showEvalBar` est vrai dès qu'elle est posée ;
+ * - `freeze` : posé par la balise `[%txt "…"]` qui enveloppe CHAQUE
+ *   commentaire ; en mode « Jouer les coups », l'ordinateur attend
+ *   « Suivant » ou Espace avant de répondre ;
+ * - `hints` / `hintHighlights` : `[%hint "…"]` (3 indices progressifs) et
+ *   `[%hintcsl …]` sur les fautes noires qu'il faut punir.
+ *
+ * Fichier GÉNÉRÉ : ne pas l'éditer à la main. Source commentée :
+ * `scripts/opening-course-src/pirc-modern-white.pgn` (et l'en-tête
+ * `pirc-modern-white.header.txt`) ; regénérer avec
+ * `node --import tsx scripts/_tmp-build-opening-course.mts <source> <en-tête> <sortie> 16`
+ * (Stockfish natif, voir `scripts/_tmp-sf-native.mts` ; sous Linux,
+ * `SF_BIN=<chemin du binaire>`). Les `[%eval]` viennent du moteur, pas de la
+ * main. Étape standard : `scripts/_tmp-check-cited-evals.mts op-pirc-modern-white`
+ * doit sortir 0 écart (un chiffre n'est cité dans un commentaire que s'il est
+ * l'éval d'un nœud). Règles de l'utilisateur : SAN en texte brut uniquement
+ * (jamais de figurine Unicode), pas de guillemet droit dans un `[%txt]`.
+ */
+
+function chapter(title: string, pgn: string): CourseChapterTree {
+  return { title, root: parseMoveTree(pgn, START) };
+}
+
+const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
