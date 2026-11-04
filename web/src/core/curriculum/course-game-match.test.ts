@@ -159,6 +159,22 @@ describe("attributeGameToCourse", () => {
     expect(result).toMatchObject({ courseId: "italian-game-black", withCourseSide: true });
   });
 
+  it("reconnaît une Italienne atteinte par transposition (2.Fc4 Cc6 3.Cf3 Cf6) : italian-game-black, pas bishops-center-black", () => {
+    const result = attribute(["e4", "e5", "Bc4", "Nc6", "Nf3", "Nf6", "d3", "Bc5"], "b");
+    expect(result).toMatchObject({ courseId: "italian-game-black", withCourseSide: true });
+    expect(result?.match.signaturePly).toBe(6);
+  });
+
+  it("compte l'ordre direct 2.Cf3 Cc6 3.Fc4 Cf6 pour italian-game-black", () => {
+    const result = attribute(["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "d3", "Bc5"], "b");
+    expect(result).toMatchObject({ courseId: "italian-game-black", withCourseSide: true });
+  });
+
+  it("garde bishops-center-black quand la partie ne transpose pas", () => {
+    const result = attribute(["e4", "e5", "Bc4", "Nf6", "d3", "c6"], "b");
+    expect(result).toMatchObject({ courseId: "bishops-center-black", withCourseSide: true });
+  });
+
   it("ne retombe sur un cours du camp adverse que si aucun cours de ton camp ne correspond", () => {
     const sans = ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"];
     const whiteOnly = COURSES.filter((course) => course.color === "w");

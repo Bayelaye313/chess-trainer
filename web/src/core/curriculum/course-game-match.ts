@@ -108,6 +108,8 @@ export interface CourseDeviation {
 export interface CourseGameMatch {
   /** Nombre de demi-coups consécutifs, depuis le premier, joués exactement dans le cours. */
   followedPlies: number;
+  /** Demi-coups joués quand la position caractéristique est apparue (par n'importe quel ordre de coups) — `null` : jamais atteinte, la partie est reconnue parce qu'elle suit le cours assez loin. */
+  signaturePly: number | null;
   exit: CourseExit | null;
   /** TA première sortie du cours — y compris après une transposition revenue dans le cours. `null` : tu n'as jamais quitté le cours quand il avait une réponse. */
   deviation: CourseDeviation | null;
@@ -130,11 +132,11 @@ export function matchGameToCourse(
   let followedPlies = 0;
   let exit: CourseExit | null = null;
   let deviation: CourseDeviation | null = null;
-  let reachedSignature = false;
+  let signaturePly: number | null = null;
 
   for (const move of moves) {
     const key = positionKey(move.fenBefore);
-    if (key === signatureKey) reachedSignature = true;
+    if (key === signatureKey && signaturePly === null) signaturePly = move.ply - 1;
     const position = index.get(key);
     const inCourse = position?.moves.some((m) => m.uci === move.uci) ?? false;
 
@@ -159,7 +161,7 @@ export function matchGameToCourse(
       };
     }
   }
-  return reachedSignature || followedPlies >= signatureLength ? { followedPlies, exit, deviation } : null;
+  return signaturePly !== null || followedPlies >= signatureLength ? { followedPlies, signaturePly, exit, deviation } : null;
 }
 
 /** Un cours candidat à l'attribution d'une partie (`attributeGameToCourse`). */
@@ -180,13 +182,33 @@ export interface CourseAttribution {
   withCourseSide: boolean;
 }
 
+/** Jusqu'où la partie est allée dans l'ouverture du cours : la position caractéristique, sinon la longueur de ligne suivie. */
+function advancement(course: AttributableCourse, match: CourseGameMatch): number {
+  return match.signaturePly ?? course.signatureLength;
+}
+
+/** > 0 : `a` l'emporte sur `b` (même camp). */
+function compareCandidates(
+  a: { course: AttributableCourse; match: CourseGameMatch },
+  b: { course: AttributableCourse; match: CourseGameMatch },
+): number {
+  return (
+    advancement(a.course, a.match) - advancement(b.course, b.match) ||
+    a.course.signatureLength - b.course.signatureLength ||
+    a.match.followedPlies - b.match.followedPlies
+  );
+}
+
 /**
  * Le cours UNIQUE auquel une partie est comptée, pour que la somme des
- * parties par cours n'excède jamais le nombre de parties. Seuls les cours
- * écrits pour TON camp entrent en compte ; parmi eux, celui que la partie
- * suit le plus loin (`followedPlies`), à égalité la fiche la plus spécifique
- * (ligne caractéristique la plus longue). Les cours du camp adverse ne
- * servent — même règle — que si aucun cours de ton camp ne correspond.
+ * parties par cours n'excède jamais le nombre de parties. Une partie compte
+ * pour un cours dont elle atteint la position caractéristique, MÊME par un
+ * autre ordre de coups (1.e4 e5 2.Bc4 Nc6 3.Nf3 Nf6 est une partie
+ * Italienne, pas un Fou-c4). Départage : les cours de TON camp d'abord (ceux
+ * du camp adverse ne servent que si aucun ne correspond), puis celui dont la
+ * position caractéristique arrive le plus tard dans la partie (l'ouverture la
+ * plus avancée), puis la fiche la plus spécifique (ligne caractéristique la
+ * plus longue), puis le cours suivi le plus loin.
  */
 export function attributeGameToCourse(
   courses: readonly AttributableCourse[],
@@ -199,11 +221,7 @@ export function attributeGameToCourse(
       if ((course.color === playerColor) !== withCourseSide) continue;
       const match = matchGameToCourse(course.index, course.signatureKey, course.signatureLength, moves);
       if (!match) continue;
-      if (
-        !chosen ||
-        match.followedPlies > chosen.match.followedPlies ||
-        (match.followedPlies === chosen.match.followedPlies && course.signatureLength > chosen.course.signatureLength)
-      ) {
+      if (!chosen || compareCandidates({ course, match }, chosen) > 0) {
         chosen = { course, match };
       }
     }

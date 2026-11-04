@@ -125,8 +125,9 @@ type AttributedGame = { game: StoredGame } & CourseAttribution;
 
 /**
  * Chaque partie comptée pour UN seul cours (`attributeGameToCourse`) : celui
- * de ton camp qui la suit le plus loin, ou à défaut un cours du camp adverse
- * qui sert alors de référence théorique (`withCourseSide: false`).
+ * de ton camp dont elle atteint la position caractéristique la plus avancée
+ * (transpositions comprises), ou à défaut un cours du camp adverse qui sert
+ * alors de référence théorique (`withCourseSide: false`).
  */
 function attributeGames(allGames: readonly StoredGame[]): AttributedGame[] {
   const courses = Array.from(prepareCourses().values());
