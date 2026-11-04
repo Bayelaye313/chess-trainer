@@ -22,6 +22,10 @@ export function proxy(request: NextRequest) {
   const hasSession = SESSION_COOKIES.some((name) => request.cookies.has(name));
   if (hasSession) return NextResponse.next();
 
+  // L'espace admin ne révèle pas son existence : 404 plutôt qu'une redirection.
+  if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname.startsWith("/api/admin/")) {
+    return new NextResponse(null, { status: 404 });
+  }
   if (pathname.startsWith("/api/")) {
     return NextResponse.json({ error: "Connexion requise." }, { status: 401 });
   }
