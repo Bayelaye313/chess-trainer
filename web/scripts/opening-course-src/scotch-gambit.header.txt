@@ -7,29 +7,40 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * coup » de l'Académie, lu par `CourseTreeViewer` (route
  * `/ouvertures/scotch-gambit/cours`). Public visé : 1500-1800 Elo.
  *
- * ## Contenu (2026-10-11)
+ * ## Contenu (2026-10-11, v2 2026-11-04)
  *
  * 1. Fiche d'identité et 4...Nf6 (Deux Cavaliers) 5.e5 d5 6.Bb5, avec
  *    5...Ng4, 5...Ne4 6.Qe2 et les pièges 6...f5? / 6...d5? (exf6 / exd6 en
  *    passant, cavalier e4 cloué).
  * 2. 4...Bc5 : 5.c3 (5...dxc3? 6.Bxf7+!) et l'Attaque Max Lange après
- *    5.O-O Nf6 6.e5 (6...Ne4? 7.Re1). 5.O-O seul est réfuté par 5...d6.
+ *    5.O-O Nf6 6.e5 (6...Ne4? 7.Re1) jusqu'à 9.Ng5. 5.O-O seul est réfuté
+ *    par 5...d6.
  * 3. 4...Bb4+ 5.c3 : 5...Bc5? 6.cxd4 et 6...Bc5? 7.Bxf7+! Qd5+.
  * 4. 4...d6, la réponse passive.
- * 5. 4...f6?, la faute qui affaiblit le roi.
+ * 5. 4...f6?, la faute qui affaiblit le roi (et 6...c6 7.Nc3 b5 8.Bb3 h5?
+ *    9.Nxb5!).
  * 6. 4...Qf6 et 4...Qe7, la dame sortie trop tôt.
+ * 7. Aléatoire surprise 1 : après 4...Bc5 5.c3, trois coups noirs mous
+ *    (12...Qb8, 14...Kh8, 18...Qc8) : la case e5 et la paire de fous.
+ * 8. Aléatoire surprise 2 : après 4...d6, deux coups noirs mous (15...Rc8,
+ *    17...Ne6) punis par e5 et g4.
  *
- * Indices progressifs : chaque faute noire porte trois balises `[%hint]`
- * (1. principe violé, 2. faiblesse, 3. action de punition) et une balise
- * `[%hintcsl]` (cases allumées à partir du 2e indice) — voir
- * `ChessMoveNode.hints` et le bouton « Indice » de `CourseTreeViewer`.
+ * Indices progressifs : chaque faute noire qui perd au moins 0.5 porte
+ * trois balises `[%hint]` (1. principe violé, 2. faiblesse, 3. action de
+ * punition) et une balise `[%hintcsl]` (cases allumées à partir du 2e
+ * indice) — voir `ChessMoveNode.hints` et le bouton « Indice » de
+ * `CourseTreeViewer` ; en dessous de 0.5, c'est une imprécision, sans
+ * indices. Chaque chapitre théorique finit par « À RETENIR. PRO TIP : la
+ * feuille de route après la théorie », chaque variante par un « À RETENIR.
+ * PRO TIP ».
  *
  * Sources : aucun livre de `docs/` ne traite 4.Bc4 (Emms, « Starting Out:
  * The Scotch Game », et Lane, « The Scotch Game Explained », couvrent
  * 4.Nxd4 ; « Winning with the Scotch » est un scan sans couche texte ; pas
  * de Pavlovic sur le disque). Les lignes suivent la théorie établie du
- * Gambit Écossais et sont TOUTES arbitrées par Stockfish 18 natif
- * (profondeur 16). Toute la prose est originale.
+ * Gambit Écossais et sont TOUTES arbitrées par Stockfish 19 natif
+ * (profondeur 16) ; tout chiffre cité est l'évaluation d'un nœud. Toute la
+ * prose est originale.
  *
  * ## Architecture technique des nœuds
  *
