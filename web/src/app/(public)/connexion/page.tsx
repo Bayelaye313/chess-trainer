@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getCurrentUser } from "@/server/auth/session";
 import { signInWithGoogle } from "@/server/actions/account";
-import { DevLoginForm } from "@/client/features/auth/dev-login-form";
 
 export const metadata: Metadata = { title: "Connexion" };
 export const dynamic = "force-dynamic";
@@ -16,7 +15,7 @@ const ERRORS: Record<string, string> = {
   "not-allowed": "Les inscriptions sont fermées pour cette adresse.",
   AccessDenied: "Connexion refusée.",
   OAuthAccountNotLinked: "Cette adresse est déjà liée à un autre mode de connexion.",
-  CredentialsSignin: "Connexion de développement refusée (compte suspendu ou non autorisé).",
+  CredentialsSignin: "Connexion refusée (compte suspendu ou non autorisé).",
 };
 
 /** Seul écran visible sans session : un bouton Google, une phrase sur les données. */
@@ -28,6 +27,11 @@ export default async function ConnexionPage({ searchParams }: PageProps<"/connex
   const error = errorCode ? (ERRORS[errorCode] ?? "La connexion n'a pas abouti. Réessaie.") : null;
   const suite = typeof params.suite === "string" ? params.suite : "/";
   const deleted = params.compte === "supprime";
+  // Connexion de développement : importée seulement sous `next dev`. Au build de
+  // production, NODE_ENV est une constante et cette branche (et le composant)
+  // disparaît du bundle.
+  const DevLoginForm =
+    process.env.NODE_ENV === "development" && process.env.DEV_LOGIN === "1" ? (await import("@/client/features/auth/dev-login-form")).DevLoginForm : null;
 
   return (
     <div className="mx-auto max-w-md space-y-6">
@@ -63,7 +67,7 @@ export default async function ConnexionPage({ searchParams }: PageProps<"/connex
         </p>
       </Card>
 
-      {process.env.NODE_ENV === "development" && process.env.DEV_LOGIN === "1" && <DevLoginForm suite={suite} />}
+      {DevLoginForm && <DevLoginForm suite={suite} />}
     </div>
   );
 }

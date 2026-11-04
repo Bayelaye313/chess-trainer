@@ -33,8 +33,9 @@ async function buildConfig(): Promise<NextAuthConfig> {
           const decision = await checkSignIn(profile?.email ?? user.email, verified);
           return decision.ok ? true : `${SIGNIN_ERROR_PAGE}${decision.reason}`;
         }
-        // Fournisseur de développement : `authorize` a déjà appliqué les mêmes règles.
-        return account?.provider === "dev-login";
+        // Google est le seul fournisseur en production. Le fournisseur de
+        // développement remplace ce callback (dev-login.ts).
+        return false;
       },
       session({ session, user }) {
         const row = user as typeof user & { role?: "user" | "admin" };

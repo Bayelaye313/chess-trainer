@@ -51,6 +51,11 @@ export function withDevLogin(config: NextAuthConfig): NextAuthConfig {
     ],
     callbacks: {
       ...config.callbacks,
+      // `authorize` a déjà appliqué les mêmes règles (email, compte suspendu, allowlist).
+      async signIn(params) {
+        if (params.account?.provider === "dev-login") return true;
+        return config.callbacks?.signIn ? config.callbacks.signIn(params) : true;
+      },
       async jwt({ token, user, account }) {
         if (account?.provider === "dev-login" && user?.id) {
           const sessionToken = crypto.randomUUID();

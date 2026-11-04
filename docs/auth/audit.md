@@ -286,3 +286,116 @@ sauvegarde**) :
   - **sessions actives** : lignes de `sessions` non expirées ;
   - **rétention simple** : parmi les inscrits depuis au moins 7 jours, part de ceux qui ont une
     activité à partir de J+1 (J = jour UTC d'inscription).
+
+## 8. Espace admin (étape 4)
+
+- `/admin` vit dans un groupe de routes à part, `(admin)`. Son layout vérifie `role = 'admin'`
+  **avant** de rendre l'habillage (`AppShell`, partagé avec `(app)`) : un visiteur ou un
+  non-admin reçoit un **404**, jamais une redirection vers /connexion qui trahirait la page.
+- Le rôle est revérifié à chaque niveau :
+  - dans `admin/layout.tsx` et dans chaque page (`requireAdmin`) ;
+  - dans les server actions (`actions/admin.ts`) ;
+  - dans le route handler `/api/admin/online`, qui répond 404 aux autres.
+
+  Sans cookie, le proxy répond aussi 404 sur `/admin*` et `/api/admin/*`.
+- Actions :
+  - suspendre (statut `suspended` et fermeture de toutes les sessions) ;
+  - réactiver ;
+  - révoquer les sessions.
+
+  Chacune demande une confirmation et s'écrit dans `admin_audit` (qui, quoi, sur qui, quand),
+  dans la même transaction. Un admin ne peut pas agir sur son propre compte. Le rôle ne se modifie
+  pas depuis l'interface : il découle de `ADMIN_EMAILS` à chaque connexion, ce qui empêche aussi
+  de se rétrograder soi-même.
+- Confidentialité : `server/admin/*` ne lit que `users`, `sessions`, `user_presence`,
+  `user_daily_activity` et `admin_audit`, jamais une table de `PERSONAL_TABLES`. Il n'y a pas
+  d'export.
+- Écrans : tableau de bord, utilisateurs (recherche, tri par dernière activité, 25 par page),
+  fiche et journal. Captures dans `docs/screens/auth/`.
+- Règle des ≤ 8 éléments interactifs (comptés comme dans `docs/redesign/rapport.md`, en-tête
+  et navigation exclus) :
+  - tableau de bord : 3 onglets + 2 « Voir le tableau » ;
+  - fiche : 3 onglets + retour + 2 actions ;
+  - journal : 3 onglets + pagination.
+
+  La liste des utilisateurs suit la règle des écrans-listes : une ligne compte pour un élément,
+  plus la recherche (2). Les cibles font au moins 44 px.
+
+## 9. Sécurité (étape 5) : vérifications du 2026-11-04
+
+### Cookies
+
+`next start`, derrière un `X-Forwarded-Proto: https` :
+`__Host-authjs.csrf-token; Path=/; HttpOnly; Secure; SameSite=Lax` et
+`__Secure-authjs.callback-url; HttpOnly; Secure; SameSite=Lax`. Le jeton de session suit la même
+règle (`__Secure-authjs.session-token`). En HTTP local, les cookies restent `authjs.*` avec
+HttpOnly et SameSite=Lax, mais sans Secure.
+
+### Secrets et journaux
+
+- `git log -p integration..auth` et `git grep` : aucun `GOCSPX`, aucun `AUTH_SECRET=` ni
+  `AUTH_GOOGLE_SECRET=` renseigné, aucun secret de test. `.env.example` ne contient que des noms
+  de variables vides (fichier non commité, voir le rapport).
+- Le logger d'Auth.js est remplacé : il n'écrit que `name: message` ou un code, jamais de profil
+  ni de jeton.
+- `linkAccount` ne stocke aucun jeton Google.
+
+### Routes sans cookie (et avec un cookie invalide)
+
+| Route | Sans cookie | Cookie invalide |
+|---|---|---|
+| `/`, `/jouer`, `/ouvertures`, `/ouvertures/[slug]`, `/ouvertures/[slug]/cours`, `/ouvertures/historique-endurance`, `/entrainer`, `/apprendre`, `/pieges`, `/pieges/[slug]`, `/rapport`, `/rapport/brillants`, `/rapport/ouvertures/[slug]`, `/parties`, `/analyse/[id]`, `/programme`, `/plus` | 307 → `/connexion?suite=…` | 307 → `/connexion` |
+| `/admin`, `/admin/utilisateurs`, `/admin/utilisateurs/[id]`, `/admin/journal` | 404 | 404 |
+| `POST /api/sync`, `POST /api/presence` | 401 | 401 |
+| `GET /api/admin/online` | 404 | 404 |
+| server action (POST + `Next-Action`) | 307 | 404 (action inconnue) ou redirection par `requireUser` |
+| `/connexion`, `/confidentialite`, `/api/auth/*` | 200 | 200 |
+
+### Avec une session (production, base de travail)
+
+- Utilisateur :
+  - `/analyse/<sa partie>` répond 200, `/analyse/<inconnue ou d'un autre>` répond 404 ;
+  - `/admin` et `/api/admin/online` répondent 404.
+- Admin : `/admin` répond 200 et `/api/admin/online` renvoie du JSON.
+- E2E (dev, `docs/screens/auth/`) : alice reçoit 404 sur `/analyse/<partie d'owner>`, 404 sur
+  `/admin` et 404 sur `/api/admin/online`.
+
+### Écriture croisée
+
+`user-isolation.test.ts` vérifie que A ne peut pas modifier les données de B en passant un
+identifiant de B aux server actions :
+- `getPuzzle` et `submitPuzzleAnswer` sur la carte de B ;
+- `recordPlayerMove`, `deletePlayerMove`, `finishGame` et `saveBotGameResult` sur la partie de B ;
+- `recordSparringMove` et `finishSparringSession` sur la séance de B ;
+- `recordProgrammeResult` sur la séance Programme de B (rejetée) ;
+- `listPlatformLinks`, `unlinkPlatform` et `linkPlatform`.
+
+Dans tous ces cas, les lignes de B restent inchangées.
+
+### Limites de fréquence
+
+- `/api/presence` : 204, 204, puis 429 au-delà de 4 par minute.
+- `/api/sync` : 200 ×6, puis 429.
+
+### En-têtes et build
+
+- COOP `same-origin` et COEP `require-corp` présents sur toutes les routes. `next.config.ts`
+  n'a pas changé.
+- **Fournisseur de dev absent du build de production.** `next build`, puis `grep -rl` sur
+  `.next/` (hors `.map` serveur, qui embarquent les sources et ne sont pas servies) : 0 fichier
+  pour `dev-login`, `devSessionToken`, `DEV_LOGIN`, `DevLoginForm`, `Se connecter (dev)` et
+  `Connexion de développement`. Sous `next start` avec `DEV_LOGIN=1`, `/api/auth/providers` ne
+  renvoie que `google`, et /connexion n'affiche pas le formulaire de dev.
+- `tsconfig.json` exclut `scripts/**/_tmp-*` du typecheck : ces scripts jetables (non
+  commitables) appelaient d'anciennes signatures et cassaient `next build`.
+
+### Reprise LEGACY_CLAIM_EMAIL : exécution journalisée
+
+Copie de la base du 2026-11-04, `LEGACY_CLAIM_EMAIL=owner@test.local`, première connexion du
+compte. Une seule entrée `admin_audit` `legacy-claim`, avec :
+- `games` 200, `moves` 13 752, `puzzles` 749, `reviews` 749 ;
+- `dailySets` 3, `platformLinks` 1 ;
+- `trainingRecommendations` 11, `programmeState` 1 ;
+- 0 pour toutes les autres tables.
+
+Après la reprise, il ne reste aucune ligne orpheline. La deuxième connexion n'a rien repris.
