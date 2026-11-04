@@ -67,3 +67,28 @@ Le journal brut est `web/data/programme/measures.log` (une ligne par étape ou p
 |---|---|---|---|
 | Comptage des lignes du dump (`zstdcat \| wc -l`) | 12,6 Mo | 2 s | stable |
 | Phase 2 : `select` | 334 Mo | 16 min | 1 196 → 1 878 Mo (autres processus, voir plus haut) |
+| Phase 2 : `verify` (17 lots de 150, 75 ou 37) | 252 Mo | ≈ 1 h 10 de calcul | 6 lots arrêtés sur hausse du swap |
+| Phase 2 : `build` | 168 Mo | 3 min | stable |
+| Phase 3 : `select` | 329 Mo | 15 min | 2 138 → 2 437 Mo (autres processus) |
+| Phase 3 : `verify` (17 lots de 75) | 246 Mo | ≈ 1 h 15 | aucun arrêt |
+| Phase 3 : `build` | 142 Mo | 4 min 30 | stable |
+| Phase 4 : `select` (2 passes) | 315 Mo | 7 min | stable |
+| Phase 4 : `verify`, interrompu à 377/1088 | 242 Mo | — | 4 lots arrêtés, dont 2 réduits de suite : règle atteinte |
+| `tsc` | 674 Mo | 4 s | — |
+| `npm run lint` | 861 Mo | 13 s | — |
+| `vitest run` (sans navigateur) | 465 Mo | 14 s | — |
+| `next build` | 977 Mo | 18 s | — |
+
+Aucun lot n'a approché le plafond de 1,2 Go : tous les arrêts viennent de la règle du swap.
+
+## Arrêts et pauses
+
+- **Règle appliquée.** Le swap monte de plus de 32 Mo pendant un lot ? Le lot est tué (les résultats déjà écrits restent, la reprise saute ce qui est fait), la taille est divisée par deux, puis on reprend. Après 2 essais réduits ratés de suite, arrêt.
+- **Cause externe.** Pendant la journée, d'autres sessions Claude Code ont fait tourner sur le même poste des Stockfish natifs (jusqu'à 2 × 400 Mo, 300 % de CPU), un `next dev`, `vitest`, `tsc` et un Chromium Playwright. Quand l'un d'eux tournait au moment de l'arrêt, le lanceur faisait une pause, sans réduire la taille des lots ni compter un essai, puis reprenait 60 s après la fin de la charge externe. Les lots sont arrêtés quand même, comme l'exige la règle : seul le décompte change.
+- **Phase 4.** Deux lots réduits (75, puis 37) ont été arrêtés de suite sans charge externe détectable : swap à 2,85 Go, 1 Go libre, pression générale du poste. Conformément à la règle, la génération des phases 4 et 5 s'est arrêtée là.
+- **Reprise.** Les 377 candidats déjà vérifiés de la phase 4 sont conservés dans `web/data/programme/phase-4/verify-0.jsonl`. Pour reprendre, depuis `web/`, sur un poste moins chargé :
+  ```sh
+  LIMIT=75 npm run programme:generate -- 4 verify   # à répéter jusqu'à 1088/1088, ou sans LIMIT
+  npm run programme:generate -- 4 build
+  # puis ajouter phase-4.json dans src/server/programme/content.ts, et faire de même pour la phase 5
+  ```
