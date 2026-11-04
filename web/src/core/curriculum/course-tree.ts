@@ -20,6 +20,7 @@ import { LES_COUPS_DE_RUPTURE } from "./course-trees/pm-les-coups-de-rupture";
 import { LA_RESTRICTION_DES_PIECES } from "./course-trees/pm-la-restriction-des-pieces-adverses";
 import { LA_SURPROTECTION_NIMZOWITSCH } from "./course-trees/pm-la-surprotection-nimzowitsch";
 import { LE_BLOCUS_DU_PION_PASSE } from "./course-trees/pm-le-blocus-du-pion-passe";
+import { LA_CENTRALISATION_DES_PIECES } from "./course-trees/pm-la-centralisation-des-pieces";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -260,6 +261,7 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-la-restriction-des-pieces-adverses": LA_RESTRICTION_DES_PIECES,
   "pm-la-surprotection-nimzowitsch": LA_SURPROTECTION_NIMZOWITSCH,
   "pm-le-blocus-du-pion-passe": LE_BLOCUS_DU_PION_PASSE,
+  "pm-la-centralisation-des-pieces": LA_CENTRALISATION_DES_PIECES,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },
