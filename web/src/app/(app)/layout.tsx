@@ -5,6 +5,7 @@ import { SyncProvider } from "@/client/features/sync/sync-context";
 import { SeanceBar } from "@/client/features/home/seance-bar";
 import { initialsOf, normalizeEmail } from "@/core/auth/policy";
 import { StorageScope } from "@/client/storage/storage-scope";
+import { PresenceBeacon } from "@/client/features/presence/presence-beacon";
 import { requireUser } from "@/server/auth/session";
 
 /**
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <>
       <StorageScope userId={user.id} adoptLegacy={adoptLegacy} />
+      <PresenceBeacon />
       <a
         href="#contenu"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-foreground"

@@ -141,6 +141,13 @@
       "when": 1793811206536,
       "tag": "0019_user_scoping",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1793812345288,
+      "tag": "0020_presence",
+      "breakpoints": true
     }
   ]
 }

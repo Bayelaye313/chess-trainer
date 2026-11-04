@@ -16,3 +16,4 @@ export * from "./traps";
 export * from "./training";
 export * from "./auth";
 export * from "./admin";
+export * from "./presence";

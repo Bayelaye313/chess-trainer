@@ -256,3 +256,33 @@ sauvegarde**) :
   - global : un seul import à la fois, car le moteur Stockfish serveur est partagé.
 - Les comptes Chess.com et Lichess liés appartiennent à chaque utilisateur : unique
   `(user_id, source)`.
+
+## 7. Présence et statistiques (étape 3)
+
+- Tables (migration **0020**, cascade sur `users`) :
+  - `user_presence` (`user_id`, `last_seen_at`, `current_section`) ;
+  - `user_daily_activity` (`user_id`, `day` UTC, `active_seconds`, `sessions_count`,
+    `first_seen_at`, `last_seen_at`).
+
+  Ce sont des métadonnées d'usage, hors `PERSONAL_TABLES` : l'admin les lit en agrégé, et elles
+  disparaissent avec le compte, par cascade.
+- `PresenceBeacon` (layout connecté) envoie un battement :
+  - toutes les 60 s quand `document.visibilityState === "visible"` ;
+  - au retour sur l'onglet et au changement de section, avec 15 s d'écart minimum.
+
+  Le corps vaut `{ section }` : une valeur de `PRESENCE_SECTIONS`, calculée côté client par
+  `sectionOfPath`. L'URL ne quitte jamais le navigateur.
+- `POST /api/presence` :
+  - 401 sans session, et aucune écriture ;
+  - 429 au-delà de 4 battements par minute et par compte ;
+  - 400 si la section est inconnue ;
+  - 204 sinon.
+- Définitions (`src/core/presence/metrics.ts`, 10 tests) :
+  - **en ligne** : dernier battement il y a moins de 2 minutes ;
+  - **actif** sur une période : au moins 60 s actives cumulées. DAU = jour UTC courant,
+    WAU = 7 jours glissants, MAU = 30 jours glissants, aujourd'hui compris ;
+  - **temps actif** : chaque battement crédite le temps écoulé depuis le précédent, plafonné à
+    60 s. Après 2 minutes de silence, le battement ouvre une nouvelle session et ne crédite rien ;
+  - **sessions actives** : lignes de `sessions` non expirées ;
+  - **rétention simple** : parmi les inscrits depuis au moins 7 jours, part de ceux qui ont une
+    activité à partir de J+1 (J = jour UTC d'inscription).
