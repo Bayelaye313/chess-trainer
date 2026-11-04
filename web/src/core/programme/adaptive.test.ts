@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   advanceCursor,
   interleavedReview,
+  isPhaseFinalWeek,
   MAX_OFFSET,
+  PHASE_PASS,
+  phaseReview,
   nextRatingOffset,
   retentionPassed,
   retentionSourceDays,
@@ -98,5 +101,27 @@ describe("interférence contextuelle", () => {
     ];
     const picked = interleavedReview(days, { semaine: 1, jour: 5 }, 3).map((p) => p.puzzle_id);
     expect(picked).toEqual(["c", "t"]);
+  });
+});
+
+describe("bilan de fin de phase", () => {
+  const week = (succeeded: number, attempted = 8) => Array.from({ length: 6 }, (_, i) => ({ dayKey: `S7J${i + 1}`, attempted, succeeded }));
+
+  it("ne porte que sur la dernière semaine de chaque phase", () => {
+    expect([7, 14, 22, 29, 36].every(isPhaseFinalWeek)).toBe(true);
+    expect([1, 6, 8, 15, 30, 35].some(isPhaseFinalWeek)).toBe(false);
+  });
+
+  it("exige la rétention ET une réussite de la semaine au moins égale au seuil", () => {
+    const atThreshold = Math.ceil(PHASE_PASS * 8);
+    expect(phaseReview(week(atThreshold), true).passed).toBe(true);
+    expect(phaseReview(week(atThreshold), false).passed).toBe(false);
+    expect(phaseReview(week(atThreshold - 1), true).passed).toBe(false);
+    expect(phaseReview([], true)).toMatchObject({ weekSuccess: null, passed: false });
+  });
+
+  it("un échec rejoue la dernière semaine, un succès ouvre la phase suivante", () => {
+    expect(advanceCursor({ semaine: 7, jour: 7, repetition: 0 }, phaseReview(week(2), true).passed)).toMatchObject({ semaine: 7, jour: 1, repetition: 1 });
+    expect(advanceCursor({ semaine: 7, jour: 7, repetition: 0 }, phaseReview(week(7), true).passed)).toMatchObject({ semaine: 8, jour: 1, repetition: 0 });
   });
 });
