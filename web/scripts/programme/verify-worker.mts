@@ -9,8 +9,13 @@
  * à 30 centipions près) ; les réponses adverses sont celles de la ligne Lichess.
  * En plus, on relève les coups ÉQUIVALENTS (MultiPV 3, à 30 cp près) pour que
  * l'écran les accepte au lieu de les refuser.
+ *
+ * Reprise : la sortie n'est jamais vidée ; les clés déjà présentes dans
+ * `<sortie.jsonl>` sont sautées. `LIMIT=<n>` arrête le processus après n
+ * nouveaux candidats (un lot), pour mesurer la mémoire lot par lot et reprendre
+ * sans rien refaire. Moteur en `Threads 1`, `Hash 64` (poste à 4 Go de RAM).
  */
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { Chess } from "chess.js";
 import { uciMove } from "./geometry.mjs";
@@ -42,6 +47,8 @@ async function cmd(c: string, until: (l: string) => true | undefined) {
   return p;
 }
 await cmd("uci", (l) => (l === "uciok" ? true : undefined));
+handle.sendCommand("setoption name Threads value 1");
+handle.sendCommand(`setoption name Hash value ${Number(process.env.HASH ?? 64)}`);
 handle.sendCommand("setoption name MultiPV value 3");
 await cmd("isready", (l) => (l === "readyok" ? true : undefined));
 
@@ -78,8 +85,24 @@ export interface VerifyOutput {
 }
 
 const [shard, shards] = (process.env.SHARD ?? "0/1").split("/").map(Number);
-const items = (JSON.parse(readFileSync(inPath, "utf8")) as VerifyInput[]).filter((_, i) => i % shards === shard);
-writeFileSync(outPath, "");
+const already = new Set(
+  existsSync(outPath)
+    ? readFileSync(outPath, "utf8").split("\n").flatMap((l) => {
+        // Une ligne tronquée (lot interrompu en pleine écriture) est ignorée : le candidat sera refait.
+        try {
+          return l ? [(JSON.parse(l) as VerifyOutput).key] : [];
+        } catch {
+          return [];
+        }
+      })
+    : [],
+);
+const limit = Number(process.env.LIMIT ?? Infinity);
+const items = (JSON.parse(readFileSync(inPath, "utf8")) as VerifyInput[])
+  .filter((_, i) => i % shards === shard)
+  .filter((it) => !already.has(it.key))
+  .slice(0, limit);
+console.error(`vérificateur ${shard}/${shards} : ${already.size} déjà faits, ${items.length} dans ce lot`);
 
 for (const it of items) {
   const c = new Chess(it.fen);

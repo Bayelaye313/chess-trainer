@@ -8,9 +8,11 @@
  *             CC0). Pour chaque jour : tags Lichess du concept + filtre géométrique
  *             (`geometry.mts`), fenêtre de rating centrée sur l'Elo cible du jour,
  *             longueur de combinaison bornée par la phase. Un puzzle et une partie
- *             d'origine ne servent qu'une fois dans toute la phase.
- * 2. verify : Stockfish (`verify-worker.mts`, SHARDS processus en parallèle) sur chaque
- *             coup du solveur ; tablebase Syzygy pour les positions de ≤ 7 pièces et
+ *             d'origine ne servent qu'une fois dans TOUT le programme : ceux des
+ *             phases déjà générées (`phase-<k>.json`, k < n) sont exclus.
+ * 2. verify : Stockfish (`verify-worker.mts`, SHARDS processus en parallèle, 1 par défaut)
+ *             sur chaque coup du solveur, avec reprise : `LIMIT=<n>` traite un lot de n
+ *             candidats non encore vérifiés, puis s'arrête ; tablebase Syzygy pour les positions de ≤ 7 pièces et
  *             les positions pédagogiques construites (Lucena, Philidor).
  * 3. build  : seuls les puzzles validés entrent dans le JSON, avec squelette,
  *             solution PGN, coups équivalents et traçabilité complète.
@@ -20,9 +22,8 @@
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Chess } from "chess.js";
-import { PHASE_1_CONSTRUCTED, PHASE_1_DAYS } from "../../src/core/programme/content/phase-1.spec";
 import type { ConstructedPosition, DaySpec } from "../../src/core/programme/content/spec-types";
 import { getMetaphor } from "../../src/core/programme/metaphors";
 import { blindfoldSeconds, conceptDayPlanning, getPhase, maxSolverMoves, PHASES, retentionDayPlanning, targetElo } from "../../src/core/programme/phases";
@@ -39,19 +40,22 @@ const here = dirname(fileURLToPath(import.meta.url));
 const WEB = resolve(here, "../..");
 const CSV = resolve(WEB, "data/import/academy/lichess_db_puzzle.csv.zst");
 const DEPTH = Number(process.env.DEPTH ?? 18);
-const SHARDS = Number(process.env.SHARDS ?? 3);
-
-const SPECS: Record<number, { days: readonly DaySpec[]; constructed: readonly ConstructedPosition[] }> = {
-  1: { days: PHASE_1_DAYS, constructed: PHASE_1_CONSTRUCTED },
-};
+const SHARDS = Number(process.env.SHARDS ?? 1);
 
 const [phaseArg, stepArg = "all"] = process.argv.slice(2);
 const phaseIndex = Number(phaseArg);
-const spec = SPECS[phaseIndex];
-if (!spec) {
-  console.error(`usage: generate-phase.mts <phase> [select|verify|build|all] — phases disponibles : ${Object.keys(SPECS).join(", ")}`);
+/** Spec de la phase : `phase-<n>.spec.ts` exporte `PHASE_<n>_DAYS` et `PHASE_<n>_CONSTRUCTED`. */
+async function loadSpec(n: number): Promise<{ days: readonly DaySpec[]; constructed: readonly ConstructedPosition[] } | null> {
+  const file = resolve(WEB, `src/core/programme/content/phase-${n}.spec.ts`);
+  if (!Number.isInteger(n) || n < 1 || n > PHASES.length || !existsSync(file)) return null;
+  const mod = (await import(pathToFileURL(file).href)) as Record<string, unknown>;
+  return { days: mod[`PHASE_${n}_DAYS`] as readonly DaySpec[], constructed: mod[`PHASE_${n}_CONSTRUCTED`] as readonly ConstructedPosition[] };
+}
+function usage(): never {
+  console.error(`usage: generate-phase.mts <phase> [select|verify|build|all] — phase 1 à ${PHASES.length}, avec src/core/programme/content/phase-<n>.spec.ts`);
   process.exit(1);
 }
+const spec = (await loadSpec(phaseIndex)) ?? usage();
 const phase = PHASES[phaseIndex - 1];
 const OUT = resolve(WEB, `data/programme/phase-${phaseIndex}`);
 mkdirSync(OUT, { recursive: true });
@@ -62,6 +66,26 @@ const CAP = 80;
 const MIN_POPULARITY = 80;
 const MIN_PLAYS = 150;
 const MAX_RD = 100;
+/**
+ * Coups du solveur au plus pour un blindfold : 2, ou le minimum de la phase
+ * quand il est plus grand (phases 4 et 5 : aucune combinaison de moins de 3 coups).
+ */
+const BLIND_MAX_SOLVER = Math.max(2, phase.soloMoves.min);
+
+/** Puzzles déjà servis par les phases générées avant celle-ci (jamais deux fois dans le programme). */
+function previousPhasePuzzleIds(): Set<string> {
+  const ids = new Set<string>();
+  for (let k = 1; k < phaseIndex; k += 1) {
+    const file = resolve(WEB, `src/core/programme/content/phase-${k}.json`);
+    if (!existsSync(file)) throw new Error(`Phase ${k} absente (${file}) : générer les phases dans l'ordre.`);
+    const content = JSON.parse(readFileSync(file, "utf8")) as ProgrammePhaseContent;
+    for (const d of content.jours) {
+      for (const p of [...d.puzzles, ...(d.reserve ?? [])]) ids.add(p.puzzle_id);
+      if (d.exercice_blindfold) ids.add(d.exercice_blindfold.puzzle_id);
+    }
+  }
+  return ids;
+}
 
 type Band = "mid" | "low" | "high";
 interface Candidate {
@@ -98,6 +122,10 @@ async function select() {
   const minRating = Math.min(...concept.map((d) => targetElo(d.semaine, d.jour))) - 300;
   const maxRating = Math.max(...concept.map((d) => targetElo(d.semaine, d.jour))) + 200;
 
+  // Exclusion inter-phases : les puzzles déjà servis, et leurs parties d'origine (relevées pendant la passe).
+  const previousIds = previousPhasePuzzleIds();
+  const previousGames = new Set<string>();
+  console.error(`${previousIds.size} puzzles des phases précédentes exclus.`);
   let rows = 0, replayed = 0, errors = 0;
   const maxRows = Number(process.env.MAXROWS ?? Infinity);
   await eachLine(CSV, (line: string) => {
@@ -112,6 +140,10 @@ async function select() {
     const row = parseRow(line);
     if (!row) return;
     rows += 1;
+    if (previousIds.has(row.id)) {
+      previousGames.add(gameIdOf(row.gameUrl));
+      return;
+    }
     if (row.popularity < MIN_POPULARITY || row.nbPlays < MIN_PLAYS || row.ratingDeviation > MAX_RD) return;
     if (row.rating < minRating || row.rating > maxRating) return;
     const solver = row.moves.length / 2;
@@ -141,14 +173,14 @@ async function select() {
         const list = b[`${geo ? "geo" : "fb"}_${band}`];
         if (list.length < CAP) list.push(cand);
       }
-      if (solver <= 2 && delta <= 0 && pieceCount(row.fen) <= 13 && b.blind.length < CAP) b.blind.push({ ...cand, band: "blind" });
+      if (solver <= BLIND_MAX_SOLVER && delta <= 0 && pieceCount(row.fen) <= 13 && b.blind.length < CAP) b.blind.push({ ...cand, band: "blind" });
     }
     if (rows % 500_000 === 0) console.error(`… ${rows} lignes lues, ${replayed} rejouées`);
   }
-  console.error(`${rows} lignes lues, ${replayed} rejouées.`);
+  console.error(`${rows} lignes lues, ${replayed} rejouées, ${previousGames.size} parties des phases précédentes exclues.`);
 
-  // Attribution : jours les plus pauvres d'abord, aucun puzzle ni partie deux fois.
-  const usedIds = new Set<string>(), usedGames = new Set<string>();
+  // Attribution : jours les plus pauvres d'abord, aucun puzzle ni partie deux fois (phases précédentes comprises).
+  const usedIds = new Set<string>(previousIds), usedGames = new Set<string>(previousGames);
   const ordered = [...concept].sort((a, b) => {
     const n = (d: DaySpec) => Object.entries(buckets.get(dayKey(d.semaine, d.jour))!).filter(([k]) => k.startsWith("geo")).reduce((s, [, v]) => s + v.length, 0);
     return n(a) - n(b);
@@ -325,8 +357,12 @@ async function build() {
     const file = resolve(OUT, `verify-${i}.jsonl`);
     if (!existsSync(file)) continue;
     for (const line of readFileSync(file, "utf8").split("\n").filter(Boolean)) {
-      const r = JSON.parse(line) as VerifyOutput;
-      results.set(r.key, r);
+      try {
+        const r = JSON.parse(line) as VerifyOutput;
+        results.set(r.key, r);
+      } catch {
+        // ligne tronquée par un lot interrompu : ignorée
+      }
     }
   }
   const byKey = new Map(selected.map((d) => [d.key, d]));
@@ -379,7 +415,8 @@ async function build() {
 
   const days: ProgrammeDay[] = [];
   const leftoverBlind = new Map<number, ProgrammePuzzle[]>();
-  let hackIndex = 0;
+  // Rotation continue sur tout le programme : le 1er jour d'une phase ne reprend pas le hack de la veille.
+  let hackIndex = (phase.semaineDebut - 1) * 7;
   const report: string[] = [];
   for (const d of spec.days) {
     const key = dayKey(d.semaine, d.jour);
@@ -410,7 +447,9 @@ async function build() {
       if (blind[0]) blindfold = toBlindfold(blind[0], d, d.concept);
       else {
         // Repli : le puzzle vérifié le plus court (≤ 2 coups du solveur, le moins de pièces) de la réserve.
-        const short = reserve.filter((p) => p.solution_uci.length <= 3).sort((a, b) => pieceCount(a.fen) - pieceCount(b.fen))[0];
+        // Sinon (jour dont toutes les combinaisons sont longues, ex. mats en 3) : la plus courte de la réserve.
+        const byLength = (a: ProgrammePuzzle, b: ProgrammePuzzle) => a.solution_uci.length - b.solution_uci.length || pieceCount(a.fen) - pieceCount(b.fen);
+        const short = reserve.filter((p) => p.solution_uci.length <= 2 * BLIND_MAX_SOLVER - 1).sort(byLength)[0] ?? [...reserve].sort(byLength)[0];
         if (short) {
           blindfold = toBlindfold(short, d, d.concept);
           reserve = reserve.filter((p) => p !== short);

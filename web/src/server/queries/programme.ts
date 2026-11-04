@@ -11,7 +11,10 @@ import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import {
   advanceCursor,
   isFullSuccess,
+  isPhaseFinalWeek,
   nextRatingOffset,
+  PHASE_PASS,
+  phaseReview,
   PROGRAMME_START,
   retentionPassed as retentionGate,
   rollingSuccessRate,
@@ -26,7 +29,7 @@ import type {
   SessionPuzzle,
 } from "@/core/programme/dto";
 import { getMetaphor, type Metaphor } from "@/core/programme/metaphors";
-import { MINUTES_PER_DAY, phaseOfWeek } from "@/core/programme/phases";
+import { MINUTES_PER_DAY, PHASES, phaseOfWeek } from "@/core/programme/phases";
 import { planSession, type PastAttempt } from "@/core/programme/session-plan";
 import { dayKey, type ProgrammePuzzle } from "@/core/programme/types";
 import { getVisualHack } from "@/core/programme/visual-hacks";
@@ -122,6 +125,16 @@ export async function getProgrammeOverview(userId: string = LOCAL_USER_ID): Prom
     }),
     library: [...visits.entries()].map(([id, v]) => ({ ...getMetaphor(id), ...v })),
     inProgressSessionId: inProgress?.id ?? null,
+    phases: PHASES.map((p) => ({
+      index: p.index,
+      titre: p.titre,
+      eloDebut: p.eloDebut,
+      eloFin: p.eloFin,
+      semaineDebut: p.semaineDebut,
+      semaineFin: p.semaineFin,
+      joursGeneres: ALL_DAYS.filter((d) => d.semaine >= p.semaineDebut && d.semaine <= p.semaineFin).length,
+      status: p.index < phase.index ? "validee" : p.index === phase.index ? "en_cours" : "verrouillee",
+    })),
   };
 }
 
@@ -256,7 +269,28 @@ export async function completeProgrammeSession(input: CompleteProgrammeSessionIn
 
   const history = [...(await completedSummaries(userId)), { dayKey: session.dayKey, attempted, succeeded }];
   const newOffset = nextRatingOffset(state.ratingOffset, history);
-  const next = advanceCursor({ semaine: state.semaine, jour: state.jour, repetition: state.repetition }, retention ?? undefined);
+
+  // Jour 7 de la dernière semaine d'une phase : bilan de fin de phase (rétention + réussite de la semaine).
+  let review: ProgrammeSessionOutcome["phaseReview"] = null;
+  let gate = retention ?? undefined;
+  if (session.jour === 7 && isPhaseFinalWeek(session.semaine)) {
+    const weekRows = await db
+      .select({ dayKey: programmeSessions.dayKey, jour: programmeSessions.jour, attempted: programmeSessions.attempted, succeeded: programmeSessions.succeeded })
+      .from(programmeSessions)
+      .where(
+        and(
+          eq(programmeSessions.userId, userId),
+          eq(programmeSessions.semaine, session.semaine),
+          eq(programmeSessions.repetition, session.repetition),
+          eq(programmeSessions.status, "completed"),
+        ),
+      );
+    const result = phaseReview(weekRows.filter((r) => r.jour < 7), retention === true);
+    const nextPhase = PHASES.find((p) => p.semaineDebut === session.semaine + 1);
+    review = { weekSuccess: result.weekSuccess, threshold: PHASE_PASS, passed: result.passed, nextPhaseTitre: nextPhase ? `Phase ${nextPhase.index} · ${nextPhase.titre}` : null };
+    gate = result.passed;
+  }
+  const next = advanceCursor({ semaine: state.semaine, jour: state.jour, repetition: state.repetition }, gate);
 
   // better-sqlite3 : transaction synchrone, chaque requête terminée par `.run()`.
   db.transaction((tx) => {
@@ -293,6 +327,7 @@ export async function completeProgrammeSession(input: CompleteProgrammeSessionIn
     previousOffset: state.ratingOffset,
     newOffset,
     retentionPassed: retention,
+    phaseReview: review,
     next,
   };
 }

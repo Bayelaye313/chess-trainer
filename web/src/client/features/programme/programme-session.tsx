@@ -364,6 +364,22 @@ function OutcomePanel({ outcome, onExit }: { outcome: ProgrammeSessionOutcome; o
             : "Test de rétention échoué : la semaine est rejouée avec de nouveaux puzzles sur les mêmes concepts."}
         </p>
       )}
+      {outcome.phaseReview && (
+        <div className={`rounded-md border p-3 ${outcome.phaseReview.passed ? "border-best" : "border-blunder"}`}>
+          <p className="font-semibold">Bilan de fin de phase</p>
+          <p>
+            Réussite complète de la dernière semaine : {pct(outcome.phaseReview.weekSuccess)} (seuil {pct(outcome.phaseReview.threshold)}) · test de rétention :{" "}
+            {outcome.retentionPassed ? "réussi" : "échoué"}
+          </p>
+          <p className={outcome.phaseReview.passed ? "text-best" : "text-blunder"}>
+            {outcome.phaseReview.passed
+              ? outcome.phaseReview.nextPhaseTitre
+                ? `Phase validée : ${outcome.phaseReview.nextPhaseTitre} débloquée.`
+                : "Phase validée."
+              : "Phase non validée : la dernière semaine est rejouée avec de nouveaux puzzles avant de passer à la suite."}
+          </p>
+        </div>
+      )}
       <p>
         Prochaine séance : {outcome.next.finished ? "programme terminé" : `semaine ${outcome.next.semaine}, jour ${outcome.next.jour}`}
       </p>

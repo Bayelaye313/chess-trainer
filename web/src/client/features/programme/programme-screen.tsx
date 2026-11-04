@@ -60,7 +60,7 @@ export function ProgrammeScreen({ overview }: { overview: ProgrammeOverview }) {
             <p className="font-semibold">La semaine {overview.semaine} n&apos;est pas encore générée.</p>
             <p className="text-foreground-muted">
               Le contenu se produit phase par phase avec puzzles Lichess vérifiés par Stockfish :{" "}
-              <code className="font-mono">node --import tsx scripts/programme/generate-phase.mts {Math.ceil(overview.semaine / 7)}</code>
+              <code className="font-mono">npm run programme:generate -- {overview.phases.find((p) => overview.semaine >= p.semaineDebut && overview.semaine <= p.semaineFin)?.index ?? "?"}</code>
             </p>
           </div>
         ) : (
@@ -76,6 +76,32 @@ export function ProgrammeScreen({ overview }: { overview: ProgrammeOverview }) {
           </div>
         )}
         {error && <p className="mt-2 text-sm text-blunder">{error}</p>}
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-foreground-muted">Les 5 phases</h3>
+        <ol className="grid gap-2 sm:grid-cols-5">
+          {overview.phases.map((p) => (
+            <li
+              key={p.index}
+              className={`rounded-md border p-3 text-xs ${p.status === "en_cours" ? "border-accent bg-surface" : p.status === "validee" ? "border-border bg-surface-muted" : "border-border bg-surface opacity-60"}`}
+            >
+              <p className="font-mono text-foreground-muted">
+                Phase {p.index} · {p.status === "validee" ? "validée ✓" : p.status === "en_cours" ? "en cours" : "verrouillée"}
+              </p>
+              <p className="font-medium">{p.titre}</p>
+              <p className="text-foreground-muted">
+                {p.eloDebut} → {p.eloFin} · S{p.semaineDebut}–S{p.semaineFin}
+              </p>
+              <p className="text-foreground-muted">
+                {p.joursGeneres === 0 ? "contenu à générer" : `${p.joursGeneres} / ${(p.semaineFin - p.semaineDebut + 1) * 7} jours générés`}
+              </p>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-1 text-xs text-foreground-muted">
+          Une phase se débloque au jour 7 de la dernière semaine de la précédente : test de rétention réussi et réussite complète de la semaine au-dessus du seuil.
+        </p>
       </section>
 
       <section>

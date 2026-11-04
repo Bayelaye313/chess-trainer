@@ -152,7 +152,9 @@ function material(c: Chess, color: Color) {
 // ── Filtres ──────────────────────────────────────────────────────────────────
 type Filter = (x: PuzzleContext) => boolean;
 
-const FILTERS: Record<GeometryFilter, Filter> = {
+type LaterFilter = "hangingPawns" | "minorityStructure" | "oppositeBishops" | "exchangeImbalance" | "exchangeSacrifice" | "blockade";
+
+const FILTERS: Record<Exclude<GeometryFilter, LaterFilter>, Filter> = {
   /** Une tour/dame du solveur entre dans, ou circule sur, une colonne sans aucun pion. */
   openFile: (x) =>
     solverMoves(x).some((m, k) => (m.piece === "r" || m.piece === "q") && !fileHasPawn(new Chess(x.fens[2 * k]), fileOf(m.to)) && (fileOf(m.from) === fileOf(m.to) || relRank(m.to, x.me) >= 7)),
@@ -378,9 +380,62 @@ const FILTERS: Record<GeometryFilter, Filter> = {
     onlyRooksKingsPawns(x.start) && solverMoves(x).some((m, k) => m.piece === "p" && isPassed(new Chess(x.fens[2 * k]), m.from, x.me)),
 };
 
+// ── Filtres ajoutés pour les phases 2 à 5 ─────────────────────────────────────
+const minors = (m: Record<string, number>) => m.n + m.b;
+const hasPieces = (c: Chess, color: Color) => pieces(c, color).some((p) => p.type !== "k" && p.type !== "p");
+
+const LATER_FILTERS: Record<LaterFilter, Filter> = {
+  /** Pions pendants : un camp a des pions sur les colonnes c ET d (même rangée), aucun pion sur b ni e, pièces encore en jeu. */
+  hangingPawns: (x) =>
+    (["w", "b"] as Color[]).some((color) => {
+      const ps = pawnsOf(x.start, color);
+      const onFile = (f: number) => ps.filter((p) => fileOf(p) === f);
+      if (onFile(1).length || onFile(4).length || !hasPieces(x.start, color)) return false;
+      return onFile(2).some((c) => onFile(3).some((d) => rankOf(c) === rankOf(d)));
+    }),
+
+  /** Structure d'attaque de minorité : 2 pions contre 3 sur les colonnes a-c, pions d bloqués l'un contre l'autre. */
+  minorityStructure: (x) => {
+    const qs = (color: Color) => pawnsOf(x.start, color).filter((p) => fileOf(p) <= 2).length;
+    const w = qs("w"), b = qs("b");
+    if (!((w === 2 && b === 3) || (w === 3 && b === 2))) return false;
+    const wd = pawnsOf(x.start, "w").find((p) => fileOf(p) === 3);
+    return !!wd && x.start.get(sqOf(3, rankOf(wd) + 1)!)?.type === "p" && x.start.get(sqOf(3, rankOf(wd) + 1)!)?.color === "b";
+  },
+
+  /** Fous de couleurs opposées : chaque camp a exactement un fou, sur des couleurs différentes. */
+  oppositeBishops: (x) => {
+    const wb = pieces(x.start, "w", "b"), bb = pieces(x.start, "b", "b");
+    return wb.length === 1 && bb.length === 1 && isLight(wb[0].square) !== isLight(bb[0].square);
+  },
+
+  /** Déséquilibre de qualité : une tour de plus d'un côté, une pièce mineure de plus de l'autre. */
+  exchangeImbalance: (x) => {
+    const me = material(x.start, x.me), them = material(x.start, x.them);
+    const dr = me.r - them.r, dm = minors(me) - minors(them);
+    return (dr === 1 && dm === -1) || (dr === -1 && dm === 1);
+  },
+
+  /** Sacrifice de qualité : une tour du solveur prend un cavalier ou un fou. */
+  exchangeSacrifice: (x) => solverMoves(x).some((m) => m.piece === "r" && (m.captured === "n" || m.captured === "b")),
+
+  /** Blocus : un pion passé (d'un camp) est arrêté par une pièce adverse posée juste devant lui. */
+  blockade: (x) =>
+    (["w", "b"] as Color[]).some((color) =>
+      pawnsOf(x.start, color).some((p) => {
+        if (!isPassed(x.start, p, color)) return false;
+        const front = sqOf(fileOf(p), rankOf(p) + (color === "w" ? 1 : -1));
+        const q = front && x.start.get(front);
+        return !!q && q.color !== color && q.type !== "p" && q.type !== "k";
+      }),
+    ),
+};
+
+const ALL_FILTERS: Record<GeometryFilter, Filter> = { ...FILTERS, ...LATER_FILTERS };
+
 export function matchesGeometry(filter: GeometryFilter, x: PuzzleContext): boolean {
   try {
-    return FILTERS[filter](x);
+    return ALL_FILTERS[filter](x);
   } catch {
     return false;
   }
