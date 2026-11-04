@@ -120,6 +120,13 @@
       "when": 1793697940548,
       "tag": "0016_curvy_red_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1793810775695,
+      "tag": "0017_auth_tables",
+      "breakpoints": true
     }
   ]
 }

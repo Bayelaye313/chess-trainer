@@ -1,10 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Nav } from "@/components/ui/nav";
-import { SyncToast } from "@/components/sync-toast";
-import { EngineProvider } from "@/client/engine/engine-context";
-import { SyncProvider } from "@/client/features/sync/sync-context";
-import { SeanceBar } from "@/client/features/home/seance-bar";
 import "./globals.css";
 
 /**
@@ -44,41 +39,21 @@ const plexMono = localFont({
 
 export const metadata: Metadata = {
   title: { default: "Chess Trainer", template: "%s · Chess Trainer" },
-  description: "Entraîneur d'échecs local : analyse tes parties, révise tes erreurs.",
+  description: "Entraîneur d'échecs : analyse tes parties, révise tes erreurs.",
 };
 
+/**
+ * Racine : polices et document seulement. L'habillage de l'application (moteur,
+ * synchro, navigation) vit dans `(app)/layout.tsx`, derrière `requireUser()`.
+ * `(public)` regroupe /connexion et /confidentialite.
+ */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
       className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans">
-        <a
-          href="#contenu"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-foreground"
-        >
-          Aller au contenu
-        </a>
-        {/*
-          Le moteur est monté une fois pour toute l'application : le charger par
-          écran coûterait 7 Mo de WASM à chaque navigation. La synchro des
-          comptes liés (sondage + état visible) l'est aussi.
-        */}
-        <EngineProvider>
-          <SyncProvider>
-            <Nav />
-            <main
-              id="contenu"
-              className="px-[var(--space-page)] pt-5 pb-[calc(var(--tabbar-h)+32px)] md:pt-8 md:pb-12 md:pl-[calc(var(--rail-w)+var(--space-page))]"
-            >
-              <SeanceBar />
-              {children}
-            </main>
-            <SyncToast />
-          </SyncProvider>
-        </EngineProvider>
-      </body>
+      <body className="min-h-full font-sans">{children}</body>
     </html>
   );
 }

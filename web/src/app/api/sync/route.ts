@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runSync } from "@/server/import/run-sync";
+import { sessionUser } from "@/server/auth/session";
 
 /**
  * Déclenche une synchronisation de toutes les plateformes liées
@@ -15,6 +16,9 @@ import { runSync } from "@/server/import/run-sync";
  * seule hypothèse qui permette une tâche de fond fire-and-forget comme celle-ci.
  */
 export async function POST() {
+  const user = await sessionUser();
+  if (!user) return NextResponse.json({ error: "Connexion requise." }, { status: 401 });
+
   const summary = await runSync();
 
   // `null` = une synchro tournait déjà (autre onglet, ou import manuel en
