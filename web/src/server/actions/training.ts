@@ -1,5 +1,6 @@
 "use server";
 
+import { requireUser } from "@/server/auth/session";
 import {
   listTrainingRecommendations,
   recordTrainingEvent,
@@ -11,28 +12,28 @@ import { applyDailyPlan as applyDailyPlanQuery, clearDailySession, type DailySes
 import type { TrainingPreferences } from "@/core/training/preferences";
 
 export async function logTrainingEvent(input: RecordTrainingEventInput): Promise<void> {
-  await recordTrainingEvent(input);
+  await recordTrainingEvent((await requireUser()).id, input);
 }
 
 export async function getTrainingRecommendations(): Promise<TrainingRecommendationDto[]> {
-  return listTrainingRecommendations();
+  return listTrainingRecommendations((await requireUser()).id);
 }
 
 export async function loadTrainingPreferences(): Promise<TrainingPreferences> {
-  return getTrainingPreferences();
+  return getTrainingPreferences((await requireUser()).id);
 }
 
 export async function updateTrainingPreferences(raw: unknown): Promise<TrainingPreferences> {
-  const saved = await saveTrainingPreferences(raw);
+  const saved = await saveTrainingPreferences((await requireUser()).id, raw);
   return saved;
 }
 
 export async function applyDailyPlan(
   raw: unknown,
 ): Promise<{ preferences: TrainingPreferences; state: DailySessionState }> {
-  return applyDailyPlanQuery(raw);
+  return applyDailyPlanQuery((await requireUser()).id, raw);
 }
 
 export async function resetDailyPlan(): Promise<void> {
-  await clearDailySession();
+  await clearDailySession((await requireUser()).id);
 }

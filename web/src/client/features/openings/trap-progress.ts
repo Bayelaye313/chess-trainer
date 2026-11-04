@@ -1,5 +1,6 @@
 "use client";
 
+import { scopedGet, scopedSet } from "@/client/storage/user-storage";
 /**
  * Progression LOCALE (par navigateur) de l'onglet « ⚔️ Pièges » — sert
  * uniquement à cocher les pastilles déjà résolues dans `PiegesScreen`/
@@ -18,7 +19,7 @@ const STORAGE_KEY = "chess-trainer:solved-traps";
 
 function readSolvedIds(): Set<string> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = scopedGet("local", STORAGE_KEY);
     return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
   } catch {
     return new Set();
@@ -27,7 +28,7 @@ function readSolvedIds(): Set<string> {
 
 function writeSolvedIds(ids: Set<string>): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(ids)));
+    scopedSet("local", STORAGE_KEY, JSON.stringify(Array.from(ids)));
   } catch {
     // Ignoré — voir le docstring du fichier.
   }

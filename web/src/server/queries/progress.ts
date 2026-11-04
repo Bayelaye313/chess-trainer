@@ -13,7 +13,7 @@ import "server-only";
  */
 import { eq, isNotNull } from "drizzle-orm";
 import { db } from "@/server/db";
-import { games, moves } from "@/server/db/schema";
+import { games, moves, userScope } from "@/server/db/user-scope";
 import {
   aggregatePlayerProgress,
   didPlayerWin,
@@ -39,7 +39,8 @@ export interface PlayerProgressOverview extends PlayerProgressInsights {
   strugglingOpening: (OpeningPerformance & { openingSlug: string | null }) | null;
 }
 
-export async function getPlayerProgress(): Promise<PlayerProgressOverview> {
+export async function getPlayerProgress(userId: string): Promise<PlayerProgressOverview> {
+  const s = userScope(userId);
   const gameRows = await db
     .select({
       id: games.id,
@@ -49,7 +50,7 @@ export async function getPlayerProgress(): Promise<PlayerProgressOverview> {
       playerColor: games.playerColor,
     })
     .from(games)
-    .where(isNotNull(games.pgn));
+    .where(s.where(games, isNotNull(games.pgn)));
 
   // Seuls les coups DU JOUEUR alimentent les quatre axes (voir
   // `progress-insights.ts`) : inutile de charger ceux de l'adversaire.
@@ -65,7 +66,7 @@ export async function getPlayerProgress(): Promise<PlayerProgressOverview> {
       motifFound: moves.motifFound,
     })
     .from(moves)
-    .where(eq(moves.byPlayer, true));
+    .where(s.where(moves, eq(moves.byPlayer, true)));
 
   const movesByGame = new Map<string, PlayerMoveRecord[]>();
   for (const row of moveRows) {
@@ -120,16 +121,17 @@ export interface ReportSummary {
  * les quatre chiffres d'aperçu — évite de payer le coût des quatre axes
  * complets sur une page consultée à chaque visite.
  */
-export async function getReportSummary(): Promise<ReportSummary> {
+export async function getReportSummary(userId: string): Promise<ReportSummary> {
+  const s = userScope(userId);
   const gameRows = await db
     .select({ id: games.id, result: games.result, playerColor: games.playerColor })
     .from(games)
-    .where(isNotNull(games.pgn));
+    .where(s.where(games, isNotNull(games.pgn)));
 
   const playerMoveRows = await db
     .select({ quality: moves.quality })
     .from(moves)
-    .where(eq(moves.byPlayer, true));
+    .where(s.where(moves, eq(moves.byPlayer, true)));
 
   const tally: QualityTally = tallyQualities(playerMoveRows);
   const gamesWithResult = gameRows.filter((g) => g.result !== null);
@@ -152,7 +154,8 @@ export async function getReportSummary(): Promise<ReportSummary> {
  * (`moves.byPlayer = true`), tally complet via `tallyQualities` plutôt que les
  * deux seuls compteurs (`blunder`/`brilliant`) que celle-ci expose.
  */
-export async function getMoveQualityTally(): Promise<QualityTally> {
-  const playerMoveRows = await db.select({ quality: moves.quality }).from(moves).where(eq(moves.byPlayer, true));
+export async function getMoveQualityTally(userId: string): Promise<QualityTally> {
+  const s = userScope(userId);
+  const playerMoveRows = await db.select({ quality: moves.quality }).from(moves).where(s.where(moves, eq(moves.byPlayer, true)));
   return tallyQualities(playerMoveRows);
 }

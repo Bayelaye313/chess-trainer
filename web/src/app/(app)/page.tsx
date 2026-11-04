@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { requireUser } from "@/server/auth/session";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
@@ -25,15 +26,16 @@ const RECENT_GAMES = 3;
  * `/?page=<n>` (ancienne pagination des parties) redirige vers `/parties`.
  */
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ page?: string; puzzle?: string }> }) {
+  const { id: userId } = await requireUser();
   const { page, puzzle } = await searchParams;
   if (page !== undefined) redirect(`/parties?page=${encodeURIComponent(page)}`);
 
   const [{ games }, decks, recommendations, preferences, sessionState] = await Promise.all([
-    listGamesSummary(1),
-    listDeckOverviews(),
-    listTrainingRecommendations(),
-    getTrainingPreferences(),
-    getDailySessionState(),
+    listGamesSummary(userId, 1),
+    listDeckOverviews(userId),
+    listTrainingRecommendations(userId),
+    getTrainingPreferences(userId),
+    getDailySessionState(userId),
   ]);
   const dueTotal = decks.reduce((sum, deck) => sum + deck.dueCount + deck.newCount, 0);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { scopedGet, scopedSet, scopedRemove } from "@/client/storage/user-storage";
 /**
  * File "⚡ Lancer les révisions du jour" — chaîne plusieurs drills à travers
  * PLUSIEURS pages `/ouvertures/[slug]` (une variante due peut appartenir à
@@ -23,7 +24,7 @@ const STORAGE_KEY = "chess-trainer:review-queue";
 
 function readQueue(): ReviewQueueItem[] {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = scopedGet("session", STORAGE_KEY);
     return raw ? (JSON.parse(raw) as ReviewQueueItem[]) : [];
   } catch {
     // Stockage indisponible (navigation privée, etc.) — la file se comporte
@@ -34,8 +35,8 @@ function readQueue(): ReviewQueueItem[] {
 
 function writeQueue(items: ReviewQueueItem[]): void {
   try {
-    if (items.length === 0) sessionStorage.removeItem(STORAGE_KEY);
-    else sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    if (items.length === 0) scopedRemove("session", STORAGE_KEY);
+    else scopedSet("session", STORAGE_KEY, JSON.stringify(items));
   } catch {
     // Ignoré — voir `readQueue`.
   }

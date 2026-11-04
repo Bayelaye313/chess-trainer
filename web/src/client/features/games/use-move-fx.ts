@@ -1,5 +1,6 @@
 "use client";
 
+import { scopedGet, scopedSet } from "@/client/storage/user-storage";
 import { useCallback, useRef, useSyncExternalStore } from "react";
 import type { MoveFxKind } from "@/core/analysis/move-fx";
 import { playEsportAudioFx } from "./esport-audio-synth";
@@ -19,7 +20,7 @@ const muteListeners = new Set<() => void>();
 
 function readStoredMuted(): boolean {
   try {
-    return localStorage.getItem(MUTE_STORAGE_KEY) === "1";
+    return scopedGet("local", MUTE_STORAGE_KEY) === "1";
   } catch {
     return false;
   }
@@ -27,7 +28,7 @@ function readStoredMuted(): boolean {
 
 function writeStoredMuted(next: boolean): void {
   try {
-    localStorage.setItem(MUTE_STORAGE_KEY, next ? "1" : "0");
+    scopedSet("local", MUTE_STORAGE_KEY, next ? "1" : "0");
   } catch {
     // Best-effort : la préférence ne survivra simplement pas au rechargement.
   }

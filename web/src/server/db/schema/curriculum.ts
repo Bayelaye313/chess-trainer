@@ -1,4 +1,5 @@
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 
 /**
  * L'onglet « Apprendre » : une académie d'échecs structurée en modules
@@ -96,15 +97,14 @@ export const curriculumPuzzles = sqliteTable(
  * étant strictement linéaire et sans retour en arrière, l'une se déduit de
  * l'autre.
  *
- * `userId` n'a aujourd'hui qu'une seule valeur possible (voir
- * `LOCAL_USER_ID` dans `server/queries/curriculum.ts`) : l'application n'a
- * pas de compte/authentification. La colonne existe pour ne pas re-modéliser
- * la table le jour où ça change.
+ * `userId` : propriétaire (clé étrangère vers `users`, cascade). Les lignes de
+ * l'époque mono-utilisateur valent encore `'local'` jusqu'à leur reprise
+ * (`LEGACY_CLAIM_EMAIL`, voir `server/db/user-scope.ts`).
  */
 export const userThemeProgress = sqliteTable(
   "user_theme_progress",
   {
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     themeId: text("theme_id")
       .notNull()
       .references(() => curriculumThemes.id, { onDelete: "cascade" }),

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireUser } from "@/server/auth/session";
 import type { Metadata } from "next";
 import { compareOpenings } from "@/client/features/openings/opening-endurance-history";
 import { OpeningExplorer } from "@/client/features/openings/opening-explorer";
@@ -30,6 +31,7 @@ export default async function OpeningDetailPage({
    */
   searchParams: Promise<{ drill?: string; side?: string; mode?: string }>;
 }) {
+  const { id: userId } = await requireUser();
   const { slug } = await params;
   const { drill, side, mode } = await searchParams;
   const playerSideOverride = side === "black" || side === "white" ? side : undefined;
@@ -40,11 +42,11 @@ export default async function OpeningDetailPage({
   // en parallèle, comme `app/ouvertures/page.tsx`. L'historique d'endurance
   // est lu en entier : le rang de cette ouverture dépend des autres.
   const [deviations, practicedVariationKeys, variationAccuracies, enduranceSessions, courseOverview] = await Promise.all([
-    getRepertoireDeviations(detail.plies),
-    listPracticedVariationKeys(detail.opening.id),
-    listOpeningVariationAccuracies(detail.opening.id),
-    listEnduranceSessions(),
-    OPENING_COURSE_IDS.has(detail.opening.id) ? getCourseGamesOverview() : Promise.resolve([]),
+    getRepertoireDeviations(userId, detail.plies),
+    listPracticedVariationKeys(userId, detail.opening.id),
+    listOpeningVariationAccuracies(userId, detail.opening.id),
+    listEnduranceSessions(userId),
+    OPENING_COURSE_IDS.has(detail.opening.id) ? getCourseGamesOverview(userId) : Promise.resolve([]),
   ]);
 
   return (

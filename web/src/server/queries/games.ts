@@ -10,7 +10,8 @@ import { Chess } from "chess.js";
 import { and, asc, desc, eq, gt, inArray, isNotNull, like, lt } from "drizzle-orm";
 import { db } from "@/server/db";
 import { moveRowToAnalysedPly } from "@/server/db/mappers";
-import { games, moves, type Game, type GameResult, type MoveRow } from "@/server/db/schema";
+import type { Game, GameResult, MoveRow } from "@/server/db/schema";
+import { games, moves, userScope, type UserScope } from "@/server/db/user-scope";
 import {
   buildGameTimeline,
   computeAccuracy,
@@ -47,16 +48,19 @@ const GAMES_SEARCH_LIMIT = 50;
  * `listGamesSummary` (page) et `searchGamesSummary` (recherche), même forme
  * de sortie, seule la requête `gameRows` en amont diffère.
  */
-async function hydrateGameSummaries(gameRows: Game[]): Promise<GameSummary[]> {
+async function hydrateGameSummaries(s: UserScope, gameRows: Game[]): Promise<GameSummary[]> {
   if (gameRows.length === 0) return [];
 
   const moveRows = await db
     .select({ gameId: moves.gameId, quality: moves.quality, byPlayer: moves.byPlayer })
     .from(moves)
     .where(
-      inArray(
-        moves.gameId,
-        gameRows.map((g) => g.id),
+      s.where(
+        moves,
+        inArray(
+          moves.gameId,
+          gameRows.map((g) => g.id),
+        ),
       ),
     );
 
@@ -88,14 +92,16 @@ async function hydrateGameSummaries(gameRows: Game[]): Promise<GameSummary[]> {
 }
 
 export async function listGamesSummary(
+  userId: string,
   page = 1,
 ): Promise<{ games: GameSummary[]; hasMore: boolean }> {
+  const s = userScope(userId);
   const offset = (page - 1) * GAMES_PAGE_SIZE;
 
   const gameRows = await db
     .select()
     .from(games)
-    .where(isNotNull(games.pgn))
+    .where(s.where(games, isNotNull(games.pgn)))
     .orderBy(desc(games.playedAt))
     .limit(GAMES_PAGE_SIZE + 1)
     .offset(offset);
@@ -103,7 +109,7 @@ export async function listGamesSummary(
   const hasMore = gameRows.length > GAMES_PAGE_SIZE;
   const pageRows = gameRows.slice(0, GAMES_PAGE_SIZE);
 
-  return { games: await hydrateGameSummaries(pageRows), hasMore };
+  return { games: await hydrateGameSummaries(s, pageRows), hasMore };
 }
 
 /**
@@ -116,18 +122,19 @@ export async function listGamesSummary(
  * `listGamesSummary`), mais renvoie tout de même un résultat cohérent
  * (aucun filtre) plutôt que de planter.
  */
-export async function searchGamesSummary(query: string): Promise<GameSummary[]> {
+export async function searchGamesSummary(userId: string, query: string): Promise<GameSummary[]> {
+  const s = userScope(userId);
   const trimmed = query.trim();
   if (trimmed.length === 0) return [];
 
   const gameRows = await db
     .select()
     .from(games)
-    .where(and(isNotNull(games.pgn), like(games.opponentName, `%${trimmed}%`)))
+    .where(s.where(games, isNotNull(games.pgn), like(games.opponentName, `%${trimmed}%`)))
     .orderBy(desc(games.playedAt))
     .limit(GAMES_SEARCH_LIMIT);
 
-  return hydrateGameSummaries(gameRows);
+  return hydrateGameSummaries(s, gameRows);
 }
 
 export interface SideOverview {
@@ -148,11 +155,13 @@ export interface GameDetail {
   overview: GameOverview;
 }
 
-export async function getGameDetail(gameId: string): Promise<GameDetail | null> {
-  const [game] = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
+/** `null` si la partie n'existe pas OU n'appartient pas à cet utilisateur (même 404). */
+export async function getGameDetail(userId: string, gameId: string): Promise<GameDetail | null> {
+  const s = userScope(userId);
+  const [game] = await db.select().from(games).where(s.where(games, eq(games.id, gameId))).limit(1);
   if (!game || !game.pgn) return null;
 
-  const moveRows = await db.select().from(moves).where(eq(moves.gameId, gameId));
+  const moveRows = await db.select().from(moves).where(s.where(moves, eq(moves.gameId, gameId)));
   const analysed = moveRows.map(moveRowToAnalysedPly);
   const playerMoves = analysed.filter((a) => a.byPlayer);
   const opponentMoves = analysed.filter((a) => !a.byPlayer);
@@ -205,9 +214,11 @@ export interface MasterpieceEntry {
  * bug utilisateur corrigé ici.
  */
 export async function listMasterpieces(
+  userId: string,
   limit = 30,
   qualities: readonly ("brilliant" | "critical")[] = ["brilliant", "critical"],
 ): Promise<MasterpieceEntry[]> {
+  const s = userScope(userId);
   const rows = await db
     .select({
       gameId: moves.gameId,
@@ -223,7 +234,7 @@ export async function listMasterpieces(
     })
     .from(moves)
     .innerJoin(games, eq(games.id, moves.gameId))
-    .where(and(eq(moves.byPlayer, true), inArray(moves.quality, qualities)))
+    .where(and(s.owns(moves, games), eq(moves.byPlayer, true), inArray(moves.quality, qualities)))
     .orderBy(desc(games.playedAt))
     .limit(limit);
 
@@ -266,21 +277,22 @@ export interface AdjacentGameIds {
  * partie analysée à une autre sans revenir à l'accueil (cahier des charges,
  * action « Erreurs de partie »).
  */
-export async function getAdjacentGameIds(gameId: string): Promise<AdjacentGameIds> {
-  const [current] = await db.select({ playedAt: games.playedAt }).from(games).where(eq(games.id, gameId)).limit(1);
+export async function getAdjacentGameIds(userId: string, gameId: string): Promise<AdjacentGameIds> {
+  const s = userScope(userId);
+  const [current] = await db.select({ playedAt: games.playedAt }).from(games).where(s.where(games, eq(games.id, gameId))).limit(1);
   if (!current) return { previousGameId: null, nextGameId: null };
 
   const [newer] = await db
     .select({ id: games.id })
     .from(games)
-    .where(and(isNotNull(games.pgn), gt(games.playedAt, current.playedAt)))
+    .where(s.where(games, isNotNull(games.pgn), gt(games.playedAt, current.playedAt)))
     .orderBy(asc(games.playedAt))
     .limit(1);
 
   const [older] = await db
     .select({ id: games.id })
     .from(games)
-    .where(and(isNotNull(games.pgn), lt(games.playedAt, current.playedAt)))
+    .where(s.where(games, isNotNull(games.pgn), lt(games.playedAt, current.playedAt)))
     .orderBy(desc(games.playedAt))
     .limit(1);
 

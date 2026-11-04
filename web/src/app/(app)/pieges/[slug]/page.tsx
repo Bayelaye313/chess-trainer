@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireUser } from "@/server/auth/session";
 import type { Metadata } from "next";
 import { EsportCanvas } from "@/components/ui/esport-page";
 
@@ -9,6 +10,7 @@ import { listAllTraps } from "@/server/queries/traps";
 export const metadata: Metadata = { title: "Piège" };
 
 export default async function PiegeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  await requireUser();
   const { slug } = await params;
   const traps = await listAllTraps();
   const trap = traps.find((candidate) => candidate.id === slug);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { notFound } from "next/navigation";
 import { BookOpen } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
@@ -13,8 +14,9 @@ export const metadata: Metadata = { title: "Mes parties dans le cours" };
 
 /** « Rapport › ouverture » : tes parties dans un cours d'ouverture, une par une, confrontées au cours. */
 export default async function RapportOpeningPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { id: userId } = await requireUser();
   const { slug } = await params;
-  const report = await getCourseGameReport(slug);
+  const report = await getCourseGameReport(userId, slug);
   if (!report) notFound();
 
   return (

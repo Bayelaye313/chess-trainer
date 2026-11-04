@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireUser } from "@/server/auth/session";
 import type { Metadata } from "next";
 import { OpeningCourse } from "@/client/features/openings/opening-course";
 import { OPENING_COURSE_IDS } from "@/core/curriculum/opening-course-ids";
@@ -20,13 +21,14 @@ export default async function OpeningCoursePage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ chapitre?: string; noeud?: string }>;
 }) {
+  const { id: userId } = await requireUser();
   const { slug } = await params;
   const { chapitre, noeud } = await searchParams;
   const opening = findOpening(slug);
   if (!opening || !OPENING_COURSE_IDS.has(slug)) notFound();
   const chapterIndex = Number(chapitre);
   const initialFocus = noeud && Number.isInteger(chapterIndex) && chapterIndex >= 0 ? { chapterIndex, nodeId: noeud } : undefined;
-  const positionNotes = await listCoursePositionNotes(opening.id);
+  const positionNotes = await listCoursePositionNotes(userId, opening.id);
   return (
     <div className="mx-auto w-full max-w-[1240px]">
       <OpeningCourse openingId={opening.id} openingName={opening.name} initialFocus={initialFocus} positionNotes={positionNotes} />

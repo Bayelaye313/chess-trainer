@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/page-header";
 import { OpeningEnduranceHistory } from "@/client/features/openings/opening-endurance-history-view";
@@ -15,8 +16,9 @@ export const metadata: Metadata = { title: "Historique d'endurance" };
  * le préfère à `ouvertures/[slug]`, aucun id d'ouverture ne peut le masquer.
  */
 export default async function HistoriqueEndurancePage() {
+  const { id: userId } = await requireUser();
   // Déjà triées plus récentes d'abord par SQLite (voir `listEnduranceSessions`).
-  const sessions = await listEnduranceSessions();
+  const sessions = await listEnduranceSessions(userId);
   // Un seul `now` par requête : les « il y a 2 jours » de la chronologie
   // restent cohérents entre eux et avec l'hydratation.
   const now = new Date();

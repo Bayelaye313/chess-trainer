@@ -1,4 +1,5 @@
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 
 /**
  * Suivi de révision du journal « Mes erreurs d'ouverture »
@@ -15,14 +16,14 @@ import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
  * sous-variante…) — jamais `openingId`/`ply`, qui décrivent le contexte, pas
  * la déviation elle-même.
  *
- * `userId` suit la même convention que `openingProgress`/`userThemeProgress` :
- * une seule valeur possible aujourd'hui (`LOCAL_USER_ID`), la colonne existe
- * pour ne pas re-modéliser le jour où un compte existe.
+ * `userId` : propriétaire (clé étrangère vers `users`, cascade). Les lignes de
+ * l'époque mono-utilisateur valent encore `'local'` jusqu'à leur reprise
+ * (`LEGACY_CLAIM_EMAIL`, voir `server/db/user-scope.ts`).
  */
 export const openingMistakeReview = sqliteTable(
   "opening_mistake_review",
   {
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     fenBefore: text("fen_before").notNull(),
     actualUci: text("actual_uci").notNull(),
     reviewedAt: integer("reviewed_at", { mode: "timestamp" }).notNull(),

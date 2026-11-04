@@ -1,4 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 
 /**
  * Répétition espacée pour l'onglet « Ouvertures » (Mode Entraînement) — le
@@ -13,14 +14,14 @@ import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm
  * Aléatoire/Surprise n'a par nature aucun script fixe à « maîtriser » et
  * n'est jamais persisté dans cette table.
  *
- * `userId` suit la même convention que `userThemeProgress` (`curriculum.ts`) :
- * une seule valeur possible aujourd'hui (`LOCAL_USER_ID`), la colonne existe
- * pour ne pas re-modéliser le jour où un compte existe.
+ * `userId` : propriétaire (clé étrangère vers `users`, cascade). Les lignes de
+ * l'époque mono-utilisateur valent encore `'local'` jusqu'à leur reprise
+ * (`LEGACY_CLAIM_EMAIL`, voir `server/db/user-scope.ts`).
  */
 export const openingProgress = sqliteTable(
   "opening_progress",
   {
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     /** `OpeningLine.id` (`core/curriculum/openings.ts`) — pas de FK, ce catalogue est statique, pas une table. */
     openingId: text("opening_id").notNull(),
     variationKey: text("variation_key").notNull(),

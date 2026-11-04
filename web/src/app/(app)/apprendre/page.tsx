@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { LearnScreen, type LearnView } from "@/client/features/learn/learn-screen";
 import type { CurriculumCategoryOverview } from "@/server/queries/curriculum";
 import { listCurriculumOverview } from "@/server/queries/curriculum";
@@ -38,8 +39,9 @@ export default async function ApprendrePage({
 }: {
   searchParams: Promise<{ themeId?: string; categoryId?: string }>;
 }) {
+  const { id: userId } = await requireUser();
   const { themeId, categoryId } = await searchParams;
-  const categories = await listCurriculumOverview();
+  const categories = await listCurriculumOverview(userId);
   const initialView = resolveInitialView(categories, themeId, categoryId);
 
   return <LearnScreen initialCategories={categories} initialView={initialView} />;

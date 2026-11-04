@@ -1,6 +1,7 @@
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { GamePhase, Motif, MoveQuality } from "@/core/chess/types";
 import { games } from "./games";
+import { users } from "./auth";
 
 /**
  * Un demi-coup analysé.
@@ -13,6 +14,8 @@ export const moves = sqliteTable(
   "moves",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     gameId: text("game_id")
       .notNull()
       .references(() => games.id, { onDelete: "cascade" }),
@@ -67,6 +70,7 @@ export const moves = sqliteTable(
   },
   (table) => [
     index("moves_game_idx").on(table.gameId, table.ply),
+    index("moves_user_idx").on(table.userId),
     index("moves_quality_idx").on(table.byPlayer, table.quality),
     index("moves_phase_idx").on(table.byPlayer, table.phase),
   ],

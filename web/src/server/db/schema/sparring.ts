@@ -1,4 +1,5 @@
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 
 export type SparringPolicy = "stockfish" | "book" | "human";
 
@@ -6,7 +7,7 @@ export const sparringSessions = sqliteTable(
   "sparring_sessions",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     openingId: text("opening_id"),
     variationKey: text("variation_key"),
     policy: text("policy").$type<SparringPolicy>().notNull(),
@@ -23,6 +24,8 @@ export const sparringMoves = sqliteTable(
   "sparring_moves",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     sessionId: text("session_id")
       .notNull()
       .references(() => sparringSessions.id, { onDelete: "cascade" }),
@@ -33,7 +36,7 @@ export const sparringMoves = sqliteTable(
     policyScore: real("policy_score"),
     thinkMs: integer("think_ms"),
   },
-  (table) => [index("sparring_moves_session_idx").on(table.sessionId, table.ply)],
+  (table) => [index("sparring_moves_session_idx").on(table.sessionId, table.ply), index("sparring_moves_user_idx").on(table.userId)],
 );
 
 export type SparringSession = typeof sparringSessions.$inferSelect;

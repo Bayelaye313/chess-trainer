@@ -13,7 +13,7 @@
     "setup:engine": "node scripts/setup-engine.mjs",
     "smoke:engine": "node scripts/smoke-engine.mjs",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node scripts/ensure-data-dir.mjs && drizzle-kit migrate",
+    "db:migrate": "node scripts/ensure-data-dir.mjs && node src/server/db/migrate/run.mjs",
     "db:studio": "drizzle-kit studio",
     "db:seed-pgn": "tsx --conditions=react-server scripts/seed-from-pgn.ts",
     "db:seed-academy": "tsx --conditions=react-server scripts/seed-academy.ts",

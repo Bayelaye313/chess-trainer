@@ -1,4 +1,5 @@
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 
 /**
  * Historique d'endurance « Sans Guide » — une ligne par Manche 2 terminée
@@ -8,13 +9,15 @@ import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core
  * dernier état. Vit dans le fichier SQLite unique, donc dans la sauvegarde
  * habituelle (copie de `data/chess-trainer.db`).
  *
- * `userId` : même convention que `opening_progress` (`LOCAL_USER_ID`).
+ * `userId` : propriétaire (clé étrangère vers `users`, cascade). Les lignes de
+ * l'époque mono-utilisateur valent encore `'local'` jusqu'à leur reprise
+ * (`LEGACY_CLAIM_EMAIL`, voir `server/db/user-scope.ts`).
  */
 export const openingEnduranceSessions = sqliteTable(
   "opening_endurance_sessions",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     /** `OpeningLine.id` — pas de FK, le catalogue est statique. */
     openingId: text("opening_id").notNull(),
     /** Nom de l'ouverture dénormalisé : l'historique se lit sans recharger le catalogue. */

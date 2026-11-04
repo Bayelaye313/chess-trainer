@@ -73,3 +73,31 @@ export function migrateLegacyKeys(userId: string, adoptLegacy: boolean): void {
     }
   }
 }
+
+type StorageKind = "local" | "session";
+
+function storageOf(kind: StorageKind): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return kind === "local" ? window.localStorage : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+/** Lecture d'une clé du compte courant (`null` sans compte ou sans stockage). */
+export function scopedGet(kind: StorageKind, baseKey: string): string | null {
+  const key = userKey(baseKey);
+  return key ? (storageOf(kind)?.getItem(key) ?? null) : null;
+}
+
+/** Écriture d'une clé du compte courant (sans effet sans compte). */
+export function scopedSet(kind: StorageKind, baseKey: string, value: string): void {
+  const key = userKey(baseKey);
+  if (key) storageOf(kind)?.setItem(key, value);
+}
+
+export function scopedRemove(kind: StorageKind, baseKey: string): void {
+  const key = userKey(baseKey);
+  if (key) storageOf(kind)?.removeItem(key);
+}

@@ -22,6 +22,7 @@ import { Chess } from "chess.js";
  */
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/server/db";
+import type { MoveRow, NewPuzzle } from "@/server/db/schema";
 import {
   dailySets,
   moves,
@@ -30,14 +31,12 @@ import {
   reviews,
   trainingEvents,
   trainingRecommendations,
-  type MoveRow,
-  type NewPuzzle,
-} from "@/server/db/schema";
+  userScope,
+} from "@/server/db/user-scope";
 import { categorizeDeck, isPuzzleWorthy } from "@/core/chess/decks";
 import type { PositionAnalyser } from "@/core/analysis/types";
 import { IMPORT_ANALYSIS_DEPTH } from "@/server/import/constants";
 import { initialReviewFields, scheduleReview, type ReviewGrade } from "@/server/srs/fsrs";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
 
 /**
  * Construit le puzzle (contenu immuable) pour un coup qui mérite d'être
@@ -164,9 +163,10 @@ const DAILY_SET_SIZE = 5;
  * lendemain (voir le docstring de `dailySets`, `schema/reviews.ts`, « pour ne
  * jamais reproposer les mêmes »).
  */
-export async function ensureDailySet(now: Date = new Date(), size = DAILY_SET_SIZE): Promise<string[]> {
+export async function ensureDailySet(userId: string, now: Date = new Date(), size = DAILY_SET_SIZE): Promise<string[]> {
+  const s = userScope(userId);
   const day = isoDay(now);
-  const [existing] = await db.select().from(dailySets).where(eq(dailySets.day, day)).limit(1);
+  const [existing] = await db.select().from(dailySets).where(s.where(dailySets, eq(dailySets.day, day))).limit(1);
   if (existing) return existing.puzzleIds;
 
   // Seulement les cartes réellement dues d'ici la fin du jour : un puzzle
@@ -176,13 +176,13 @@ export async function ensureDailySet(now: Date = new Date(), size = DAILY_SET_SI
   const candidates = await db
     .select({ puzzleId: reviews.puzzleId })
     .from(reviews)
-    .where(and(or(gt(reviews.lapses, 0), eq(reviews.state, 0)), lt(reviews.due, end)))
+    .where(s.where(reviews, or(gt(reviews.lapses, 0), eq(reviews.state, 0)), lt(reviews.due, end)))
     .orderBy(desc(reviews.lapses), asc(reviews.due))
     .limit(size);
 
   const puzzleIds = candidates.map((row) => row.puzzleId);
   if (puzzleIds.length > 0) {
-    await db.insert(dailySets).values({ day, puzzleIds, createdAt: now }).onConflictDoNothing();
+    await db.insert(dailySets).values(s.own({ day, puzzleIds, createdAt: now })).onConflictDoNothing();
   }
   return puzzleIds;
 }
@@ -202,14 +202,15 @@ export interface DailyProgress {
  * avant demain — sans ce filtre, la file tournait en boucle sur les mêmes
  * puzzles et son compteur ne baissait jamais.
  */
-export async function getDailyProgress(now: Date = new Date()): Promise<DailyProgress> {
-  const puzzleIds = await ensureDailySet(now);
+export async function getDailyProgress(userId: string, now: Date = new Date()): Promise<DailyProgress> {
+  const s = userScope(userId);
+  const puzzleIds = await ensureDailySet(userId, now);
   if (puzzleIds.length === 0) return { puzzleIds, doneIds: [], remainingIds: [] };
   const { start } = utcDayBounds(now);
   const logged = await db
     .selectDistinct({ puzzleId: reviewLogs.puzzleId })
     .from(reviewLogs)
-    .where(and(inArray(reviewLogs.puzzleId, puzzleIds), gte(reviewLogs.reviewedAt, start)));
+    .where(s.where(reviewLogs, inArray(reviewLogs.puzzleId, puzzleIds), gte(reviewLogs.reviewedAt, start)));
   const done = new Set(logged.map((row) => row.puzzleId));
   return {
     puzzleIds,
@@ -233,15 +234,16 @@ export interface ExtractionResult {
  * ce qui rend les deux idempotentes de la même façon, qu'on les relance une
  * fois ou dix.
  */
-async function extractPuzzlesFromMoves(candidateMoves: readonly MoveRow[], now: Date): Promise<ExtractionResult> {
+async function extractPuzzlesFromMoves(userId: string, candidateMoves: readonly MoveRow[], now: Date): Promise<ExtractionResult> {
   if (candidateMoves.length === 0) return { scanned: 0, created: 0 };
+  const s = userScope(userId);
 
   const alreadyPuzzled = new Set(
     (
       await db
         .select({ moveId: puzzles.moveId })
         .from(puzzles)
-        .where(inArray(puzzles.moveId, candidateMoves.map((m) => m.id)))
+        .where(s.where(puzzles, inArray(puzzles.moveId, candidateMoves.map((m) => m.id))))
     ).map((row) => row.moveId),
   );
 
@@ -254,8 +256,8 @@ async function extractPuzzlesFromMoves(candidateMoves: readonly MoveRow[], now: 
     puzzle.solution = line.solution;
     puzzle.solutionSan = line.solutionSan;
 
-    await db.insert(puzzles).values(puzzle);
-    await db.insert(reviews).values({ puzzleId: puzzle.id, ...initialReviewFields(now) });
+    await db.insert(puzzles).values(s.own(puzzle));
+    await db.insert(reviews).values(s.own({ puzzleId: puzzle.id, ...initialReviewFields(now) }));
     created += 1;
   }
 
@@ -267,15 +269,17 @@ async function extractPuzzlesFromMoves(candidateMoves: readonly MoveRow[], now: 
  * pour être appelé juste après son import ou son analyse.
  */
 export async function extractPuzzlesFromGame(
+  userId: string,
   gameId: string,
   now: Date = new Date(),
 ): Promise<ExtractionResult> {
+  const s = userScope(userId);
   const candidateMoves = await db
     .select()
     .from(moves)
-    .where(and(eq(moves.gameId, gameId), eq(moves.byPlayer, true)));
+    .where(s.where(moves, eq(moves.gameId, gameId), eq(moves.byPlayer, true)));
 
-  return extractPuzzlesFromMoves(candidateMoves, now);
+  return extractPuzzlesFromMoves(userId, candidateMoves, now);
 }
 
 /**
@@ -285,9 +289,10 @@ export async function extractPuzzlesFromGame(
  * pour tourner ponctuellement (script, tâche de fond), pas à chaque
  * chargement de page.
  */
-export async function extractPuzzlesFromAllGames(now: Date = new Date()): Promise<ExtractionResult> {
-  const candidateMoves = await db.select().from(moves).where(eq(moves.byPlayer, true));
-  return extractPuzzlesFromMoves(candidateMoves, now);
+export async function extractPuzzlesFromAllGames(userId: string, now: Date = new Date()): Promise<ExtractionResult> {
+  const s = userScope(userId);
+  const candidateMoves = await db.select().from(moves).where(s.where(moves, eq(moves.byPlayer, true)));
+  return extractPuzzlesFromMoves(userId, candidateMoves, now);
 }
 
 /**
@@ -303,6 +308,7 @@ export async function extractPuzzlesFromAllGames(now: Date = new Date()): Promis
  * puzzles déjà créés.
  */
 export async function backfillMoveBestPv(analyser: PositionAnalyser): Promise<{ scanned: number; updated: number }> {
+  // user-scope: maintenance — script d'exploitation sur toute la base, sans chemin HTTP.
   const personalPuzzles = await db.select({ moveId: puzzles.moveId }).from(puzzles).where(eq(puzzles.source, "local"));
   const moveIds = [...new Set(personalPuzzles.map((puzzle) => puzzle.moveId).filter((id): id is number => id !== null))];
   if (moveIds.length === 0) return { scanned: 0, updated: 0 };
@@ -331,6 +337,7 @@ export async function backfillMoveBestPv(analyser: PositionAnalyser): Promise<{ 
  * reste vide et cette fonction n'a rien de neuf à propager.
  */
 export async function backfillPersonalPuzzleLines(): Promise<{ scanned: number; extended: number }> {
+  // user-scope: maintenance — script d'exploitation sur toute la base, sans chemin HTTP.
   const personalPuzzles = await db.select().from(puzzles).where(eq(puzzles.source, "local"));
   if (personalPuzzles.length === 0) return { scanned: 0, extended: 0 };
 
@@ -366,32 +373,37 @@ export interface SubmitPuzzleAnswerInput {
  * ont divergé (insertion de puzzle contournant ce service).
  */
 export async function submitPuzzleAnswer(
+  userId: string,
   input: SubmitPuzzleAnswerInput,
   now: Date = new Date(),
 ): Promise<boolean> {
-  const [current] = await db.select().from(reviews).where(eq(reviews.puzzleId, input.puzzleId)).limit(1);
+  const s = userScope(userId);
+  const [current] = await db.select().from(reviews).where(s.where(reviews, eq(reviews.puzzleId, input.puzzleId))).limit(1);
   if (!current) return false;
 
   const { card, log } = scheduleReview(current, input.grade, now);
 
-  await db.update(reviews).set(card).where(eq(reviews.puzzleId, input.puzzleId));
-  await db.insert(reviewLogs).values({
-    ...log,
-    puzzleId: input.puzzleId,
-    playedUci: input.playedUci ?? null,
-    solvedMs: input.solvedMs ?? null,
-  });
+  await db.update(reviews).set(card).where(s.where(reviews, eq(reviews.puzzleId, input.puzzleId)));
+  await db.insert(reviewLogs).values(
+    s.own({
+      ...log,
+      puzzleId: input.puzzleId,
+      playedUci: input.playedUci ?? null,
+      solvedMs: input.solvedMs ?? null,
+    }),
+  );
   const scoreByGrade: Record<ReviewGrade, number> = { again: 0, hard: 0.5, good: 0.8, easy: 1 };
-  await db.insert(trainingEvents).values({
-    id: crypto.randomUUID(),
-    userId: LOCAL_USER_ID,
-    kind: "puzzle",
-    entityId: input.puzzleId,
-    score: scoreByGrade[input.grade],
-    seconds: input.solvedMs == null ? undefined : input.solvedMs / 1000,
-    occurredAt: now,
-  });
-  await completePuzzleRecommendation(input.puzzleId, now);
+  await db.insert(trainingEvents).values(
+    s.own({
+      id: crypto.randomUUID(),
+      kind: "puzzle" as const,
+      entityId: input.puzzleId,
+      score: scoreByGrade[input.grade],
+      seconds: input.solvedMs == null ? undefined : input.solvedMs / 1000,
+      occurredAt: now,
+    }),
+  );
+  await completePuzzleRecommendation(userId, input.puzzleId, now);
 
   return true;
 }
@@ -402,25 +414,25 @@ export async function submitPuzzleAnswer(
  * enchaîne les puzzles dus, pas forcément celui de la carte cliquée). Jamais
  * toutes d'un coup : chaque puzzle résolu fait avancer la séance d'une carte.
  */
-async function completePuzzleRecommendation(puzzleId: string, completedAt: Date): Promise<void> {
-  const open = and(
-    eq(trainingRecommendations.userId, LOCAL_USER_ID),
-    eq(trainingRecommendations.entityType, "puzzle"),
-    isNull(trainingRecommendations.completedAt),
-  );
+async function completePuzzleRecommendation(userId: string, puzzleId: string, completedAt: Date): Promise<void> {
+  const s = userScope(userId);
+  const open = and(eq(trainingRecommendations.entityType, "puzzle"), isNull(trainingRecommendations.completedAt));
   const [exact] = await db
     .select({ id: trainingRecommendations.id })
     .from(trainingRecommendations)
-    .where(and(open, eq(trainingRecommendations.entityId, puzzleId)))
+    .where(s.where(trainingRecommendations, open, eq(trainingRecommendations.entityId, puzzleId)))
     .limit(1);
   const [target] = exact
     ? [exact]
     : await db
         .select({ id: trainingRecommendations.id })
         .from(trainingRecommendations)
-        .where(open)
+        .where(s.where(trainingRecommendations, open))
         .orderBy(desc(trainingRecommendations.priority))
         .limit(1);
   if (!target) return;
-  await db.update(trainingRecommendations).set({ completedAt }).where(eq(trainingRecommendations.id, target.id));
+  await db
+    .update(trainingRecommendations)
+    .set({ completedAt })
+    .where(s.where(trainingRecommendations, eq(trainingRecommendations.id, target.id)));
 }

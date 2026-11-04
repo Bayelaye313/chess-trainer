@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { notFound } from "next/navigation";
 import { EsportCanvas } from "@/components/ui/esport-page";
 import { GameReviewScreen, type GameDeviation } from "@/client/features/games/game-review-screen";
@@ -27,9 +28,10 @@ export default async function GameDetailPage({
    */
   searchParams: Promise<{ openingId?: string; ply?: string; reviewPly?: string; course?: string }>;
 }) {
+  const { id: userId } = await requireUser();
   const { id } = await params;
   const { openingId, ply, reviewPly, course } = await searchParams;
-  const detail = await getGameDetail(id);
+  const detail = await getGameDetail(userId, id);
   if (!detail) notFound();
 
   // Les paramètres explicites (venus du journal « Erreurs d'ouverture »)
@@ -38,15 +40,15 @@ export default async function GameDetailPage({
   // pour que TOUTE partie ouverte affiche sa déviation, pas seulement celles
   // déjà cataloguées dans le journal — voir le docstring du Coach
   // (`buildCoachMessage`, `coach-narrative.ts`).
-  const courseContext = course ? await getCourseGameContext(course, id) : null;
+  const courseContext = course ? await getCourseGameContext(userId, course, id) : null;
   const courseDeviation = courseContext?.deviation ? { ...courseContext.deviation, openingName: courseContext.openingName } : null;
   // Le cours fait foi quand la partie en relève : sans déviation au cours, pas de bulle tirée d'une autre source.
-  const deviation = courseContext ? courseDeviation : (resolveDeviation(openingId, ply) ?? (await getGameOpeningDeviation(id)));
+  const deviation = courseContext ? courseDeviation : (resolveDeviation(openingId, ply) ?? (await getGameOpeningDeviation(userId, id)));
   // Voisines chronologiques, pour la navigation ◀ Précédente / Suivante ▶ —
   // permet de passer d'une partie analysée à une autre sans repasser par
   // l'accueil (cahier des charges, action « Erreurs de partie »). Depuis le
   // Rapport d'une ouverture : les voisines dans cette ouverture seulement.
-  const adjacent = courseContext ?? (await getAdjacentGameIds(id));
+  const adjacent = courseContext ?? (await getAdjacentGameIds(userId, id));
 
   return (
     <EsportCanvas detail>

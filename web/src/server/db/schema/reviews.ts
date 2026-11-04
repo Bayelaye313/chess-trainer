@@ -1,5 +1,6 @@
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { puzzles } from "./puzzles";
+import { users } from "./auth";
 
 /**
  * État de répétition espacée d'un puzzle, au format FSRS.
@@ -17,6 +18,8 @@ export const reviews = sqliteTable(
     puzzleId: text("puzzle_id")
       .primaryKey()
       .references(() => puzzles.id, { onDelete: "cascade" }),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
 
     due: integer("due", { mode: "timestamp" }).notNull(),
     stability: real("stability").notNull(),
@@ -29,7 +32,7 @@ export const reviews = sqliteTable(
     state: integer("state").notNull().default(0),
     lastReview: integer("last_review", { mode: "timestamp" }),
   },
-  (table) => [index("reviews_due_idx").on(table.due)],
+  (table) => [index("reviews_due_idx").on(table.due), index("reviews_user_due_idx").on(table.userId, table.due)],
 );
 
 /**
@@ -43,6 +46,8 @@ export const reviewLogs = sqliteTable(
   "review_logs",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     puzzleId: text("puzzle_id")
       .notNull()
       .references(() => puzzles.id, { onDelete: "cascade" }),
@@ -66,16 +71,23 @@ export const reviewLogs = sqliteTable(
   (table) => [
     index("review_logs_puzzle_idx").on(table.puzzleId),
     index("review_logs_date_idx").on(table.reviewedAt),
+    index("review_logs_user_idx").on(table.userId),
   ],
 );
 
 /** Sélection figée des puzzles du jour, pour ne jamais reproposer les mêmes. */
-export const dailySets = sqliteTable("daily_sets", {
-  /** Jour au format ISO "AAAA-MM-JJ". */
-  day: text("day").primaryKey(),
-  puzzleIds: text("puzzle_ids", { mode: "json" }).$type<string[]>().notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
+export const dailySets = sqliteTable(
+  "daily_sets",
+  {
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    /** Jour au format ISO "AAAA-MM-JJ". */
+    day: text("day").notNull(),
+    puzzleIds: text("puzzle_ids", { mode: "json" }).$type<string[]>().notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [uniqueIndex("daily_sets_user_day_idx").on(table.userId, table.day)],
+);
 
 export type Review = typeof reviews.$inferSelect;
 export type NewReview = typeof reviews.$inferInsert;

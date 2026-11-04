@@ -2,8 +2,8 @@ import "server-only";
 
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { sparringMoves, sparringSessions, trainingEvents, type SparringPolicy } from "@/server/db/schema";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
+import type { SparringPolicy } from "@/server/db/schema";
+import { sparringMoves, sparringSessions, trainingEvents, userScope } from "@/server/db/user-scope";
 
 export interface StartSparringInput {
   openingId?: string;
@@ -31,27 +31,42 @@ export interface FinishSparringInput {
 }
 
 export async function startSparringSession(
+  userId: string,
   input: StartSparringInput,
-  userId: string = LOCAL_USER_ID,
 ): Promise<string> {
   const id = crypto.randomUUID();
-  await db.insert(sparringSessions).values({
+  await db.insert(sparringSessions).values(userScope(userId).own({
     id,
-    userId,
     openingId: input.openingId,
     variationKey: input.variationKey,
     policy: input.policy,
     targetElo: input.targetElo,
     startedAt: input.startedAt ?? new Date(),
-  });
+  }));
   return id;
 }
 
-export async function recordSparringMove(input: RecordSparringMoveInput): Promise<void> {
-  await db.insert(sparringMoves).values(input);
+/** Vrai si la séance existe ET appartient à cet utilisateur. */
+async function ownsSparringSession(userId: string, sessionId: string): Promise<boolean> {
+  const s = userScope(userId);
+  const [row] = await db
+    .select({ id: sparringSessions.id })
+    .from(sparringSessions)
+    .where(s.where(sparringSessions, eq(sparringSessions.id, sessionId)))
+    .limit(1);
+  return row !== undefined;
 }
 
-export async function finishSparringSession(input: FinishSparringInput): Promise<void> {
+/** Ignoré (renvoie `false`) si la séance n'est pas à cet utilisateur : l'id vient du client. */
+export async function recordSparringMove(userId: string, input: RecordSparringMoveInput): Promise<boolean> {
+  if (!(await ownsSparringSession(userId, input.sessionId))) return false;
+  await db.insert(sparringMoves).values(userScope(userId).own(input));
+  return true;
+}
+
+export async function finishSparringSession(userId: string, input: FinishSparringInput): Promise<boolean> {
+  const s = userScope(userId);
+  if (!(await ownsSparringSession(userId, input.sessionId))) return false;
   const finishedAt = input.finishedAt ?? new Date();
   await db
     .update(sparringSessions)
@@ -60,22 +75,24 @@ export async function finishSparringSession(input: FinishSparringInput): Promise
       theoryExitPly: input.theoryExitPly,
       finishedAt,
     })
-    .where(eq(sparringSessions.id, input.sessionId));
-  await db.insert(trainingEvents).values({
-    id: crypto.randomUUID(),
-    userId: LOCAL_USER_ID,
-    kind: "game",
-    entityId: input.sessionId,
-    score: input.result === "win" ? 1 : input.result === "draw" ? 0.5 : 0,
-    occurredAt: finishedAt,
-  });
+    .where(s.where(sparringSessions, eq(sparringSessions.id, input.sessionId)));
+  await db.insert(trainingEvents).values(
+    s.own({
+      id: crypto.randomUUID(),
+      kind: "game" as const,
+      entityId: input.sessionId,
+      score: input.result === "win" ? 1 : input.result === "draw" ? 0.5 : 0,
+      occurredAt: finishedAt,
+    }),
+  );
+  return true;
 }
 
-export async function listRecentSparringSessions(userId: string = LOCAL_USER_ID) {
+export async function listRecentSparringSessions(userId: string) {
   return db
     .select()
     .from(sparringSessions)
-    .where(eq(sparringSessions.userId, userId))
+    .where(userScope(userId).owns(sparringSessions))
     .orderBy(desc(sparringSessions.startedAt))
     .limit(20);
 }
@@ -94,16 +111,17 @@ export interface SparringMoveBiasResult {
 
 /** Apprentissage local : renforce les reponses des sessions que l'utilisateur a perdues. */
 export async function getSparringMoveBias(
+  userId: string,
   input: SparringMoveBiasInput,
-  userId: string = LOCAL_USER_ID,
 ): Promise<SparringMoveBiasResult> {
+  const s = userScope(userId);
   const rows = await db
     .select({ sessionId: sparringSessions.id, uci: sparringMoves.uci, result: sparringSessions.result })
     .from(sparringMoves)
     .innerJoin(sparringSessions, eq(sparringMoves.sessionId, sparringSessions.id))
     .where(
       and(
-        eq(sparringSessions.userId, userId),
+        s.owns(sparringMoves, sparringSessions),
         eq(sparringSessions.openingId, input.openingId),
         eq(sparringSessions.variationKey, input.variationKey),
         eq(sparringMoves.byPlayer, false),

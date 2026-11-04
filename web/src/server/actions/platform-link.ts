@@ -2,7 +2,9 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { platformLinks, type PlatformLink } from "@/server/db/schema";
+import type { PlatformLink } from "@/server/db/schema";
+import { platformLinks, userScope } from "@/server/db/user-scope";
+import { requireUser } from "@/server/auth/session";
 import { runSync } from "@/server/import/run-sync";
 import type { SyncPlatform } from "@/server/import/sync-platforms";
 
@@ -19,10 +21,13 @@ export type LinkPlatformResult = { link: PlatformLink } | { error: string };
 /**
  * Lie un pseudo à une plateforme — une seule fois, comme demandé : relier de
  * nouveau la même plateforme remplace simplement le pseudo (upsert sur
- * `source`, clé primaire de `platform_links`), la synchro repart alors depuis
- * zéro pour ce nouveau compte.
+ * `(user_id, source)`, unique dans `platform_links`), la synchro repart alors
+ * depuis zéro pour ce nouveau compte. Les comptes liés sont propres à chaque
+ * utilisateur.
  */
 export async function linkPlatform(input: LinkPlatformInput): Promise<LinkPlatformResult> {
+  const user = await requireUser();
+  const s = userScope(user.id);
   const username = input.username.trim();
   if (!username) return { error: "Indique un pseudo." };
   if (input.source !== "chesscom" && input.source !== "lichess") {
@@ -30,6 +35,7 @@ export async function linkPlatform(input: LinkPlatformInput): Promise<LinkPlatfo
   }
 
   const link: PlatformLink = {
+    userId: user.id,
     source: input.source,
     username,
     linkedAt: new Date(),
@@ -39,9 +45,9 @@ export async function linkPlatform(input: LinkPlatformInput): Promise<LinkPlatfo
 
   await db
     .insert(platformLinks)
-    .values(link)
+    .values(s.own(link))
     .onConflictDoUpdate({
-      target: platformLinks.source,
+      target: [platformLinks.userId, platformLinks.source],
       set: { username, linkedAt: link.linkedAt, lastSyncedAt: null, lastImportedPlayedAt: null },
     });
 
@@ -50,7 +56,7 @@ export async function linkPlatform(input: LinkPlatformInput): Promise<LinkPlatfo
   // juste la synchro immédiatement plutôt que d'attendre le sondage à 5 min
   // (`useSyncNotifier`). Un échec ici (réseau, plateforme en panne) n'empêche
   // pas le lien d'être posé — le prochain sondage réessaiera.
-  void runSync().catch((cause) => {
+  void runSync(user.id).catch((cause) => {
     console.error("Synchro immédiate après liaison de compte en échec :", cause);
   });
 
@@ -58,9 +64,11 @@ export async function linkPlatform(input: LinkPlatformInput): Promise<LinkPlatfo
 }
 
 export async function unlinkPlatform(source: SyncPlatform): Promise<void> {
-  await db.delete(platformLinks).where(eq(platformLinks.source, source));
+  const s = userScope((await requireUser()).id);
+  await db.delete(platformLinks).where(s.where(platformLinks, eq(platformLinks.source, source)));
 }
 
 export async function listPlatformLinks(): Promise<PlatformLink[]> {
-  return db.select().from(platformLinks);
+  const s = userScope((await requireUser()).id);
+  return db.select().from(platformLinks).where(s.owns(platformLinks));
 }

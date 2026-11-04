@@ -1,5 +1,6 @@
 "use server";
 
+import { requireUser } from "@/server/auth/session";
 import type {
   CompleteProgrammeSessionInput,
   ProgrammeSessionOutcome,
@@ -9,13 +10,13 @@ import type {
 import { completeProgrammeSession, recordProgrammeResult, startOrResumeSession } from "@/server/queries/programme";
 
 export async function startProgrammeSession(): Promise<ProgrammeSessionPayload | null> {
-  return startOrResumeSession();
+  return startOrResumeSession((await requireUser()).id);
 }
 
 export async function saveProgrammeResult(input: RecordProgrammeResultInput): Promise<void> {
-  await recordProgrammeResult(input);
+  await recordProgrammeResult((await requireUser()).id, input);
 }
 
 export async function finishProgrammeSession(input: CompleteProgrammeSessionInput): Promise<ProgrammeSessionOutcome> {
-  return completeProgrammeSession(input);
+  return completeProgrammeSession((await requireUser()).id, input);
 }

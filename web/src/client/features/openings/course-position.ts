@@ -1,5 +1,6 @@
 "use client";
 
+import { scopedGet, scopedSet } from "@/client/storage/user-storage";
 import type { CourseTreeFocus } from "@/client/features/learn/course-tree-viewer";
 
 /**
@@ -16,7 +17,7 @@ export interface LastCourse extends CourseTreeFocus {
 
 export function readCoursePosition(openingId: string): CourseTreeFocus | null {
   try {
-    const raw = window.localStorage.getItem(POSITION_KEY(openingId));
+    const raw = scopedGet("local", POSITION_KEY(openingId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CourseTreeFocus;
     return Number.isInteger(parsed.chapterIndex) && typeof parsed.nodeId === "string" ? parsed : null;
@@ -27,8 +28,8 @@ export function readCoursePosition(openingId: string): CourseTreeFocus | null {
 
 export function saveCoursePosition(openingId: string, openingName: string, focus: CourseTreeFocus): void {
   try {
-    window.localStorage.setItem(POSITION_KEY(openingId), JSON.stringify(focus));
-    window.localStorage.setItem(LAST_COURSE_KEY, JSON.stringify({ openingId, openingName, ...focus } satisfies LastCourse));
+    scopedSet("local", POSITION_KEY(openingId), JSON.stringify(focus));
+    scopedSet("local", LAST_COURSE_KEY, JSON.stringify({ openingId, openingName, ...focus } satisfies LastCourse));
   } catch {
     // Stockage indisponible : le cours repartira simplement du début.
   }
@@ -36,7 +37,7 @@ export function saveCoursePosition(openingId: string, openingName: string, focus
 
 export function readLastCourse(): LastCourse | null {
   try {
-    const raw = window.localStorage.getItem(LAST_COURSE_KEY);
+    const raw = scopedGet("local", LAST_COURSE_KEY);
     return raw ? (JSON.parse(raw) as LastCourse) : null;
   } catch {
     return null;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { PlayScreen } from "@/client/features/play/play-screen";
 import { PageHeader } from "@/components/ui/page-header";
 import { getDailySessionState, listBotStartLines } from "@/server/queries/daily-plan";
@@ -12,8 +13,9 @@ export const dynamic = "force-dynamic";
  * une partie avec le dernier réglage mémorisé.
  */
 export default async function JouerPage({ searchParams }: { searchParams: Promise<{ rejouer?: string }> }) {
+  const { id: userId } = await requireUser();
   const { rejouer } = await searchParams;
-  const sessionState = await getDailySessionState();
+  const sessionState = await getDailySessionState(userId);
   // Plan du jour appliqué → lignes que le bot imposera (vide hors session ou sans « Ouvertures »/« Pièges »).
   const startLines = listBotStartLines(sessionState?.session ?? null);
 

@@ -8,6 +8,7 @@
  * son domaine.
  */
 import type { DeckId } from "@/core/chess/decks";
+import { requireUser } from "@/server/auth/session";
 import type { GameResult } from "@/core/chess/types";
 import { listRepertoireDeviationGames, type DeviationGameSummary } from "@/server/queries/opening-mistakes";
 import { getNextDuePuzzle, getPuzzleById, listDeckOverviews, type DeckOverview, type DeckPuzzle } from "@/server/queries/reviews";
@@ -17,7 +18,7 @@ import {
 } from "@/server/queries/spaced-repetition";
 
 export async function getDeckOverviews(): Promise<DeckOverview[]> {
-  return listDeckOverviews();
+  return listDeckOverviews((await requireUser()).id);
 }
 
 /**
@@ -26,16 +27,16 @@ export async function getDeckOverviews(): Promise<DeckOverview[]> {
  * deck précis, voir `getNextDuePuzzle`.
  */
 export async function getNextPuzzle(deckId?: DeckId): Promise<DeckPuzzle | null> {
-  return getNextDuePuzzle(deckId);
+  return getNextDuePuzzle((await requireUser()).id, deckId);
 }
 
 /** La carte cliquée de la Séance du jour — `RecommendedPuzzleSession` l'ouvre en premier. */
 export async function getPuzzle(puzzleId: string): Promise<DeckPuzzle | null> {
-  return getPuzzleById(puzzleId);
+  return getPuzzleById((await requireUser()).id, puzzleId);
 }
 
 export async function submitPuzzleAnswer(input: SubmitPuzzleAnswerInput): Promise<boolean> {
-  return submitPuzzleAnswerQuery(input);
+  return submitPuzzleAnswerQuery((await requireUser()).id, input);
 }
 
 /**
@@ -56,6 +57,6 @@ export interface DeviationGameSummaryDto extends Omit<DeviationGameSummary, "pla
  * plus coûteux que le simple dénombrement de `listDeckOverviews`.
  */
 export async function getOpeningMistakesHub(): Promise<DeviationGameSummaryDto[]> {
-  const games = await listRepertoireDeviationGames();
+  const games = await listRepertoireDeviationGames((await requireUser()).id);
   return games.map((game) => ({ ...game, playedAt: game.playedAt.toISOString() }));
 }

@@ -19,6 +19,7 @@
  * `server/queries/opening-progress.ts` — comme `getOpeningDetail` pour
  * `/ouvertures/[slug]` (voir `server/actions/openings.ts`).
  */
+import { requireUser } from "@/server/auth/session";
 import { recordOpeningDrillResult as recordOpeningDrillResultQuery, type RecordOpeningDrillInput } from "@/server/queries/opening-progress";
 
 export interface OpeningDrillProgressSummary {
@@ -32,7 +33,7 @@ export interface OpeningDrillProgressSummary {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function recordOpeningDrillResult(input: RecordOpeningDrillInput): Promise<OpeningDrillProgressSummary> {
-  const row = await recordOpeningDrillResultQuery(input);
+  const row = await recordOpeningDrillResultQuery((await requireUser()).id, input);
   return {
     attemptsCount: row.attemptsCount,
     streak: row.streak,

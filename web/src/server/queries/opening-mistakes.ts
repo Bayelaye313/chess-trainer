@@ -37,7 +37,7 @@ import type { GameResult, MoveQuality } from "@/core/chess/types";
 import { isReviewable } from "@/core/chess/types";
 import { OPENINGS } from "@/core/curriculum/openings";
 import { db } from "@/server/db";
-import { games, moves } from "@/server/db/schema";
+import { games, moves, userScope } from "@/server/db/user-scope";
 import { fetchLichessMasters, type PopularMove } from "@/server/import/lichess-explorer";
 import { findBookMove } from "@/server/import/openings";
 import { getCuratedChildren } from "@/server/curriculum/opening-tree-index";
@@ -121,8 +121,9 @@ export interface RepertoireDeviation {
  * pas une déviation. Les candidats restants passent ensuite les deux portes
  * de `filterRealDeviations`.
  */
-export async function getRepertoireDeviations(plies: readonly AnnotatedPly[]): Promise<RepertoireDeviation[]> {
+export async function getRepertoireDeviations(userId: string, plies: readonly AnnotatedPly[]): Promise<RepertoireDeviation[]> {
   if (plies.length === 0) return [];
+  const s = userScope(userId);
 
   const fenBeforeByPly = buildFenBeforeByPly(plies);
 
@@ -137,7 +138,7 @@ export async function getRepertoireDeviations(plies: readonly AnnotatedPly[]): P
     })
     .from(moves)
     .innerJoin(games, eq(games.id, moves.gameId))
-    .where(and(eq(moves.byPlayer, true), inArray(moves.fenBefore, fenBeforeByPly)));
+    .where(and(s.owns(moves, games), eq(moves.byPlayer, true), inArray(moves.fenBefore, fenBeforeByPly)));
 
   // Regroupe par (position, coup joué) — un même écart répété dans plusieurs
   // parties ne doit apparaître qu'une fois, avec son nombre d'occurrences.
@@ -376,15 +377,17 @@ export function buildDeviationGameSummaries(
  * `filterRealDeviations`), mais autant limiter les allers-retours DB.
  */
 async function fetchLeadInUciByGame(
+  userId: string,
   deviations: readonly { gameId: string; ply: number }[],
 ): Promise<Map<string, string[]>> {
   if (deviations.length === 0) return new Map();
+  const s = userScope(userId);
   const cutoffPlyByGame = new Map(deviations.map((d) => [d.gameId, d.ply]));
 
   const rows = await db
     .select({ gameId: moves.gameId, ply: moves.ply, uci: moves.uci })
     .from(moves)
-    .where(inArray(moves.gameId, Array.from(cutoffPlyByGame.keys())));
+    .where(s.where(moves, inArray(moves.gameId, Array.from(cutoffPlyByGame.keys()))));
 
   const byGame = new Map<string, { ply: number; uci: string }[]>();
   for (const row of rows) {
@@ -428,7 +431,8 @@ export interface GameOpeningDeviation {
  * `earliestOpeningMistakePerGame` ne sert à rien ici : il n'y a qu'une seule
  * partie, le plus petit `ply` se prend directement).
  */
-export async function getGameOpeningDeviation(gameId: string): Promise<GameOpeningDeviation | null> {
+export async function getGameOpeningDeviation(userId: string, gameId: string): Promise<GameOpeningDeviation | null> {
+  const s = userScope(userId);
   const rows = await db
     .select({
       ply: moves.ply,
@@ -441,7 +445,7 @@ export async function getGameOpeningDeviation(gameId: string): Promise<GameOpeni
     })
     .from(moves)
     .innerJoin(games, eq(games.id, moves.gameId))
-    .where(and(eq(moves.gameId, gameId), eq(moves.byPlayer, true), eq(moves.phase, "opening")));
+    .where(and(s.owns(moves, games), eq(moves.gameId, gameId), eq(moves.byPlayer, true), eq(moves.phase, "opening")));
 
   const reviewable = rows.filter((row) => isReviewable(row.actualQuality));
   if (reviewable.length === 0) return null;
@@ -484,7 +488,8 @@ export async function getGameOpeningDeviation(gameId: string): Promise<GameOpeni
  * catalogue) — `openingId` (le chapitre du catalogue, s'il y en a un) ne sert
  * plus qu'à enrichir l'exercice de commentaires pédagogiques quand il existe.
  */
-export async function listRepertoireDeviationGames(): Promise<DeviationGameSummary[]> {
+export async function listRepertoireDeviationGames(userId: string): Promise<DeviationGameSummary[]> {
+  const s = userScope(userId);
   const rows = await db
     .select({
       gameId: moves.gameId,
@@ -504,7 +509,7 @@ export async function listRepertoireDeviationGames(): Promise<DeviationGameSumma
     })
     .from(moves)
     .innerJoin(games, eq(games.id, moves.gameId))
-    .where(and(eq(moves.byPlayer, true), eq(moves.phase, "opening")));
+    .where(and(s.owns(moves, games), eq(moves.byPlayer, true), eq(moves.phase, "opening")));
 
   const reviewable = rows.filter((row) => isReviewable(row.actualQuality));
   const earliest = earliestOpeningMistakePerGame(reviewable);
@@ -514,6 +519,6 @@ export async function listRepertoireDeviationGames(): Promise<DeviationGameSumma
   const survivors = filterRealDeviations(earliest, mastersByFen);
   if (survivors.length === 0) return [];
 
-  const leadInUciByGame = await fetchLeadInUciByGame(survivors.map((row) => ({ gameId: row.gameId, ply: row.ply })));
+  const leadInUciByGame = await fetchLeadInUciByGame(userId, survivors.map((row) => ({ gameId: row.gameId, ply: row.ply })));
   return buildDeviationGameSummaries(survivors, leadInUciByGame);
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { requireUser } from "@/server/auth/session";
 import {
   finishSparringSession as finishSparringSessionQuery,
   getSparringMoveBias as getSparringMoveBiasQuery,
@@ -11,17 +12,17 @@ import {
 } from "@/server/queries/sparring";
 
 export async function startSparringSession(input: StartSparringInput): Promise<string> {
-  return startSparringSessionQuery(input);
+  return startSparringSessionQuery((await requireUser()).id, input);
 }
 
 export async function recordSparringMove(input: RecordSparringMoveInput): Promise<void> {
-  await recordSparringMoveQuery(input);
+  await recordSparringMoveQuery((await requireUser()).id, input);
 }
 
 export async function finishSparringSession(input: FinishSparringInput): Promise<void> {
-  await finishSparringSessionQuery(input);
+  await finishSparringSessionQuery((await requireUser()).id, input);
 }
 
 export async function getSparringMoveBias(input: { openingId: string; variationKey: string }) {
-  return getSparringMoveBiasQuery(input);
+  return getSparringMoveBiasQuery((await requireUser()).id, input);
 }

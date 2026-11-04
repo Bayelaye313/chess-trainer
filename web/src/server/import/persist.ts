@@ -1,56 +1,60 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { evaluatedMoveToRow } from "@/server/db/mappers";
-import { games, moves, type GameSource } from "@/server/db/schema";
+import type { GameSource } from "@/server/db/schema";
+import { games, moves, userScope } from "@/server/db/user-scope";
 import { isReviewable } from "@/core/chess/types";
 import type { ImportedGameResult } from "./analyse-game";
 
-/** Vrai si cette partie a déjà été importée — évite de la ré-analyser. */
-export async function gameAlreadyImported(source: GameSource, externalId: string): Promise<boolean> {
+/** Vrai si CET utilisateur a déjà importé cette partie — évite de la ré-analyser. */
+export async function gameAlreadyImported(userId: string, source: GameSource, externalId: string): Promise<boolean> {
+  const s = userScope(userId);
   const existing = await db
     .select({ id: games.id })
     .from(games)
-    .where(and(eq(games.source, source), eq(games.externalId, externalId)))
+    .where(s.where(games, eq(games.source, source), eq(games.externalId, externalId)))
     .limit(1);
   return existing.length > 0;
 }
 
 /** Insère une partie importée et ses coups analysés. Renvoie le nombre d'erreurs (mistake/blunder). */
 export async function persistImportedGame(
+  userId: string,
   source: GameSource,
   result: ImportedGameResult,
 ): Promise<{ gameId: string; mistakesFound: number }> {
+  const s = userScope(userId);
   const gameId = crypto.randomUUID();
   const now = new Date();
 
-  await db.insert(games).values({
-    id: gameId,
-    source,
-    externalId: result.externalId,
-    pgn: result.pgn,
-    initialFen: result.initialFen,
-    finalFen: result.finalFen,
-    playerColor: result.playerColor,
-    playerRating: result.playerRating,
-    opponentName: result.opponentName,
-    opponentRating: result.opponentRating,
-    result: result.result,
-    termination: result.termination,
-    timeControl: result.timeControl,
-    eco: result.eco,
-    openingName: result.openingName,
-    playedAt: result.playedAt,
-    createdAt: now,
-    analysedAt: now,
-  });
+  await db.insert(games).values(
+    s.own({
+      id: gameId,
+      source,
+      externalId: result.externalId,
+      pgn: result.pgn,
+      initialFen: result.initialFen,
+      finalFen: result.finalFen,
+      playerColor: result.playerColor,
+      playerRating: result.playerRating,
+      opponentName: result.opponentName,
+      opponentRating: result.opponentRating,
+      result: result.result,
+      termination: result.termination,
+      timeControl: result.timeControl,
+      eco: result.eco,
+      openingName: result.openingName,
+      playedAt: result.playedAt,
+      createdAt: now,
+      analysedAt: now,
+    }),
+  );
 
   if (result.moves.length > 0) {
     await db
       .insert(moves)
-      .values(
-        result.moves.map((m) => evaluatedMoveToRow(gameId, m.ply, m.side, m.evaluated, m.byPlayer)),
-      );
+      .values(s.ownAll(result.moves.map((m) => evaluatedMoveToRow(gameId, m.ply, m.side, m.evaluated, m.byPlayer))));
   }
 
   // Le compteur affiché à l'import ("erreurs trouvées") ne parle que du

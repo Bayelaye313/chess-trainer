@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { History, ListOrdered, Sparkles } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -13,7 +14,8 @@ export const metadata: Metadata = { title: "Progrès" };
 export const dynamic = "force-dynamic";
 
 export default async function RapportPage() {
-  const [overview, qualityTally, courseGames] = await Promise.all([getPlayerProgress(), getMoveQualityTally(), getCourseGamesOverview()]);
+  const { id: userId } = await requireUser();
+  const [overview, qualityTally, courseGames] = await Promise.all([getPlayerProgress(userId), getMoveQualityTally(userId), getCourseGamesOverview(userId)]);
 
   return (
     <div className="mx-auto w-full max-w-[1100px] space-y-8">

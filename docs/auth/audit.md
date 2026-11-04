@@ -65,8 +65,8 @@ Les autres contenus partagés ne sont pas en base : cours d'ouverture (`opening-
 | `programme_sessions` | `user_id` déjà présent | |
 | `programme_puzzle_results` | `user_id` déjà présent | |
 
-Soit **21 tables personnelles**, toutes cloisonnées. Neuf d'entre elles avaient déjà une colonne
-`user_id` en texte libre, qui valait toujours `'local'` (`LOCAL_USER_ID`). Les 12 autres n'en
+Soit **21 tables personnelles**, toutes cloisonnées. Dix d'entre elles avaient déjà une colonne
+`user_id` en texte libre, qui valait toujours `'local'` (`LOCAL_USER_ID`). Les 11 autres n'en
 avaient pas.
 
 Table douteuse à relire : **`puzzle_purges`**, classée personnelle par défaut.
@@ -153,3 +153,106 @@ la déconnexion. Les anciennes clés sans préfixe sont reprises par le compte q
   ligne de `sessions`.
 - HTTPS en production : le cookie passe alors en `__Secure-authjs.session-token` (secure). Il faut
   `AUTH_URL` ou `AUTH_TRUST_HOST=true` derrière un proxy inverse.
+
+## 6. Cloisonnement (étape 2) : ce qui a été fait
+
+### Schéma et migrations
+
+- **0017** (`auth_tables`) : `users`, `accounts`, `sessions`, `verification_tokens`.
+- **0018** (`user_id_columns`) : `user_id` NULLable ajouté par `ALTER TABLE` aux 11 tables qui
+  n'en avaient pas, plus `admin_audit`.
+- **0019** (`user_scoping`) : clés étrangères `user_id → users.id ON DELETE CASCADE` sur les
+  21 tables, index par `user_id`, et clés uniques par utilisateur :
+  - `settings (user_id, key)`
+  - `platform_links (user_id, source)`
+  - `daily_sets (user_id, day)`
+  - `games (user_id, source, external_id)`
+
+  Les anciennes clés primaires `key`, `source` et `day` sont supprimées : SQLite utilise alors le
+  `rowid`.
+- Le `when` du journal augmente : 0016 = 1793697940548 < 0017 < 0018 < 0019.
+
+Pourquoi deux migrations au lieu d'une : drizzle-kit 0.31.10, en une seule passe, générait un
+`INSERT … SELECT "id", "user_id"` depuis des tables où ces colonnes n'existaient pas encore. Il
+générait aussi des `ALTER TABLE … ADD … REFERENCES users(id)` **sans** `ON DELETE CASCADE`
+(générateur SQLite, `drizzle-kit/bin.cjs` l.24050). Avec deux passes générées, toutes les FK sont
+recréées proprement avec la cascade. Aucune ligne SQL n'a été écrite à la main.
+
+### Exécution des migrations : `npm run db:migrate` → `src/server/db/migrate/run.mjs`
+
+**Ne plus utiliser `drizzle-kit migrate` à partir de 0019.** drizzle exécute toutes les
+migrations dans une seule transaction, et better-sqlite3 active `foreign_keys` par défaut. Les
+`PRAGMA foreign_keys=OFF` générés n'ont aucun effet dans une transaction : le `DROP TABLE games`
+de la recréation déclencherait les cascades et viderait `moves`, `puzzles`, `reviews`…
+
+Le script coupe les FK *avant* la transaction (procédure documentée par SQLite), applique les
+migrations, puis lance `PRAGMA foreign_key_check`. Seules les lignes `user_id = 'local'` en
+attente de reprise peuvent y apparaître.
+
+Vérifié :
+- base neuve : OK ;
+- copie de la base existante : 200 parties, 13 752 coups, 749 cartes, 749 révisions et 3 plans
+  du jour, tous conservés. `integrity_check` = ok, aucune FK invalide hors `'local'`
+  (11 `training_recommendations`, 1 `programme_state`).
+
+### Retard préexistant de la base locale (à corriger avant de migrer)
+
+`web/data/chess-trainer.db` (état du 2026-11-04) n'a **jamais reçu 0015** : la table
+`puzzle_purges` et les colonnes `puzzles.coach_comment`, `alternatives` et `audited_at`
+manquent. Les tables de 0016 existent pourtant, enregistrées sous un ancien horodatage
+(1793629628770). `drizzle-kit migrate` échouait donc déjà (code 1, sans message). Ce retard ne
+vient pas de cette mission.
+
+Procédure d'alignement suivie sur la copie (à refaire sur la vraie base, **après
+sauvegarde**) :
+1. exécuter le SQL de 0015 ;
+2. insérer dans `__drizzle_migrations` les entrées de 0015 et 0016 (hash sha256 du fichier,
+   `created_at` = `when` du journal) ;
+3. lancer `npm run db:migrate`.
+
+### Point d'entrée unique : `src/server/db/user-scope.ts`
+
+- `userScope(userId)` fournit trois outils :
+  - `where(table, …)` : condition `user_id = ? AND …` ;
+  - `owns(...tables)` : la même condition sur plusieurs tables, pour les jointures ;
+  - `own(values)` / `ownAll(values)` : ajoutent le propriétaire aux insertions.
+
+  Il refuse un identifiant vide ou `'local'`.
+- Les tables personnelles s'importent de `user-scope.ts`, jamais de `@/server/db/schema`.
+- Deux tests le garantissent :
+  - `user-scope.enforcement.test.ts` (statique) : chaque `from/join/update/delete` d'une table
+    personnelle est filtré, et chaque `insert` passe par `own`. Il comporte un cas témoin.
+  - `user-isolation.test.ts` (comportemental) : 12 tests.
+- Toutes les requêtes prennent `userId` en premier paramètre. Pages, server actions et route
+  handlers l'obtiennent de `requireUser()`.
+- **Aucun fichier `"use server"` n'exporte de fonction qui accepte un `userId`** : le client
+  pourrait sinon le choisir. La logique de Jouer est passée de `actions/play.ts` à
+  `queries/play.ts`.
+- Failles d'écriture croisée corrigées en passant : `recordPlayerMove`, `saveBotGameResult`,
+  `recordSparringMove` et `finishSparringSession` acceptaient un identifiant de partie ou de
+  séance d'un autre joueur. Ils vérifient désormais que le compte en est propriétaire.
+- `currentElo` du Programme lisait la dernière partie notée, tous joueurs confondus. Il est
+  désormais filtré.
+
+### Reprise des données mono-utilisateur (`LEGACY_CLAIM_EMAIL`)
+
+- Lignes concernées : `user_id IS NULL` (colonnes ajoutées) ou `user_id = 'local'` (anciennes
+  colonnes non nullables, dont certaines en clé primaire).
+- Déclenchement : `events.signIn`, quand l'email du compte correspond. Une seule fois pour toute
+  l'instance : si un compte a déjà `users.legacy_claimed_at`, rien ne se passe.
+- Exécution en transaction. Elle est journalisée dans `admin_audit` (action `legacy-claim`, avec
+  les compteurs par table) et dans le journal serveur (nombre total de lignes).
+- Sans la variable, rien n'est repris : les lignes restent invisibles pour tout le monde.
+- Navigateur : les anciennes clés `chess-trainer:*` sans préfixe reviennent à ce compte. Elles
+  sont supprimées pour tout autre compte.
+
+### Synchro `/api/sync`
+
+- Authentifiée : 401 sans session.
+- Limite de fréquence : 6 appels par minute et par utilisateur, au-delà 429 avec `Retry-After`.
+  Le client traite 429 comme « rien à signaler ».
+- Verrous en mémoire :
+  - par utilisateur : pas d'import concurrent pour le même compte ;
+  - global : un seul import à la fois, car le moteur Stockfish serveur est partagé.
+- Les comptes Chess.com et Lichess liés appartiennent à chaque utilisateur : unique
+  `(user_id, source)`.

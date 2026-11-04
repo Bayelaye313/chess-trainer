@@ -1,3 +1,4 @@
+import { scopedGet, scopedSet } from "@/client/storage/user-storage";
 import { ChessBishop, ChessPawn, ChessQueen, ChessRook, type LucideIcon } from "lucide-react";
 import type { BotProfileId } from "@/core/chess/bot-profiles";
 
@@ -23,7 +24,7 @@ export interface BotSetup {
 
 export function readLastSetup(): BotSetup | null {
   try {
-    const raw = window.localStorage.getItem(LAST_SETUP_KEY);
+    const raw = scopedGet("local", LAST_SETUP_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<BotSetup>;
     if (!parsed.profileId || !(parsed.profileId in BOT_DISPLAY) || (parsed.color !== "w" && parsed.color !== "b")) return null;
@@ -35,7 +36,7 @@ export function readLastSetup(): BotSetup | null {
 
 export function writeLastSetup(setup: BotSetup): void {
   try {
-    window.localStorage.setItem(LAST_SETUP_KEY, JSON.stringify(setup));
+    scopedSet("local", LAST_SETUP_KEY, JSON.stringify(setup));
   } catch {
     // Stockage indisponible (navigation privée) : le choix n'est simplement pas mémorisé.
   }

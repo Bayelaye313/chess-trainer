@@ -17,19 +17,19 @@ import "server-only";
  */
 import { and, asc, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/server/db";
-import { curriculumPuzzles, curriculumThemes, userThemeProgress } from "@/server/db/schema";
+import { curriculumPuzzles, curriculumThemes } from "@/server/db/schema";
+import { userScope, userThemeProgress } from "@/server/db/user-scope";
 import type { CurriculumCategory, CurriculumLevel } from "@/server/db/schema/curriculum";
 import { CURRICULUM_CATEGORIES, CURRICULUM_THEMES, type CurriculumCategoryMeta } from "@/core/curriculum/catalog";
 import { alternativesFor } from "@/core/curriculum/puzzle-alternatives";
 import { buildDemoCurriculumPuzzleRows } from "@/server/db/seed/curriculum-puzzles";
 
 /**
- * L'application tourne sur une base SQLite locale, sans compte ni
- * authentification (voir `server/db/index.ts`) — un seul utilisateur possible
- * aujourd'hui. `userThemeProgress.userId` garde malgré tout sa colonne : le
- * jour où un compte existe, seule cette constante change.
+ * Ancien identifiant unique de l'époque mono-utilisateur, conservé pour les
+ * lignes en attente de reprise (`LEGACY_USER_ID`, voir `server/db/user-scope.ts`).
+ * Aucune requête ne l'utilise plus : chaque fonction reçoit le `userId` de la session.
  */
-export const LOCAL_USER_ID = "local";
+export { LEGACY_USER_ID as LOCAL_USER_ID } from "@/server/db/user-scope";
 
 /**
  * Évite l'aller-retour "déjà semé ?" à chaque requête dans le même process —
@@ -112,7 +112,7 @@ export interface CurriculumCategoryOverview extends CurriculumCategoryMeta {
  * l'utilisateur. `completedCount` est plafonné à `totalPuzzles` — au cas où
  * un import réduirait plus tard le total annoncé d'un thème déjà entamé.
  */
-export async function listCurriculumOverview(userId: string = LOCAL_USER_ID): Promise<CurriculumCategoryOverview[]> {
+export async function listCurriculumOverview(userId: string): Promise<CurriculumCategoryOverview[]> {
   await ensureCurriculumSeeded();
 
   const themeRows = await db
@@ -122,7 +122,7 @@ export async function listCurriculumOverview(userId: string = LOCAL_USER_ID): Pr
   const progressRows = await db
     .select({ themeId: userThemeProgress.themeId, completedCount: userThemeProgress.completedCount })
     .from(userThemeProgress)
-    .where(eq(userThemeProgress.userId, userId));
+    .where(userScope(userId).owns(userThemeProgress));
   const completedByTheme = new Map(progressRows.map((row) => [row.themeId, row.completedCount]));
 
   const themesByCategory = new Map<CurriculumCategory, CurriculumThemeOverview[]>();
@@ -179,7 +179,7 @@ export interface ThemeSession {
 }
 
 /** Session courante d'un thème : sa progression et le prochain puzzle à résoudre. `null` si le thème n'existe pas. */
-export async function getThemeSession(themeId: string, userId: string = LOCAL_USER_ID): Promise<ThemeSession | null> {
+export async function getThemeSession(userId: string, themeId: string): Promise<ThemeSession | null> {
   await ensureCurriculumSeeded();
 
   const [theme] = await db.select().from(curriculumThemes).where(eq(curriculumThemes.id, themeId)).limit(1);
@@ -197,7 +197,7 @@ export async function getThemeSession(themeId: string, userId: string = LOCAL_US
   const [progress] = await db
     .select({ completedCount: userThemeProgress.completedCount })
     .from(userThemeProgress)
-    .where(and(eq(userThemeProgress.userId, userId), eq(userThemeProgress.themeId, themeId)))
+    .where(userScope(userId).where(userThemeProgress, eq(userThemeProgress.themeId, themeId)))
     .limit(1);
   const completedCount = Math.min(progress?.completedCount ?? 0, theme.totalPuzzles);
 
@@ -238,7 +238,7 @@ export interface ThemeReviewSession {
  * le thème n'existe pas ; un thème sans exercice renvoie `puzzles: []`,
  * jamais un puzzle inventé (même garde défensive que `getThemeSession`).
  */
-export async function getThemeReviewSession(themeId: string): Promise<ThemeReviewSession | null> {
+export async function getThemeReviewSession(_userId: string, themeId: string): Promise<ThemeReviewSession | null> {
   await ensureCurriculumSeeded();
 
   const [theme] = await db.select().from(curriculumThemes).where(eq(curriculumThemes.id, themeId)).limit(1);
@@ -260,7 +260,7 @@ export async function getThemeReviewSession(themeId: string): Promise<ThemeRevie
  * `getThemeReviewSession` : ne touche jamais à la progression. `[]` pour un
  * thème inconnu ou vide, jamais un exemple inventé.
  */
-export async function getThemeExamplePuzzles(themeId: string, limit: number = 3): Promise<ThemePuzzle[]> {
+export async function getThemeExamplePuzzles(_userId: string, themeId: string, limit: number = 3): Promise<ThemePuzzle[]> {
   await ensureCurriculumSeeded();
   return db
     .select()
@@ -280,8 +280,8 @@ export async function getThemeExamplePuzzles(themeId: string, limit: number = 3)
  * `theme-puzzle-board.tsx`).
  */
 export async function completeThemePuzzle(
+  userId: string,
   themeId: string,
-  userId: string = LOCAL_USER_ID,
   now: Date = new Date(),
 ): Promise<CurriculumThemeOverview | null> {
   const [theme] = await db.select().from(curriculumThemes).where(eq(curriculumThemes.id, themeId)).limit(1);
@@ -290,7 +290,7 @@ export async function completeThemePuzzle(
   const [existing] = await db
     .select({ completedCount: userThemeProgress.completedCount })
     .from(userThemeProgress)
-    .where(and(eq(userThemeProgress.userId, userId), eq(userThemeProgress.themeId, themeId)))
+    .where(userScope(userId).where(userThemeProgress, eq(userThemeProgress.themeId, themeId)))
     .limit(1);
 
   const completedCount = Math.min((existing?.completedCount ?? 0) + 1, theme.totalPuzzles);
@@ -298,7 +298,7 @@ export async function completeThemePuzzle(
 
   await db
     .insert(userThemeProgress)
-    .values({ userId, themeId, completedCount, completedAt, updatedAt: now })
+    .values(userScope(userId).own({ themeId, completedCount, completedAt, updatedAt: now }))
     .onConflictDoUpdate({
       target: [userThemeProgress.userId, userThemeProgress.themeId],
       set: { completedCount, completedAt, updatedAt: now },

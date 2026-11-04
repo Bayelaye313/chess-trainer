@@ -31,7 +31,7 @@ import {
 import { OPENING_COURSE_TREES } from "@/core/curriculum/opening-course-trees";
 import { findOpening, type OpeningLine } from "@/core/curriculum/openings";
 import { db } from "@/server/db";
-import { games, moves } from "@/server/db/schema";
+import { games, moves, userScope } from "@/server/db/user-scope";
 
 interface PreparedCourse extends AttributableCourse {
   opening: OpeningLine;
@@ -74,7 +74,8 @@ interface StoredGame {
 }
 
 /** Parties jouées depuis la position initiale, avec leurs coups analysés, plus récentes d'abord. */
-async function loadGames(gameIds?: readonly string[]): Promise<StoredGame[]> {
+async function loadGames(userId: string, gameIds?: readonly string[]): Promise<StoredGame[]> {
+  const s = userScope(userId);
   const gameRows = await db
     .select({
       id: games.id,
@@ -89,7 +90,7 @@ async function loadGames(gameIds?: readonly string[]): Promise<StoredGame[]> {
       initialFen: games.initialFen,
     })
     .from(games)
-    .where(gameIds ? inArray(games.id, [...gameIds]) : isNotNull(games.pgn));
+    .where(s.where(games, gameIds ? inArray(games.id, [...gameIds]) : isNotNull(games.pgn)));
   const standard = gameRows.filter((g) => positionKey(g.initialFen) === positionKey(MOVE_TREE_START_FEN));
   if (standard.length === 0) return [];
 
@@ -106,7 +107,7 @@ async function loadGames(gameIds?: readonly string[]): Promise<StoredGame[]> {
       bestSan: moves.bestSan,
     })
     .from(moves)
-    .where(gameIds ? inArray(moves.gameId, [...gameIds]) : undefined)
+    .where(s.where(moves, gameIds ? inArray(moves.gameId, [...gameIds]) : undefined))
     .orderBy(asc(moves.gameId), asc(moves.ply));
   const movesByGame = new Map<string, StoredMove[]>();
   for (const { gameId, ...move } of moveRows) {
@@ -165,8 +166,8 @@ export interface CourseGamesOverviewRow {
 }
 
 /** Une ligne par cours d'ouverture, même ceux sans partie — la carte du Rapport n'affiche que ceux joués. */
-export async function getCourseGamesOverview(): Promise<CourseGamesOverviewRow[]> {
-  const attributed = attributeGames(await loadGames());
+export async function getCourseGamesOverview(userId: string): Promise<CourseGamesOverviewRow[]> {
+  const attributed = attributeGames(await loadGames(userId));
   const rows: CourseGamesOverviewRow[] = [];
   for (const [openingId, course] of prepareCourses()) {
     const matched = attributed.filter(({ courseId }) => courseId === openingId);
@@ -216,10 +217,10 @@ export interface CourseGameReport {
   winRateOffCourse: number | null;
 }
 
-export async function getCourseGameReport(openingId: string): Promise<CourseGameReport | null> {
+export async function getCourseGameReport(userId: string, openingId: string): Promise<CourseGameReport | null> {
   const course = prepareCourses().get(openingId);
   if (!course) return null;
-  const matched = matchCourse(course, await loadGames());
+  const matched = matchCourse(course, await loadGames(userId));
 
   const rows: CourseGameRow[] = matched.map(({ game, match, withCourseSide }) => {
     const mistake = game.moves.find((m) => m.byPlayer && (m.quality === "blunder" || m.quality === "inaccuracy"));
@@ -256,8 +257,8 @@ export async function getCourseGameReport(openingId: string): Promise<CourseGame
   };
 }
 
-export async function listCoursePositionNotes(openingId: string): Promise<CoursePositionNote[]> {
-  const report = await getCourseGameReport(openingId);
+export async function listCoursePositionNotes(userId: string, openingId: string): Promise<CoursePositionNote[]> {
+  const report = await getCourseGameReport(userId, openingId);
   if (!report) return [];
   return report.deviations
     .filter((d) => d.chapterIndex !== null && d.nodeId !== null)
@@ -289,10 +290,10 @@ export interface CourseGameContext {
  * la déviation est recalculée ici, jamais lue dans l'URL, et ◀ ▶ restent dans
  * les parties de cette ouverture. `null` si la partie ne relève pas du cours.
  */
-export async function getCourseGameContext(openingId: string, gameId: string): Promise<CourseGameContext | null> {
+export async function getCourseGameContext(userId: string, openingId: string, gameId: string): Promise<CourseGameContext | null> {
   const course = prepareCourses().get(openingId);
   if (!course) return null;
-  const matched = matchCourse(course, await loadGames());
+  const matched = matchCourse(course, await loadGames(userId));
   const position = matched.findIndex(({ game }) => game.id === gameId);
   if (position === -1) return null;
   const { deviation } = matched[position].match;

@@ -6,10 +6,9 @@ import "server-only";
  * `use-opening-drill.ts` (via `server/actions/opening-endurance.ts`), lu par
  * l'écran `OpeningEnduranceHistory`.
  */
-import { desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { db } from "@/server/db";
-import { openingEnduranceSessions } from "@/server/db/schema";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
+import { openingEnduranceSessions, userScope } from "@/server/db/user-scope";
 import { buildEnduranceSessionMetrics, type OpeningSessionHistory } from "@/core/curriculum/opening-endurance";
 import { type TrackedDrillSelection, variationKeyFor } from "@/core/curriculum/opening-variation-key";
 
@@ -32,8 +31,8 @@ export interface RecordEnduranceSessionInput {
  * coup du joueur — voir `buildEnduranceSessionMetrics`.
  */
 export async function recordEnduranceSession(
+  userId: string,
   input: RecordEnduranceSessionInput,
-  userId: string = LOCAL_USER_ID,
   now: Date = new Date(),
 ): Promise<OpeningSessionHistory | null> {
   const metrics = buildEnduranceSessionMetrics(input);
@@ -41,9 +40,8 @@ export async function recordEnduranceSession(
 
   const id = crypto.randomUUID();
   const variationKey = variationKeyFor(input.selection);
-  await db.insert(openingEnduranceSessions).values({
+  await db.insert(openingEnduranceSessions).values(userScope(userId).own({
     id,
-    userId,
     openingId: input.openingId,
     openingName: input.openingName,
     variationKey,
@@ -52,7 +50,7 @@ export async function recordEnduranceSession(
     lastPly: metrics.lastPly,
     accuracy: metrics.accuracy,
     playedAt: now,
-  });
+  }));
   return { sessionId: id, openingId: input.openingId, openingName: input.openingName, variationKey, playedAt: now.toISOString(), ...metrics };
 }
 
@@ -61,11 +59,11 @@ export async function recordEnduranceSession(
  * `opening_endurance_user_time_idx`). `playedAt` est sérialisé en ISO : la
  * liste traverse telle quelle la frontière Server Component → client.
  */
-export async function listEnduranceSessions(userId: string = LOCAL_USER_ID): Promise<OpeningSessionHistory[]> {
+export async function listEnduranceSessions(userId: string): Promise<OpeningSessionHistory[]> {
   const rows = await db
     .select()
     .from(openingEnduranceSessions)
-    .where(eq(openingEnduranceSessions.userId, userId))
+    .where(userScope(userId).owns(openingEnduranceSessions))
     .orderBy(desc(openingEnduranceSessions.playedAt), desc(openingEnduranceSessions.id));
   return rows.map((row) => ({
     sessionId: row.id,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { SectionSwitcher, TRAINING_SECTIONS } from "@/components/ui/section-switcher";
 import { PiegesScreen } from "@/client/features/openings/pieges-screen";
 import { displayOpeningName } from "@/client/features/openings/opening-display";
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "Pièges" };
 export const dynamic = "force-dynamic";
 
 export default async function PiegesPage() {
+  await requireUser();
   const traps = await listAllTraps();
   const families = [...new Set(traps.map((trap) => trap.family))];
   return (

@@ -14,7 +14,7 @@ import "server-only";
  */
 import { and, asc, eq, inArray, lte, type SQL } from "drizzle-orm";
 import { db } from "@/server/db";
-import { moves, puzzles, reviews } from "@/server/db/schema";
+import { moves, puzzles, reviews, userScope, type UserScope } from "@/server/db/user-scope";
 import { DECKS, type DeckId } from "@/core/chess/decks";
 import { getDailyProgress } from "@/server/queries/spaced-repetition";
 import type { Motif } from "@/core/chess/types";
@@ -41,14 +41,15 @@ export interface DeckOverview {
  * `ensureDailySet`) : son compte vient de la sélection figée du jour plutôt
  * que du `GROUP BY` ci-dessus, qui l'ignore totalement.
  */
-export async function listDeckOverviews(now: Date = new Date()): Promise<DeckOverview[]> {
+export async function listDeckOverviews(userId: string, now: Date = new Date()): Promise<DeckOverview[]> {
+  const s = userScope(userId);
   const [rows, daily] = await Promise.all([
     db
       .select({ deck: puzzles.deck, state: reviews.state })
       .from(reviews)
       .innerJoin(puzzles, eq(reviews.puzzleId, puzzles.id))
-      .where(lte(reviews.due, now)),
-    getDailyProgress(now),
+      .where(and(s.owns(reviews, puzzles), lte(reviews.due, now))),
+    getDailyProgress(userId, now),
   ]);
 
   const counts = new Map<DeckId, { due: number; new: number }>();
@@ -62,7 +63,7 @@ export async function listDeckOverviews(now: Date = new Date()): Promise<DeckOve
   // Seulement ce qui RESTE à faire aujourd'hui (voir `getDailyProgress`).
   const dailyRows =
     daily.remainingIds.length > 0
-      ? await db.select({ state: reviews.state }).from(reviews).where(inArray(reviews.puzzleId, daily.remainingIds))
+      ? await db.select({ state: reviews.state }).from(reviews).where(s.where(reviews, inArray(reviews.puzzleId, daily.remainingIds)))
       : [];
   const dailyCounts = { due: 0, new: 0 };
   for (const row of dailyRows) {
@@ -102,18 +103,19 @@ export interface DeckPuzzle {
  * tout premier coup de la partie.
  */
 async function findSetupMove(
+  s: UserScope,
   moveId: number | null,
   gameId: string | null,
 ): Promise<{ uci: string; san: string; fenBefore: string } | null> {
   if (moveId === null || gameId === null) return null;
 
-  const [current] = await db.select({ ply: moves.ply }).from(moves).where(eq(moves.id, moveId)).limit(1);
+  const [current] = await db.select({ ply: moves.ply }).from(moves).where(s.where(moves, eq(moves.id, moveId))).limit(1);
   if (!current || current.ply <= 1) return null;
 
   const [previous] = await db
     .select({ uci: moves.uci, san: moves.san, fenBefore: moves.fenBefore })
     .from(moves)
-    .where(and(eq(moves.gameId, gameId), eq(moves.ply, current.ply - 1)))
+    .where(s.where(moves, eq(moves.gameId, gameId), eq(moves.ply, current.ply - 1)))
     .limit(1);
 
   return previous ?? null;
@@ -136,7 +138,7 @@ async function findSetupMove(
  * « à faire aujourd'hui », qu'une carte choisie pour son échec récent ait ou
  * non déjà un `due` strictement passé.
  */
-function nextPuzzleRow(where: SQL) {
+function nextPuzzleRow(s: UserScope, where: SQL) {
   return db
     .select({
       id: puzzles.id,
@@ -150,30 +152,32 @@ function nextPuzzleRow(where: SQL) {
     })
     .from(reviews)
     .innerJoin(puzzles, eq(reviews.puzzleId, puzzles.id))
-    .where(where)
+    .where(and(s.owns(reviews, puzzles), where))
     .orderBy(asc(reviews.due))
     .limit(1);
 }
 
 /** Un puzzle précis — la carte cliquée de la Séance du jour ouvre CE puzzle d'abord. */
-export async function getPuzzleById(puzzleId: string): Promise<DeckPuzzle | null> {
-  const [row] = await nextPuzzleRow(eq(puzzles.id, puzzleId));
+export async function getPuzzleById(userId: string, puzzleId: string): Promise<DeckPuzzle | null> {
+  const s = userScope(userId);
+  const [row] = await nextPuzzleRow(s, eq(puzzles.id, puzzleId));
   if (!row) return null;
   const { moveId, gameId, ...puzzle } = row;
-  return { ...puzzle, setupMove: await findSetupMove(moveId, gameId) };
+  return { ...puzzle, setupMove: await findSetupMove(s, moveId, gameId) };
 }
 
-export async function getNextDuePuzzle(deckId?: DeckId, now: Date = new Date()): Promise<DeckPuzzle | null> {
+export async function getNextDuePuzzle(userId: string, deckId?: DeckId, now: Date = new Date()): Promise<DeckPuzzle | null> {
+  const s = userScope(userId);
   let row;
   if (deckId === "daily") {
-    const { remainingIds } = await getDailyProgress(now);
-    [row] = remainingIds.length === 0 ? [] : await nextPuzzleRow(inArray(puzzles.id, remainingIds));
+    const { remainingIds } = await getDailyProgress(userId, now);
+    [row] = remainingIds.length === 0 ? [] : await nextPuzzleRow(s, inArray(puzzles.id, remainingIds));
   } else {
-    [row] = await nextPuzzleRow(deckId ? and(eq(puzzles.deck, deckId), lte(reviews.due, now))! : lte(reviews.due, now));
+    [row] = await nextPuzzleRow(s, deckId ? and(eq(puzzles.deck, deckId), lte(reviews.due, now))! : lte(reviews.due, now));
   }
 
   if (!row) return null;
 
   const { moveId, gameId, ...puzzle } = row;
-  return { ...puzzle, setupMove: await findSetupMove(moveId, gameId) };
+  return { ...puzzle, setupMove: await findSetupMove(s, moveId, gameId) };
 }

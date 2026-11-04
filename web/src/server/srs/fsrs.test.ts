@@ -5,7 +5,7 @@ import { initialReviewFields, scheduleReview } from "./fsrs";
 const NOW = new Date("2026-08-14T10:00:00Z");
 
 function reviewFrom(fields: ReturnType<typeof initialReviewFields>): Review {
-  return { puzzleId: "p1", ...fields };
+  return { puzzleId: "p1", userId: "user-1", ...fields };
 }
 
 describe("initialReviewFields", () => {
@@ -48,6 +48,7 @@ describe("scheduleReview", () => {
   it("conserve le nombre de répétitions déjà accumulé sur la carte", () => {
     const review: Review = {
       puzzleId: "p1",
+      userId: "user-1",
       due: NOW,
       stability: 5,
       difficulty: 4,

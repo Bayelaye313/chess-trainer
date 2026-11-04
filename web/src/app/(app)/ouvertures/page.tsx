@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { EsportCanvas } from "@/components/ui/esport-page";
 import { OpeningsScreen } from "@/client/features/openings/openings-screen";
 import { listDueReviews, listOpeningMasterySummaries, listOpeningReviewSummaries } from "@/server/queries/opening-progress";
@@ -10,11 +11,12 @@ export const metadata: Metadata = { title: "Ouvertures" };
 export const dynamic = "force-dynamic";
 
 export default async function OuverturesPage() {
+  const { id: userId } = await requireUser();
   const [reviewSummaries, dueReviews, masterySummaries, enduranceSessions] = await Promise.all([
-    listOpeningReviewSummaries(),
-    listDueReviews(),
-    listOpeningMasterySummaries(),
-    listEnduranceSessions(),
+    listOpeningReviewSummaries(userId),
+    listDueReviews(userId),
+    listOpeningMasterySummaries(userId),
+    listEnduranceSessions(userId),
   ]);
   return (
     <EsportCanvas>

@@ -3,6 +3,7 @@ import type { DeckId } from "@/core/chess/decks";
 import type { GamePhase, Motif, MoveQuality } from "@/core/chess/types";
 import { games } from "./games";
 import { moves } from "./moves";
+import { users } from "./auth";
 
 export type PuzzleSource = "local" | "chesscom" | "lichess" | "lichess_db";
 
@@ -16,6 +17,8 @@ export const puzzles = sqliteTable(
   "puzzles",
   {
     id: text("id").primaryKey(),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     deck: text("deck").$type<DeckId>().notNull(),
 
     /** Origine, quand le puzzle vient d'une de nos parties. */
@@ -61,6 +64,7 @@ export const puzzles = sqliteTable(
   },
   (table) => [
     index("puzzles_deck_idx").on(table.deck),
+    index("puzzles_user_idx").on(table.userId),
     index("puzzles_game_idx").on(table.gameId),
     // Un coup ne devient jamais deux puzzles, même si l'extraction (voir
     // server/queries/spaced-repetition.ts) tourne plusieurs fois sur la même
@@ -80,13 +84,19 @@ export type NewPuzzle = typeof puzzles.$inferInsert;
  * (, ).
  * Pas de clé étrangère : la trace doit survivre à la suppression du coup.
  */
-export const puzzlePurges = sqliteTable("puzzle_purges", {
+export const puzzlePurges = sqliteTable(
+  "puzzle_purges",
+  {
   moveId: integer("move_id").primaryKey(),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   gameId: text("game_id"),
   fenBefore: text("fen_before").notNull(),
   /** Motif du verdict : , … */
   reason: text("reason").notNull(),
   purgedAt: integer("purged_at", { mode: "timestamp" }).notNull(),
-});
+  },
+  (table) => [index("puzzle_purges_user_idx").on(table.userId)],
+);
 
 export type PuzzlePurge = typeof puzzlePurges.$inferSelect;

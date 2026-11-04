@@ -5,6 +5,7 @@
  * `server/actions/practice.ts` pour « Entraîner » : aucune logique propre
  * ici, juste une redirection vers `server/queries/curriculum.ts`.
  */
+import { requireUser } from "@/server/auth/session";
 import {
   completeThemePuzzle,
   getThemeExamplePuzzles,
@@ -19,15 +20,15 @@ import {
 } from "@/server/queries/curriculum";
 
 export async function getCurriculumOverview(): Promise<CurriculumCategoryOverview[]> {
-  return listCurriculumOverview();
+  return listCurriculumOverview((await requireUser()).id);
 }
 
 export async function getThemePuzzleSession(themeId: string): Promise<ThemeSession | null> {
-  return getThemeSession(themeId);
+  return getThemeSession((await requireUser()).id, themeId);
 }
 
 export async function submitThemePuzzleSolved(themeId: string): Promise<CurriculumThemeOverview | null> {
-  return completeThemePuzzle(themeId);
+  return completeThemePuzzle((await requireUser()).id, themeId);
 }
 
 /**
@@ -38,10 +39,10 @@ export async function submitThemePuzzleSolved(themeId: string): Promise<Curricul
  * (`theme-review-session.tsx`).
  */
 export async function getThemePuzzleReviewSession(themeId: string): Promise<ThemeReviewSession | null> {
-  return getThemeReviewSession(themeId);
+  return getThemeReviewSession((await requireUser()).id, themeId);
 }
 
 /** Exercices réels servant de chapitres au cours en arbre d'un thème sans cours rédigé — voir `getThemeExamplePuzzles`. */
 export async function getThemeCourseExamples(themeId: string): Promise<ThemePuzzle[]> {
-  return getThemeExamplePuzzles(themeId);
+  return getThemeExamplePuzzles((await requireUser()).id, themeId);
 }

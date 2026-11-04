@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/page-header";
 import { GamesSearchList } from "@/client/features/home/games-search-list";
@@ -9,9 +10,10 @@ export const dynamic = "force-dynamic";
 
 /** Toutes les parties (recherche + pagination `?page=<n>`), ex-liste de l'accueil. */
 export default async function PartiesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { id: userId } = await requireUser();
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const { games, hasMore } = await listGamesSummary(page);
+  const { games, hasMore } = await listGamesSummary(userId, page);
 
   return (
     <div className="mx-auto w-full max-w-[960px]">

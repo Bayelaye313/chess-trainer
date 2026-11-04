@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
 import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/page-header";
 import { HallOfFame } from "@/client/features/reports/hall-of-fame";
@@ -17,11 +18,12 @@ export const metadata: Metadata = { title: "Coups brillants" };
  * `HallOfFame` tel quel — seule sa place dans l'app a changé.
  */
 export default async function BrillantsPage() {
+  const { id: userId } = await requireUser();
   // Filtre STRICT sur "brillant" — cette page n'affiche que les
   // chefs-d'œuvre annoncés par son propre lien d'entrée (« Voir l'historique
   // de mes coups brillants → »), jamais les coups Critiques (voir le
   // docstring de `listMasterpieces`).
-  const masterpieces = await listMasterpieces(30, ["brilliant"]);
+  const masterpieces = await listMasterpieces(userId, 30, ["brilliant"]);
 
   return (
     <div className="mx-auto w-full max-w-[960px]">
