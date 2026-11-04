@@ -150,16 +150,20 @@ export function PuzzleBoard({
   // seulement après un PREMIER essai infructueux. Les cercles verts des
   // cibles (`recognitionAids`), eux, restent visibles d'emblée.
   const hasFailed = hasFailedAttempt(solver);
-  const preSolveMessage = showPreSolveCoach
-    ? buildPreSolveCoachMessage({
-        // Coup adverse VU se jouer sur l'échiquier (intro animée) : inutile de
-        // le dicter en plus. Seulement en repli, quand il n'a pas pu être animé.
-        setupSan: solver.introAnimated ? null : (puzzle.setupMove?.san ?? null),
-        pattern: hasFailed ? pattern : null,
-        motifs: hasFailed ? (puzzle.motifs ?? []) : [],
-        playerMoveCount,
-      })
-    : null;
+  // Coup adverse VU se jouer sur l'échiquier (intro animée) : inutile de le
+  // dicter en plus. Seulement en repli, quand il n'a pas pu être animé.
+  const preSolveSetupSan = solver.introAnimated ? null : (puzzle.setupMove?.san ?? null);
+  const preSolvePattern = hasFailed ? pattern : null;
+  const preSolveMotifs = hasFailed ? (puzzle.motifs ?? []) : [];
+  // Sans coup adverse à rappeler ni pattern/motif à nommer, le Coach ne dirait
+  // que « Trouve la suite gagnante (N coups à enchaîner) » : la ligne de
+  // statut sous l'échiquier le dit déjà (retour utilisateur 2026-11-04,
+  // consigne affichée deux fois).
+  const preSolveHasInsight = preSolveSetupSan !== null || preSolvePattern !== null || preSolveMotifs.length > 0;
+  const preSolveMessage =
+    showPreSolveCoach && preSolveHasInsight
+      ? buildPreSolveCoachMessage({ setupSan: preSolveSetupSan, pattern: preSolvePattern, motifs: preSolveMotifs, playerMoveCount })
+      : null;
   const recognitionAids = showPreSolveCoach
     ? buildRecognitionAids(solver.fen, solver.playerColor, puzzle.motifs ?? [])
     : null;
@@ -333,10 +337,12 @@ export function PuzzleBoard({
 
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
-      {/* Même mise en page que le cours d'Apprendre (`CourseTreeViewer`) :
-          grand échiquier à gauche, commentaire et contrôles à droite. */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-start">
-        <div className="w-full shrink-0 md:w-[480px] lg:w-[600px]">
+      {/* Grand échiquier à gauche, commentaire et contrôles à droite — côte à
+          côte seulement à partir de `lg` : en dessous, la colonne du Coach
+          était écrasée (≈120 px à 820 px de large, texte hors du cadre,
+          retour utilisateur 2026-11-04) ; elle passe alors sous l'échiquier. */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="mx-auto w-full max-w-[600px] shrink-0 lg:mx-0 lg:w-[460px] xl:w-[600px]">
           <div className="flex items-stretch gap-2">
             <EvaluationBar score={boardScore} size="lg" />
             <div className="min-w-0 flex-1">
@@ -365,7 +371,7 @@ export function PuzzleBoard({
             <p className={hintClassName}>{statusMessage}</p>
           </div>
         </div>
-        <div className="min-w-0 flex-1 space-y-4">
+        <div className="min-w-0 flex-1 space-y-4 lg:min-w-[260px]">
           {postAnalysisActive && postAnalysis.explore.isExploring && (
             <div>
               <ExplorePanel
