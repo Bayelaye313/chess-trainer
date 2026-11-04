@@ -9,11 +9,11 @@ Les deux plans à connaître par coeur :
 
 La règle d'or du joueur de club : à l'aile dame, on ne défend pas, on CONTRE-ATTAQUE plus vite. Chaque coup noir à l'aile dame est un coup de moins pour l'attaque.
 
-Honnêteté moteur : l'Est-Indienne ne réfute rien. Stockfish 18 donne aux Blancs environ +0.6 dans la ligne principale, un peu plus que dans les défenses classiques. C'est le prix d'une position déséquilibrée où celui qui connaît son plan gagne souvent avant le moteur.
+Honnêteté moteur : l'Est-Indienne ne réfute rien. Stockfish 19 donne aux Blancs +0.68 après 12...g5 dans la ligne principale, un peu plus que dans les défenses classiques. C'est le prix d'une position déséquilibrée où celui qui connaît son plan gagne souvent avant le moteur.
 
 Les structures types (relevées sur la position finale de chaque chapitre) :
 - Classique fermée (chapitres 1, 2 et 5) : Blancs b4-c5-d5-e4-f3 contre Noirs c7-d6-e5-f4-g5 ; deux chaînes en sens opposé, chacun attaque à la base de la chaîne adverse.
-- Échange (chapitre 3) : colonne d ouverte, pions e4 contre e5 ; la case d4 est un trou pour nos pièces.
+- Échange (chapitres 3 et 6) : colonne d ouverte, pions e4 contre e5 ; la case d4 est un trou pour nos pièces.
 - Anti-panique (chapitre 4) : on frappe le centre blanc avec ...c5 avant qu'il soit soutenu. }
 1. d4 { Les Blancs occupent le centre avec le pion dame. }
 1... Nf6 { Le cavalier contrôle e4 et ne s'engage encore sur aucune structure. [%cal Gf6e4,Gf6d5] }
@@ -28,25 +28,26 @@ Les structures types (relevées sur la position finale de chaque chapitre) :
 6. Be2 { Développement sobre, les Blancs préparent leur propre roque. }
 6... e5 { LE COUP DE L'EST-INDIENNE : on frappe d4. Les Blancs doivent choisir : fermer (d5), échanger (dxe5, chapitre 3) ou maintenir. [%csl Ge5,Rd4] [%cal Ge5d4] }
 7. O-O { Les Blancs roquent et maintiennent la tension. }
-7... Nc6 { On ajoute une troisième pression sur d4 : les Blancs sont obligés de se décider. Le moteur préfère légèrement 7...Na6, mais 7...Nc6 donne les plans les plus clairs. [%cal Gc6d4,Ge5d4] }
+7... Nc6 { On ajoute une troisième pression sur d4 : les Blancs sont obligés de se décider. Le moteur préfère de peu 7...exd4 ou 7...Na6, mais 7...Nc6 donne les plans les plus clairs. [%cal Gc6d4,Ge5d4] }
 8. d5 { Les Blancs ferment le centre avec gain de temps sur le cavalier. À partir d'ici, plus aucun pion central ne s'échangera vite : c'est une course d'ailes. [%csl Gd5] }
 8... Ne7 { Le cavalier recule vers l'aile roi : il soutiendra ...f5 et pourra aller en g6. [%cal Ge7g6,Gf7f5] }
 9. Ne1 { L'ancienne ligne principale (Mar del Plata) : le cavalier va en d3 pour soutenir c5, et il libère le pion f pour f3. La Bayonnette 9.b4 est au chapitre 2. [%cal Ge1d3] }
 9... Nd7 { Le cavalier f6 libère le pion f. Tout notre plan commence par ...f5. [%cal Gf7f5] }
 10. Nd3 { Le cavalier vise c5 et protège e5... et f4. [%cal Gd3c5] }
 10... f5 { LA PREMIÈRE VAGUE : on attaque e4, base de la chaîne blanche. [%csl Gf5,Re4] [%cal Gf5e4] }
-11. Bd2 { Un coup de développement : le fou soutiendra b4 et ira en e1 défendre l'aile roi. }
-(11. f3 { Le coup le plus fréquent et le préféré du moteur : les Blancs soutiennent e4 tout de suite. } 11... f4 { On ferme : le fou c1 n'a plus la diagonale c1-h6. [%csl Gf4] } 12. Bd2 { Le fou se développe. } 12... g5 { Même position que la ligne principale par une autre route. [%csl Gg5] [%cal Gg5g4] })
-11... f4 { LA DEUXIÈME VAGUE : on ferme l'aile roi. Le pion f4 coupe le fou d2 de l'aile roi et prépare ...g5-g4. Le moteur préfère 11...fxe4 (+0.3), mais 11...f4 est le plan de la tempête, tout aussi jouable (+0.55). [%csl Gf4] [%cal Gg7g5,Gg5g4] }
+11. Bd2 { Un coup de développement : le fou soutiendra b4 et ira en e1 défendre l'aile roi. C'est une imprécision : le moteur passe de +0.61 à +0.20. }
+(11. f3 { Le coup le plus fréquent, et le meilleur des deux selon le moteur (+0.51 contre +0.20 pour 11.Bd2) : les Blancs soutiennent e4 tout de suite. } 11... f4 { On ferme : le fou c1 n'a plus la diagonale c1-h6. [%csl Gf4] } 12. Bd2 { Le fou se développe. } 12... g5 { À RETENIR. PRO TIP : +0.68. Même position que la ligne principale par une autre route : contre 11.f3, on ferme par ...f4 et on enchaîne ...g5. [%csl Gg5] [%cal Gg5g4] })
+11... f4 { LA DEUXIÈME VAGUE : on ferme l'aile roi. Le pion f4 coupe le fou d2 de l'aile roi et prépare ...g5-g4. Le moteur préfère nettement 11...fxe4 ; 11...f4 lui rend du terrain (+0.68), mais c'est le plan de la tempête, le plus simple à jouer. [%csl Gf4] [%cal Gg7g5,Gg5g4] }
 12. f3 { Les Blancs bloquent : le pion f3 empêchera ...f3 et soutient e4. Il deviendra aussi la cible de ...g4. [%csl Rf3] }
 12... g5 { LA TROISIÈME VAGUE : g5 prépare ...g4 pour ouvrir la colonne g contre le roi blanc. [%csl Gg5] [%cal Gg5g4,Rg4f3] }
 13. b4 { Le plan blanc : b4 prépare c5 pour ouvrir la colonne c. [%cal Gb4c5] }
-(13. c5 { Trop pressé : les Blancs oublient que le pion c5 n'est soutenu que par le cavalier d3. [%hint "Les Blancs poussent c5 avant de l'avoir préparé par b4."] [%hint "Le pion c5 : attaqué par le cavalier d7 et le pion d6, défendu par le seul cavalier d3."] [%hintcsl Rc5] [%hint "Nxc5 ! On prend le pion : la poussée blanche n'a rien ouvert."] } 13... Nxc5 { On prend gratuitement. [%csl Gc5] [%cal Gd7c5] } 14. Nxc5 { Les Blancs récupèrent avec le cavalier. } 14... dxc5 { Reprise : un pion de plus pour les Noirs, environ -0.2. Retenir : la poussée c5 n'est dangereuse que préparée par b4. [%csl Gc5] })
-13... Nf6 { Le cavalier revient : il attaque e4 et prépare ...h5 et ...g4. [%cal Gf6e4,Gh7h5] }
-14. c5 { La poussée c5 est lancée : les Blancs menacent cxd6 et Nb5 vers c7. [%cal Gc5d6,Rc3b5] }
-14... Ng6 { Le deuxième cavalier rejoint l'attaque : g6 soutient ...h5-h4 et ...g4. [%cal Gg6h4,Gg5g4] }
-15. Rc1 { La tour se place sur la future colonne c ouverte. }
-15... Rf7 { RETENIR (PRO TIP) : la tour f7 défend c7 (la case d'invasion blanche) et pourra aller en g7 ou h7 pour soutenir ...g4. Position autour de +0.3 : les Blancs avancent à l'aile dame, nous avons le temps de préparer ...h5 et ...g4. Ne jamais répondre aux pions blancs à l'aile dame : compter les coups et attaquer. [%csl Gc7] [%cal Gf7g7,Gg5g4] }
+(13. c5 { Trop pressé : les Blancs oublient que le pion c5 n'est soutenu que par le cavalier d3. L'évaluation passe de +0.68 à -0.05. [%hint "Les Blancs poussent c5 avant de l'avoir préparé par b4."] [%hint "Le pion c5 : attaqué par le cavalier d7 et le pion d6, défendu par le seul cavalier d3."] [%hintcsl Rc5] [%hint "Nxc5 ! On prend le pion : la poussée blanche n'a rien ouvert."] } 13... Nxc5 { À RETENIR. PRO TIP : -0.05. On prend gratuitement : si 14.Nxc5 dxc5, le pion de plus reste à nous et la poussée blanche n'a rien ouvert. La poussée c5 n'est dangereuse que préparée par b4. [%csl Gc5] [%cal Gd7c5] })
+13... Nf6 { Le cavalier revient : il attaque e4 et prépare ...h5 et ...g4.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (+0.54).
+1. ...Ng6 ou ...Kh8 : le deuxième cavalier et le roi se placent pour la tempête.
+2. ...h5 puis ...g4 : le levier, préparé par le cavalier f6 et le pion h5.
+3. Après c5 et cxd6 cxd6, une tour en f7 défend c7 contre Nb5-c7 : on ne répond pas à l'aile dame, on compte les coups et on attaque. [%cal Gf6e4,Gh7h5,Gg5g4] }
 
 ## L'Attaque Bayonnette 9.b4 : la ligne moderne de club
 { L'ATTAQUE BAYONNETTE.
@@ -55,7 +56,7 @@ Au lieu de 9.Ne1, les Blancs poussent tout de suite b4 : ils gagnent un temps po
 
 Notre réponse : 9...Nh5 ! Le cavalier libère le pion f, regarde la case f4 et accélère ...f5. Les Blancs répondent par 10.Re1 (la découverte de Kramnik), qui libère f1 pour le fou e2 et défend e4.
 
-Honnêteté moteur : Stockfish 18 préfère légèrement 9...a5 (+0.6), mais 9...Nh5 est dans l'esprit de l'Est-Indienne et la ligne finit en quasi-égalité (environ +0.2). }
+Honnêteté moteur : Stockfish 19 préfère de très peu 9...a5, mais 9...Nh5 (+0.73) est dans l'esprit de l'Est-Indienne, et la ligne se rapproche ensuite de l'égalité. }
 1. d4 { Le pion dame. }
 1... Nf6 { Le cavalier. [%cal Gf6e4] }
 2. c4 { L'espace. }
@@ -79,25 +80,21 @@ Honnêteté moteur : Stockfish 18 préfère légèrement 9...a5 (+0.6), mais 9..
 11. Ng5 { Le cavalier bondit vers e6, la case faible créée par ...f5. [%cal Rg5e6] [%csl Re6] }
 11... Nf6 { Le cavalier revient défendre : il défend h7 et attaque e4. La case e6 reste le point à surveiller. [%cal Gf6e4,Gf6h7] }
 12. Bf3 { Le fou renforce e4 et la diagonale vers h5. }
-(12. f3 { Le coup le plus sûr pour les Blancs (+0.6) : e4 est consolidé. } 12... Kh8 { Le roi quitte la diagonale g1-a7 et la case g8 sera libre pour un cavalier ou une tour. Plan : ...Nh5 et ...f4 plus tard. [%csl Gh8] [%cal Gf5f4] })
+(12. f3 { Le coup le plus sûr pour les Blancs (+0.44) : e4 est consolidé. } 12... Kh8 { À RETENIR. PRO TIP : +0.34. Le roi quitte la diagonale g1-a7 et la case g8 sera libre pour un cavalier ou une tour. Plan : ...Nh5 et ...f4 plus tard. [%csl Gh8] [%cal Gf5f4] })
 12... c6 { On ouvre une deuxième front : la colonne c, pour que les Blancs ne soient pas seuls à l'aile dame. [%csl Gc6] [%cal Gc6d5] }
 13. Be3 { Le fou se développe et vise a7 et c5. }
 13... cxd5 { On ouvre la colonne c. [%cal Gc8c1] }
-14. cxd5 { Les Blancs reprennent avec le pion c : le pion d5 reste solide. }
-14... h6 { On chasse le cavalier g5 : il doit choisir tout de suite. [%cal Gh6g5] }
-15. Ne6 { Le cavalier s'installe en e6, attaque la dame et la tour f8. [%csl Re6] [%cal Re6d8,Re6f8] }
-15... Bxe6 { On échange le cavalier gênant contre le fou c8 : le pion e6 sera isolé. [%cal Gc8e6] }
-16. dxe6 { Le pion e6 est avancé mais coupé de sa chaîne. [%csl Re6] }
-16... fxe4 { On ouvre la colonne f et on élimine un pion central. [%cal Gf5e4,Gf8f3] }
-17. Nxe4 { Les Blancs reprennent. }
-17... Nxe4 { On échange les pièces. [%cal Gf6e4] }
-18. Bxe4 { Le fou reprend. }
-18... d5 { RETENIR (PRO TIP) : on reprend le centre avec gain de temps sur le fou e4 (Xu Jun-Ponomariov 2000). Quasi-égalité (environ +0.2) : le pion e6 isolé compense tout juste le centre noir. Contre la Bayonnette, la règle : ...Nh5, ...f5, puis ouvrir la colonne c par ...c6 pour ne pas subir. [%csl Gd5,Re6] [%cal Gd5e4] }
+14. cxd5 { Les Blancs reprennent avec le pion c : le pion d5 reste solide.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (0.00).
+1. ...h6 : on chasse le cavalier g5, il doit choisir tout de suite.
+2. Contre Ne6, ...Bxe6 et dxe6 : le cavalier gênant disparaît, le pion e6 est coupé de sa chaîne.
+3. ...fxe4 puis ...d5 : on reprend le centre avec gain de temps (Xu Jun-Ponomariov 2000). Contre la Bayonnette, la règle : ...Nh5, ...f5, puis ouvrir la colonne c par ...c6 pour ne pas subir. [%cal Gh7h6,Gc8e6] }
 
 ## La Variante d'Échange : 7.dxe5, une finale égale mais vivante
 { LA VARIANTE D'ÉCHANGE.
 
-Très fréquente à 1500 Elo : les Blancs ont peur de l'attaque noire et échangent les dames dès le coup 8. Beaucoup de joueurs noirs croient alors la partie nulle et morte. C'est faux : la finale est égale (0.00 au moteur), mais elle reste dynamique.
+Très fréquente à 1500 Elo : les Blancs ont peur de l'attaque noire et échangent les dames dès le coup 8. Beaucoup de joueurs noirs croient alors la partie nulle et morte. C'est faux : la finale est égale (-0.08 après 8...Rxd8), mais elle reste dynamique.
 
 Nos atouts dans cette finale :
 - La case d4 : aucun pion blanc ne peut plus la chasser (plus de pion d, le pion c4 et le pion e4 ne la couvrent pas). Un cavalier noir en d4 y sera intouchable.
@@ -117,13 +114,13 @@ Le piège à éviter : se précipiter sur le pion e5 de façon naïve (voir 9.Nx
 5... O-O { Le roque. [%csl Gg8] }
 6. Be2 { Développement. }
 6... e5 { La frappe sur d4. [%cal Ge5d4] }
-7. dxe5 { L'ÉCHANGE : les Blancs liquident la tension. Le moteur le juge déjà moins bon pour eux (+0.1 contre +0.6 après 7.O-O). [%cal Gd4e5] }
+7. dxe5 { L'ÉCHANGE : les Blancs liquident la tension. Le moteur le juge nettement moins ambitieux que 7.O-O : +0.15 seulement. [%cal Gd4e5] }
 7... dxe5 { Reprise obligatoire : la colonne d s'ouvre. [%csl Ge5,Gd4] }
 8. Qxd8 { Les Blancs échangent les dames. }
-8... Rxd8 { La tour reprend et occupe la colonne d. Égalité : 0.00. [%cal Gd8d1] }
+8... Rxd8 { La tour reprend et occupe la colonne d. Égalité : -0.08. [%cal Gd8d1] }
 9. Bg5 { Le coup le plus piquant : le fou cloue le cavalier f6 contre la tour d8 et menace Nd5. [%cal Rg5f6,Rf6d8] }
-(9. Nxe5 { Le coup de club naïf : les Blancs prennent le pion e5. [%hint "Les Blancs prennent un pion alors que leur propre pion e4 n'est défendu que par le cavalier c3."] [%hint "Le pion e4 : attaqué par le cavalier f6 et défendu une seule fois."] [%hintcsl Re4] [%hint "Nxe4 ! On rend le pion tout de suite, et la grande diagonale du fou g7 s'ouvre sur e5 et b2."] } 9... Nxe4 { On récupère le pion. [%cal Gf6e4] } 10. Nxe4 { Les Blancs échangent. } 10... Bxe5 { Le fou g7 reprend et vise b2 : égalité, et c'est plutôt aux Blancs de faire attention à leur pion b2. [%cal Ge5b2] [%csl Rb2] })
-(9. Be3 { Le coup que le moteur préfère (0.00) : le fou surveille d4 et c5. } 9... Nc6 { Le cavalier vise directement la case d4. [%cal Gc6d4] [%csl Gd4] } 10. O-O { Les Blancs roquent sans se soucier de d4. } 10... Nd4 { Le cavalier s'installe en d4, menace Nxe2+ et l'échange du fou e2. [%csl Gd4] [%cal Gd4e2,Gd4f3] } 11. Nxd4 { Les Blancs échangent pour chasser le cavalier. } 11... exd4 { RETENIR : la reprise ouvre la grande diagonale du fou g7 et le pion d4 gêne le cavalier c3 et le fou e3. Environ -0.2, les Noirs sont déjà un peu mieux. [%cal Gg7b2,Gd4c3] [%csl Gd4] })
+(9. Nxe5 { Le coup de club naïf : les Blancs prennent le pion e5. Une simple imprécision (-0.04) : le gain de pion est une illusion, car le pion e4 n'est défendu qu'une fois. [%csl Re4] } 9... Nxe4 { On récupère le pion. [%cal Gf6e4] } 10. Nxe4 { Les Blancs échangent. } 10... Bxe5 { À RETENIR. PRO TIP : -0.09. Le fou g7 reprend et vise b2 : égalité, et c'est plutôt aux Blancs de faire attention à leur pion b2. Contre Nxe5, on rend coup pour coup avec ...Nxe4. [%cal Ge5b2] [%csl Rb2] })
+(9. Be3 { Un coup que le moteur juge aussi bon (-0.04) : le fou surveille d4 et c5. } 9... Nc6 { Le cavalier vise directement la case d4. [%cal Gc6d4] [%csl Gd4] } 10. O-O { Les Blancs roquent sans se soucier de d4. } 10... Nd4 { Le cavalier s'installe en d4, menace Nxe2+ et l'échange du fou e2. [%csl Gd4] [%cal Gd4e2,Gd4f3] } 11. Nxd4 { Les Blancs échangent pour chasser le cavalier. } 11... exd4 { À RETENIR. PRO TIP : -0.11. La reprise ouvre la grande diagonale du fou g7 et le pion d4 gêne le cavalier c3 et le fou e3 : les Noirs sont déjà un peu mieux. [%cal Gg7b2,Gd4c3] [%csl Gd4] })
 9... Re8 { La tour reste sur la grande colonne et défend e5, et le clouage disparaît. [%cal Ge8e5] }
 10. Nd5 { Le cavalier s'installe au centre et attaque c7 et f6. [%cal Rd5c7] }
 10... Nxd5 { On échange ce cavalier gênant. [%cal Gf6d5] }
@@ -132,7 +129,12 @@ Le piège à éviter : se précipiter sur le pion e5 de façon naïve (voir 9.Nx
 12. Bc4 { Le fou défend d5. }
 12... cxd5 { On échange. [%cal Gc6d5] }
 13. Bxd5 { Le fou reprend et occupe le centre. }
-13... Nd7 { RETENIR (PRO TIP) : le cavalier va en c5 (cible e4) ou en f6 ; le fou g7 n'a plus d'obstacle sur sa diagonale. Égalité (0.00), mais les Noirs jouent avec plaisir : le pion e4 est fixé, nos pièces ont des cases. Dans la finale d'Échange, on joue pour la case d4 et pour le fou g7, jamais pour la nulle. [%cal Gd7c5,Gc5e4] [%csl Gg7] }
+13... Nd7 { Le cavalier va en c5 (cible e4) ou en f6 ; le fou g7 n'a plus d'obstacle sur sa diagonale.
+
+À RETENIR. PRO TIP : la feuille de route après la théorie (+0.07).
+1. ...Nc5 : le cavalier attaque e4, le pion fixé.
+2. ...Bf8 : le fou change de diagonale et vise c5 et b4.
+3. ...Be6 : on échange le fou d5, le seul défenseur des cases blanches. Dans la finale d'Échange, on joue pour la case d4 et pour le fou g7, jamais pour la nulle. [%cal Gd7c5,Gc5e4] [%csl Gg7] }
 
 ## Anti-panique : la Sämisch 5.f3 et l'Attaque des Quatre Pions 5.f4
 { ANTI-PANIQUE : QUAND LES BLANCS PRENNENT TOUT LE CENTRE.
@@ -151,14 +153,14 @@ La règle unique pour les deux : frapper le centre avec ...c5 AVANT que les Blan
 4. e4 { Le grand centre. }
 4... d6 { Le contrôle de e5. [%csl Ge5] }
 5. f3 { LA SÄMISCH : f3 soutient e4 et prépare Be3, Qd2 et g4. Le défaut : le cavalier g1 n'a plus f3. [%csl Rg1,Gf3] }
-(5. f4 { LES QUATRE PIONS : les Blancs prennent tout le centre. Aucune pièce ne soutient ces pions : on va les attaquer. [%csl Rc4,Rd4,Re4,Rf4] } 5... O-O { Le roque d'abord : on ne frappe pas le centre avec le roi au milieu. [%csl Gg8] } 6. Nf3 { Le cavalier soutient d4. } 6... c5 { LE LEVIER : on attaque d4, la base du centre. Si les Blancs avancent d5, la case e5 et la diagonale du fou g7 nous appartiennent. [%csl Gc5,Rd4] [%cal Gc5d4] } 7. d5 { Les Blancs avancent. } (7. dxc5 { Les Blancs prennent, mais leur centre perd sa base. } 7... Na6 { Le meilleur coup : le cavalier récupérera c5. Le moteur préfère légèrement les Noirs (-0.1). [%cal Ga6c5] } 8. cxd6 { Les Blancs gardent le pion un moment. } 8... exd6 { Reprise : notre pion d6 contrôle e5, la diagonale du fou g7 est ouverte. [%cal Gg7c3] }) 7... e6 { On ouvre le centre tout de suite : la colonne e s'ouvrira face au roi blanc encore au centre. [%cal Ge6d5] } 8. Be2 { Les Blancs se développent. } 8... exd5 { On échange. [%cal Ge6d5] } 9. cxd5 { Les Blancs reprennent avec le pion c. } 9... Re8 { La ligne principale de Vaisser : la tour vise le pion e4 et la colonne e. [%cal Ge8e4] } 10. e5 { Les Blancs tentent la percée. } (10. Nd2 { Le coup prudent : le cavalier soutient e4 et vise c4. } 10... Na6 { Le cavalier vers c7 ou b4 : on soutient ...b5. [%cal Ga6c7,Ga6b4] }) 10... dxe5 { On prend. [%csl Ge5] } 11. fxe5 { Les Blancs reprennent. } 11... Ng4 { Le cavalier attaque e5 trois fois avec la tour et le fou. [%cal Gg4e5,Ge8e5,Gg7e5] } 12. Bg5 { Le fou attaque la dame. } 12... Qb6 { RETENIR : la dame attaque b2 et prépare ...Nxe5. Égalité (0.00) : le grand centre blanc a explosé. Contre les Quatre Pions, ...c5 et ...e6 au plus vite. [%cal Gb6b2] [%csl Re5] })
+(5. f4 { LES QUATRE PIONS : les Blancs prennent tout le centre. Aucune pièce ne soutient ces pions : on va les attaquer. [%csl Rc4,Rd4,Re4,Rf4] } 5... O-O { Le roque d'abord : on ne frappe pas le centre avec le roi au milieu. [%csl Gg8] } 6. Nf3 { Le cavalier soutient d4. } 6... c5 { LE LEVIER : on attaque d4, la base du centre. Si les Blancs avancent d5, la case e5 et la diagonale du fou g7 nous appartiennent. [%csl Gc5,Rd4] [%cal Gc5d4] } 7. d5 { Les Blancs avancent. } (7. dxc5 { Les Blancs prennent, mais leur centre perd sa base. } 7... Na6 { Le meilleur coup : le cavalier récupérera c5. Le moteur préfère légèrement les Noirs (-0.08). [%cal Ga6c5] } 8. cxd6 { Les Blancs gardent le pion un moment. } 8... exd6 { À RETENIR. PRO TIP : 0.00. Notre pion d6 contrôle e5, la diagonale du fou g7 est ouverte, et le pion c5 tombera. [%cal Gg7c3] }) 7... e6 { On ouvre le centre tout de suite : la colonne e s'ouvrira face au roi blanc encore au centre. [%cal Ge6d5] } 8. Be2 { Les Blancs se développent. } 8... exd5 { On échange. [%cal Ge6d5] } 9. cxd5 { Les Blancs reprennent avec le pion c. } 9... Re8 { La ligne principale de Vaisser : la tour vise le pion e4 et la colonne e. [%cal Ge8e4] } 10. e5 { Les Blancs tentent la percée. } (10. Nd2 { Le coup prudent : le cavalier soutient e4 et vise c4. } 10... Na6 { À RETENIR. PRO TIP : +0.17. Le cavalier vers c7 ou b4 : on soutient ...b5. Contre Nd2, l'aile dame est à nous. [%cal Ga6c7,Ga6b4] }) 10... dxe5 { On prend. [%csl Ge5] } 11. fxe5 { Les Blancs reprennent. } 11... Ng4 { Le cavalier attaque e5 trois fois avec la tour et le fou. [%cal Gg4e5,Ge8e5,Gg7e5] } 12. Bg5 { Le fou attaque la dame. } 12... Qb6 { À RETENIR. PRO TIP : 0.00. La dame attaque b2 et prépare ...Nxe5 : le grand centre blanc a explosé. Contre les Quatre Pions, ...c5 et ...e6 au plus vite. [%cal Gb6b2] [%csl Re5] })
 5... O-O { Le roque. Contre la Sämisch, le roi noir est en sécurité tant que la colonne h reste fermée. [%csl Gg8] }
 6. Be3 { Le fou soutient d4 et prépare Qd2 et Bh6 pour échanger notre fou g7. [%cal Re3h6] }
-6... c5 { LE LEVIER ANTI-SÄMISCH : on frappe d4 avant que le cavalier g1 soit sorti. C'est le meilleur coup du moteur (+0.4). [%csl Gc5,Rd4] [%cal Gc5d4] }
-(6... e5 { Le coup classique de l'Est-Indienne, jouable mais moins précis (+0.9) : on garde les plans connus du chapitre 1. [%cal Ge5d4] } 7. d5 { Les Blancs ferment. } 7... Nh5 { Le cavalier libère le pion f. [%cal Gf7f5] } 8. Qd2 { La dame prépare O-O-O. } 8... f5 { La poussée f5. [%cal Gf5e4] } 9. O-O-O { Les rois sont de côtés opposés. } 9... Nd7 { RETENIR : le cavalier soutient ...Ndf6 et ...f4. Position tranchante, environ +0.8 : les Blancs attaquent par g4, nous par ...a6 et ...b5. [%cal Gd7f6,Ga7a6] })
+6... c5 { LE LEVIER ANTI-SÄMISCH : on frappe d4 avant que le cavalier g1 soit sorti. C'est le meilleur coup du moteur (+0.14). [%csl Gc5,Rd4] [%cal Gc5d4] }
+(6... e5 { Le coup classique de l'Est-Indienne, jouable mais moins précis (+0.76 contre +0.14 après 6...c5) : on garde les plans connus du chapitre 1. [%cal Ge5d4] } 7. d5 { Les Blancs ferment. } 7... Nh5 { Le cavalier libère le pion f. [%cal Gf7f5] } 8. Qd2 { La dame prépare O-O-O. } 8... f5 { La poussée f5. [%cal Gf5e4] } 9. O-O-O { Les rois sont de côtés opposés. } 9... Nd7 { À RETENIR. PRO TIP : +0.62. Le cavalier soutient ...Ndf6 et ...f4. Position tranchante : les Blancs attaquent par g4, nous par ...a6 et ...b5. [%cal Gd7f6,Ga7a6] })
 7. dxc5 { Les Blancs acceptent. Le cavalier g1 n'est toujours pas sorti. }
-(7. d5 { Les Blancs ferment : on obtient une Benoni où leur cavalier g1 est mal placé. } 7... e6 { On frappe d5 tout de suite. [%cal Ge6d5] } 8. Qd2 { La dame se développe. } 8... exd5 { On ouvre la colonne e. [%cal Ge8e4] } 9. cxd5 { Reprise. } 9... a6 { RETENIR : on prépare ...b5, l'aile dame est à nous. [%cal Gb7b5] })
-(7. Nge2 { Le cavalier sort enfin. } 7... Nc6 { Le cavalier attaque d4 une deuxième fois. [%cal Gc6d4] } 8. d5 { Les Blancs avancent avec gain de temps. } 8... Ne5 { Le cavalier s'installe en e5, une case forte devant le pion d6. [%csl Ge5] } 9. Ng3 { Les Blancs défendent c4 et f5. } 9... e6 { RETENIR : on frappe d5, le fou g7 respire. [%cal Ge6d5] })
+(7. d5 { Les Blancs ferment : on obtient une Benoni où leur cavalier g1 est mal placé. } 7... e6 { On frappe d5 tout de suite. [%cal Ge6d5] } 8. Qd2 { La dame se développe. } 8... exd5 { On ouvre la colonne e. [%cal Ge8e4] } 9. cxd5 { Reprise. } 9... a6 { À RETENIR. PRO TIP : +0.17. On prépare ...b5 : contre 7.d5, l'aile dame est à nous. [%cal Gb7b5] })
+(7. Nge2 { Le cavalier sort enfin. } 7... Nc6 { Le cavalier attaque d4 une deuxième fois. [%cal Gc6d4] } 8. d5 { Les Blancs avancent avec gain de temps. } 8... Ne5 { Le cavalier s'installe en e5, une case forte devant le pion d6. [%csl Ge5] } 9. Ng3 { Les Blancs défendent c4 et f5. } 9... e6 { À RETENIR. PRO TIP : +0.34. On frappe d5, le fou g7 respire. [%cal Ge6d5] })
 7... dxc5 { On reprend : les dames vont s'échanger. [%cal Gd6c5] }
 8. Qxd8 { Les Blancs échangent les dames. }
 8... Rxd8 { La tour prend la colonne d. [%cal Gd8d1] }
@@ -167,12 +169,17 @@ La règle unique pour les deux : frapper le centre avec ...c5 AVANT que les Blan
 10. Nge2 { Le cavalier sort enfin. }
 10... b6 { On chasse le fou c5. [%cal Gb6c5] }
 11. Ba3 { Le fou recule au bord. }
-11... Ba6 { RETENIR (PRO TIP) : le fou a6 cloue le pion c4 et vise le roi blanc resté au centre. Un pion de moins, mais égalité parfaite (0.00) : développement, colonnes ouvertes, fou g7 libre. Contre la Sämisch, un pion vaut moins que trois temps. [%cal Ga6c4,Gg7b2] [%csl Rc4,Re1] }
+11... Ba6 { Le fou a6 cloue le pion c4 et vise le roi blanc resté au centre. Un pion de moins, mais quasi-égalité : développement, colonnes ouvertes, fou g7 libre.
 
-## Aléatoire Surprise : les coups de pion mous punis par le levier ...g4
-{ MODULE ALÉATOIRE SURPRISE.
+À RETENIR. PRO TIP : la feuille de route après la théorie (+0.12).
+1. Contre Nb5, ...Rd7 : la tour défend c7.
+2. ...Bb7 : le fou revient sur la grande diagonale quand c4 n'est plus une cible.
+3. ...a6 : on chasse le cavalier b5. Contre la Sämisch, un pion vaut moins que trois temps. [%cal Ga6c4,Gg7b2] [%csl Rc4,Re1] }
 
-Une partie de club typique : les Blancs suivent la ligne du chapitre 1 jusqu'au coup 12, puis jouent deux coups de pion « prudents » : 13.h3 et 14.a3. Ils ne préparent ni c5 ni la défense de l'aile roi. Pire : le pion h3 devient un CROCHET pour notre levier ...g4.
+## Aléatoire surprise 1 : les coups de pion mous punis par le levier ...g4
+{ ALÉATOIRE SURPRISE.
+
+Une partie de club typique : les Blancs suivent la ligne du chapitre 1 jusqu'au coup 12, puis jouent deux coups de pion prudents : 13.h3 et 14.a3. Ils ne préparent ni c5 ni la défense de l'aile roi. Pire : le pion h3 devient un CROCHET pour notre levier ...g4.
 
 À toi de trouver la punition. Utilise les indices dans l'ordre : 1. le principe violé, 2. la zone faible, 3. le levier de pion.
 
@@ -199,11 +206,11 @@ La méthode à retenir (PRO TIP) : on ne pousse pas ...g4 tout de suite. On pré
 10... f5 { La première vague. [%cal Gf5e4] }
 11. Bd2 { Développement. }
 11... f4 { La deuxième vague. [%csl Gf4] }
-12. f3 { Le blocage : fin du terrain connu, environ +0.6. }
+12. f3 { Le blocage : fin du terrain connu (+0.68). }
 12... g5 { La troisième vague. [%cal Gg5g4] }
-13. h3 { PREMIER COUP MOU : les Blancs veulent empêcher ...g4. En réalité, ils donnent une cible : le pion h3 est un crochet pour ...h5 et ...g4. Le plan c5 (b4 était le bon coup) n'avance pas. Environ +0.2 au lieu de +0.55. [%csl Rh3] [%hint "Les Blancs jouent un coup de pion sur l'aile où ils sont attaqués, au lieu de poursuivre leur plan c5 à l'aile dame."] [%hint "Le pion h3 : il sert de crochet. Un pion noir en g4 l'attaquera et ouvrira une colonne vers le roi."] [%hintcsl Rh3,Rg4] [%hint "On prépare le levier ...g4 : d'abord les cavaliers en g6 et f6, puis ...h5."] }
+13. h3 { PREMIER COUP MOU : les Blancs veulent empêcher ...g4. En réalité, ils donnent une cible : le pion h3 est un crochet pour ...h5 et ...g4. Le plan c5 (b4 était le bon coup) n'avance pas : l'évaluation passe de +0.68 à +0.15. [%csl Rh3] [%hint "Les Blancs jouent un coup de pion sur l'aile où ils sont attaqués, au lieu de poursuivre leur plan c5 à l'aile dame."] [%hint "Le pion h3 : il sert de crochet. Un pion noir en g4 l'attaquera et ouvrira une colonne vers le roi."] [%hintcsl Rh3,Rg4] [%hint "On prépare le levier ...g4 : d'abord les cavaliers en g6 et f6, puis ...h5."] }
 13... Ng6 { Le cavalier rejoint l'aile roi et soutient ...h5-h4. [%cal Ge7g6,Gg6h4] }
-14. a3 { DEUXIÈME COUP MOU : a3 ne prépare rien que b4 n'aurait fait en un coup. Les Blancs ont perdu deux temps : environ -0.45, les Noirs sont mieux. [%csl Ra3] [%hint "Deuxième coup de pion inutile : a3 ne fait rien que b4 n'aurait fait directement. Deux temps perdus dans une course d'ailes."] [%hint "L'aile roi blanche : g4 et h3 ne sont défendus que par des pions, aucune pièce blanche ne la protège."] [%hintcsl Rg4,Rh3] [%hint "Nf6 ! Le cavalier contrôle g4 et h5 ; ensuite ...h5 et le levier ...g4."] }
+14. a3 { DEUXIÈME COUP MOU : a3 ne prépare rien que b4 n'aurait fait en un coup. Les Blancs ont perdu deux temps : l'évaluation passe de +0.10 à -0.48, les Noirs sont mieux. [%csl Ra3] [%hint "Deuxième coup de pion inutile : a3 ne fait rien que b4 n'aurait fait directement. Deux temps perdus dans une course d'ailes."] [%hint "L'aile roi blanche : g4 et h3 ne sont défendus que par des pions, aucune pièce blanche ne la protège."] [%hintcsl Rg4,Rh3] [%hint "Nf6 ! Le cavalier contrôle g4 et h5 ; ensuite ...h5 et le levier ...g4."] }
 14... Nf6 { Le cavalier contrôle g4 : c'est la première pièce du levier. [%cal Gf6g4,Gf6h5] }
 15. Be1 { Le fou rentre pour défendre l'aile roi (il pourra aller en f2). }
 15... h5 { Le deuxième soutien : le pion h5 pousse ...g4 et ouvrira la colonne h. [%csl Gh5] [%cal Gh5g4,Gg5g4] }
@@ -220,4 +227,56 @@ La méthode à retenir (PRO TIP) : on ne pousse pas ...g4 tout de suite. On pré
 21. a5 { Les Blancs n'ont toujours pas ouvert de colonne à l'aile dame. }
 21... a6 { On fige l'aile dame : la poussée a6 est stoppée, b5 aussi. [%csl Ga6] }
 22. Kf2 { Le roi blanc tente de fuir. }
-22... Nxg4+ { RETENIR (PRO TIP) : on récupère le pion avec échec, la colonne h est ouverte et le roi blanc est exposé. Environ -0.5, et c'est la position la plus facile à jouer : nos pièces attaquent, les leurs défendent. Deux coups de pion mous à l'aile roi se punissent par un levier PRÉPARÉ (...Nf6, ...h5, puis ...g4), jamais improvisé. [%csl Rf2] [%cal Gg4f2,Gf8h8] }
+22... Nxg4+ { À RETENIR. PRO TIP : -0.40. On récupère le pion avec échec, la colonne h est ouverte et le roi blanc est exposé : c'est la position la plus facile à jouer, nos pièces attaquent, les leurs défendent. Deux coups de pion mous à l'aile roi se punissent par un levier PRÉPARÉ (...Nf6, ...h5, puis ...g4), jamais improvisé. [%csl Rf2] [%cal Gg4f2,Gf8h8] }
+
+## Aléatoire surprise 2 : la finale d'Échange jouée sans plan
+{ ALÉATOIRE SURPRISE.
+
+On reprend le chapitre 3 jusqu'à 13...Nd7. La théorie s'arrête là. Les Blancs croient la finale nulle et jouent des coups sans plan. À chaque faute, l'échelle des 3 indices guide vers la bonne réponse :
+- indice 1 : le principe violé ;
+- indice 2 : la case clé (cases allumées) ;
+- indice 3 : l'action concrète.
+
+PRO TIP : la méthode. 1. Qu'a abandonné le dernier coup blanc ? 2. Quel pion blanc est devenu une cible ? 3. Quelle colonne mène au roi blanc ? }
+1. d4 { Le pion dame. }
+1... Nf6 { Le cavalier. [%cal Gf6e4] }
+2. c4 { L'espace. }
+2... g6 { Fianchetto. [%cal Gf8g7] }
+3. Nc3 { Le cavalier dame. }
+3... Bg7 { La grande diagonale. [%csl Gg7] }
+4. e4 { Le grand centre. }
+4... d6 { Le contrôle de e5. [%csl Ge5] }
+5. Nf3 { La Classique. }
+5... O-O { Le roque. [%csl Gg8] }
+6. Be2 { Développement. }
+6... e5 { La frappe sur d4. [%cal Ge5d4] }
+7. dxe5 { L'échange. }
+7... dxe5 { Reprise. }
+8. Qxd8 { Les dames partent. }
+8... Rxd8 { La tour reprend. }
+9. Bg5 { Le clouage. }
+9... Re8 { Le clouage disparaît. }
+10. Nd5 { Le cavalier au centre. }
+10... Nxd5 { Échange. }
+11. cxd5 { Reprise. }
+11... c6 { On attaque d5. }
+12. Bc4 { Le fou défend. }
+12... cxd5 { Échange. }
+13. Bxd5 { Le fou reprend. }
+13... Nd7 { Fin de la théorie : le cavalier vise c5 et f6. }
+14. Nh4 { PREMIER COUP MOU : le cavalier part au bord pour viser f5, mais il abandonne la défense de e4 (14.Nd2 était le bon coup) : l'évaluation passe de +0.07 à -0.61. [%hint "Le cavalier part sur le bord au lieu de défendre le pion e4 depuis d2."] [%hint "Le pion e4 : seul le fou d5 le défend encore. Un cavalier noir en f6 attaquera les deux à la fois."] [%hintcsl Re4,Rd5] [%hint "14...a5 : on fige l'aile dame (plus de b4), puis ...h6 et ...Nf6 iront chercher e4."] }
+14... a5 { On fige l'aile dame : b4 n'est plus possible, la case c5 reste à nos cavaliers. [%csl Gc5] }
+15. a4 { Les Blancs bloquent le pion a5. }
+15... h6 { On chasse le fou g5. [%cal Gh6g5] }
+16. Be3 { Le fou recule. }
+16... Nf6 { Le cavalier attaque les deux à la fois : le fou d5 et le pion e4. [%cal Gf6d5,Gf6e4] }
+17. Bb3 { Le fou recule, et e4 n'a plus de défenseur. }
+17... Nxe4 { On prend le pion e4. Attention : le fou b3 cloue notre pion f7 contre le roi g8. [%cal Rb3g8] }
+18. Rc1 { DEUXIÈME COUP MOU : la tour prend la colonne c, mais les Blancs oublient Nxg6, qui récupérait le pion grâce au clouage de f7 : l'évaluation passe de -0.59 à -1.16. [%hint "Les Blancs jouent un coup de tour au lieu de récupérer le pion qu'ils viennent de perdre."] [%hint "Le fou b3 : c'est lui qui cloue f7 contre le roi g8 ; tant qu'il est là, notre pion g6 est en danger."] [%hintcsl Rb3,Rg6] [%hint "18...Be6 : on propose l'échange du fou b3 ; après Bxe6 Rxe6, plus de clouage, et le pion e4 gagné reste à nous."] }
+18... Be6 { Le fou contre le fou : le clouage va disparaître. [%cal Ge6b3] }
+19. Bxe6 { Les Blancs échangent. }
+19... Rxe6 { On reprend avec la tour, pas avec le pion : le pion f7 garde g6. [%csl Gf7] }
+20. b3 { TROISIÈME COUP MOU : un coup de pion avec le roi encore en e1, alors que le roque était urgent : l'évaluation passe de -1.42 à -2.55. [%hint "Les Blancs jouent un coup de pion lent alors que leur roi est encore au centre, en e1."] [%hint "La colonne d : elle mène tout droit au roi e1, et aucune tour blanche ne la défend."] [%hintcsl Rd1,Re1] [%hint "20...Rd8 : la tour prend la colonne d, la deuxième la suivra en d6."] }
+20... Rd8 { La tour prend la colonne d. [%cal Gd8d1] }
+21. Rc7 { La tour blanche entre en c7, mais trop tard. }
+21... Red6 { À RETENIR. PRO TIP : -2.84. Un pion de plus, et deux tours sur la colonne d face au roi blanc resté en e1. Dans la finale d'Échange, chaque coup mou blanc se punit par une cible concrète : le pion e4 d'abord, puis la colonne d. [%cal Gd6d1] }

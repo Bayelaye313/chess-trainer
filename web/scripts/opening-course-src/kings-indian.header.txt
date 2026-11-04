@@ -8,32 +8,39 @@ import type { CourseChapterTree, CourseTree } from "../course-tree";
  * `/ouvertures/kings-indian/cours`). Public visé : 1500-1800 Elo, joueur
  * tactique qui a besoin de plans stricts.
  *
- * ## Contenu (2026-10-12)
+ * ## Contenu (2026-10-12, v2 2026-11-04)
  *
  * 1. Fiche d'identité et Variante Classique 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6
- *    8.d5 Ne7 9.Ne1 Nd7 10.Nd3 f5 11.Bd2 f4 12.f3 g5 jusqu'au coup 15, avec
- *    11.f3 (le coup principal) et le piège 13.c5? Nxc5.
- * 2. Attaque Bayonnette 9.b4 Nh5 10.Re1 f5 11.Ng5 Nf6 12.Bf3 c6 jusqu'à
- *    18...d5 (Xu Jun-Ponomariov 2000, environ +0.2), avec 12.f3 Kh8.
- * 3. Variante d'Échange 7.dxe5 dxe5 8.Qxd8 Rxd8 (0.00) : 9.Bg5 Re8, 9.Be3 Nc6
- *    10.O-O Nd4 (la case d4) et le coup de club 9.Nxe5? Nxe4.
+ *    8.d5 Ne7 9.Ne1 Nd7 10.Nd3 f5 11.Bd2 f4 12.f3 g5 13.b4 Nf6, avec
+ *    11.f3 et le piège 13.c5? Nxc5 ; feuille de route ...Ng6, ...h5, ...g4.
+ * 2. Attaque Bayonnette 9.b4 Nh5 10.Re1 f5 11.Ng5 Nf6 12.Bf3 c6 13.Be3
+ *    cxd5 14.cxd5, avec 12.f3 Kh8 ; feuille de route ...h6, ...Bxe6,
+ *    ...fxe4 et ...d5 (Xu Jun-Ponomariov 2000).
+ * 3. Variante d'Échange 7.dxe5 dxe5 8.Qxd8 Rxd8 : 9.Bg5 Re8, 9.Be3 Nc6
+ *    10.O-O Nd4 (la case d4) et l'imprécision de club 9.Nxe5 Nxe4.
  * 4. Anti-panique : Sämisch 5.f3 O-O 6.Be3 c5! (et 6...e5) puis Quatre
  *    Pions 5.f4 O-O 6.Nf3 c5 7.d5 e6 8.Be2 exd5 9.cxd5 Re8.
- * 5. Aléatoire surprise : 13.h3 et 14.a3 (deux coups de pion mous) punis
- *    par ...Nf6, ...h5 et le levier ...g4 (8 coups après la faute).
+ * 5. Aléatoire surprise 1 : 13.h3 et 14.a3 (deux coups de pion mous) punis
+ *    par ...Nf6, ...h5 et le levier ...g4.
+ * 6. Aléatoire surprise 2 : la finale d'Échange jouée sans plan (14.Nh4,
+ *    18.Rc1, 20.b3) : le pion e4 tombe, puis la colonne d s'ouvre vers e1.
  *
- * Indices progressifs : chaque faute blanche porte trois balises `[%hint]`
- * (1. principe violé, 2. zone faible, 3. levier de pion) et une balise
- * `[%hintcsl]` (cases allumées à partir du 2e indice).
+ * Indices progressifs : chaque faute blanche qui perd au moins 0.5 porte
+ * trois balises `[%hint]` (1. principe violé, 2. zone faible, 3. action
+ * concrète) et une balise `[%hintcsl]` (cases allumées à partir du 2e
+ * indice) ; en dessous de 0.5, c'est une imprécision, sans indices. Chaque
+ * chapitre théorique finit par « À RETENIR. PRO TIP : la feuille de route
+ * après la théorie », chaque variante par un « À RETENIR. PRO TIP ».
  *
  * Sources : Andrew Martin, « Classical King's Indian E90-E99 » (ChessPub
  * 2002, `docs/`, couche texte) pour les lignes 9.Ne1 et 9.b4 ; Anatoli
  * Vaisser, « Beating the King's Indian and Benoni » (Batsford 1997, `docs/`)
  * pour la ligne principale des Quatre Pions 9...Re8. Toutes les lignes sont
- * arbitrées par Stockfish 18 natif (profondeur 16) ; le moteur a nuancé le
- * cahier des charges : 6...c5 est meilleur que 6...e5 contre la Sämisch
- * (+0.4 contre +0.9), et le levier ...g4 n'est bon qu'APRÈS ...h5 et
- * ...Nf6 (poussé trop tôt, il ne donne rien). Toute la prose est originale.
+ * arbitrées par Stockfish 19 natif (profondeur 16) ; tout chiffre cité est
+ * l'évaluation d'un nœud. Le moteur a nuancé le cahier des charges : 6...c5
+ * est meilleur que 6...e5 contre la Sämisch, et le levier ...g4 n'est bon
+ * qu'APRÈS ...h5 et ...Nf6 (poussé trop tôt, il ne donne rien). Toute la
+ * prose est originale.
  *
  * ## Architecture technique des nœuds
  *
