@@ -2,7 +2,7 @@ import type { PhaseId, PlanningBlock } from "./types";
 
 /**
  * Les cinq phases du Programme 1000 Heures : 36 semaines × 7 jours × 4 h
- * = 1008 h. Les semaines sont numérotées sur TOUT le programme (la Phase 2
+ * = 1008 h (7 + 7 + 8 + 7 + 7 semaines ; calcul dans `docs/programme/`). Les semaines sont numérotées sur TOUT le programme (la Phase 2
  * commence en semaine 8), ce qui garde `S<n>J<m>` unique.
  *
  * `soloMoves` borne le nombre de coups DU SOLVEUR par combinaison (la colonne
@@ -27,8 +27,8 @@ export const PHASES: readonly PhaseDefinition[] = [
   { id: "1500-1700", index: 1, titre: "Fondamentaux structurels", eloDebut: 1500, eloFin: 1700, semaineDebut: 1, semaineFin: 7, soloMoves: { min: 1, max: 3 }, blindfoldSeconds: { debut: 30, fin: 20 } },
   { id: "1700-1900", index: 2, titre: "Tactique avancée, finales techniques", eloDebut: 1700, eloFin: 1900, semaineDebut: 8, semaineFin: 14, soloMoves: { min: 2, max: 4 }, blindfoldSeconds: { debut: 20, fin: 15 } },
   { id: "1900-2100", index: 3, titre: "Stratégie profonde, préparation d'ouverture", eloDebut: 1900, eloFin: 2100, semaineDebut: 15, semaineFin: 22, soloMoves: { min: 2, max: 5 }, blindfoldSeconds: { debut: 15, fin: 12 } },
-  { id: "2100-2300", index: 4, titre: "Calcul long, finales complexes", eloDebut: 2100, eloFin: 2300, semaineDebut: 23, semaineFin: 30, soloMoves: { min: 3, max: 6 }, blindfoldSeconds: { debut: 12, fin: 10 } },
-  { id: "2300-2400", index: 5, titre: "Perfectionnement, psychologie de compétition", eloDebut: 2300, eloFin: 2400, semaineDebut: 31, semaineFin: 36, soloMoves: { min: 3, max: 8 }, blindfoldSeconds: { debut: 10, fin: 8 } },
+  { id: "2100-2250", index: 4, titre: "Calcul long, finales complexes", eloDebut: 2100, eloFin: 2250, semaineDebut: 23, semaineFin: 29, soloMoves: { min: 3, max: 6 }, blindfoldSeconds: { debut: 12, fin: 10 } },
+  { id: "2250-2400", index: 5, titre: "Perfectionnement, décisions de compétition", eloDebut: 2250, eloFin: 2400, semaineDebut: 30, semaineFin: 36, soloMoves: { min: 3, max: 7 }, blindfoldSeconds: { debut: 10, fin: 8 } },
 ];
 
 export const TOTAL_WEEKS = 36;

@@ -14,7 +14,7 @@
  *   progression adaptative pioche (`core/programme/adaptive.ts`).
  */
 
-export type PhaseId = "1500-1700" | "1700-1900" | "1900-2100" | "2100-2300" | "2300-2400";
+export type PhaseId = "1500-1700" | "1700-1900" | "1900-2100" | "2100-2250" | "2250-2400";
 
 export type BlockType = "cours" | "puzzles" | "blindfold" | "hack_visuel" | "pause" | "reconsolidation" | "partie" | "analyse";
 

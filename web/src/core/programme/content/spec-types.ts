@@ -37,7 +37,14 @@ export type GeometryFilter =
   | "lucenaLike"
   | "philidorLike"
   | "rookTradeToPawnEnding"
-  | "rookEndingPasser";
+  | "rookEndingPasser"
+  // Phases 2 à 5
+  | "hangingPawns"
+  | "minorityStructure"
+  | "oppositeBishops"
+  | "exchangeImbalance"
+  | "exchangeSacrifice"
+  | "blockade";
 
 export interface SourcingSpec {
   /** Au moins un de ces tags Lichess (vide = aucun filtre sur les tags). */

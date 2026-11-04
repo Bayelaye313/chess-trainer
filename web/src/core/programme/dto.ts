@@ -36,6 +36,18 @@ export interface ProgrammeOverview {
   /** Métaphores déjà visitées, dans l'ordre (bibliothèque personnelle). */
   library: (Metaphor & { firstDayKey: string; visits: number })[];
   inProgressSessionId: string | null;
+  /** Les 5 phases : validée (derrière le curseur), en cours, ou verrouillée jusqu'au bilan de la précédente. */
+  phases: {
+    index: number;
+    titre: string;
+    eloDebut: number;
+    eloFin: number;
+    semaineDebut: number;
+    semaineFin: number;
+    /** Jours dont le contenu est généré (sur `(semaineFin − semaineDebut + 1) × 7`). */
+    joursGeneres: number;
+    status: "validee" | "en_cours" | "verrouillee";
+  }[];
 }
 
 export interface SessionPuzzle {
@@ -92,5 +104,7 @@ export interface ProgrammeSessionOutcome {
   previousOffset: number;
   newOffset: number;
   retentionPassed: boolean | null;
+  /** Jour 7 de la dernière semaine d'une phase : bilan de passage à la phase suivante. */
+  phaseReview: { weekSuccess: number | null; threshold: number; passed: boolean; nextPhaseTitre: string | null } | null;
   next: { semaine: number; jour: number; repetition: number; finished: boolean };
 }

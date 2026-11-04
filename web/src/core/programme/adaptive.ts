@@ -1,4 +1,4 @@
-import { DAYS_PER_WEEK, TOTAL_WEEKS } from "./phases";
+import { DAYS_PER_WEEK, PHASES, TOTAL_WEEKS } from "./phases";
 import { dayKey, type ProgrammeDay, type ProgrammePuzzle } from "./types";
 
 /**
@@ -27,6 +27,13 @@ export const RATING_STEP = 50;
 export const MAX_OFFSET = 200;
 export const RETENTION_PASS = 0.7;
 export const PUZZLES_PER_DAY = 6;
+/**
+ * Bilan de fin de phase : réussite complète minimale sur les 6 jours de concept
+ * de la DERNIÈRE semaine de la phase (même répétition). Valeur de départ, à
+ * recaler après la première semaine de pratique réelle : elle se place entre le
+ * seuil de baisse de la fenêtre (50 %) et celui de la rétention (70 %).
+ */
+export const PHASE_PASS = 0.6;
 
 /** Résultat d'un puzzle dans une séance. */
 export interface PuzzleOutcome {
@@ -133,6 +140,30 @@ export function retentionSourceDays(semaine: number): string[] {
 export function retentionPassed(outcomes: readonly PuzzleOutcome[]): boolean {
   if (outcomes.length === 0) return false;
   return outcomes.filter(isFullSuccess).length / outcomes.length >= RETENTION_PASS;
+}
+
+/** La semaine est-elle la dernière de sa phase ? Son jour 7 porte alors le bilan de fin de phase. */
+export function isPhaseFinalWeek(semaine: number): boolean {
+  return PHASES.some((p) => p.semaineFin === semaine);
+}
+
+export interface PhaseReview {
+  /** Réussite complète sur les jours de concept de la dernière semaine, `null` sans donnée. */
+  weekSuccess: number | null;
+  retentionOk: boolean;
+  passed: boolean;
+}
+
+/**
+ * Bilan de fin de phase, deux critères mesurables : le test de rétention du
+ * jour 7 (`RETENTION_PASS`) ET la réussite complète des 6 jours de concept de
+ * la dernière semaine (`PHASE_PASS`). Un échec rejoue la dernière semaine,
+ * comme un échec de rétention.
+ */
+export function phaseReview(conceptDays: readonly SessionSummary[], retentionOk: boolean): PhaseReview {
+  const attempted = conceptDays.reduce((s, d) => s + d.attempted, 0);
+  const weekSuccess = attempted === 0 ? null : conceptDays.reduce((s, d) => s + d.succeeded, 0) / attempted;
+  return { weekSuccess, retentionOk, passed: retentionOk && weekSuccess !== null && weekSuccess >= PHASE_PASS };
 }
 
 /** Position de l'utilisateur dans le programme. */
