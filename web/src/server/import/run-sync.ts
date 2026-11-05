@@ -1,7 +1,8 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { platformLinks, type PlatformLink } from "@/server/db/schema";
+import type { PlatformLink } from "@/server/db/schema";
+import { platformLinks, userScope } from "@/server/db/user-scope";
 import { getNodeStockfishAnalyser, type NodeStockfishAnalyser } from "@/server/engine/node-stockfish-analyser";
 import { analyseImportedGame } from "./analyse-game";
 import { IMPORT_ANALYSIS_DEPTH } from "./constants";
@@ -25,21 +26,30 @@ export interface SyncSummary {
 }
 
 /**
- * Verrou anti-chevauchement en mémoire : plusieurs onglets ouverts sondent
- * tous `/api/sync` sur le même intervalle, ce verrou évite qu'ils lancent
- * chacun leur propre passage. Survit au rechargement à chaud de Next en dev
- * via `globalThis`, comme `db/index.ts`.
+ * Verrous anti-chevauchement en mémoire (serveur Node persistant) :
+ *
+ * - par utilisateur : jamais deux imports concurrents pour le même compte
+ *   (plusieurs onglets sondent tous `/api/sync`) ;
+ * - global : le moteur Stockfish serveur est une instance unique partagée,
+ *   donc un seul import à la fois pour toute l'instance. Les autres
+ *   utilisateurs réessaient au sondage suivant.
+ *
+ * Ils survivent au rechargement à chaud de Next en dev via `globalThis`, comme
+ * `db/index.ts`.
  */
-const globalForSync = globalThis as unknown as { __chessTrainerSyncing?: boolean };
+const globalForSync = globalThis as unknown as { __chessTrainerSyncingUsers?: Set<string>; __chessTrainerEngineBusy?: boolean };
+const syncingUsers = (globalForSync.__chessTrainerSyncingUsers ??= new Set<string>());
 
-export function isSyncRunning(): boolean {
-  return globalForSync.__chessTrainerSyncing === true;
+export function isSyncRunning(userId?: string): boolean {
+  return userId === undefined ? globalForSync.__chessTrainerEngineBusy === true : syncingUsers.has(userId);
 }
 
 async function syncOnePlatform(
+  userId: string,
   link: PlatformLink,
   analyser: NodeStockfishAnalyser,
 ): Promise<PlatformSyncResult> {
+  const s = userScope(userId);
   const result: PlatformSyncResult = {
     source: link.source,
     username: link.username,
@@ -65,7 +75,7 @@ async function syncOnePlatform(
       // mais une partie jouée localement puis aussi vue côté plateforme (ou
       // déjà remontée par un sondage précédent) ne doit pas être ré-analysée
       // pour autant — dédoublonnage exact par `externalId`.
-      if (await gameAlreadyImported(link.source, fetchedGame.externalId)) continue;
+      if (await gameAlreadyImported(userId, link.source, fetchedGame.externalId)) continue;
 
       const analysed = await analyseImportedGame(
         analyser,
@@ -76,7 +86,7 @@ async function syncOnePlatform(
       );
       if (!analysed) continue;
 
-      const persisted = await persistImportedGame(link.source, analysed);
+      const persisted = await persistImportedGame(userId, link.source, analysed);
       result.gamesImported += 1;
       if (!latestPlayedAt || analysed.playedAt > latestPlayedAt) {
         latestPlayedAt = analysed.playedAt;
@@ -84,7 +94,7 @@ async function syncOnePlatform(
 
       // Une partie détectée en tâche de fond doit alimenter les decks sans
       // action supplémentaire de l'utilisateur.
-      const extraction = await extractPuzzlesFromGame(persisted.gameId);
+      const extraction = await extractPuzzlesFromGame(userId, persisted.gameId);
       result.puzzlesCreated += extraction.created;
 
       // Vide les tables de hachage entre deux parties : chacune repart neuve.
@@ -94,7 +104,7 @@ async function syncOnePlatform(
     await db
       .update(platformLinks)
       .set({ lastSyncedAt: new Date(), lastImportedPlayedAt: latestPlayedAt })
-      .where(eq(platformLinks.source, link.source));
+      .where(s.where(platformLinks, eq(platformLinks.source, link.source)));
   } catch (cause) {
     result.error = cause instanceof Error ? cause.message : String(cause);
     // La date de dernière tentative avance quand même : une plateforme en
@@ -102,23 +112,26 @@ async function syncOnePlatform(
     await db
       .update(platformLinks)
       .set({ lastSyncedAt: new Date() })
-      .where(eq(platformLinks.source, link.source));
+      .where(s.where(platformLinks, eq(platformLinks.source, link.source)));
   }
 
   return result;
 }
 
 /**
- * Synchronise toutes les plateformes liées : nouvelles parties → analyse →
- * persistance → puzzles, pour chacune. `null` si une synchro tourne déjà
- * (voir `isSyncRunning`) — le prochain sondage réessaiera.
+ * Synchronise les plateformes liées DE CET UTILISATEUR : nouvelles parties →
+ * analyse → persistance → puzzles, pour chacune. `null` si une synchro tourne
+ * déjà pour lui ou pour l'instance (voir `isSyncRunning`). Le prochain sondage
+ * réessaiera.
  */
-export async function runSync(): Promise<SyncSummary | null> {
-  if (isSyncRunning()) return null;
-  globalForSync.__chessTrainerSyncing = true;
+export async function runSync(userId: string): Promise<SyncSummary | null> {
+  const s = userScope(userId);
+  if (syncingUsers.has(userId) || globalForSync.__chessTrainerEngineBusy) return null;
+  syncingUsers.add(userId);
+  globalForSync.__chessTrainerEngineBusy = true;
 
   try {
-    const links = await db.select().from(platformLinks);
+    const links = await db.select().from(platformLinks).where(s.owns(platformLinks));
     if (links.length === 0) {
       return { results: [], totalGamesImported: 0, totalPuzzlesCreated: 0 };
     }
@@ -129,7 +142,7 @@ export async function runSync(): Promise<SyncSummary | null> {
 
     const results: PlatformSyncResult[] = [];
     for (const link of links) {
-      results.push(await syncOnePlatform(link, analyser));
+      results.push(await syncOnePlatform(userId, link, analyser));
     }
 
     return {
@@ -138,6 +151,7 @@ export async function runSync(): Promise<SyncSummary | null> {
       totalPuzzlesCreated: results.reduce((sum, r) => sum + r.puzzlesCreated, 0),
     };
   } finally {
-    globalForSync.__chessTrainerSyncing = false;
+    syncingUsers.delete(userId);
+    globalForSync.__chessTrainerEngineBusy = false;
   }
 }

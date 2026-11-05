@@ -6,8 +6,9 @@
  * `practice.ts` : aucune logique propre, juste une redirection vers la
  * lecture pure `searchGamesSummary`.
  */
+import { requireUser } from "@/server/auth/session";
 import { searchGamesSummary, type GameSummary } from "@/server/queries/games";
 
 export async function searchGames(query: string): Promise<GameSummary[]> {
-  return searchGamesSummary(query);
+  return searchGamesSummary((await requireUser()).id, query);
 }

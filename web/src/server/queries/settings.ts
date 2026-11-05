@@ -7,30 +7,34 @@ import {
   type TrainingPreferences,
 } from "@/core/training/preferences";
 import { db } from "@/server/db";
-import { settings } from "@/server/db/schema";
+import { settings, userScope } from "@/server/db/user-scope";
 import { SETTING_KEYS } from "@/server/db/settings-keys";
 
-export async function getTrainingPreferences(): Promise<TrainingPreferences> {
+export async function getTrainingPreferences(userId: string): Promise<TrainingPreferences> {
+  const s = userScope(userId);
   const [row] = await db
     .select()
     .from(settings)
-    .where(eq(settings.key, SETTING_KEYS.trainingPreferences))
+    .where(s.where(settings, eq(settings.key, SETTING_KEYS.trainingPreferences)))
     .limit(1);
   return row ? normalizeTrainingPreferences(row.value) : { ...DEFAULT_TRAINING_PREFERENCES, goals: [...DEFAULT_TRAINING_PREFERENCES.goals] };
 }
 
-export async function saveTrainingPreferences(raw: unknown): Promise<TrainingPreferences> {
+export async function saveTrainingPreferences(userId: string, raw: unknown): Promise<TrainingPreferences> {
+  const s = userScope(userId);
   const value = normalizeTrainingPreferences(raw);
   const updatedAt = new Date();
   await db
     .insert(settings)
-    .values({
-      key: SETTING_KEYS.trainingPreferences,
-      value,
-      updatedAt,
-    })
+    .values(
+      s.own({
+        key: SETTING_KEYS.trainingPreferences,
+        value,
+        updatedAt,
+      }),
+    )
     .onConflictDoUpdate({
-      target: settings.key,
+      target: [settings.userId, settings.key],
       set: { value, updatedAt },
     });
   return value;

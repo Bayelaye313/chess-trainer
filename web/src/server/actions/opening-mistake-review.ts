@@ -6,13 +6,14 @@
  * `OpeningMistakeExercise` (marquer) et `OpeningMistakesHub` (lister, pour le
  * badge persistant « ✅ Vue / Révisée »).
  */
+import { requireUser } from "@/server/auth/session";
 import {
   listReviewedMistakeKeys,
   markOpeningMistakeReviewed as markOpeningMistakeReviewedQuery,
 } from "@/server/queries/opening-mistake-review";
 
 export async function markOpeningMistakeReviewed(fenBefore: string, actualUci: string): Promise<void> {
-  await markOpeningMistakeReviewedQuery(fenBefore, actualUci);
+  await markOpeningMistakeReviewedQuery((await requireUser()).id, fenBefore, actualUci);
 }
 
 /**
@@ -24,5 +25,5 @@ export async function markOpeningMistakeReviewed(fenBefore: string, actualUci: s
  * (`opening-mistakes-hub.tsx`), qui applique le même format.
  */
 export async function getReviewedMistakeKeys(): Promise<string[]> {
-  return Array.from(await listReviewedMistakeKeys());
+  return Array.from(await listReviewedMistakeKeys((await requireUser()).id));
 }

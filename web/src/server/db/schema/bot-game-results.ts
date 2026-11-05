@@ -3,6 +3,7 @@ import type { BotProfileId } from "@/core/chess/bot-profiles";
 import type { GameResult } from "@/core/chess/types";
 import type { Termination } from "@/core/chess/termination";
 import { games } from "./games";
+import { users } from "./auth";
 
 /**
  * Bilan de fin de partie du Sparring Humain Local (`client/features/play`,
@@ -16,6 +17,8 @@ export const botGameResults = sqliteTable(
   "bot_game_results",
   {
     id: text("id").primaryKey(),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     gameId: text("game_id")
       .notNull()
       .references(() => games.id, { onDelete: "cascade" }),
@@ -38,6 +41,7 @@ export const botGameResults = sqliteTable(
     // Une partie du Sparring Local produit au plus un bilan.
     uniqueIndex("bot_game_results_game_idx").on(table.gameId),
     index("bot_game_results_created_idx").on(table.createdAt),
+    index("bot_game_results_user_idx").on(table.userId),
   ],
 );
 

@@ -1,4 +1,5 @@
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 import type { TrainingRecommendationType } from "@/core/training/recommendations";
 
 export type TrainingEventKind = "puzzle" | "opening" | "trap" | "review" | "game";
@@ -8,7 +9,7 @@ export const trainingEvents = sqliteTable(
   "training_events",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     kind: text("kind").$type<TrainingEventKind>().notNull(),
     entityId: text("entity_id").notNull(),
     sourceGameId: text("source_game_id"),
@@ -28,7 +29,7 @@ export const trainingRecommendations = sqliteTable(
   "training_recommendations",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     entityType: text("entity_type").$type<TrainingRecommendationType>().notNull(),
     entityId: text("entity_id").notNull(),
     reasonCode: text("reason_code").notNull(),

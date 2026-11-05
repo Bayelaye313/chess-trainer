@@ -36,8 +36,8 @@ import {
   reviews,
   trainingEvents,
   trainingRecommendations,
-} from "@/server/db/schema";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
+  userScope,
+} from "@/server/db/user-scope";
 import { getTrainingPreferences } from "@/server/queries/settings";
 import { listAllTraps } from "@/server/queries/traps";
 
@@ -81,13 +81,13 @@ function openingDisplayName(openingId: string): string | null {
 }
 
 export async function recordTrainingEvent(
+  userId: string,
   input: RecordTrainingEventInput,
-  userId: string = LOCAL_USER_ID,
 ): Promise<void> {
+  const s = userScope(userId);
   const occurredAt = input.occurredAt ?? new Date();
-  await db.insert(trainingEvents).values({
+  await db.insert(trainingEvents).values(s.own({
     id: crypto.randomUUID(),
-    userId,
     kind: input.kind,
     entityId: input.entityId,
     sourceGameId: input.sourceGameId,
@@ -95,7 +95,7 @@ export async function recordTrainingEvent(
     seconds: input.seconds,
     hintsUsed: input.hintsUsed ?? 0,
     occurredAt,
-  });
+  }));
   await completeMatchingRecommendations(input, userId, occurredAt);
 }
 
@@ -107,28 +107,30 @@ async function completeMatchingRecommendations(
   const entityType = input.kind === "game" ? null : EVENT_ENTITY_TYPE[input.kind];
   if (!entityType) return;
 
-  const filters = [eq(trainingRecommendations.userId, userId), isNull(trainingRecommendations.completedAt)];
+  const s = userScope(userId);
+  const open = isNull(trainingRecommendations.completedAt);
   if (input.kind === "puzzle") {
     await db
       .update(trainingRecommendations)
       .set({ completedAt })
-      .where(and(...filters, eq(trainingRecommendations.entityType, "puzzle")));
+      .where(s.where(trainingRecommendations, open, eq(trainingRecommendations.entityType, "puzzle")));
     return;
   }
 
   await db
     .update(trainingRecommendations)
     .set({ completedAt })
-    .where(and(...filters, eq(trainingRecommendations.entityType, entityType), eq(trainingRecommendations.entityId, input.entityId)));
+    .where(s.where(trainingRecommendations, open, eq(trainingRecommendations.entityType, entityType), eq(trainingRecommendations.entityId, input.entityId)));
 }
 
 export async function listTrainingRecommendations(
+  userId: string,
   now: Date = new Date(),
   limit?: number,
-  userId: string = LOCAL_USER_ID,
   preferences?: TrainingPreferences,
 ): Promise<TrainingRecommendationDto[]> {
-  const plan = preferences ?? (await getTrainingPreferences());
+  const s = userScope(userId);
+  const plan = preferences ?? (await getTrainingPreferences(userId));
   const sessionSize = limit ?? plan.dailyLimit;
   const poolSize = Math.max(sessionSize * 4, 12);
   const dayStart = startOfUtcDay(now);
@@ -148,7 +150,7 @@ export async function listTrainingRecommendations(
       .select({ id: puzzles.id, due: reviews.due, motifs: puzzles.motifs, deck: puzzles.deck })
       .from(reviews)
       .innerJoin(puzzles, eq(reviews.puzzleId, puzzles.id))
-      .where(lte(reviews.due, now))
+      .where(and(s.owns(reviews, puzzles), lte(reviews.due, now)))
       .orderBy(asc(reviews.due))
       .limit(poolSize),
     db
@@ -160,7 +162,7 @@ export async function listTrainingRecommendations(
         lastAccuracy: openingProgress.lastAccuracy,
       })
       .from(openingProgress)
-      .where(and(eq(openingProgress.userId, userId), lte(openingProgress.nextReviewDate, now)))
+      .where(s.where(openingProgress, lte(openingProgress.nextReviewDate, now)))
       .orderBy(asc(openingProgress.nextReviewDate))
       .limit(poolSize),
     db
@@ -173,7 +175,7 @@ export async function listTrainingRecommendations(
       })
       .from(moves)
       .innerJoin(games, eq(games.id, moves.gameId))
-      .where(and(eq(moves.byPlayer, true), gte(moves.cpLoss, 80)))
+      .where(and(s.owns(moves, games), eq(moves.byPlayer, true), gte(moves.cpLoss, 80)))
       .orderBy(desc(moves.cpLoss))
       .limit(poolSize),
     db
@@ -187,6 +189,7 @@ export async function listTrainingRecommendations(
       .innerJoin(games, eq(games.id, moves.gameId))
       .where(
         and(
+          s.owns(moves, games),
           eq(moves.byPlayer, true),
           eq(moves.phase, "opening"),
           ne(moves.quality, "book"),
@@ -204,7 +207,7 @@ export async function listTrainingRecommendations(
         ply: moves.ply,
       })
       .from(moves)
-      .where(and(eq(moves.byPlayer, true), eq(moves.motifFound, false)))
+      .where(s.where(moves, eq(moves.byPlayer, true), eq(moves.motifFound, false)))
       .orderBy(desc(moves.cpLoss))
       .limit(150),
     db
@@ -215,13 +218,13 @@ export async function listTrainingRecommendations(
         occurredAt: trainingEvents.occurredAt,
       })
       .from(trainingEvents)
-      .where(and(eq(trainingEvents.userId, userId), eq(trainingEvents.kind, "trap")))
+      .where(s.where(trainingEvents, eq(trainingEvents.kind, "trap")))
       .orderBy(desc(trainingEvents.occurredAt))
       .limit(200),
     db
       .select({ eco: games.eco, games: count() })
       .from(games)
-      .where(isNotNull(games.eco))
+      .where(s.where(games, isNotNull(games.eco)))
       .groupBy(games.eco)
       .orderBy(desc(count()))
       .limit(20),
@@ -232,8 +235,8 @@ export async function listTrainingRecommendations(
       })
       .from(trainingRecommendations)
       .where(
-        and(
-          eq(trainingRecommendations.userId, userId),
+        s.where(
+          trainingRecommendations,
           isNotNull(trainingRecommendations.completedAt),
           gte(trainingRecommendations.completedAt, dayStart),
         ),
@@ -322,16 +325,15 @@ export async function listTrainingRecommendations(
   await db
     .insert(trainingRecommendations)
     .values(
-      selected.map((candidate) => ({
+      s.ownAll(selected.map((candidate) => ({
         id: `${userId}:${recommendationId(candidate)}`,
-        userId,
         entityType: candidate.entityType,
         entityId: candidate.entityId,
         reasonCode: candidate.reasonCode,
         priority: candidate.priority,
         dueAt: candidate.dueAt,
         completedAt: null,
-      })),
+      }))),
     )
     .onConflictDoUpdate({
       target: trainingRecommendations.id,

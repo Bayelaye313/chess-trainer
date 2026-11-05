@@ -7,7 +7,7 @@ import "server-only";
  * rafraîchissement ou un retour sur l'onglet retrouve la session active et sa
  * complétion, calculée depuis les vrais `training_events` du jour.
  */
-import { and, eq, gte } from "drizzle-orm";
+import { eq, gte } from "drizzle-orm";
 import {
   buildBotStartLines,
   computeDailyCompletion,
@@ -23,9 +23,8 @@ import { OFF_REPERTOIRE_COURSE_IDS } from "@/core/curriculum/opening-course-ids"
 import { OPENING_COURSE_TREES } from "@/core/curriculum/opening-course-trees";
 import { OPENING_TRAPS } from "@/core/curriculum/traps";
 import { db } from "@/server/db";
-import { settings, trainingEvents } from "@/server/db/schema";
+import { settings, trainingEvents, userScope } from "@/server/db/user-scope";
 import { SETTING_KEYS } from "@/server/db/settings-keys";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
 import { saveTrainingPreferences } from "@/server/queries/settings";
 
 export interface DailySessionState {
@@ -33,22 +32,24 @@ export interface DailySessionState {
   completion: DailyCompletion;
 }
 
-export async function getDailySession(now: Date = new Date()): Promise<DailySession | null> {
-  const [row] = await db.select().from(settings).where(eq(settings.key, SETTING_KEYS.dailySession)).limit(1);
+export async function getDailySession(userId: string, now: Date = new Date()): Promise<DailySession | null> {
+  const s = userScope(userId);
+  const [row] = await db.select().from(settings).where(s.where(settings, eq(settings.key, SETTING_KEYS.dailySession))).limit(1);
   return row ? normalizeDailySession(row.value, now) : null;
 }
 
 /** Session du jour + complétion, ou `null` hors session (jamais appliquée, ou appliquée un autre jour). */
 export async function getDailySessionState(
+  userId: string,
   now: Date = new Date(),
-  userId: string = LOCAL_USER_ID,
 ): Promise<DailySessionState | null> {
-  const session = await getDailySession(now);
+  const s = userScope(userId);
+  const session = await getDailySession(userId, now);
   if (!session) return null;
   const rows = await db
     .select({ kind: trainingEvents.kind })
     .from(trainingEvents)
-    .where(and(eq(trainingEvents.userId, userId), gte(trainingEvents.occurredAt, new Date(session.appliedAt))));
+    .where(s.where(trainingEvents, gte(trainingEvents.occurredAt, new Date(session.appliedAt))));
   return { session, completion: computeDailyCompletion(session, rows.map((row) => row.kind)) };
 }
 
@@ -59,24 +60,26 @@ export async function getDailySessionState(
  * aurait rejetés.
  */
 export async function applyDailyPlan(
+  userId: string,
   raw: unknown,
   now: Date = new Date(),
-  userId: string = LOCAL_USER_ID,
 ): Promise<{ preferences: TrainingPreferences; state: DailySessionState }> {
-  const preferences = await saveTrainingPreferences(raw);
+  const s = userScope(userId);
+  const preferences = await saveTrainingPreferences(userId, raw);
   const session = createDailySession(preferences.goals, now);
   await db
     .insert(settings)
-    .values({ key: SETTING_KEYS.dailySession, value: session, updatedAt: now })
-    .onConflictDoUpdate({ target: settings.key, set: { value: session, updatedAt: now } });
-  const state = await getDailySessionState(now, userId);
+    .values(s.own({ key: SETTING_KEYS.dailySession, value: session, updatedAt: now }))
+    .onConflictDoUpdate({ target: [settings.userId, settings.key], set: { value: session, updatedAt: now } });
+  const state = await getDailySessionState(userId, now);
   // `state` ne peut être nul : la session vient d'être écrite pour ce jour.
   return { preferences, state: state ?? { session, completion: computeDailyCompletion(session, []) } };
 }
 
 /** « Modifier le plan » : déverrouille l'édition, la page repasse hors session. */
-export async function clearDailySession(): Promise<void> {
-  await db.delete(settings).where(eq(settings.key, SETTING_KEYS.dailySession));
+export async function clearDailySession(userId: string): Promise<void> {
+  const s = userScope(userId);
+  await db.delete(settings).where(s.where(settings, eq(settings.key, SETTING_KEYS.dailySession)));
 }
 
 /**

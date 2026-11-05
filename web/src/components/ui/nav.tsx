@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { listPlatformLinks } from "@/server/actions/platform-link";
 import { useSync } from "@/client/features/sync/sync-context";
+import { AccountMenu, type AccountSummary } from "@/client/features/auth/account-menu";
 import { cx } from "./cx";
 
 interface NavItem {
@@ -101,7 +102,7 @@ function SyncPill() {
   );
 }
 
-export function Nav() {
+export function Nav({ account }: { account: AccountSummary }) {
   const pathname = usePathname();
   const settingsActive = pathname === "/plus";
 
@@ -126,6 +127,7 @@ export function Nav() {
           >
             <Settings aria-hidden="true" className="size-5" />
           </Link>
+          <AccountMenu account={account} />
         </div>
       </header>
 

@@ -1,4 +1,5 @@
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { users } from "./auth";
 
 /**
  * Programme 1000 Heures : l'état de progression et l'historique des séances.
@@ -11,7 +12,7 @@ import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core
 
 /** Curseur de l'utilisateur dans le programme (une ligne par utilisateur). */
 export const programmeState = sqliteTable("programme_state", {
-  userId: text("user_id").primaryKey(),
+  userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
   semaine: integer("semaine").notNull(),
   jour: integer("jour").notNull(),
   /** Nombre de fois que la semaine courante a été rejouée (échec au test J+7). */
@@ -29,7 +30,7 @@ export const programmeSessions = sqliteTable(
   "programme_sessions",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     dayKey: text("day_key").notNull(),
     semaine: integer("semaine").notNull(),
     jour: integer("jour").notNull(),
@@ -62,7 +63,7 @@ export const programmePuzzleResults = sqliteTable(
     sessionId: text("session_id")
       .notNull()
       .references(() => programmeSessions.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     puzzleId: text("puzzle_id").notNull(),
     /** Jour d'origine du puzzle (diffère du jour de la séance pour la rétention et l'entrelacement). */
     sourceDayKey: text("source_day_key").notNull(),

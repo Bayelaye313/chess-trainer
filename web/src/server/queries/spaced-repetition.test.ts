@@ -8,6 +8,7 @@ const NOW = new Date("2026-08-14T10:00:00Z");
 function move(partial: Partial<MoveRow>): MoveRow {
   return {
     id: 1,
+    userId: "user-1",
     gameId: "game-1",
     ply: 12,
     side: "w",

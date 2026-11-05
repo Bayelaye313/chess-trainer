@@ -1,5 +1,6 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { GameResult } from "@/core/chess/types";
+import { users } from "./auth";
 
 /** D'où vient la partie. */
 export type GameSource = "local" | "chesscom" | "lichess";
@@ -17,6 +18,8 @@ export const games = sqliteTable(
   "games",
   {
     id: text("id").primaryKey(),
+    /** Propriétaire (NULL = ligne de l'époque mono-utilisateur, voir user-scope.ts). */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     source: text("source").$type<GameSource>().notNull(),
     /** Identifiant chez la plateforme d'origine, pour ne pas réimporter deux fois. */
     externalId: text("external_id"),
@@ -48,7 +51,8 @@ export const games = sqliteTable(
     analysedAt: integer("analysed_at", { mode: "timestamp" }),
   },
   (table) => [
-    uniqueIndex("games_source_external_idx").on(table.source, table.externalId),
+    uniqueIndex("games_user_source_external_idx").on(table.userId, table.source, table.externalId),
+    index("games_user_played_idx").on(table.userId, table.playedAt),
     index("games_played_at_idx").on(table.playedAt),
     index("games_eco_idx").on(table.eco),
   ],

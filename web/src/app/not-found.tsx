@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Page introuvable" };
 /** 404 de l'application : français, thème sombre, chemin de retour explicite. */
 export default function NotFound() {
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-start gap-4 py-12">
+    <div className="mx-auto flex max-w-lg flex-col items-start gap-4 px-[var(--space-page)] py-12">
       <Compass aria-hidden="true" className="size-8 text-foreground-subtle" />
       <h1 className="font-display text-[26px] font-semibold sm:text-[32px]">Page introuvable</h1>
       <p className="text-foreground-muted">

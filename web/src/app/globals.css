@@ -39,6 +39,10 @@
   --status-danger: #f07a76;
   --status-info: #8fb3cf;
 
+  /* Graphiques : une série unique, validée (dataviz, surface #141b22 : bande de
+     luminance, chroma, contraste ≥ 3:1). Jamais pour du texte. */
+  --chart-series-1: #4f8fd1;
+
   /* Mise en page. */
   --header-h: 56px;
   --rail-w: 88px;
@@ -131,6 +135,7 @@
   --color-warning: var(--status-warning);
   --color-danger: var(--status-danger);
   --color-info: var(--status-info);
+  --color-chart-1: var(--chart-series-1);
   --color-board-light: var(--board-light);
   --color-board-dark: var(--board-dark);
 

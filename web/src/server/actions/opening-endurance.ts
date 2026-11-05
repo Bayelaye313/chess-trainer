@@ -10,11 +10,12 @@
  * `listEnduranceSessions` (`server/queries/opening-endurance.ts`), comme
  * `app/ouvertures/page.tsx` le fait pour `opening-progress.ts`.
  */
+import { requireUser } from "@/server/auth/session";
 import {
   recordEnduranceSession as recordEnduranceSessionQuery,
   type RecordEnduranceSessionInput,
 } from "@/server/queries/opening-endurance";
 
 export async function recordEnduranceSession(input: RecordEnduranceSessionInput): Promise<void> {
-  await recordEnduranceSessionQuery(input);
+  await recordEnduranceSessionQuery((await requireUser()).id, input);
 }

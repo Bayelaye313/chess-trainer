@@ -61,11 +61,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const poll = useCallback(() => {
     fetch("/api/sync", { method: "POST" })
       .then((response) => {
+        // 429 : une synchro de ce compte vient de passer ou tourne encore.
+        // Rien à signaler, le prochain sondage réessaiera.
+        if (response.status === 429) return null;
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json() as Promise<SyncApiResponse>;
       })
       .then((summary) => {
-        if (!mounted.current) return;
+        if (!mounted.current || !summary) return;
         const errors = (summary.results ?? [])
           .filter((result): result is PlatformSyncError => typeof result.error === "string")
           .map(({ source, username, error }) => ({ source, username, error }));

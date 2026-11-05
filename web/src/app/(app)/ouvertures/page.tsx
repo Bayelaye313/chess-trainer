@@ -1,0 +1,42 @@
+import type { Metadata } from "next";
+import { requireUser } from "@/server/auth/session";
+import { EsportCanvas } from "@/components/ui/esport-page";
+import { OpeningsScreen } from "@/client/features/openings/openings-screen";
+import { listDueReviews, listOpeningMasterySummaries, listOpeningReviewSummaries } from "@/server/queries/opening-progress";
+import { listEnduranceSessions } from "@/server/queries/opening-endurance";
+import { listOpenings } from "@/server/queries/openings";
+
+export const metadata: Metadata = { title: "Ouvertures" };
+// Révisions dues et progression changent à chaque drill : jamais figées au build.
+export const dynamic = "force-dynamic";
+
+export default async function OuverturesPage() {
+  const { id: userId } = await requireUser();
+  const [reviewSummaries, dueReviews, masterySummaries, enduranceSessions] = await Promise.all([
+    listOpeningReviewSummaries(userId),
+    listDueReviews(userId),
+    listOpeningMasterySummaries(userId),
+    listEnduranceSessions(userId),
+  ]);
+  return (
+    <EsportCanvas>
+    <OpeningsScreen
+      openings={listOpenings()}
+      // Un composant client ne reçoit que des props sérialisables au sens RSC
+      // — comme `DeckOverview` (`server/queries/reviews.ts`), on ne fait
+      // jamais traverser cette frontière avec une `Date` brute : seuls les
+      // champs réellement affichés par `OpeningsScreen` passent (`status`,
+      // jamais `nextReviewDate`).
+      reviewStatuses={reviewSummaries.map(({ openingId, status }) => ({ openingId, status }))}
+      dueReviews={dueReviews.map(({ openingId, variationKey, variationLabel }) => ({
+        openingId,
+        variationKey,
+        variationLabel,
+      }))}
+      masterySummaries={masterySummaries}
+      // `playedAt` déjà en ISO : la liste traverse telle quelle la frontière RSC.
+      enduranceSessions={enduranceSessions}
+    />
+    </EsportCanvas>
+  );
+}

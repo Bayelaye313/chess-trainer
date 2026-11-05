@@ -8,11 +8,9 @@ import "server-only";
  * stricte, voir son docstring) ; lu par `OpeningMistakesHub` pour le badge
  * persistant « ✅ Vue / Révisée ».
  */
-import { eq } from "drizzle-orm";
 import { mistakeReviewKey } from "@/core/curriculum/opening-mistake-key";
 import { db } from "@/server/db";
-import { openingMistakeReview } from "@/server/db/schema";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
+import { openingMistakeReview, userScope } from "@/server/db/user-scope";
 
 export { mistakeReviewKey };
 
@@ -23,14 +21,14 @@ export { mistakeReviewKey };
  * que ce soit pour l'affichage (un simple badge booléen).
  */
 export async function markOpeningMistakeReviewed(
+  userId: string,
   fenBefore: string,
   actualUci: string,
-  userId: string = LOCAL_USER_ID,
   now: Date = new Date(),
 ): Promise<void> {
   await db
     .insert(openingMistakeReview)
-    .values({ userId, fenBefore, actualUci, reviewedAt: now })
+    .values(userScope(userId).own({ fenBefore, actualUci, reviewedAt: now }))
     .onConflictDoNothing();
 }
 
@@ -39,10 +37,10 @@ export async function markOpeningMistakeReviewed(
  * forme de clés `mistakeReviewKey` — un `Set` pour un lookup O(1) côté Hub,
  * qui doit vérifier le statut de chaque erreur affichée.
  */
-export async function listReviewedMistakeKeys(userId: string = LOCAL_USER_ID): Promise<Set<string>> {
+export async function listReviewedMistakeKeys(userId: string): Promise<Set<string>> {
   const rows = await db
     .select({ fenBefore: openingMistakeReview.fenBefore, actualUci: openingMistakeReview.actualUci })
     .from(openingMistakeReview)
-    .where(eq(openingMistakeReview.userId, userId));
+    .where(userScope(userId).owns(openingMistakeReview));
   return new Set(rows.map((row) => mistakeReviewKey(row.fenBefore, row.actualUci)));
 }

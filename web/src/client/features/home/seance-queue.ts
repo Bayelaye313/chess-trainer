@@ -1,5 +1,6 @@
 "use client";
 
+import { scopedGet, scopedSet, scopedRemove } from "@/client/storage/user-storage";
 /**
  * File de la séance du jour, gardée en `sessionStorage` (comme la file des
  * révisions d'ouverture, `openings/review-queue.ts`) : « Continuer » la crée,
@@ -22,7 +23,7 @@ export interface SeanceQueue {
 
 export function readSeanceQueue(): SeanceQueue | null {
   try {
-    const raw = window.sessionStorage.getItem(SEANCE_QUEUE_KEY);
+    const raw = scopedGet("session", SEANCE_QUEUE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SeanceQueue;
     return Array.isArray(parsed.items) && typeof parsed.index === "number" ? parsed : null;
@@ -33,8 +34,8 @@ export function readSeanceQueue(): SeanceQueue | null {
 
 export function writeSeanceQueue(queue: SeanceQueue | null): void {
   try {
-    if (queue === null) window.sessionStorage.removeItem(SEANCE_QUEUE_KEY);
-    else window.sessionStorage.setItem(SEANCE_QUEUE_KEY, JSON.stringify(queue));
+    if (queue === null) scopedRemove("session", SEANCE_QUEUE_KEY);
+    else scopedSet("session", SEANCE_QUEUE_KEY, JSON.stringify(queue));
   } catch {
     // Stockage indisponible : la séance reste faisable depuis l'accueil.
   }

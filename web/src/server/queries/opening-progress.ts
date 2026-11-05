@@ -10,11 +10,10 @@ import "server-only";
  * révisions du jour") et par `OpeningExplorer` (relance automatique d'une
  * variante précise depuis cette file, `?drill=<clé>`).
  */
-import { and, eq, lte } from "drizzle-orm";
+import { eq, lte } from "drizzle-orm";
 import { db } from "@/server/db";
-import { openingProgress, trainingEvents } from "@/server/db/schema";
+import { openingProgress, trainingEvents, userScope } from "@/server/db/user-scope";
 import type { OpeningProgress } from "@/server/db/schema/opening-progress";
-import { LOCAL_USER_ID } from "@/server/queries/curriculum";
 import { starsForAccuracy, type MasteryStars } from "@/core/curriculum/opening-mastery";
 import { type TrackedDrillSelection, variationKeyFor } from "@/core/curriculum/opening-variation-key";
 import { scheduleOpeningReview } from "@/server/srs/opening-repetition";
@@ -49,22 +48,17 @@ export interface OpeningProgressRow {
  * `scheduleOpeningReview`.
  */
 export async function recordOpeningDrillResult(
+  userId: string,
   input: RecordOpeningDrillInput,
-  userId: string = LOCAL_USER_ID,
   now: Date = new Date(),
 ): Promise<OpeningProgressRow> {
+  const s = userScope(userId);
   const variationKey = variationKeyFor(input.selection);
 
   const [existing] = await db
     .select()
     .from(openingProgress)
-    .where(
-      and(
-        eq(openingProgress.userId, userId),
-        eq(openingProgress.openingId, input.openingId),
-        eq(openingProgress.variationKey, variationKey),
-      ),
-    )
+    .where(s.where(openingProgress, eq(openingProgress.openingId, input.openingId), eq(openingProgress.variationKey, variationKey)))
     .limit(1);
 
   const scheduled = scheduleOpeningReview(
@@ -87,7 +81,7 @@ export async function recordOpeningDrillResult(
 
   await db
     .insert(openingProgress)
-    .values(values)
+    .values(s.own(values))
     .onConflictDoUpdate({
       target: [openingProgress.userId, openingProgress.openingId, openingProgress.variationKey],
       set: {
@@ -99,14 +93,15 @@ export async function recordOpeningDrillResult(
         variationLabel: values.variationLabel,
       },
     });
-  await db.insert(trainingEvents).values({
-    id: crypto.randomUUID(),
-    userId,
-    kind: "opening",
-    entityId: `${input.openingId}:${variationKey}`,
-    score: scheduled.lastAccuracy / 100,
-    occurredAt: now,
-  });
+  await db.insert(trainingEvents).values(
+    s.own({
+      id: crypto.randomUUID(),
+      kind: "opening" as const,
+      entityId: `${input.openingId}:${variationKey}`,
+      score: scheduled.lastAccuracy / 100,
+      occurredAt: now,
+    }),
+  );
 
   return values;
 }
@@ -127,10 +122,10 @@ export interface OpeningReviewSummary {
  * plutôt qu'un 🔴 trompeur qui laisserait croire à une régression.
  */
 export async function listOpeningReviewSummaries(
-  userId: string = LOCAL_USER_ID,
+  userId: string,
   now: Date = new Date(),
 ): Promise<OpeningReviewSummary[]> {
-  const rows = await db.select().from(openingProgress).where(eq(openingProgress.userId, userId));
+  const rows = await db.select().from(openingProgress).where(userScope(userId).owns(openingProgress));
 
   const byOpening = new Map<string, OpeningProgress[]>();
   for (const row of rows.filter((r) => isCatalogOpeningId(r.openingId))) {
@@ -160,13 +155,13 @@ export async function listOpeningReviewSummaries(
  * pour le format des clés).
  */
 export async function listPracticedVariationKeys(
+  userId: string,
   openingId: string,
-  userId: string = LOCAL_USER_ID,
 ): Promise<string[]> {
   const rows = await db
     .select({ variationKey: openingProgress.variationKey })
     .from(openingProgress)
-    .where(and(eq(openingProgress.userId, userId), eq(openingProgress.openingId, openingId)));
+    .where(userScope(userId).where(openingProgress, eq(openingProgress.openingId, openingId)));
   return rows.map((row) => row.variationKey);
 }
 
@@ -187,13 +182,13 @@ export interface VariationAccuracy {
  * (gating du Test Final) n'ont besoin que des clés, pas du score.
  */
 export async function listOpeningVariationAccuracies(
+  userId: string,
   openingId: string,
-  userId: string = LOCAL_USER_ID,
 ): Promise<VariationAccuracy[]> {
   const rows = await db
     .select({ variationKey: openingProgress.variationKey, lastAccuracy: openingProgress.lastAccuracy })
     .from(openingProgress)
-    .where(and(eq(openingProgress.userId, userId), eq(openingProgress.openingId, openingId)));
+    .where(userScope(userId).where(openingProgress, eq(openingProgress.openingId, openingId)));
   return rows;
 }
 
@@ -212,11 +207,11 @@ export interface OpeningMasterySummary {
  * convention que `listOpeningReviewSummaries`, pas de 0⭐ trompeur tant qu'il
  * n'y a aucune donnée.
  */
-export async function listOpeningMasterySummaries(userId: string = LOCAL_USER_ID): Promise<OpeningMasterySummary[]> {
+export async function listOpeningMasterySummaries(userId: string): Promise<OpeningMasterySummary[]> {
   const rows = await db
     .select({ openingId: openingProgress.openingId, lastAccuracy: openingProgress.lastAccuracy })
     .from(openingProgress)
-    .where(eq(openingProgress.userId, userId));
+    .where(userScope(userId).owns(openingProgress));
 
   const byOpening = new Map<string, number[]>();
   for (const row of rows.filter((r) => isCatalogOpeningId(r.openingId))) {
@@ -242,11 +237,11 @@ export interface DueReview {
  * Toutes les variantes dues (échéance dépassée ou du jour), triées par
  * échéance — la file du bouton "⚡ Lancer les révisions du jour".
  */
-export async function listDueReviews(userId: string = LOCAL_USER_ID, now: Date = new Date()): Promise<DueReview[]> {
+export async function listDueReviews(userId: string, now: Date = new Date()): Promise<DueReview[]> {
   const rows = await db
     .select()
     .from(openingProgress)
-    .where(and(eq(openingProgress.userId, userId), lte(openingProgress.nextReviewDate, now)));
+    .where(userScope(userId).where(openingProgress, lte(openingProgress.nextReviewDate, now)));
 
   return rows
     .filter((row) => isCatalogOpeningId(row.openingId))

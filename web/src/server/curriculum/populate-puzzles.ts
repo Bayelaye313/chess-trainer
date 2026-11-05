@@ -49,12 +49,8 @@ import "server-only";
 import { pathToFileURL } from "node:url";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/server/db";
-import {
-  curriculumPuzzles,
-  curriculumThemes,
-  userThemeProgress,
-  type NewCurriculumPuzzle,
-} from "@/server/db/schema";
+import { curriculumPuzzles, curriculumThemes, type NewCurriculumPuzzle } from "@/server/db/schema";
+import { userThemeProgress } from "@/server/db/user-scope";
 import { CURRICULUM_THEMES } from "@/core/curriculum/catalog";
 import { ensureCurriculumSeeded } from "@/server/queries/curriculum";
 import { MASTER_PUZZLES_DATASET, type MasterPuzzle } from "@/core/curriculum/master-puzzles-dataset";
@@ -128,6 +124,8 @@ function buildRow(theme: (typeof CURRICULUM_THEMES)[number], puzzle: MasterPuzzl
  * scopée (`--themes=`) ne purge et ne remet à zéro que les thèmes visés.
  */
 export async function populateThemes(options: PopulateOptions = {}): Promise<PopulateThemeResult[]> {
+  // user-scope: maintenance — script `populate:puzzles` : le contenu partagé change,
+  // la progression de TOUS les comptes sur ces thèmes repart de zéro. Aucun chemin HTTP.
   const dryRun = options.dryRun ?? false;
   const fullRun = !options.themeIds;
   const targetIds = new Set(options.themeIds ?? CURRICULUM_THEMES.map((theme) => theme.id));
