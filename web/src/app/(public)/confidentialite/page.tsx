@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Confidentialité" };
 
@@ -13,7 +14,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /** Ce qui est stocké, ce que l'administrateur voit, et comment tout effacer. */
-export default function ConfidentialitePage() {
+export default async function ConfidentialitePage() {
+  // Lu à l'exécution (et non figé au build) : l'adresse dépend de l'instance déployée.
+  await connection();
+  const contact = process.env.PRIVACY_CONTACT_EMAIL?.trim();
   return (
     <article className="space-y-6">
       <div>
@@ -50,6 +54,20 @@ export default function ConfidentialitePage() {
         <p>
           Dans le menu de ton compte (tes initiales, en haut à droite), « Supprimer mon compte » efface en une seule fois ton compte et toutes tes données personnelles. C&apos;est définitif.
         </p>
+      </Section>
+
+      <Section title="Contact">
+        {contact ? (
+          <p>
+            Pour toute question sur tes données, ou pour exercer tes droits d&apos;accès, de rectification et de suppression, écris à{" "}
+            <a href={`mailto:${contact}`} className="text-foreground underline underline-offset-4 hover:text-accent-hover">
+              {contact}
+            </a>
+            .
+          </p>
+        ) : (
+          <p>Pour toute question sur tes données, adresse-toi à l&apos;administrateur de cette instance.</p>
+        )}
       </Section>
 
       <p className="border-t border-border pt-5 text-sm">
