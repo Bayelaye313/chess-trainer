@@ -93,6 +93,17 @@ export interface DeckPuzzle {
   setupMove: { uci: string; san: string; fenBefore: string } | null;
   /** Motifs tactiques exploités par la solution — voir `SolvablePuzzle.motifs`. */
   motifs: Motif[];
+  /**
+   * Mats forcés équivalents acceptés, par pli — écrits par l'audit Stockfish
+   * (`scripts/audit-game-puzzles.mts`), voir `SolvablePuzzle.alternatives`.
+   */
+  alternatives?: string[][];
+  /**
+   * Commentaire du coach sur l'erreur réelle de la partie (`[%txt]`, `[%csl]`,
+   * `[%cal]`, voir `buildGameErrorComment`) — `null` tant que le puzzle n'a pas
+   * été audité.
+   */
+  coachComment: string | null;
 }
 
 /**
@@ -147,6 +158,8 @@ function nextPuzzleRow(where: SQL) {
       motifs: puzzles.motifs,
       moveId: puzzles.moveId,
       gameId: puzzles.gameId,
+      alternatives: puzzles.alternatives,
+      coachComment: puzzles.coachComment,
     })
     .from(reviews)
     .innerJoin(puzzles, eq(reviews.puzzleId, puzzles.id))
@@ -159,8 +172,8 @@ function nextPuzzleRow(where: SQL) {
 export async function getPuzzleById(puzzleId: string): Promise<DeckPuzzle | null> {
   const [row] = await nextPuzzleRow(eq(puzzles.id, puzzleId));
   if (!row) return null;
-  const { moveId, gameId, ...puzzle } = row;
-  return { ...puzzle, setupMove: await findSetupMove(moveId, gameId) };
+  const { moveId, gameId, alternatives, ...puzzle } = row;
+  return { ...puzzle, alternatives: alternatives ?? undefined, setupMove: await findSetupMove(moveId, gameId) };
 }
 
 export async function getNextDuePuzzle(deckId?: DeckId, now: Date = new Date()): Promise<DeckPuzzle | null> {
@@ -174,6 +187,6 @@ export async function getNextDuePuzzle(deckId?: DeckId, now: Date = new Date()):
 
   if (!row) return null;
 
-  const { moveId, gameId, ...puzzle } = row;
-  return { ...puzzle, setupMove: await findSetupMove(moveId, gameId) };
+  const { moveId, gameId, alternatives, ...puzzle } = row;
+  return { ...puzzle, alternatives: alternatives ?? undefined, setupMove: await findSetupMove(moveId, gameId) };
 }

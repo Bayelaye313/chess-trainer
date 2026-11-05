@@ -25,6 +25,7 @@ import { db } from "@/server/db";
 import {
   dailySets,
   moves,
+  puzzlePurges,
   puzzles,
   reviewLogs,
   reviews,
@@ -244,10 +245,20 @@ async function extractPuzzlesFromMoves(candidateMoves: readonly MoveRow[], now: 
         .where(inArray(puzzles.moveId, candidateMoves.map((m) => m.id)))
     ).map((row) => row.moveId),
   );
+  // Pierres tombales de l'audit Stockfish (`scripts/audit-game-puzzles.mts`) :
+  // un puzzle purgé ne renaît jamais à l'extraction suivante.
+  const purged = new Set(
+    (
+      await db
+        .select({ moveId: puzzlePurges.moveId })
+        .from(puzzlePurges)
+        .where(inArray(puzzlePurges.moveId, candidateMoves.map((m) => m.id)))
+    ).map((row) => row.moveId),
+  );
 
   let created = 0;
   for (const move of candidateMoves) {
-    if (alreadyPuzzled.has(move.id)) continue;
+    if (alreadyPuzzled.has(move.id) || purged.has(move.id)) continue;
     const puzzle = puzzleFromMove(move, now);
     if (!puzzle) continue;
     const line = extendPuzzleSolution(move);
