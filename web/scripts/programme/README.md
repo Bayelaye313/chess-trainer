@@ -34,3 +34,21 @@ Aucune position n'est écrite à la main sans être signalée comme construite.
 Le dump local a été retéléchargé le 2026-11-04 (6 193 530 puzzles, SHA-256 vérifié contre
 `https://database.lichess.org/sha256sums.txt`). Le lecteur tolère toujours un fichier tronqué
 (il s'arrête proprement à la coupure).
+
+## Lanceur et contrôles (poste à 4 Go de RAM partagé)
+
+| Script | Usage |
+|---|---|
+| `run-step.sh <n> select\|verify [lot]\|build\|auto [lot]` | Lanceur des étapes lourdes. Verrou `/tmp/programme.lock` (PID), un seul moteur, attente sans limite (contrôle toutes les 5 min) tant qu'un Stockfish, `next dev`, vitest ou vérificateur étranger tourne, lots sous `/usr/bin/time -v` journalisés dans `data/programme/measures.log`, lot réduit de moitié si le swap monte pendant notre lot (jamais d'abandon), groupe de processus tué à l'arrêt. `auto` applique la règle du minimum puis enchaîne `verify` et `build`. |
+| `run-step.sh exec <libellé> -- <commande…>` | Même verrou, même attente et même mesure pour une autre commande lourde (`tsc`, `next build`, `ui-check.sh`…). |
+| `coverage.mjs <n>` | Règle du minimum : 13 validés par jour de concept (6 puzzles + 1 blindfold + 6 de réserve pour rejouer une semaine), plus 1 blindfold par semaine ; `BUILD` si tout est couvert avec 50 % de marge, sinon `VERIFY`. |
+| `check-phase.mjs <n>` | Contrôles du JSON généré : 6 puzzles par jour de concept, doublons (puzzles et parties d'origine, phases précédentes comprises), légalité, difficulté croissante, rating médian face aux Elo cibles. |
+| `ui-check.sh <s>:<j> …` | Joue des jours dans l'application (`next start`, copie de la base via `DATABASE_PATH`, port libre ≥ 3131) avec `play-day.mjs` (Playwright, `/api/sync` intercepté), puis vérifie en base que la progression est sauvegardée. |
+
+Reprise après une interruption (rien n'est refait) :
+
+```sh
+cd web && setsid nohup scripts/programme/run-step.sh 4 auto > data/programme/phase-4/runner.out 2>&1 &
+# phase 5, dans l'ordre : select, puis auto
+cd web && mkdir -p data/programme/phase-5 && setsid nohup sh -c 'scripts/programme/run-step.sh 5 select && scripts/programme/run-step.sh 5 auto' > data/programme/phase-5/runner.out 2>&1 &
+```
