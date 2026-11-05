@@ -79,6 +79,8 @@ interface PuzzleRow {
   solution_san: string;
   played_uci: string | null;
   audited_at: number | null;
+  /** Propriétaire (bases multi-utilisateurs) — `null` sur une base mono-utilisateur. */
+  user_id: string | null;
 }
 
 interface PlyRecord {
@@ -228,13 +230,7 @@ async function analysePuzzle(engine: Engine, row: PuzzleRow): Promise<AnalysisRe
 
 async function runAnalyse(outPath: string) {
   const db = new Database(DB_PATH, { readonly: true, fileMustExist: true });
-  const hasAudited = db.prepare(`PRAGMA table_info("puzzles")`).all().some((c: { name: string }) => c.name === "audited_at");
-  const rows: PuzzleRow[] = db
-    .prepare(
-      `SELECT id, deck, game_id, move_id, fen_before, solution, solution_san, played_uci, ${hasAudited ? "audited_at" : "NULL AS audited_at"}
-       FROM puzzles WHERE source = 'local' ORDER BY created_at, id`,
-    )
-    .all();
+  const rows: PuzzleRow[] = db.prepare(`SELECT ${puzzleColumns(db)} FROM puzzles WHERE source = 'local' ORDER BY created_at, id`).all();
   db.close();
 
   const [shard, shards] = (process.env.SHARD ?? "0/1").split("/").map(Number);
@@ -262,7 +258,7 @@ async function runAnalyse(outPath: string) {
 // ---------------------------------------------------------------- étape 2
 
 type Decision =
-  | { id: string; action: "purge"; reason: string; deck: string; moveId: number | null; gameId: string | null; fenBefore: string }
+  | { id: string; action: "purge"; reason: string; deck: string; moveId: number | null; gameId: string | null; fenBefore: string; userId: string | null }
   | {
       id: string;
       action: "keep";
@@ -284,6 +280,7 @@ function decide(row: PuzzleRow, record: AnalysisRecord): Decision {
     moveId: row.move_id,
     gameId: row.game_id,
     fenBefore: row.fen_before,
+    userId: row.user_id,
   });
   if (record.error) return purge(`illegal: ${record.error}`);
 
@@ -348,6 +345,18 @@ function decide(row: PuzzleRow, record: AnalysisRecord): Decision {
   };
 }
 
+function hasColumn(db: { prepare(sql: string): { all(): unknown[] } }, table: string, column: string): boolean {
+  return (db.prepare(`PRAGMA table_info("${table}")`).all() as { name: string }[]).some((c) => c.name === column);
+}
+
+function puzzleColumns(db: { prepare(sql: string): { all(): unknown[] } }): string {
+  return [
+    "id, deck, game_id, move_id, fen_before, solution, solution_san, played_uci",
+    hasColumn(db, "puzzles", "audited_at") ? "audited_at" : "NULL AS audited_at",
+    hasColumn(db, "puzzles", "user_id") ? "user_id" : "NULL AS user_id",
+  ].join(", ");
+}
+
 function hasTable(db: { prepare(sql: string): { get(...args: unknown[]): unknown } }, name: string): boolean {
   return db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name) != null;
 }
@@ -364,17 +373,11 @@ async function runDecide(inPath: string, reportPath: string, apply: boolean) {
   );
 
   const db = new Database(DB_PATH, { fileMustExist: true });
-  if (apply && (!hasTable(db, "puzzle_purges") || !db.prepare(`PRAGMA table_info("puzzles")`).all().some((c: { name: string }) => c.name === "coach_comment"))) {
+  if (apply && (!hasTable(db, "puzzle_purges") || !hasColumn(db, "puzzles", "coach_comment"))) {
     console.error("Migration 0015 absente (puzzle_purges, puzzles.coach_comment) : lancer d'abord `node scripts/db-align.mjs` (après sauvegarde).");
     process.exit(1);
   }
-  const hasAudited = db.prepare(`PRAGMA table_info("puzzles")`).all().some((c: { name: string }) => c.name === "audited_at");
-  const rows: PuzzleRow[] = db
-    .prepare(
-      `SELECT id, deck, game_id, move_id, fen_before, solution, solution_san, played_uci, ${hasAudited ? "audited_at" : "NULL AS audited_at"}
-       FROM puzzles WHERE source = 'local'`,
-    )
-    .all();
+  const rows: PuzzleRow[] = db.prepare(`SELECT ${puzzleColumns(db)} FROM puzzles WHERE source = 'local'`).all();
 
   const decisions: Decision[] = [];
   let missing = 0;
@@ -421,8 +424,12 @@ async function runDecide(inPath: string, reportPath: string, apply: boolean) {
 
   const now = Math.floor(Date.now() / 1000);
   const purgedIds = new Set(purges.map((d) => d.id));
+  // Base multi-utilisateurs : la pierre tombale appartient au propriétaire du puzzle.
+  const scoped = hasColumn(db, "puzzle_purges", "user_id");
   const tombstone = db.prepare(
-    "INSERT OR IGNORE INTO puzzle_purges (move_id, game_id, fen_before, reason, purged_at) VALUES (?, ?, ?, ?, ?)",
+    scoped
+      ? "INSERT OR IGNORE INTO puzzle_purges (move_id, game_id, fen_before, reason, purged_at, user_id) VALUES (?, ?, ?, ?, ?, ?)"
+      : "INSERT OR IGNORE INTO puzzle_purges (move_id, game_id, fen_before, reason, purged_at) VALUES (?, ?, ?, ?, ?)",
   );
   const deleteLogs = db.prepare("DELETE FROM review_logs WHERE puzzle_id = ?");
   const deleteReview = db.prepare("DELETE FROM reviews WHERE puzzle_id = ?");
@@ -438,7 +445,7 @@ async function runDecide(inPath: string, reportPath: string, apply: boolean) {
 
   db.transaction(() => {
     for (const d of purges) {
-      if (d.moveId !== null) tombstone.run(d.moveId, d.gameId, d.fenBefore, d.reason, now);
+      if (d.moveId !== null) tombstone.run(d.moveId, d.gameId, d.fenBefore, d.reason, now, ...(scoped ? [d.userId] : []));
       deleteLogs.run(d.id);
       deleteReview.run(d.id);
       deleteRecommendation.run(d.id);
