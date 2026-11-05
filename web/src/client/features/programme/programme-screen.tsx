@@ -41,14 +41,14 @@ export function ProgrammeScreen({ overview }: { overview: ProgrammeOverview }) {
 
   return (
     <div className="space-y-6">
-      <EsportHeader eyebrow={`Phase ${overview.phaseId} · ${overview.phaseTitre}`} title="Programme 1000 Heures">
-        De ton Elo actuel à 2400, 36 semaines de 7 jours × 4 h. Palais de mémoire, squelette avant solution, hack visuel quotidien, pauses SMR,
+      <EsportHeader eyebrow={`Phase ${overview.phases.find((p) => p.status === "en_cours")?.index ?? overview.phaseId} · ${overview.phaseTitre}`} title="Programme 1000 Heures">
+        36 semaines de 7 jours × 4 h, difficulté des puzzles ~1500 à ~2400. Palais de mémoire, squelette avant solution, hack visuel quotidien, pauses SMR,
         cécité partielle et reconsolidation active.
       </EsportHeader>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Tile label="Position" value={`S${overview.semaine} · J${overview.jour}`} hint={overview.repetition > 0 ? `semaine rejouée ×${overview.repetition}` : "sur 36 semaines"} />
-        <Tile label="Elo cible du jour" value={overview.today ? String(overview.today.elo_cible + overview.ratingOffset) : "—"} hint={`décalage adaptatif ${overview.ratingOffset >= 0 ? "+" : ""}${overview.ratingOffset}`} />
+        <Tile label="Difficulté des puzzles du jour" value={overview.today ? `~${overview.today.elo_cible + overview.ratingOffset}` : "—"} hint={`décalage adaptatif ${overview.ratingOffset >= 0 ? "+" : ""}${overview.ratingOffset}`} />
         <Tile label="Réussite glissante" value={pct(overview.stats.rollingSuccess)} hint="10 dernières séances" />
         <Tile label="Heures" value={`${overview.stats.hoursDone} / 1000`} hint={`${overview.stats.completedSessions} séances`} />
         <Tile label="Elo actuel" value={overview.stats.currentElo ? String(overview.stats.currentElo) : "—"} hint="dernière partie importée" />
@@ -91,7 +91,7 @@ export function ProgrammeScreen({ overview }: { overview: ProgrammeOverview }) {
               </p>
               <p className="font-medium">{p.titre}</p>
               <p className="text-foreground-muted">
-                {p.eloDebut} → {p.eloFin} · S{p.semaineDebut}–S{p.semaineFin}
+                difficulté des puzzles ~{p.eloDebut} à ~{p.eloFin} · S{p.semaineDebut}–S{p.semaineFin}
               </p>
               <p className="text-foreground-muted">
                 {p.joursGeneres === 0 ? "contenu à générer" : `${p.joursGeneres} / ${(p.semaineFin - p.semaineDebut + 1) * 7} jours générés`}
