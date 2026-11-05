@@ -92,3 +92,17 @@ Aucun lot n'a approché le plafond de 1,2 Go : tous les arrêts viennent de la r
   npm run programme:generate -- 4 build
   # puis ajouter phase-4.json dans src/server/programme/content.ts, et faire de même pour la phase 5
   ```
+
+## Reprise du 2026-11-05
+
+Relevé de départ (12:40) : 1 759 Mo disponibles, swap 1 927 Mo. Aucun Stockfish, `next dev`, vitest ni Playwright étranger. Seul `next-server` tournait : c'est l'application absentéisme (port 3000, `~/Desktop/absenteisme-app`), un service permanent quasi entièrement en swap, non compté comme charge.
+
+Lanceur : `runner.sh` (scratchpad de session). Avant chaque lot, il fait `free -m` et `ps aux --sort=-rss | head -15`. En présence d'une charge externe, il attend 5 min, et s'arrête après 3 contrôles. Chaque lot tourne sous `/usr/bin/time -v`, dans son propre groupe de processus (`setsid`). Un lot est tué si le swap monte de plus de 32 Mo, puis le lot suivant est réduit de moitié (minimum 10). Le lanceur s'arrête après 2 essais réduits ratés de suite.
+
+| Étape | Pic (Maximum resident set size) | Lots | Arrêts |
+|---|---|---|---|
+| Phase 4 : `verify`, 443 → 687/1088 | 245 Mo | 75, puis 18, puis 10 | 7 lots tués sur hausse du swap, chaque fois suivis d'un lot réduit réussi : la règle des 2 essais n'a pas été atteinte |
+
+- **Défaut du lanceur, corrigé.** Les trois premiers arrêts (12:41 à 12:43) viennent de mon lanceur, pas du poste : tuer le lot ne tuait pas le `verify-worker` petit-enfant, et jusqu'à 3 moteurs ont tourné en parallèle. J'ai tué les workers et retiré 39 doublons de `verify-0.jsonl`, aux verdicts identiques (sauvegarde : `verify-0.jsonl.bak-dups`). Le lanceur tue maintenant le groupe entier, et j'ai remis le décompte des essais à zéro.
+- **Arrêt à 13:11 : charge externe persistante (3 contrôles à 5 min d'intervalle).** Une autre session Claude Code a lancé `vitest run` (13:01), puis `next dev -p 3131` et `next dev` dans `chess-trainer/web` (13:06 et 13:09, `next-server` ≈ 250 Mo). Une autre session encore a lancé trois Stockfish natifs dans `~/Desktop/chess/ct-audit-puzzles/web` (≈ 3 × 206 Mo, 13:07). Firefox était à ≈ 800 Mo. Au moment de l'arrêt : 628 Mo disponibles, swap 2 728 Mo.
+- **État.** Phase 4 : 687/1088 candidats vérifiés, conservés dans `web/data/programme/phase-4/verify-0.jsonl`. `build` n'a pas été lancé. Phase 5 : rien n'a été lancé (ni `select`, ni `verify`, ni `build`). Pour reprendre, suivre la même commande que plus haut, une fois le poste libéré.
