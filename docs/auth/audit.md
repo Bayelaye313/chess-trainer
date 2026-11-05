@@ -210,6 +210,19 @@ sauvegarde**) :
    `created_at` = `when` du journal) ;
 3. lancer `npm run db:migrate`.
 
+Les étapes 1 et 2 sont automatisées par [`web/scripts/db-align.mjs`](../../web/scripts/db-align.mjs)
+(idempotent, en une transaction). Commande exacte, depuis `web/`, sur une copie :
+
+```sh
+node -e "require('better-sqlite3')('data/chess-trainer.db',{readonly:true}).backup('/tmp/ct-copie.db')"
+DATABASE_PATH=/tmp/ct-copie.db node scripts/db-align.mjs
+DATABASE_PATH=/tmp/ct-copie.db npm run db:migrate
+```
+
+Résultat attendu sur la base du 2026-11-04 : 200 parties, 13 752 coups, 749 cartes et
+749 révisions conservés ; 11 `training_recommendations` et 1 `programme_state` en attente de
+reprise.
+
 ### Point d'entrée unique : `src/server/db/user-scope.ts`
 
 - `userScope(userId)` fournit trois outils :
