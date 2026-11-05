@@ -126,4 +126,19 @@ describe("buildGameErrorComment", () => {
     expect(parsed.highlights).toContainEqual({ square: "h5", color: "red" });
     expect(parsed.arrows).toContainEqual({ from: "g1", to: "f3", color: "green" });
   });
+
+  it("ne dit « prend l'avantage » que si l'adversaire passe vraiment devant", () => {
+    // Coup calme raté : le joueur reste mieux (+0.9) après son coup.
+    const fen = "rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3";
+    const stillBetter = buildGameErrorComment({
+      fenBefore: fen,
+      playedUci: "b1c3",
+      best: cp(210, "f3e5"),
+      afterPlayed: cp(-90, "b8c6"),
+      deck: "opening_mistakes",
+    });
+    expect(stillBetter!.text).toContain("Stockfish répond Nc6 et réduit ton avantage.");
+    const losing = buildGameErrorComment({ fenBefore: fen, playedUci: "b1c3", best: cp(210, "f3e5"), afterPlayed: cp(250, "b8c6"), deck: "opening_mistakes" });
+    expect(losing!.text).toContain("et prend l'avantage.");
+  });
 });

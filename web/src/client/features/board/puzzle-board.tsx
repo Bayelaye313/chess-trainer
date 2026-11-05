@@ -40,6 +40,9 @@ import { Chessboard, type SquareRenderer } from "react-chessboard";
 import { ESPORT_BOARD_OPTIONS, LAST_MOVE_TINT, LICHESS_BRUSH, qualityRingColor, SquareCircle } from "@/client/features/board/board-theme";
 import { useEngine } from "@/client/engine/engine-context";
 import { kingInCheckSquare } from "@/core/chess/check";
+import { parseCoachComment } from "@/core/chess/move-tree";
+import type { CoachMessage } from "@/core/curriculum/coach-feedbacks";
+import { CourseCoachBubble } from "@/client/features/learn/course-coach-bubble";
 import type { MoveQuality } from "@/core/chess/types";
 import { buildPreSolveCoachMessage } from "@/core/puzzle/pre-solve-coach";
 import { buildProgressCoachMessage } from "@/core/puzzle/progress-coach";
@@ -66,10 +69,19 @@ const STATUS_TEXT: Record<SolvePhase, string> = {
 
 export function PuzzleBoard({
   puzzle,
+  coachComment = null,
   onGraded,
   onComplete,
 }: {
   puzzle: SolvablePuzzle;
+  /**
+   * Commentaire du coach sur l'erreur RÉELLE de la partie (puzzles de l'onglet
+   * Entraîner audités par Stockfish, format `[%txt] [%csl] [%cal]` de nos
+   * cours) : affiché seulement une fois le puzzle terminé — jamais de
+   * spoiler pendant la recherche — et ses repères (coup joué en rouge, coup
+   * attendu en vert, cases clés) dessinés sur la position de départ.
+   */
+  coachComment?: string | null;
   /** Mode Entraîner : note FSRS une fois le puzzle terminé (résolu ou raté). */
   onGraded?: (grade: ReviewGrade, playedUci: string | null, solvedMs: number) => void;
   /**
@@ -237,7 +249,24 @@ export function PuzzleBoard({
     showPreSolveCoach && puzzle.setupMove && !solver.introAnimated
       ? [{ startSquare: puzzle.setupMove.uci.slice(0, 2), endSquare: puzzle.setupMove.uci.slice(2, 4), color: LICHESS_BRUSH.blue }]
       : [];
-  const boardArrows = [...(postAnalysisActive ? postAnalysis.arrows : solver.boardArrows), ...setupArrow];
+  // Commentaire du coach (partie réelle) : repères géométriques sur la
+  // position de DÉPART uniquement (pli 0 du Mode Analyse Pro, hors exploration).
+  const gameComment = useMemo(() => (coachComment ? parseCoachComment(coachComment) : null), [coachComment]);
+  const gameCommentMessage: CoachMessage | null =
+    postAnalysisActive && gameComment?.text
+      ? { profile: "murDeBriques", outcome: "echec", label: "Ton erreur dans la partie", text: gameComment.text }
+      : null;
+  const showGameCommentMarks = gameCommentMessage !== null && postAnalysis.viewPly === 0 && !postAnalysis.explore.isExploring;
+  const gameCommentArrows = showGameCommentMarks
+    ? gameComment!.arrows.map((arrow) => ({ startSquare: arrow.from, endSquare: arrow.to, color: arrow.color === "red" ? LICHESS_BRUSH.red : LICHESS_BRUSH.green }))
+    : [];
+  const gameCommentCircles = new Map<string, string>(
+    showGameCommentMarks ? gameComment!.highlights.map((h) => [h.square, h.color === "red" ? LICHESS_BRUSH.red : LICHESS_BRUSH.green]) : [],
+  );
+
+  const boardArrows = showGameCommentMarks
+    ? gameCommentArrows
+    : [...(postAnalysisActive ? postAnalysis.arrows : solver.boardArrows), ...setupArrow];
   const boardScore = postAnalysisActive ? postAnalysis.currentScore : solver.currentScore;
 
   // Surbrillance + badge du dernier coup joué. Trois sources, jamais deux à
@@ -310,6 +339,7 @@ export function PuzzleBoard({
     >
       {children}
       {circledSquares.has(square) && <SquareCircle color={LICHESS_BRUSH.green} />}
+      {gameCommentCircles.has(square) && <SquareCircle color={gameCommentCircles.get(square)!} />}
       {square === qualityCircleSquare && ringColor && <SquareCircle color={ringColor} />}
       {badgeQuality && square === badgeSquare && (
         <span className="pointer-events-none absolute right-0.5 top-0.5">
@@ -425,6 +455,23 @@ export function PuzzleBoard({
                     </Link>
                   </span>
                 </p>
+              )}
+            </div>
+          )}
+
+          {gameCommentMessage && (
+            <div className="space-y-2">
+              <CourseCoachBubble message={gameCommentMessage} />
+              {!showGameCommentMarks && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => postAnalysis.goToPly(0)}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-border px-3 text-sm text-foreground-muted hover:bg-surface-muted hover:text-foreground"
+                  >
+                    Voir l&apos;erreur sur l&apos;échiquier
+                  </button>
+                </div>
               )}
             </div>
           )}

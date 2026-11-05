@@ -293,7 +293,11 @@ export function buildGameErrorComment(input: GameErrorCommentInput): GameErrorCo
       circles.push(`R${target.square}`);
       sentences.push(`Ce coup laisse ${yourPiece(target.piece)} en ${target.square} sans défense légale.`);
     } else if (reply) {
-      sentences.push(`Stockfish répond ${reply.san}${reply.san.includes("+") ? ", avec échec" : ""} et prend l'avantage.`);
+      // Conséquence lue sur le score RÉEL après le coup joué (POV du joueur) :
+      // « prend l'avantage » seulement si l'adversaire passe vraiment devant.
+      const after = lineWinPercent(flipLine(input.afterPlayed));
+      const consequence = after >= 55 ? "et réduit ton avantage" : after >= 45 ? "et revient à égalité" : "et prend l'avantage";
+      sentences.push(`Stockfish répond ${reply.san}${reply.san.includes("+") ? ", avec échec" : ""} ${consequence}.`);
     }
     if (reply) arrows.push(`R${reply.from}${reply.to}`);
 

@@ -91,6 +91,7 @@ export function PuzzleSession({ deckId, onExit }: { deckId: DeckId; onExit: () =
         <PuzzleBoard
           key={state.puzzle.id}
           puzzle={state.puzzle}
+          coachComment={state.puzzle.coachComment}
           onGraded={(grade, playedUci, solvedMs) => handleGraded(state.puzzle, grade, playedUci, solvedMs)}
         />
       )}
