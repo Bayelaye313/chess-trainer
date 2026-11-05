@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Chessboard } from "react-chessboard";
 import { ListOrdered, Route } from "lucide-react";
 import { pickBotStartLine, type BotStartLine } from "@/core/training/daily-plan";
@@ -20,8 +21,17 @@ import { usePlayGame } from "./use-play-game";
  * `startLines` : lignes imposées par le Plan du jour appliqué (voir
  * `server/queries/daily-plan.ts#listBotStartLines`), tirées au lancement
  * selon la couleur. `autoStart` : lancement immédiat avec le dernier réglage.
+ * `planPanel` : formulaire du Plan du jour, affiché avec le réglage (hors partie).
  */
-export function PlayScreen({ startLines = [], autoStart = false }: { startLines?: readonly BotStartLine[]; autoStart?: boolean }) {
+export function PlayScreen({
+  startLines = [],
+  autoStart = false,
+  planPanel,
+}: {
+  startLines?: readonly BotStartLine[];
+  autoStart?: boolean;
+  planPanel?: ReactNode;
+}) {
   const game = usePlayGame();
   const hasGame = game.status !== "setup";
   // Reste affiché après la fin d'une partie : relancer ne demande qu'un clic.
@@ -93,6 +103,8 @@ export function PlayScreen({ startLines = [], autoStart = false }: { startLines?
             onStart={(color, profileId) => game.startNewGame(color, profileId, pickBotStartLine(startLines, color))}
           />
         )}
+
+        {showSetup && planPanel}
 
         {hasGame && game.feed.length === 0 && game.status !== "over" && (
           <p className="text-sm text-foreground-muted">Le coach commente chacun de tes coups ici, et le fil de la partie s&apos;affiche dessous.</p>
