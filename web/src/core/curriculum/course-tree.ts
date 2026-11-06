@@ -23,6 +23,7 @@ import { LE_BLOCUS_DU_PION_PASSE } from "./course-trees/pm-le-blocus-du-pion-pas
 import { LA_CENTRALISATION_DES_PIECES } from "./course-trees/pm-la-centralisation-des-pieces";
 import { LA_TRANSFORMATION_DUN_AVANTAGE } from "./course-trees/pm-transformer-un-avantage";
 import { LE_PION_PASSE_PROTEGE } from "./course-trees/pm-le-pion-passe-protege";
+import { LE_FOU_CONTRE_TROIS_PIONS } from "./course-trees/pm-le-fou-contre-trois-pions";
 
 /**
  * Cours en ARBRE COMPLET façon Lichess Study — cahier des charges du
@@ -266,6 +267,7 @@ export const COURSE_TREES: Record<string, CourseTree> = {
   "pm-la-centralisation-des-pieces": LA_CENTRALISATION_DES_PIECES,
   "pm-transformer-un-avantage": LA_TRANSFORMATION_DUN_AVANTAGE,
   "pm-le-pion-passe-protege": LE_PION_PASSE_PROTEGE,
+  "pm-le-fou-contre-trois-pions": LE_FOU_CONTRE_TROIS_PIONS,
   "jh-module-21-jouer-les-structures-fermees": { chapters: [{ title: "Rubinstein – Nimzowitsch, Berlin 1928", root: buildModule21() }] },
   "jh-module-22-affronter-le-fianchetto": { chapters: [{ title: "Botvinnik – Smyslov, Moscou 1954 (16e partie)", root: buildModule22() }] },
   "jh-module-23-le-controle-du-centre": { chapters: [{ title: "Alekhine – Euwe, Amsterdam 1935 (1re partie)", root: buildModule23() }] },
